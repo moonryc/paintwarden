@@ -1,0 +1,422 @@
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Chip,
+  CircularProgress,
+  MenuItem,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
+import Box from "@mui/material/Box";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { Modal } from "../Components/Modal";
+import { Archive, Check, Heart, Save, Trash2 } from "../icons";
+import { useTemplateCatalog } from "../store/template-hooks";
+import { up } from "../theme-tokens";
+import type {
+  Miniature,
+  MiniatureFormValues,
+  MiniatureTemplate,
+  PaintStatus,
+  PaintingStatus,
+} from "../types";
+import { STAGES } from "../utils/constants";
+import { useFuzzySearch } from "../utils/use-fuzzy-search";
+
+import { MiniatureImageField } from "./MiniatureImageField";
+
+const templateSearchText = (template: MiniatureTemplate) => template.name;
+
+export function MiniatureForm({
+  onClose,
+  onSubmit,
+  onDelete,
+  initial,
+  initialTemplateId,
+}: {
+  onClose(): void;
+  onSubmit(v: MiniatureFormValues): Promise<void>;
+  onDelete?: () => Promise<void>;
+  initial?: Miniature;
+  initialTemplateId?: string | null;
+}) {
+  const catalogQuery = useTemplateCatalog(!initial);
+  const templateCatalog = catalogQuery.data;
+  const templateError = catalogQuery.error?.message ?? "";
+  const [busy, setBusy] = useState(false),
+    [deleting, setDeleting] = useState(false),
+    [confirmDelete, setConfirmDelete] = useState(false),
+    [removeImage, setRemoveImage] = useState(false),
+    [title, setTitle] = useState(initial?.title ?? ""),
+    [status, setStatus] = useState<PaintStatus>(initial?.status ?? "OWNED"),
+    [notes, setNotes] = useState(initial?.notes ?? ""),
+    [paintingStatus, setPaintingStatus] = useState<PaintingStatus>(initial?.paintingStatus ?? "NOT_STARTED"),
+    [image, setImage] = useState<File | null>(null);
+  const [manufacturer, setManufacturer] = useState(initial?.manufacturer ?? ""),
+    [faction, setFaction] = useState(initial?.faction ?? ""),
+    [scale] = useState(initial?.scale ?? "");
+  const [templateCategory, setTemplateCategory] = useState("ALL"),
+    [templateSearch, setTemplateSearch] = useState(""),
+    [selectedTemplate, setSelectedTemplate] = useState<MiniatureTemplate | null>(null),
+    [templateImageUrl, setTemplateImageUrl] = useState("");
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const timer = setTimeout(() => setConfirmDelete(false), 3000);
+    return () => clearTimeout(timer);
+  }, [confirmDelete]);
+  const appliedTemplateId = useRef<string | null>(null);
+  useEffect(() => {
+    if (initial || !initialTemplateId || !templateCatalog || appliedTemplateId.current === initialTemplateId)
+      return;
+    const match = templateCatalog.templates.find((template) => template.id === initialTemplateId);
+    if (match) {
+      appliedTemplateId.current = initialTemplateId;
+      setSelectedTemplate(match);
+      setTemplateSearch(match.name);
+      setTitle(match.name);
+      setManufacturer(match.manufacturer);
+      setFaction(match.faction);
+      setTemplateImageUrl(match.imageUrl);
+    }
+  }, [initial, initialTemplateId, templateCatalog]);
+  const templateOptions = useMemo(
+    () =>
+      (templateCatalog?.templates ?? []).filter(
+        (template) => templateCategory === "ALL" || template.categories.includes(templateCategory),
+      ),
+    [templateCatalog, templateCategory],
+  );
+  const templateMatches = useFuzzySearch(templateOptions, templateSearch, templateSearchText, 100);
+  return (
+    <Modal
+      title={initial ? "Edit miniature" : "Add a miniature"}
+      subtitle={
+        initial
+          ? "Keep the project details current."
+          : "Start from a mini-template or build your own project."
+      }
+      onClose={onClose}
+    >
+      <Box
+        component="form"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          try {
+            await onSubmit({
+              title: title.trim(),
+              status,
+              notes,
+              manufacturer,
+              faction,
+              scale,
+              paintingStatus,
+              image,
+              removeImage,
+              templateId: selectedTemplate?.id ?? null,
+              includeTemplateImage: !!templateImageUrl && !removeImage,
+            });
+          } catch {
+            setBusy(false);
+          }
+        }}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 2.5,
+        }}
+      >
+        {!initial && (
+          <Box
+            component="div"
+            sx={{
+              boxSizing: "border-box",
+              borderRadius: "1rem",
+              borderStyle: "solid",
+              borderWidth: "1px",
+              borderColor: "var(--line)",
+              bgcolor: "color-mix(in oklab, var(--sunken) 45%, transparent)",
+              p: 1.5,
+            }}
+          >
+            <Box
+              component="div"
+              sx={{
+                mb: 1.5,
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                gap: 1.5,
+              }}
+            >
+              <div>
+                <Box
+                  component="p"
+                  sx={{
+                    m: 0,
+                    mb: 0.7,
+                    fontSize: "0.65rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.16em",
+                    textTransform: "uppercase",
+                    color: "var(--ink-faint)",
+                  }}
+                >
+                  Mini-template
+                </Box>
+                <Box
+                  component="p"
+                  sx={{
+                    m: 0,
+                    mt: 0.5,
+                    fontSize: "0.75rem",
+                    lineHeight: 4 / 3,
+                    color: "var(--ink-soft)",
+                  }}
+                >
+                  Choose a source or personal template to add its name, image, schemes, and paints.
+                </Box>
+              </div>
+              {!templateCatalog && !templateError && <CircularProgress size={18} />}
+            </Box>
+            <Box
+              component="div"
+              sx={{
+                display: "grid",
+                gap: 1.5,
+                [up.sm]: {
+                  gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.2fr)",
+                },
+              }}
+            >
+              <TextField
+                select
+                fullWidth
+                size="small"
+                label="Category"
+                value={templateCategory}
+                disabled={!templateCatalog}
+                onChange={(e) => {
+                  if (selectedTemplate && title === selectedTemplate.name) setTitle("");
+                  setTemplateCategory(e.target.value);
+                  setTemplateSearch("");
+                  setSelectedTemplate(null);
+                  setTemplateImageUrl("");
+                  setManufacturer("");
+                  setFaction("");
+                }}
+              >
+                <MenuItem value="ALL">All categories</MenuItem>
+                {templateCatalog?.categories.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </TextField>
+              <Autocomplete
+                options={templateMatches}
+                filterOptions={(options) => options}
+                value={selectedTemplate}
+                inputValue={templateSearch}
+                onInputChange={(_, value) => setTemplateSearch(value)}
+                loading={!templateCatalog && !templateError}
+                getOptionLabel={(option) => option.name}
+                getOptionKey={(option) => option.id}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(_, template) => {
+                  setSelectedTemplate(template);
+                  setTemplateSearch(template?.name ?? "");
+                  if (!template) {
+                    setTemplateImageUrl("");
+                    return;
+                  }
+                  setTitle(template.name);
+                  setManufacturer(template.manufacturer);
+                  setFaction(template.faction);
+                  setImage(null);
+                  setRemoveImage(false);
+                  setTemplateImageUrl(template.imageUrl);
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} size="small" label="Model" placeholder="Search every model…" />
+                )}
+              />
+            </Box>
+            {templateError && (
+              <Alert
+                severity="warning"
+                sx={{
+                  boxSizing: "border-box",
+                  marginTop: "0.75rem",
+                }}
+              >
+                {templateError}. You can still create a miniature manually.
+              </Alert>
+            )}
+            {selectedTemplate && (
+              <Box
+                component="div"
+                sx={{
+                  mt: 1.5,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.75,
+                }}
+              >
+                <Chip size="small" label={`${selectedTemplate.schemeCount} schemes`} />
+                <Chip size="small" label={`${selectedTemplate.paintCount} paints`} />
+                {selectedTemplate.faction && (
+                  <Chip size="small" variant="outlined" label={selectedTemplate.faction} />
+                )}
+              </Box>
+            )}
+          </Box>
+        )}
+        <MiniatureImageField
+          image={image}
+          onImageChange={setImage}
+          removeImage={removeImage}
+          onRemoveImageChange={setRemoveImage}
+          savedImageUrl={initial?.imageUrl}
+          templateImageUrl={templateImageUrl}
+        />
+        <TextField
+          required
+          fullWidth
+          label="Name"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Space Marine Captain"
+        />
+        <Box
+          component="div"
+          sx={{
+            "& > :where(:not(:last-child))": { mb: 1 },
+          }}
+        >
+          <Box
+            component="p"
+            sx={{
+              m: 0,
+              mb: 0.7,
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--ink-faint)",
+            }}
+          >
+            Collection
+          </Box>
+          <ToggleButtonGroup
+            exclusive
+            fullWidth
+            value={status}
+            onChange={(_, v: PaintStatus | null) => v && setStatus(v)}
+            aria-label="Collection"
+          >
+            <ToggleButton
+              value="OWNED"
+              sx={[
+                {
+                  boxSizing: "border-box",
+                  gap: "0.5rem",
+                  fontSize: "0.875rem",
+                  lineHeight: "calc(10 / 7)",
+                },
+                {
+                  "&.Mui-selected, &.Mui-selected:hover": {
+                    bgcolor: "var(--brand)",
+                    color: "var(--brand-fg)",
+                    boxShadow: "var(--shadow-sm)",
+                  },
+                },
+              ]}
+            >
+              {status === "OWNED" ? <Check size={16} strokeWidth={3} /> : <Archive size={16} />} On my shelf
+            </ToggleButton>
+            <ToggleButton
+              value="WISHLIST"
+              sx={[
+                {
+                  boxSizing: "border-box",
+                  gap: "0.5rem",
+                  fontSize: "0.875rem",
+                  lineHeight: "calc(10 / 7)",
+                },
+                {
+                  "&.Mui-selected, &.Mui-selected:hover": {
+                    bgcolor: "var(--brand)",
+                    color: "var(--brand-fg)",
+                    boxShadow: "var(--shadow-sm)",
+                  },
+                },
+              ]}
+            >
+              {status === "WISHLIST" ? <Check size={16} strokeWidth={3} /> : <Heart size={16} />} On my
+              wishlist
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+        <TextField
+          fullWidth
+          select
+          label="Painting stage"
+          value={paintingStatus}
+          onChange={(e) => setPaintingStatus(e.target.value as PaintingStatus)}
+        >
+          {STAGES.map(([v, l]) => (
+            <MenuItem key={v} value={v}>
+              {l}
+            </MenuItem>
+          ))}
+        </TextField>
+        <TextField
+          fullWidth
+          multiline
+          minRows={3}
+          label="Notes (optional)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Scheme, army, project notes…"
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          loading={busy}
+          disabled={!title.trim() || deleting}
+          startIcon={<Save size={15} />}
+          fullWidth
+        >
+          Save
+        </Button>
+        {initial && onDelete && (
+          <Button
+            type="button"
+            variant="text"
+            color="error"
+            disabled={busy || deleting}
+            loading={deleting}
+            startIcon={<Trash2 size={15} />}
+            onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                return;
+              }
+              setDeleting(true);
+              void onDelete().catch(() => {
+                setDeleting(false);
+                setConfirmDelete(false);
+              });
+            }}
+          >
+            {confirmDelete ? "Tap again to delete miniature" : "Delete miniature"}
+          </Button>
+        )}
+      </Box>
+    </Modal>
+  );
+}

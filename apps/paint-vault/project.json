@@ -1,0 +1,11 @@
+{
+  "name": "paint-vault",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [{ "target": "build", "projects": "paint-vault-web" }],
+      "options": { "command": "npm run build --workspace paint-vault" }
+    }
+  }
+}

@@ -1,0 +1,260 @@
+{
+  "paints": [
+    {
+      "id": "aa642d26-a431-400f-b3fa-36ed3f224847",
+      "brand": "Paint Vault Demo",
+      "range": "Primers",
+      "name": "Demo Black Primer",
+      "type": "PRIMER",
+      "colorHex": "#1b1b1f"
+    },
+    {
+      "id": "129b95b2-e59f-44fc-95b9-09106653fc1c",
+      "brand": "Paint Vault Demo",
+      "range": "Base",
+      "name": "Harbor Blue",
+      "type": "BASE",
+      "colorHex": "#2a4d8f"
+    },
+    {
+      "id": "0259b087-548b-4d1d-a785-e92aec34e94c",
+      "brand": "Paint Vault Demo",
+      "range": "Base",
+      "name": "Gull Grey",
+      "type": "BASE",
+      "colorHex": "#9aa3ad"
+    },
+    {
+      "id": "0600ccaa-6bb2-4a92-9692-05a9469e9322",
+      "brand": "Paint Vault Demo",
+      "range": "Washes",
+      "name": "Deep Umber Wash",
+      "type": "SHADE",
+      "colorHex": "#2b2622"
+    },
+    {
+      "id": "90f3446f-f490-4fe2-b240-0360646e4723",
+      "brand": "Paint Vault Demo",
+      "range": "Layer",
+      "name": "Sky Highlight",
+      "type": "LAYER",
+      "colorHex": "#6f9be0"
+    },
+    {
+      "id": "359e0dbd-85ca-4741-8028-46f9f89cb2cc",
+      "brand": "Paint Vault Demo",
+      "range": "Metallics",
+      "name": "Brass Trim",
+      "type": "METALLIC",
+      "colorHex": "#b08d3c"
+    },
+    {
+      "id": "2133c8d7-7eda-4770-b3d3-7634a928226e",
+      "brand": "Paint Vault Demo",
+      "range": "Base",
+      "name": "Old Bone",
+      "type": "BASE",
+      "discontinued": true,
+      "colorHex": "#d8cfae",
+      "sourceUrl": "https://github.com/",
+      "sourceLabel": "Retired demo range"
+    },
+    {
+      "id": "692ad601-4bc8-491a-9739-a59e97c3f0bc",
+      "brand": "Paint Vault Demo",
+      "range": "Finishes",
+      "name": "Matte Varnish",
+      "type": "VARNISH",
+      "colorHex": null
+    }
+  ],
+  "schemes": [
+    {
+      "id": "1e01273c-5654-469c-ac18-fea3ccdd0c54",
+      "name": "Harbor Blue Armor",
+      "category": "BLUE",
+      "entries": [
+        {
+          "id": "a06b0aae-1f92-4562-9a18-94491cd3d3ce",
+          "type": "MILESTONE",
+          "label": "GET READY!"
+        },
+        {
+          "id": "6583f3d4-3f14-45ba-95a5-b09002153f3a",
+          "type": "STEP",
+          "label": "PRIMER"
+        },
+        {
+          "id": "56fcf688-8be2-44d7-bf79-18ad93ed0c57",
+          "type": "PAINT",
+          "paintId": "aa642d26-a431-400f-b3fa-36ed3f224847"
+        },
+        {
+          "id": "298b4161-3feb-470f-b031-a056d9954ae5",
+          "type": "STEP",
+          "label": "BASECOAT"
+        },
+        {
+          "id": "1a02bc42-3059-4bd4-8f4f-b0dab3958b6b",
+          "type": "PAINT",
+          "paintId": "129b95b2-e59f-44fc-95b9-09106653fc1c"
+        },
+        {
+          "id": "0fd11614-66b1-440e-bbed-845f2bc6882a",
+          "type": "STEP",
+          "label": "SHADE"
+        },
+        {
+          "id": "278fe490-4a01-4061-b9a9-d7ce69f8f0d1",
+          "type": "PAINT",
+          "paintId": "0600ccaa-6bb2-4a92-9692-05a9469e9322"
+        },
+        {
+          "id": "df693fd5-7dde-427c-a585-035aea4f9fc8",
+          "type": "MILESTONE",
+          "label": "YOU'RE READY!"
+        },
+        {
+          "id": "38fa6712-0b1a-4914-9983-23ecb1d8f766",
+          "type": "STEP",
+          "label": "EDGE_HIGHLIGHT"
+        },
+        {
+          "id": "69d6339f-828a-4b18-a1ab-e7175db1c0c1",
+          "type": "PAINT",
+          "paintId": "90f3446f-f490-4fe2-b240-0360646e4723"
+        },
+        {
+          "id": "0a9943bf-d728-44bf-90b6-ab73fc766ea0",
+          "type": "STEP",
+          "label": "DETAIL"
+        },
+        {
+          "id": "7741c84c-a47f-4c02-a2d1-840b00339dc1",
+          "type": "PAINT",
+          "paintId": "359e0dbd-85ca-4741-8028-46f9f89cb2cc"
+        },
+        {
+          "id": "aacf9caf-1b02-4c6d-b28e-85afa6988450",
+          "type": "MILESTONE",
+          "label": "YOU'RE BATTLE READY!"
+        },
+        {
+          "id": "5aa6ac76-590a-4a98-a571-90427cee199b",
+          "type": "IMAGE",
+          "imageUrl": "images/harbor-blue-armor.png",
+          "thumbnailUrl": "images/harbor-blue-armor-thumb.png",
+          "imageType": "Example",
+          "method": "Brush"
+        }
+      ]
+    },
+    {
+      "id": "bca19f5e-92c1-4809-b5b9-1487582335bb",
+      "name": "Brass and Bone",
+      "category": "BONE",
+      "entries": [
+        {
+          "id": "d7ea9b8c-d71e-4f08-b9e1-791c9b626643",
+          "type": "MILESTONE",
+          "label": "GET READY!"
+        },
+        {
+          "id": "27490193-cda9-4622-91d0-9117b287aa4d",
+          "type": "STEP",
+          "label": "BASECOAT"
+        },
+        {
+          "id": "702b55a8-941b-4e56-9e1e-438fca8e8fac",
+          "type": "PAINT",
+          "paintId": "2133c8d7-7eda-4770-b3d3-7634a928226e"
+        },
+        {
+          "id": "00306e5b-6be4-4892-afff-e36598651d75",
+          "type": "PAINT",
+          "paintId": "359e0dbd-85ca-4741-8028-46f9f89cb2cc"
+        },
+        {
+          "id": "17ba433b-b911-4fdd-884d-b374bb8b507a",
+          "type": "STEP",
+          "label": "WASH"
+        },
+        {
+          "id": "5b41127a-8248-4e93-bcaf-cf35ce24e0b5",
+          "type": "PAINT",
+          "paintId": "0600ccaa-6bb2-4a92-9692-05a9469e9322"
+        },
+        {
+          "id": "6c4387d6-50a5-4cea-a580-30e45e44a1e8",
+          "type": "MILESTONE",
+          "label": "YOU'RE READY!"
+        },
+        {
+          "id": "e26b21fa-ebcb-4c3d-a591-d581f4e7b3dc",
+          "type": "STEP",
+          "label": "VARNISH"
+        },
+        {
+          "id": "5c5c9e7e-cc17-48fb-8a9f-66e6ae20da4c",
+          "type": "PAINT",
+          "paintId": "692ad601-4bc8-491a-9739-a59e97c3f0bc"
+        }
+      ]
+    }
+  ],
+  "templates": [
+    {
+      "id": "65eb4203-ce43-4295-aed2-3b035877a0ab",
+      "name": "Demo Sentinel",
+      "manufacturer": "Paint Vault",
+      "faction": "Demo Collection",
+      "categories": ["Demo Collection", "Sci-fi"],
+      "imageUrl": "images/demo-sentinel.png",
+      "schemeIds": ["1e01273c-5654-469c-ac18-fea3ccdd0c54"],
+      "paints": [
+        {
+          "paintId": "aa642d26-a431-400f-b3fa-36ed3f224847",
+          "step": "PRIMER",
+          "notes": "",
+          "sortOrder": 0
+        },
+        {
+          "paintId": "129b95b2-e59f-44fc-95b9-09106653fc1c",
+          "step": "BASECOAT",
+          "notes": "Armor plates, two thin coats",
+          "sortOrder": 1
+        },
+        {
+          "paintId": "0259b087-548b-4d1d-a785-e92aec34e94c",
+          "step": "BASECOAT",
+          "notes": "Cloth and pouches",
+          "sortOrder": 2
+        },
+        {
+          "paintId": "0600ccaa-6bb2-4a92-9692-05a9469e9322",
+          "step": "SHADE",
+          "notes": "Recesses only",
+          "sortOrder": 3
+        },
+        {
+          "paintId": "0259b087-548b-4d1d-a785-e92aec34e94c",
+          "step": "DRYBRUSH",
+          "notes": "Light drybrush on the cloth",
+          "sortOrder": 4
+        },
+        {
+          "paintId": "90f3446f-f490-4fe2-b240-0360646e4723",
+          "step": "EDGE_HIGHLIGHT",
+          "notes": "",
+          "sortOrder": 5
+        },
+        {
+          "paintId": "359e0dbd-85ca-4741-8028-46f9f89cb2cc",
+          "step": "DETAIL",
+          "notes": "Trim and buckles",
+          "sortOrder": 6
+        }
+      ]
+    }
+  ]
+}

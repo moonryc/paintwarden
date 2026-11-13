@@ -1,0 +1,14 @@
+.git
+dist
+.nx
+data
+apps/paint-vault/dist
+node_modules
+**/node_modules
+apps/paint-vault-electron/desktop-server
+npm-debug.log*
+.env*
+.agents
+.codex
+outputs
+work

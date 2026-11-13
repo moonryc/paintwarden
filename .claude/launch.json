@@ -1,0 +1,9 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "dev", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 3000 },
+    { "name": "dev-4322", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev", "--workspace=paint-vault", "--", "--host", "127.0.0.1", "--port", "4322"], "port": 4322 },
+    { "name": "site", "runtimeExecutable": "npm", "runtimeArgs": ["run", "site:dev"], "port": 4321, "url": "http://127.0.0.1:4321" },
+    { "name": "storybook", "runtimeExecutable": "npm", "runtimeArgs": ["run", "storybook", "--workspace=@paint-vault/ui", "--", "--no-open"], "port": 6006 }
+  ]
+}

@@ -1,0 +1,393 @@
+const assert = require("node:assert/strict");
+const { EventEmitter } = require("node:events");
+const { readFileSync } = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+const vm = require("node:vm");
+
+// Exercise the main-process lifecycle without starting Electron or opening a vault.
+const source = readFileSync(path.join(__dirname, "main.cjs"), "utf8");
+function localServer() {
+  const children = [];
+  let probes = 0;
+  const context = vm.createContext({
+    console,
+    URL,
+    AbortSignal,
+    process,
+    path,
+    explicitPort: 9999,
+    localUrl: "http://127.0.0.1:9999",
+    dataDirectory: "/unused-test-vault",
+    serverDirectory: () => "/unused-test-server",
+    existsSync: () => true,
+    fetch: async () => {
+      probes++;
+      return { ok: children.at(-1)?.exitCode === null, json: async () => ({ setupRequired: false }) };
+    },
+    spawn: () => {
+      const child = new EventEmitter();
+      child.exitCode = null;
+      child.killed = false;
+      child.kill = () => {
+        child.killed = true;
+        child.exitCode = 0;
+        child.emit("exit");
+      };
+      children.push(child);
+      return child;
+    },
+  });
+  vm.runInContext(
+    "let serverProcess, readyServer, startingServer;\n" +
+      source.slice(
+        source.indexOf("async function serverHealthy()"),
+        source.indexOf("async function setConnection("),
+      ),
+    context,
+  );
+  return { context, children, probes: () => probes };
+}
+
+test("a ready local child is reused without health requests; stop and exit invalidate readiness", async () => {
+  const { context, children, probes } = localServer();
+  await Promise.all([context.ensureLocalServer(), context.ensureLocalServer()]);
+  assert.equal(children.length, 1);
+  const initialProbes = probes();
+  assert.ok(initialProbes > 0);
+  for (let i = 0; i < 3; i++) await context.ensureLocalServer();
+  assert.equal(probes(), initialProbes);
+  context.stopLocalServer();
+  await context.ensureLocalServer();
+  assert.equal(children.length, 2);
+  children[1].exitCode = 1;
+  children[1].emit("exit");
+  await context.ensureLocalServer();
+  assert.equal(children.length, 3);
+  assert.ok(probes() > initialProbes);
+  context.stopLocalServer();
+});
+
+test("an old child's exit cannot clear a newer child's readiness", async () => {
+  const { context, children, probes } = localServer();
+  await context.ensureLocalServer();
+  context.stopLocalServer();
+  await context.ensureLocalServer();
+  const before = probes();
+  children[0].emit("exit");
+  await context.ensureLocalServer();
+  assert.equal(children.length, 2);
+  assert.equal(probes(), before);
+  context.stopLocalServer();
+});
+
+function remoteVersions() {
+  let calls = 0;
+  let now = 0;
+  const requests = [];
+  const context = vm.createContext({
+    app: { getVersion: () => "1.0.0" },
+    Date: { now: () => now },
+    versionMismatch: (_app, server) => (server === "1.0.0" ? null : { serverVersion: server }),
+    serverVersion: (origin) => {
+      calls++;
+      return new Promise((resolve, reject) => requests.push({ origin, resolve, reject }));
+    },
+  });
+  vm.runInContext(
+    source.slice(source.indexOf("const VERSION_RECHECK_MS"), source.indexOf("function rememberSession(")),
+    context,
+  );
+  return { context, requests, calls: () => calls, expire: () => (now += 6 * 60_000) };
+}
+
+test("concurrent version checks coalesce per origin, including fresh checks, and respect expiry", async () => {
+  const { context, calls, requests, expire } = remoteVersions();
+  const origin = "https://fixture.invalid";
+  const checks = Array.from({ length: 10 }, () => context.remoteVersionProblem(origin));
+  checks.push(context.remoteVersionProblem(origin, { fresh: true }));
+  const other = context.remoteVersionProblem("https://other.invalid");
+  assert.equal(calls(), 2);
+  requests[0].resolve("1.0.0");
+  requests[1].resolve("2.0.0");
+  assert.deepEqual(await Promise.all(checks), Array(11).fill(null));
+  assert.equal((await other).serverVersion, "2.0.0");
+  assert.equal(await context.remoteVersionProblem(origin), null);
+  assert.equal(calls(), 2);
+  const fresh = context.remoteVersionProblem(origin, { fresh: true });
+  const joined = context.remoteVersionProblem(origin);
+  assert.equal(calls(), 3);
+  requests[2].resolve("2.0.0");
+  assert.equal((await fresh).serverVersion, "2.0.0");
+  assert.equal((await joined).serverVersion, "2.0.0");
+  expire();
+  const expired = context.remoteVersionProblem(origin);
+  assert.equal(calls(), 4);
+  requests[3].resolve("1.0.0");
+  assert.equal(await expired, null);
+});
+
+test("failed version checks are not retained and can be retried", async () => {
+  const { context, calls, requests } = remoteVersions();
+  const origin = "https://fixture.invalid";
+  const first = context.remoteVersionProblem(origin);
+  const second = context.remoteVersionProblem(origin, { fresh: true });
+  const rejected = Promise.all([assert.rejects(first, /offline/), assert.rejects(second, /offline/)]);
+  requests[0].reject(new Error("offline"));
+  await rejected;
+  assert.equal(calls(), 1);
+  const retry = context.remoteVersionProblem(origin);
+  requests[1].resolve("1.0.0");
+  assert.equal(await retry, null);
+  assert.equal(calls(), 2);
+});
+
+test("static shell responses cache only hashed assets and preserve errors and security headers", async () => {
+  const { assetPath, shellCacheControl } = require("./desktop-core.cjs");
+  const directory = path.resolve("/unused-test-shell");
+  const files = new Map([
+    ["index.html", "<html>Fixture</html>"],
+    ["sw.js", "// fixture service worker"],
+    ["assets/index-B6ZqGOrP.js", "// fixture app"],
+    ["assets/index-B6ZqGOrP.css", "/* fixture styles */"],
+    ["assets/inter-C38fXH4l.woff2", "fixture font"],
+    ["assets/photo-C38fXH4l.webp", "fixture image"],
+  ]);
+  let reads = 0;
+  const context = vm.createContext({
+    path,
+    Response,
+    assetPath,
+    shellCacheControl,
+    webDirectory: () => directory,
+    mimeTypes: { ".html": "text/html", ".js": "text/javascript", ".css": "text/css" },
+    stat: async (file) => ({ isFile: () => files.has(path.relative(directory, file)) }),
+    readFile: async (file) => {
+      reads++;
+      return files.get(path.relative(directory, file));
+    },
+  });
+  vm.runInContext(
+    source.slice(
+      source.indexOf("async function serveStatic(url)"),
+      source.indexOf("function allowRenderer("),
+    ),
+    context,
+  );
+  for (const pathname of ["/", "/sw.js", "/assets/photo-C38fXH4l.webp"]) {
+    const response = await context.serveStatic({ pathname });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "no-store");
+  }
+  for (const pathname of [
+    "/assets/index-B6ZqGOrP.js",
+    "/assets/index-B6ZqGOrP.css",
+    "/assets/inter-C38fXH4l.woff2",
+  ]) {
+    const response = await context.serveStatic({ pathname });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get("cache-control"), "public, max-age=31536000, immutable");
+    assert.match(response.headers.get("content-security-policy"), /script-src 'self'/);
+    assert.ok(await response.text());
+  }
+  const before = reads;
+  assert.equal((await context.serveStatic({ pathname: "/assets/missing-12345678.js" })).status, 404);
+  assert.equal((await context.serveStatic({ pathname: "/%2e%2e/secret" })).status, 403);
+  assert.equal(reads, before);
+});
+
+function imageProxy() {
+  const { imageRequest, imageProxyCacheControl, createImageCache } = require("./desktop-core.cjs");
+  const calls = [];
+  let pending;
+  const context = vm.createContext({
+    console,
+    URL,
+    Headers,
+    Request,
+    Response,
+    AbortSignal,
+    imageRequest,
+    imageProxyCacheControl,
+    createImageCache,
+    randomBytes: require("node:crypto").randomBytes,
+    ensureLocalServer: async () => undefined,
+    remoteVersionProblem: async () => null,
+    localUrl: "http://127.0.0.1:9999",
+    fetch: async (url, options) => {
+      calls.push({ url, options });
+      if (pending) return pending;
+      const headers = url.includes("/api/auth/login")
+        ? { "content-type": "application/json", "set-cookie": "pv_session=account-b; HttpOnly" }
+        : { "content-type": "image/webp", "cache-control": "private, max-age=31536000, immutable" };
+      return new Response(url.includes("server-b") ? "image-b" : "image-a", { headers });
+    },
+  });
+  vm.runInContext(
+    `let connection = {mode: "remote", serverUrl: "https://server-a.invalid"};
+    const cookies = new Map(); const imageCache = createImageCache(); let imageScope = "initial-scope", authorizationIdentity;
+    function rotateImageScope() { imageCache.clear(); imageScope = randomBytes(24).toString("hex"); }
+    function switchServer(url) { connection = {mode: "remote", serverUrl: url}; rotateImageScope(); }
+    function currentScope() { return imageScope; }\n` +
+      source.slice(source.indexOf("function rememberSession("), source.indexOf("// Posts a file")) +
+      source.slice(source.indexOf("async function proxyApi("), source.indexOf("async function serveStatic(")),
+    context,
+  );
+  return {
+    context,
+    calls,
+    request: (pathname, method = "GET", headers = {}) =>
+      context.proxyApi(
+        new Request(`paintvault://app${pathname}`, { method, headers }),
+        new URL(`paintvault://app${pathname}`),
+      ),
+    hold: () => {
+      let resolve;
+      pending = new Promise((done) => {
+        resolve = done;
+      });
+      return resolve;
+    },
+  };
+}
+
+test("immutable image policies survive only scoped image GETs; APIs, unscoped images and errors stay no-store", async () => {
+  const { imageProxyCacheControl } = require("./desktop-core.cjs");
+  const proxy = imageProxy();
+  const image = "/api/miniatures/same-id/image?v=same-key";
+  const unscoped = await proxy.request(image);
+  assert.equal(unscoped.headers.get("cache-control"), "no-store");
+  const scope = unscoped.headers.get("x-paint-vault-image-scope");
+  const cached = await proxy.request(`${image}&_pv_scope=${scope}`);
+  assert.equal(cached.headers.get("cache-control"), "private, max-age=31536000, immutable");
+  assert.equal(proxy.calls.at(-1).url, `https://server-a.invalid${image}`);
+  assert.equal((await proxy.request("/api/state")).headers.get("cache-control"), "no-store");
+  const headers = { "content-type": "image/webp", "cache-control": "private, max-age=31536000, immutable" };
+  for (const [method, path, status, scoped] of [
+    ["POST", image, 200, true],
+    ["GET", "/api/state", 200, true],
+    ["GET", "/api/catalog-source-images/key.webp", 404, true],
+    ["GET", image, 200, false],
+  ])
+    assert.equal(
+      imageProxyCacheControl(method, path, new Response("x", { status, headers }), scoped),
+      "no-store",
+    );
+  assert.equal(
+    imageProxyCacheControl(
+      "GET",
+      "/api/catalog-source-images/key.webp",
+      new Response("x", { headers }),
+      true,
+    ),
+    headers["cache-control"],
+  );
+  assert.equal(
+    imageProxyCacheControl("GET", "/api/miniature-templates/id/image", new Response("x", { headers }), true),
+    headers["cache-control"],
+  );
+  assert.equal(
+    imageProxyCacheControl(
+      "GET",
+      "/api/catalog-source-images/key.webp",
+      new Response("x", { headers: { ...headers, "content-type": "application/json" } }),
+      true,
+    ),
+    "no-store",
+  );
+});
+
+test("same-path images are isolated after switching servers and login/logout sessions", async () => {
+  const proxy = imageProxy();
+  const image = "/api/miniatures/same-id/image?v=same-key";
+  const firstScope = proxy.context.currentScope();
+  const first = await proxy.request(`${image}&_pv_scope=${firstScope}`);
+  assert.equal(await first.text(), "image-a");
+  proxy.context.switchServer("https://server-b.invalid");
+  const secondScope = proxy.context.currentScope();
+  assert.notEqual(secondScope, firstScope);
+  const old = await proxy.request(`${image}&_pv_scope=${firstScope}`);
+  assert.equal(old.status, 409);
+  assert.equal(old.headers.get("cache-control"), "no-store");
+  const second = await proxy.request(`${image}&_pv_scope=${secondScope}`);
+  assert.equal(await second.text(), "image-b");
+  await proxy.request("/api/auth/login", "POST");
+  const loginScope = proxy.context.currentScope();
+  assert.notEqual(loginScope, secondScope);
+  assert.equal((await proxy.request(`${image}&_pv_scope=${secondScope}`)).status, 409);
+  vm.runInContext(
+    `rememberSession("https://server-b.invalid", new Response("", {headers: {"set-cookie": "pv_session=; Max-Age=0"}}))`,
+    proxy.context,
+  );
+  assert.notEqual(proxy.context.currentScope(), loginScope);
+  assert.equal((await proxy.request(`${image}&_pv_scope=${loginScope}`)).status, 409);
+});
+
+test("a late response from the old server cannot populate the new vault or its image cache", async () => {
+  const proxy = imageProxy();
+  const resolve = proxy.hold();
+  const response = proxy.request("/api/miniatures/id/image?_pv_scope=initial-scope");
+  await new Promise((done) => setImmediate(done));
+  proxy.context.switchServer("https://server-b.invalid");
+  resolve(
+    new Response("old image", {
+      headers: { "content-type": "image/webp", "cache-control": "private, max-age=31536000, immutable" },
+    }),
+  );
+  const result = await response;
+  assert.equal(result.status, 409);
+  assert.equal(result.headers.get("cache-control"), "no-store");
+  assert.equal(await result.text(), "Connection changed");
+});
+
+test("scoped repeated reads reuse bytes without upstream requests and new generations miss", async () => {
+  const proxy = imageProxy();
+  const url = `/api/miniatures/id/image?v=key&_pv_scope=${proxy.context.currentScope()}`;
+  for (let i = 0; i < 3; i++) assert.equal(await (await proxy.request(url)).text(), "image-a");
+  assert.equal(proxy.calls.length, 1);
+  proxy.context.switchServer("https://server-b.invalid");
+  const next = `/api/miniatures/id/image?v=key&_pv_scope=${proxy.context.currentScope()}`;
+  assert.equal(await (await proxy.request(next)).text(), "image-b");
+  assert.equal(proxy.calls.length, 2);
+});
+
+test("image byte cache bounds entries and bytes, honors TTL/no-cache, and clears pending stores", async () => {
+  const { createImageCache } = require("./desktop-core.cjs");
+  let now = 0;
+  const cache = createImageCache({ maxBytes: 6, maxEntryBytes: 4, maxEntries: 2, now: () => now });
+  const image = (body, policy = "private, max-age=1, immutable") =>
+    new Response(body, { headers: { "content-type": "image/webp", "cache-control": policy } });
+  await cache.put("a", image("aaa"));
+  await cache.put("b", image("bbb"));
+  assert.equal(await cache.get("a").text(), "aaa"); // touch a, evict b
+  await cache.put("c", image("ccc"));
+  assert.equal(cache.get("b"), null);
+  assert.equal(await cache.get("a").text(), "aaa");
+  await cache.put("large", image("12345"));
+  assert.equal(cache.get("large"), null);
+  await cache.put("nocache", image("x", "private, no-cache"));
+  assert.equal(cache.get("nocache"), null);
+  await cache.put(
+    "json",
+    new Response("x", {
+      headers: { "content-type": "application/json", "cache-control": "private, max-age=1, immutable" },
+    }),
+  );
+  assert.equal(cache.get("json"), null);
+  now = 1000;
+  assert.equal(cache.get("a"), null);
+  let release;
+  const stream = new ReadableStream({
+    start(controller) {
+      release = () => {
+        controller.enqueue(new Uint8Array([1]));
+        controller.close();
+      };
+    },
+  });
+  const store = cache.put("pending", image(stream));
+  cache.clear();
+  release();
+  await store;
+  assert.equal(cache.get("pending"), null);
+});

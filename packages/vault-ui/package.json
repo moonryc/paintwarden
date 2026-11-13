@@ -1,0 +1,55 @@
+{
+  "name": "@paint-vault/ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/dom/Vault.tsx",
+  "types": "./src/dom/Vault.tsx",
+  "exports": {
+    ".": "./src/dom/Vault.tsx",
+    "./theme": "./src/dom/theme.ts",
+    "./theme-tokens": "./src/dom/theme-tokens.ts"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.9.0",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.4.0",
+    "@paint-vault/core": "*",
+    "@tanstack/react-query": "^5.107.1",
+    "fflate": "^0.8.3",
+    "zustand": "^5.1.0"
+  },
+  "peerDependencies": {
+    "react": "^19.2.0"
+  },
+  "scripts": {
+    "test": "node --experimental-strip-types --test src/dom/utils/*.test.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "code-lint": "eslint src/dom --ext .ts,.tsx",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build -o dist/storybook",
+    "storybook:test": "vitest run"
+  },
+  "devDependencies": {
+    "@fontsource-variable/fraunces": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@storybook/addon-a11y": "10.6.4",
+    "@storybook/addon-docs": "10.6.4",
+    "@storybook/addon-vitest": "10.6.4",
+    "@storybook/react-vite": "10.6.4",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.4",
+    "@vitest/browser": "^5.0.5",
+    "@vitest/browser-playwright": "^5.0.5",
+    "playwright": "^1.64.1",
+    "react-dom": "19.2.6",
+    "storybook": "10.6.4",
+    "vitest": "^5.0.5"
+  }
+}

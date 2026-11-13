@@ -1,0 +1,27 @@
+{
+  "name": "@paint-vault/core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./catalog-import": "./catalog-import.ts",
+    "./color-categories": "./color-categories.ts",
+    "./color-hex": "./color-hex.ts",
+    "./fuzzy-search": "./fuzzy-search.ts",
+    "./paint-color-similarity": "./paint-color-similarity.ts",
+    "./paint-state": "./paint-state.ts",
+    "./paint-substitutions": "./paint-substitutions.ts",
+    "./paint-types": "./paint-types.ts",
+    "./recipe-converter": "./recipe-converter.ts",
+    "./recipe-steps": "./recipe-steps.ts",
+    "./text-limits": "./text-limits.ts",
+    "./vault-changes": "./vault-changes.ts",
+    "./vault-ids": "./vault-ids.ts",
+    "./zip-reader": "./zip-reader.ts"
+  },
+  "scripts": {
+    "test": "node --test *.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "code-lint": "eslint . --ext .ts"
+  }
+}

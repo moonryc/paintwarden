@@ -1,0 +1,88 @@
+import { ButtonBase } from "@mui/material";
+import Box from "@mui/material/Box";
+import type { SxProps, Theme } from "@mui/material/styles";
+
+import { Plus } from "../icons";
+
+export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProps<Theme> }) {
+  return (
+    <ButtonBase
+      onClick={onClick}
+      sx={[
+        {
+          boxSizing: "border-box",
+          display: "grid",
+          aspectRatio: "4/5",
+          placeItems: "center",
+          borderRadius: "20px",
+          borderStyle: "dashed",
+          borderWidth: "2px",
+          borderColor: "var(--line-strong) !important",
+          color: "var(--ink-faint) !important",
+          transition:
+            "border-color 150ms cubic-bezier(0.4, 0, 0.2, 1), background-color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+          "&:hover": {
+            "@media (hover: hover)": {
+              borderColor: "var(--brand) !important",
+              bgcolor: "color-mix(in oklab, var(--brand-soft) 40%, transparent) !important",
+            },
+          },
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
+    >
+      <Box
+        component="span"
+        sx={{
+          boxSizing: "border-box",
+          px: 1.5,
+          textAlign: "center",
+        }}
+      >
+        <Box
+          component="span"
+          sx={{
+            marginInline: "auto",
+            mb: 1,
+            display: "grid",
+            height: "2.75rem",
+            width: "2.75rem",
+            placeItems: "center",
+            borderRadius: "calc(infinity * 1px)",
+            bgcolor: "var(--sunken)",
+            transition:
+              "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+            ".MuiButtonBase-root:hover &": {
+              "@media (hover: hover)": {
+                bgcolor: "var(--brand)",
+                color: "var(--brand-fg)",
+              },
+            },
+          }}
+        >
+          <Plus size={20} />
+        </Box>
+        <Box
+          component="b"
+          sx={{
+            display: "block",
+            fontSize: "0.875rem",
+            lineHeight: 10 / 7,
+            color: "var(--ink)",
+          }}
+        >
+          Add miniature
+        </Box>
+        <Box
+          component="span"
+          sx={{
+            fontSize: "0.75rem",
+            lineHeight: 4 / 3,
+          }}
+        >
+          Owned or wishlist
+        </Box>
+      </Box>
+    </ButtonBase>
+  );
+}

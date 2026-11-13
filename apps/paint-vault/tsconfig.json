@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "types": ["node"]
+  },
+  "include": ["db/**/*.ts", "lib/**/*.ts", "app/api/**/*.ts", "server/**/*.ts", "drizzle.config.ts"],
+  "exclude": ["node_modules", "examples"]
+}

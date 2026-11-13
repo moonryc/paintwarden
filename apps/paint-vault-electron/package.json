@@ -1,0 +1,83 @@
+{
+  "name": "paint-vault-electron",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Paint Vault desktop app",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "test": "node --test desktop-core.test.cjs desktop-update.test.cjs main-server.test.cjs"
+  },
+  "devDependencies": {
+    "electron": "45.1.0",
+    "electron-builder": "26.18.1"
+  },
+  "build": {
+    "appId": "com.paintvault.desktop",
+    "productName": "Paint Vault",
+    "asar": true,
+    "directories": {
+      "output": "../../dist/electron"
+    },
+    "files": [
+      "main.cjs",
+      "desktop-core.cjs",
+      "desktop-update.cjs",
+      "preload.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../paint-vault-web/dist",
+        "to": "web-dist"
+      },
+      {
+        "from": "desktop-server",
+        "to": "server"
+      },
+      {
+        "from": "desktop-server/node_modules",
+        "to": "server/node_modules"
+      }
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": true
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "moonryc",
+        "repo": "paint-tracker",
+        "releaseType": "draft"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11"
+  }
+}

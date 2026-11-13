@@ -1,0 +1,55 @@
+{
+  "name": "paint-vault-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "workspaces": [
+    "apps/paint-vault",
+    "apps/paint-vault-web",
+    "apps/paint-vault-site",
+    "apps/paint-vault-electron",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "site:dev": "node scripts/nx.mjs dev paint-vault-site",
+    "site:build": "node scripts/nx.mjs build paint-vault-site",
+    "storybook": "node scripts/nx.mjs storybook @paint-vault/ui",
+    "storybook:build": "node scripts/nx.mjs storybook:build @paint-vault/ui",
+    "storybook:test": "node scripts/nx.mjs storybook:test @paint-vault/ui",
+    "build": "node scripts/nx.mjs run-many -t build -p paint-vault paint-vault-site",
+    "start": "node scripts/nx.mjs start paint-vault",
+    "test": "node --test scripts/*.test.mjs && node scripts/nx.mjs run-many -t test -p paint-vault @paint-vault/core @paint-vault/ui && npm run test --workspace paint-vault-electron",
+    "lint": "npm run lint:eslint && npm run typecheck",
+    "lint:eslint": "node scripts/nx.mjs run-many -t code-lint -p paint-vault paint-vault-web paint-vault-site @paint-vault/core @paint-vault/ui",
+    "format:check": "prettier --check .eslintrc.cjs .prettierrc.json nx.json package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\"",
+    "format:write": "prettier --write .eslintrc.cjs .prettierrc.json nx.json package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\"",
+    "typecheck": "npm run typecheck:shared && node --check apps/paint-vault-electron/main.cjs && node --check apps/paint-vault-electron/preload.cjs && node --check apps/paint-vault-electron/desktop-core.cjs",
+    "typecheck:shared": "node scripts/nx.mjs run-many -t lint -p paint-vault paint-vault-web paint-vault-site && node scripts/nx.mjs run-many -t typecheck -p @paint-vault/core @paint-vault/ui",
+    "db:generate": "node scripts/nx.mjs db:generate paint-vault",
+    "desktop": "npm run build && node scripts/package-desktop-server.mjs electron && npm run start --workspace paint-vault-electron",
+    "desktop:package": "npm run build && node scripts/package-desktop-server.mjs electron && npm run dist --workspace paint-vault-electron",
+    "macos": "npm run desktop",
+    "windows": "npm run desktop"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^3.10.1",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-prettier": "^5.5.7",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-sonarjs": "^0.25.1",
+    "nx": "23.3.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.7"
+  }
+}

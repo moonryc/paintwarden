@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowUnreachableCode": false,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "types": ["react", "react-dom"]
+  },
+  "include": [
+    "src/dom/**/*.ts",
+    "src/dom/**/*.tsx",
+    ".storybook/*.ts",
+    ".storybook/*.tsx",
+    "vitest.config.ts"
+  ]
+}

@@ -1,0 +1,17 @@
+services:
+  paint-vault:
+    build: .
+    container_name: paint-vault
+    restart: unless-stopped
+    ports:
+      - "${PAINT_VAULT_PORT:-3000}:3000"
+    environment:
+      PORT: "3000"
+      DATA_DIR: /data
+      PAINT_VAULT_TRUST_PROXY: "${PAINT_VAULT_TRUST_PROXY:-0}"
+      PAINT_VAULT_ALLOWED_HOSTS: "${PAINT_VAULT_ALLOWED_HOSTS:-}"
+    volumes:
+      - paint-vault-data:/data
+
+volumes:
+  paint-vault-data:

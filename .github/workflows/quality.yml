@@ -1,0 +1,53 @@
+name: Quality
+
+on:
+  push:
+  pull_request:
+  # The Release workflow runs these checks before it builds and uploads a release.
+  workflow_call:
+
+jobs:
+  shared:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint:eslint
+      - run: npm run typecheck:shared
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run storybook:test
+      - run: npm run build
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: node scripts/package-desktop-server.mjs electron
+      - run: npm run dist --workspace paint-vault-electron -- --dir --publish never
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: node scripts/package-desktop-server.mjs electron
+      - run: npm run dist --workspace paint-vault-electron -- --dir --publish never

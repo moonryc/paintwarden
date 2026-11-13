@@ -1,0 +1,39 @@
+{
+  "name": "paint-vault",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.2.7",
+    "@nestjs/core": "^11.2.7",
+    "@nestjs/platform-express": "^11.2.7",
+    "@paint-vault/core": "*",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "0.45.2",
+    "express": "^5.1.0",
+    "fflate": "^0.8.3",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "22.19.19",
+    "drizzle-kit": "0.31.10",
+    "esbuild": "^0.25.12",
+    "tsx": "^4.20.0",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "tsx watch server/main.ts",
+    "build": "node build.mjs",
+    "start": "node dist/server.mjs",
+    "test": "node --import tsx --test db/migration-backup.test.ts db/migrate.test.ts db/schema.test.ts lib/auth.test.ts lib/password-hash.test.ts lib/public-fetch.test.ts lib/request-limits.test.ts lib/catalog-sources.test.ts lib/catalog-source-upload.test.ts lib/demo-plugin.test.ts lib/client-config.test.ts lib/sqlite-read-cache.test.ts lib/http-compression.test.ts lib/source-format.test.ts lib/vault-state.test.ts lib/zip-writer.test.ts lib/image-mutations.test.ts server/api-router.test.ts app/api/backup/route.test.ts app/api/color-schemes/route.test.ts app/api/paint-state/route.test.ts",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "code-lint": "eslint . --ext .ts",
+    "db:generate": "drizzle-kit generate"
+  }
+}

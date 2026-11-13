@@ -1,0 +1,11 @@
+{
+  "images/harbor-blue-armor.png": {
+    "sha256": "436a80b1c7b174fbff9109772288d4c7132998f8ddc3a8e3e844799efb356e98"
+  },
+  "images/harbor-blue-armor-thumb.png": {
+    "sha256": "5f5c365a300445f7a84ceb39f78520604c8e6cbb6a980a46890126936100f4d2"
+  },
+  "images/demo-sentinel.png": {
+    "sha256": "9325a28f2e23c35915b06e6a47e6cbf2b3bf94946f93ab504de082168e42e8c0"
+  }
+}
