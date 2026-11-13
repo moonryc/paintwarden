@@ -1,8 +1,10 @@
 import { useState } from "react";
 
+import { usePaintCommands } from "../graphql/paint-actions";
 import { useVaultGraphQL } from "../graphql/provider";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
+import { noop } from "../utils/constants";
 
 import { PaintDetailsModal } from "./PaintDetailsModal";
 import { PaintForm } from "./PaintForm";
@@ -30,7 +32,7 @@ function PaintDetailsOverlayView({
   apollo,
   legacyPaint,
 }: OverlayProps & { apollo?: boolean; legacyPaint?: Paint | null }) {
-  const api = useVaultStore((s) => s.api);
+  const commands = usePaintCommands();
   const notify = useVaultStore((s) => s.notify);
   const storeOpenMini = useVaultStore((s) => s.openMini);
   const openMini = openMiniOverride ?? storeOpenMini;
@@ -68,14 +70,16 @@ function PaintDetailsOverlayView({
           paint={editingPaint}
           onClose={() => setEditingPaint(null)}
           onSave={async (values) => {
-            await api(`/api/catalog/${editingPaint.id}`, { method: "PUT", body: JSON.stringify(values) });
-            setEditingPaint(null);
-            notify("Custom paint updated");
+            await commands.updatePaint(editingPaint.id, values).then(() => {
+              setEditingPaint(null);
+              notify("Custom paint updated");
+            }, noop);
           }}
           onDelete={async () => {
-            await api(`/api/catalog/${editingPaint.id}`, { method: "DELETE" });
-            setEditingPaint(null);
-            notify("Custom paint deleted");
+            await commands.deletePaint(editingPaint.id).then(() => {
+              setEditingPaint(null);
+              notify("Custom paint deleted");
+            }, noop);
           }}
         />
       )}

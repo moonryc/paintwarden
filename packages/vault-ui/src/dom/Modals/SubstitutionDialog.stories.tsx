@@ -74,8 +74,16 @@ const ingredientsPage = (complete: boolean) => ({
   pageInfo: pageInfo(!complete),
 });
 
-function ApolloFixture({ children, failFirst = false }: { children: ReactNode; failFirst?: boolean }) {
-  const [failure] = useState(() => ({ remaining: failFirst ? 1 : 0 }));
+function ApolloFixture({
+  children,
+  failFirst = false,
+  failCreate = false,
+}: {
+  children: ReactNode;
+  failFirst?: boolean;
+  failCreate?: boolean;
+}) {
+  const [failure] = useState(() => ({ remaining: failFirst ? 1 : 0, creates: failCreate ? 1 : 0 }));
   const [scope] = useState(() => ({
     controller: new VaultInvalidationController(),
     client: new ApolloClient({
@@ -86,6 +94,11 @@ function ApolloFixture({ children, failFirst = false }: { children: ReactNode; f
             if (failure.remaining > 0 && operation.operationName === "PaintDetails") {
               failure.remaining -= 1;
               observer.error(new Error("Could not load saved substitutions"));
+              return;
+            }
+            if (operation.operationName === "CreateSubstitution" && failure.creates > 0) {
+              failure.creates -= 1;
+              observer.error(new Error("Substitution could not be saved"));
               return;
             }
             const laterPage = !!operation.variables.substitutionsAfter;
@@ -99,7 +112,21 @@ function ApolloFixture({ children, failFirst = false }: { children: ReactNode; f
               ingredients: ingredientsPage(false),
             };
             let data;
-            if (operation.operationName === "PaintPickerOptions") {
+            const mutations: Record<string, string> = {
+              CreateSubstitution: "createSubstitution",
+              SetSubstitutionDefault: "setSubstitutionDefault",
+              DeleteSubstitution: "deleteSubstitution",
+            };
+            if (mutations[operation.operationName]) {
+              data = {
+                [mutations[operation.operationName]]: {
+                  revision,
+                  invalidatedFamilies: ["PAINT", "OPTIONS", "HOME", "MINIATURES", "WISHLIST"],
+                  substitutionId: "saved-server-mix",
+                  clientMutationId: operation.variables.clientMutationId,
+                },
+              };
+            } else if (operation.operationName === "PaintPickerOptions") {
               const excludes = operation.variables.excludeIds as string[];
               data = {
                 paintOptions: { revision, items: excludes.includes(serverPaint.id) ? [] : [serverPaint] },
@@ -197,5 +224,35 @@ export const ApolloRetry: Story = {
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(screen.getByText("Server mix")).toBeVisible());
     await expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  },
+};
+
+export const ApolloSaveFailureRetainsDraft: Story = {
+  decorators: [
+    (Story) => (
+      <ApolloFixture failCreate>
+        <Story />
+      </ApolloFixture>
+    ),
+  ],
+  play: async ({ userEvent }) => {
+    await waitFor(() => expect(screen.getByText("Server mix")).toBeVisible());
+    const name = screen.getByRole("textbox", { name: "Recipe name" });
+    await userEvent.type(name, "Retry this mix");
+    await userEvent.type(screen.getByRole("combobox", { name: "Ingredient paint" }), "Server");
+    await userEvent.click(
+      await screen.findByRole("option", { name: `${serverPaint.name} · ${serverPaint.brand}` }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+    const save = screen.getByRole("button", { name: "Save substitution" });
+    await userEvent.click(save);
+    await expect(name).toHaveValue("Retry this mix");
+    await expect(screen.getByRole("button", { name: `Remove ${serverPaint.name}` })).toBeVisible();
+    await expect(save).toBeEnabled();
+    await userEvent.click(save);
+    await expect(name).toHaveValue("");
+    await expect(
+      screen.queryByRole("button", { name: `Remove ${serverPaint.name}` }),
+    ).not.toBeInTheDocument();
   },
 };

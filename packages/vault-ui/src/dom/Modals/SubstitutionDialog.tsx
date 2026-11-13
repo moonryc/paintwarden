@@ -7,6 +7,7 @@ import { Modal } from "../Components/Modal";
 import { PaintBottle } from "../Components/PaintBottle";
 import { usePaintDetail, usePaintOptions } from "../graphql/detail-hooks";
 import type { DetailPaintFragment } from "../graphql/generated/graphql";
+import { usePaintCommands } from "../graphql/paint-actions";
 import { useVaultGraphQL } from "../graphql/provider";
 import { Plus, X } from "../icons";
 import { useVault, useVaultStore } from "../store/hooks";
@@ -117,7 +118,7 @@ function SubstitutionDialogView({
   hasMore?: boolean;
   onLoadMore?: () => void;
 }) {
-  const api = useVaultStore((s) => s.api);
+  const commands = usePaintCommands();
   const notify = useVaultStore((s) => s.notify);
   const [name, setName] = useState(""),
     [ingredients, setIngredients] = useState<{ paint: Paint; parts: number }[]>([]),
@@ -184,10 +185,9 @@ function SubstitutionDialogView({
               disabled={!defaultRecipe}
               onClick={() =>
                 defaultRecipe &&
-                api("/api/paint-substitutions", {
-                  method: "PUT",
-                  body: JSON.stringify({ action: "default", id: defaultRecipe.id, enabled: false }),
-                }).then(() => notify(`${paint.name} is now the default`), noop)
+                commands
+                  .setSubstitutionDefault(defaultRecipe.id, false)
+                  .then(() => notify(`${paint.name} is now the default`), noop)
               }
             >
               {defaultRecipe ? "Make default" : "Default"}
@@ -236,27 +236,20 @@ function SubstitutionDialogView({
             key={projection.mix.id}
             projection={projection}
             onToggleDefault={() =>
-              api("/api/paint-substitutions", {
-                method: "PUT",
-                body: JSON.stringify({
-                  action: "default",
-                  id: projection.mix.id,
-                  enabled: !projection.mix.isDefault,
-                }),
-              }).then(
-                () =>
-                  notify(
-                    projection.mix.isDefault
-                      ? `${paint.name} is now the default`
-                      : `${projection.mix.name} is now the default`,
-                  ),
-                noop,
-              )
+              commands
+                .setSubstitutionDefault(projection.mix.id, !projection.mix.isDefault)
+                .then(
+                  () =>
+                    notify(
+                      projection.mix.isDefault
+                        ? `${paint.name} is now the default`
+                        : `${projection.mix.name} is now the default`,
+                    ),
+                  noop,
+                )
             }
             onDelete={() =>
-              api(`/api/paint-substitutions?id=${encodeURIComponent(projection.mix.id)}`, {
-                method: "DELETE",
-              }).then(() => notify("Substitution deleted"), noop)
+              commands.deleteSubstitution(projection.mix.id).then(() => notify("Substitution deleted"), noop)
             }
           />
         ))}
@@ -404,17 +397,16 @@ function SubstitutionDialogView({
           onClick={async () => {
             setBusy(true);
             try {
-              await api("/api/paint-substitutions", {
-                method: "POST",
-                body: JSON.stringify({
-                  targetPaintId: paint.id,
-                  name,
-                  ingredients: ingredients.map((row) => ({ paintId: row.paint.id, parts: row.parts })),
-                }),
+              await commands.createSubstitution({
+                targetPaintId: paint.id,
+                name,
+                ingredients: ingredients.map((row) => ({ paintId: row.paint.id, parts: row.parts })),
               });
               setName("");
               setIngredients([]);
               notify("Substitution saved");
+            } catch {
+              // The command reports the error. Keep the draft available for retry.
             } finally {
               setBusy(false);
             }
