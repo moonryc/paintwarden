@@ -21,7 +21,7 @@ import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 export { readMiniatureScheme } from "./miniature-scheme-loader";
 export type { MiniatureSchemeRead, SchemeOptionsRead } from "./miniature-scheme-loader";
 
-const FAMILIES: readonly VaultFamily[] = ["SCHEMES", "PAINT", "SOURCES"];
+const FAMILIES: readonly VaultFamily[] = ["SCHEMES", "PAINT", "SOURCES", "MINIATURES"];
 type WindowState<T> = {
   key: string;
   scope: VaultGraphQLScope | null;
@@ -32,7 +32,7 @@ type WindowState<T> = {
 
 // Both reads share the same invalidation/commit boundary. In-flight pages never
 // reach normalized entities, including when a scope, filter, or ID changes.
-function useSchemeWindow<T extends { revision: Revision }>(
+export function useSchemeWindow<T extends { revision: Revision }>(
   key: string,
   read: (client: ApolloClient, pages: number) => Promise<T>,
   write: (client: ApolloClient, data: T) => void,

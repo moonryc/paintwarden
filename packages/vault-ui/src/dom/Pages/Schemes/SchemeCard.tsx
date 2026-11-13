@@ -2,27 +2,26 @@ import { Card, CardActionArea, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
 import { memo, type KeyboardEvent } from "react";
-import { shallow } from "zustand/shallow";
 
 import { SchemeProgressChip } from "../../Components/SchemeProgressChip";
 import { Check, Layers } from "../../icons";
-import { useVault } from "../../store/hooks";
-import type { State } from "../../types";
+import type { SchemeSummaryModel } from "../../graphql/miniature-scheme-model";
 import { imageUrl } from "../../utils/image-cache";
 import { liftCardSx } from "../../utils/lift-card";
-import { schemeCardSummary } from "../../utils/semantic-contract";
 
 // One color scheme in the schemes grid: its finished example or paint blend, readiness, name,
 // category, source and paints. It opens the scheme.
 export const SchemeCard = memo(function SchemeCard({
   scheme,
+  summary,
   index,
   available,
   total,
   onOpen,
   onKeyDown,
 }: {
-  scheme: State["colorSchemes"][number];
+  scheme: SchemeSummaryModel;
+  summary: { gradient?: string | null; previewUrl?: string | null; uses: number; paintNames: string };
   // Position in the whole filtered list, for keyboard paging through the windowed grid.
   index: number;
   available: number;
@@ -30,10 +29,7 @@ export const SchemeCard = memo(function SchemeCard({
   onOpen: (id: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>, index: number) => void;
 }) {
-  const { gradient, preview, previewUrl, uses, paintNames } = useVault(
-    (data) => schemeCardSummary(data, scheme.id),
-    shallow,
-  );
+  const { gradient, previewUrl, uses, paintNames } = summary;
   const ready = total > 0 && available === total;
   return (
     <Card sx={{ ...liftCardSx, height: "18rem" }}>
@@ -65,7 +61,7 @@ export const SchemeCard = memo(function SchemeCard({
           // The gradient also fills the frame while a remote preview image loads.
           style={gradient ? { background: gradient } : undefined}
         >
-          {preview ? (
+          {previewUrl ? (
             <>
               <Box
                 component="img"

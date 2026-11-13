@@ -1,0 +1,89 @@
+query SchemesPage(
+  $after: String
+  $search: String
+  $category: String
+  $sourceId: ID
+  $noSource: Boolean!
+  $readiness: SchemeReadiness
+  $usesPaintIds: [ID!]!
+) {
+  schemes(
+    first: 48
+    after: $after
+    search: $search
+    category: $category
+    sourceId: $sourceId
+    noSource: $noSource
+    readiness: $readiness
+    usesPaintIds: $usesPaintIds
+  ) {
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      ...MiniatureSchemeSummary
+      sourceId
+      paintNames
+      usageCount
+      gradient
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    facets {
+      categories {
+        key
+        label
+        count
+      }
+      sources {
+        key
+        label
+        count
+      }
+      readiness {
+        key
+        label
+        count
+      }
+    }
+  }
+}
+query SchemeUsedPaintOptions($search: String!, $excludeIds: [ID!]!) {
+  schemePaintOptions(search: $search, excludeIds: $excludeIds, first: 30) {
+    revision {
+      epoch
+      seq
+    }
+    items {
+      ...DetailPaint
+    }
+  }
+}
+fragment SchemeEditResult on SchemeMutationPayload {
+  revision {
+    epoch
+    seq
+  }
+  schemeId
+  invalidatedFamilies
+  clientMutationId
+}
+mutation CreateColorScheme($input: SchemeInput!, $clientMutationId: String) {
+  createScheme(input: $input, clientMutationId: $clientMutationId) {
+    ...SchemeEditResult
+  }
+}
+mutation UpdateColorScheme($id: ID!, $input: SchemeInput!, $clientMutationId: String) {
+  updateScheme(id: $id, input: $input, clientMutationId: $clientMutationId) {
+    ...SchemeEditResult
+  }
+}
+mutation DeleteColorScheme($id: ID!, $clientMutationId: String) {
+  deleteScheme(id: $id, clientMutationId: $clientMutationId) {
+    ...SchemeEditResult
+  }
+}
