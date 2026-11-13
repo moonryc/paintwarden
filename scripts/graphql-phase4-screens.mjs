@@ -79,6 +79,7 @@ export async function runPhase4Screens({
   const select = async (scope, name, option) => {
     await scope.getByRole("combobox", exact(name)).click();
     await page.getByRole("option", typeof option === "string" ? exact(option) : { name: option }).click();
+    await page.getByRole("listbox").waitFor({ state: "hidden" });
   };
   const choose = async (scope, name, query, option = query) => {
     // A repeated selection may already have the same input value; fill alone
@@ -249,28 +250,52 @@ export async function runPhase4Screens({
   });
 
   await check(checklistNames[5], async () => {
+    // Prepare a persisted wishlisted row through the ordinary paint controls.
+    // The independent OWNED write should remove it from the selected shopping
+    // list, not appear in the separately paginated global issues preview.
+    await nav("Paints");
+    await librarySearch(f.missingPaintName);
+    await page
+      .getByRole("list", exact("Paint library"))
+      .getByRole("button", { name: new RegExp(escapeRegex(f.missingPaintName)) })
+      .filter({ hasText: f.missingPaintName })
+      .first()
+      .click();
+    const detail = page.getByRole("dialog", exact(f.missingPaintName));
+    const prepare = recorder.mark();
+    await detail
+      .getByRole("group", exact(`State for ${f.missingPaintName}`))
+      .getByRole("button", exact("Wishlist"))
+      .click();
+    await stockSaved(prepare);
+    await close(detail);
     await nav("Wishlist");
     await choose(page, "Miniature", f.wishlistMiniatureTitle);
+    await page.getByRole("button", exact(`Mark ${f.missingPaintName} as bought`)).waitFor();
     assert.ok(
       recorder.requests.some((e) => e.path === "/api/graphql/stream" && e.status === 200),
       "Production SSE connection must be open",
     );
-    // An independent process/HTTP client writes after navigation; no reload or UI mutation follows.
     const mark = recorder.mark();
-    await secondClientWrite(f.missingPaintId, 0);
+    const writer = await secondClientWrite(f.missingPaintId, 3);
     await recorder.waitFor(
       (entries) =>
-        gql(entries, "wishlist").some((e) =>
-          e.data.data.wishlist.missing.nodes.some(
-            (row) => row.paint.id === f.missingPaintId && row.missingStock,
-          ),
+        gql(entries, "wishlist").some(
+          (entry) =>
+            entry.body.variables.miniatureId === f.wishlistMiniatureId &&
+            entry.data.data.wishlist.shopping.totalCount === 0 &&
+            !entry.data.data.wishlist.shopping.nodes.some((row) => row.paint.id === f.missingPaintId),
         ),
       mark,
     );
-    await page.getByRole("button", exact(`Add ${f.missingPaintName} to wishlist`)).waitFor();
+    await page.getByText(`Nothing listed for ${f.wishlistMiniatureTitle}`, { exact: true }).waitFor();
+    await page
+      .getByRole("button", exact(`Mark ${f.missingPaintName} as bought`))
+      .waitFor({ state: "hidden" });
     return {
       paintId: f.missingPaintId,
-      independentlyWrittenQuantity: 0,
+      independentlyWrittenQuantity: 3,
+      writer,
       noReload: true,
       screenshot: await screenshot("wishlist-independent-stock-sse"),
     };
