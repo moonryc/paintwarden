@@ -16,6 +16,7 @@ import type { Paint } from "../types";
 import { listResetSx } from "../utils/element-resets";
 import { buzz } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
+import { libraryInventoryFilter, matchesLibraryInventory } from "../utils/semantic-contract";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
 const paintSearchText = (paint: Paint) =>
@@ -51,14 +52,9 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       ),
     [data],
   );
-  const activeFilter = q ? "ALL" : filter;
-  const match = (p: Paint, f: string) =>
-    f === "ALL" ||
-    (f === "OWNED"
-      ? availablePaintIds.has(p.id)
-      : f === "UNTRACKED"
-        ? !availablePaintIds.has(p.id) && data.paintStates[p.id] !== "WISHLIST"
-        : data.paintStates[p.id] === f);
+  const activeFilter = libraryInventoryFilter(q, filter);
+  const match = (paint: Paint, inventory: string) =>
+    matchesLibraryInventory(data, availablePaintIds, paint, inventory);
   const searchResults = useFuzzySearch(data.catalog, q, paintSearchText);
   const searched = searchResults.filter(
     (paint) => (brand === "ALL" || filterBrand(paint) === brand) && pluginFilter.matches(paint),

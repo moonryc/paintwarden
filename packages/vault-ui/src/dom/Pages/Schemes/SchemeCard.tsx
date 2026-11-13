@@ -1,4 +1,3 @@
-import { imageUrl } from "../../utils/image-cache";
 import { Card, CardActionArea, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
@@ -8,10 +7,10 @@ import { shallow } from "zustand/shallow";
 import { SchemeProgressChip } from "../../Components/SchemeProgressChip";
 import { Check, Layers } from "../../icons";
 import { useVault } from "../../store/hooks";
-import type { Paint, State } from "../../types";
+import type { State } from "../../types";
+import { imageUrl } from "../../utils/image-cache";
 import { liftCardSx } from "../../utils/lift-card";
-import { paintGradient } from "../../utils/paint-gradient";
-import { schemePaintRows } from "../../utils/scheme-order";
+import { schemeCardSummary } from "../../utils/semantic-contract";
 
 // One color scheme in the schemes grid: its finished example or paint blend, readiness, name,
 // category, source and paints. It opens the scheme.
@@ -31,21 +30,10 @@ export const SchemeCard = memo(function SchemeCard({
   onOpen: (id: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>, index: number) => void;
 }) {
-  const { gradient, preview, uses, paintNames } = useVault((data) => {
-    const paints = schemePaintRows(data, scheme.id)
-      .map((row) => data.catalog.find((paint) => paint.id === row.paintId))
-      .filter(Boolean) as Paint[];
-    const colors = paints.map((paint) => paint.colorHex).filter(Boolean) as string[];
-    return {
-      gradient: paintGradient(colors),
-      preview: data.colorSchemeImages
-        .filter((image) => image.schemeId === scheme.id)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .at(-1),
-      uses: data.miniatureColorSchemes.filter((row) => row.schemeId === scheme.id).length,
-      paintNames: paints.map((paint) => paint.name).join(" · "),
-    };
-  }, shallow);
+  const { gradient, preview, previewUrl, uses, paintNames } = useVault(
+    (data) => schemeCardSummary(data, scheme.id),
+    shallow,
+  );
   const ready = total > 0 && available === total;
   return (
     <Card sx={{ ...liftCardSx, height: "18rem" }}>
@@ -81,7 +69,7 @@ export const SchemeCard = memo(function SchemeCard({
             <>
               <Box
                 component="img"
-                src={imageUrl(preview.thumbnailUrl || preview.imageUrl)}
+                src={imageUrl(previewUrl ?? "")}
                 alt=""
                 aria-hidden="true"
                 loading="lazy"
@@ -107,7 +95,7 @@ export const SchemeCard = memo(function SchemeCard({
               />
               <Box
                 component="img"
-                src={imageUrl(preview.thumbnailUrl || preview.imageUrl)}
+                src={imageUrl(previewUrl ?? "")}
                 alt={`${scheme.name} finished example`}
                 loading="lazy"
                 sx={{

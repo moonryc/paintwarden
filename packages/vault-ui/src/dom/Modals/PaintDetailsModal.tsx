@@ -11,7 +11,8 @@ import { QuantityCounter } from "../Components/QuantityCounter";
 import { Check, ExternalLink, Heart, Minus, Pencil } from "../icons";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint, PaintStatus } from "../types";
-import { effectiveRequirements, owns } from "../utils/vault-data";
+import { usedByMiniatures } from "../utils/semantic-contract";
+import { owns } from "../utils/vault-data";
 
 import { SubstitutionDialog } from "./SubstitutionDialog";
 
@@ -33,9 +34,7 @@ export function PaintDetailsModal({
     state = owns(rec) ? "OWNED" : rec?.state === "WISHLIST" ? "WISHLIST" : null;
   const activeSubstitution = defaultSubstitution(data, paint.id);
   const available = isPaintAvailable(data, data.paintRecords, paint.id);
-  const usedBy = data.miniatures.filter((m) =>
-    effectiveRequirements(data, m.id).some((r) => r.paintId === paint.id),
-  );
+  const usedBy = usedByMiniatures(data, paint.id);
   const options: [
     PaintStatus | "UNTRACKED",
     string,

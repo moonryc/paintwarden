@@ -3,17 +3,23 @@ import Box from "@mui/material/Box";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "../Components/EmptyState";
-import { MissingProjectPaints, type MissingPaint } from "../Components/MissingProjectPaints";
+import { MissingProjectPaints } from "../Components/MissingProjectPaints";
 import { PageHeader } from "../Components/PageHeader";
 import { WishlistPaintList } from "../Components/WishlistPaintList";
 import { WishlistPaintRow } from "../Components/WishlistPaintRow";
 import { PackageCheck, Share2 } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
 import { useVault, useVaultStore } from "../store/hooks";
-import type { Miniature, Paint } from "../types";
-import { owns, resolvedPaintIds, wishlistPaintIds } from "../utils/vault-data";
-
-type WishlistRow = { paint: Paint; projects: Miniature[] };
+import type { Paint } from "../types";
+import {
+  filterShoppingGroups,
+  missingShoppingPaints,
+  retainedShoppingRows,
+  shoppingGroups,
+  shoppingRows,
+  type WishlistRow,
+} from "../utils/semantic-contract";
+import { owns } from "../utils/vault-data";
 
 export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }) {
   const data = useVault();
@@ -23,46 +29,14 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   const [openPaintId, setOpenPaintId] = useState<string | null>(null),
     [miniFilter, setMiniFilter] = useState("ALL"),
     [retainedBoughtRows, setRetainedBoughtRows] = useState<Map<string, WishlistRow>>(new Map());
-  const paintById = useMemo(() => new Map(data.catalog.map((paint) => [paint.id, paint])), [data.catalog]);
-  const rows = useMemo(() => {
-    const grouped = new Map<string, WishlistRow>();
-    for (const paintId of wishlistPaintIds(data)) {
-      const paint = paintById.get(paintId);
-      if (paint) grouped.set(paintId, { paint, projects: [] });
-    }
-    for (const mini of data.miniatures)
-      for (const paintId of resolvedPaintIds(data, mini.id)) {
-        if (owns(data.paintRecords[paintId])) continue;
-        const current = grouped.get(paintId);
-        if (!current) continue;
-        if (!current.projects.some((m) => m.id === mini.id)) current.projects.push(mini);
-        grouped.set(paintId, current);
-      }
-    return [...grouped.values()].sort(
-      (a, b) => b.projects.length - a.projects.length || a.paint.name.localeCompare(b.paint.name),
-    );
-  }, [data, paintById]);
+  const rows = useMemo(() => shoppingRows(data), [data]);
   // Keep newly bought paints on this page so their bottle count can be adjusted before leaving.
-  const displayRows = useMemo(() => {
-    const listedIds = new Set(rows.map(({ paint }) => paint.id));
-    return [
-      ...rows,
-      ...[...retainedBoughtRows.values()].filter(
-        ({ paint }) => owns(data.paintRecords[paint.id]) && !listedIds.has(paint.id),
-      ),
-    ].sort((a, b) => b.projects.length - a.projects.length || a.paint.name.localeCompare(b.paint.name));
-  }, [rows, retainedBoughtRows, data.paintRecords]);
+  const displayRows = useMemo(
+    () => retainedShoppingRows(rows, retainedBoughtRows, data.paintRecords),
+    [rows, retainedBoughtRows, data.paintRecords],
+  );
   // Grouped by brand so the list follows store shelves; project-heavy paints stay first within a brand.
-  const groups = useMemo(() => {
-    const byBrand = new Map<string, WishlistRow[]>();
-    for (const row of displayRows) {
-      const brand = row.paint.isCustom ? "Custom" : row.paint.brand;
-      const items = byBrand.get(brand);
-      if (items) items.push(row);
-      else byBrand.set(brand, [row]);
-    }
-    return [...byBrand].sort(([a], [b]) => a.localeCompare(b));
-  }, [displayRows]);
+  const groups = useMemo(() => shoppingGroups(displayRows), [displayRows]);
   // Share sheet on phones (handy in the store); clipboard everywhere else.
   async function share() {
     const title = selectedMini ? `Paint shopping list for ${selectedMini.title}` : "Paint shopping list";
@@ -84,21 +58,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
     }
   }
   // Project paints that are neither owned nor listed, most-needed first.
-  const missingItems = useMemo(() => {
-    const listed = wishlistPaintIds(data);
-    const projectCounts = new Map<string, number>();
-    for (const mini of data.miniatures)
-      for (const paintId of resolvedPaintIds(data, mini.id))
-        if (!owns(data.paintRecords[paintId]) && !listed.has(paintId))
-          projectCounts.set(paintId, (projectCounts.get(paintId) ?? 0) + 1);
-    return [...projectCounts]
-      .map(([paintId, projectCount]) => ({
-        paint: paintById.get(paintId),
-        projectCount,
-      }))
-      .filter((item): item is MissingPaint => Boolean(item.paint))
-      .sort((a, b) => b.projectCount - a.projectCount || a.paint.name.localeCompare(b.paint.name));
-  }, [data, paintById]);
+  const missingItems = useMemo(() => missingShoppingPaints(data), [data]);
   // Depleted bottles are stored either as owned-but-empty or as a wishlist record marked EMPTY.
   const isRestock = (paint: Paint) => {
     const record = data.paintRecords[paint.id];
@@ -109,17 +69,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   );
   const activeMiniId = workbenchMinis.some((mini) => mini.id === miniFilter) ? miniFilter : "ALL";
   const selectedMini = workbenchMinis.find((mini) => mini.id === activeMiniId);
-  const visibleGroups = groups
-    .map(
-      ([brand, items]) =>
-        [
-          brand,
-          items.filter(
-            (row) => activeMiniId === "ALL" || row.projects.some((mini) => mini.id === activeMiniId),
-          ),
-        ] as const,
-    )
-    .filter(([, items]) => items.length > 0);
+  const visibleGroups = filterShoppingGroups(groups, activeMiniId);
   const shareGroups = visibleGroups
     .map(
       ([brand, items]) => [brand, items.filter(({ paint }) => !owns(data.paintRecords[paint.id]))] as const,

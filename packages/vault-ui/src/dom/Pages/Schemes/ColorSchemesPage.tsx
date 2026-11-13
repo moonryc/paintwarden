@@ -19,6 +19,12 @@ import { useVault } from "../../store/hooks";
 import { breakpoints, up } from "../../theme-tokens";
 import type { ColorScheme, Paint } from "../../types";
 import { schemeGridWindow } from "../../utils/scheme-grid-window";
+import {
+  filteredSchemes,
+  schemeCategoryCount,
+  schemePaintIdIndex,
+  sortedSchemes,
+} from "../../utils/semantic-contract";
 import { useFuzzySearch } from "../../utils/use-fuzzy-search";
 
 import { SchemeCard } from "./SchemeCard";
@@ -46,15 +52,7 @@ export function ColorSchemesPage() {
   const pluginFilter = useFilterPlugin(data.colorSchemes);
   const matchesPlugin = pluginFilter.matches;
   const q = search.trim();
-  const schemePaintIds = useMemo(() => {
-    const result = new Map<string, Set<string>>();
-    for (const row of data.colorSchemePaints) {
-      const paintIds = result.get(row.schemeId) ?? new Set<string>();
-      paintIds.add(row.paintId);
-      result.set(row.schemeId, paintIds);
-    }
-    return result;
-  }, [data.colorSchemePaints]);
+  const schemePaintIds = useMemo(() => schemePaintIdIndex(data), [data]);
   const paintOptions = useMemo(() => {
     const usedPaintIds = new Set([...schemePaintIds.values()].flatMap((paintIds) => [...paintIds]));
     return data.catalog.filter((paint) => usedPaintIds.has(paint.id));
@@ -89,40 +87,30 @@ export function ColorSchemesPage() {
     [availability],
   );
   const readinessCount = (value: Readiness) =>
-    data.colorSchemes.filter(
-      (scheme) =>
-        (categoryFilter === "ALL" || scheme.category === categoryFilter) &&
-        matchesPlugin(scheme) &&
-        selectedPaints.every((paint) => schemePaintIds.get(scheme.id)?.has(paint.id)) &&
-        (value === "ALL" || (value === "READY") === readyIds.has(scheme.id)),
+    filteredSchemes(
+      data,
+      categoryFilter,
+      matchesPlugin,
+      selectedPaints.map((paint) => paint.id),
+      schemePaintIds,
+      value,
+      readyIds,
     ).length;
   const schemeCandidates = useMemo(
     () =>
-      data.colorSchemes.filter(
-        (scheme) =>
-          (categoryFilter === "ALL" || scheme.category === categoryFilter) &&
-          matchesPlugin(scheme) &&
-          selectedPaints.every((paint) => schemePaintIds.get(scheme.id)?.has(paint.id)) &&
-          (readiness === "ALL" || (readiness === "READY") === readyIds.has(scheme.id)),
+      filteredSchemes(
+        data,
+        categoryFilter,
+        matchesPlugin,
+        selectedPaints.map((paint) => paint.id),
+        schemePaintIds,
+        readiness,
+        readyIds,
       ),
-    [data.colorSchemes, categoryFilter, matchesPlugin, selectedPaints, schemePaintIds, readiness, readyIds],
+    [data, categoryFilter, matchesPlugin, selectedPaints, schemePaintIds, readiness, readyIds],
   );
   const schemeMatches = useFuzzySearch(schemeCandidates, q, schemeSearchText);
-  const schemes = useMemo(
-    () =>
-      [...schemeMatches].sort((a, b) => {
-        if (!a.category && b.category) return 1;
-        if (a.category && !b.category) return -1;
-        const categoryOrder =
-          a.category && b.category
-            ? COLOR_CATEGORY_LABELS[a.category].localeCompare(COLOR_CATEGORY_LABELS[b.category], undefined, {
-                sensitivity: "base",
-              })
-            : 0;
-        return categoryOrder || a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-      }),
-    [schemeMatches],
-  );
+  const schemes = useMemo(() => sortedSchemes(schemeMatches), [schemeMatches]);
   // MUI removes selected options before calling filterOptions; preserve that order before limiting.
   const paintCandidates = useMemo(
     () => paintOptions.filter((paint) => !selectedPaints.some((selected) => selected.id === paint.id)),
@@ -277,8 +265,7 @@ export function ColorSchemesPage() {
                 <MenuItem value="ALL">All ({data.colorSchemes.length})</MenuItem>
                 {usedCategories.map((category) => (
                   <MenuItem key={category} value={category}>
-                    {COLOR_CATEGORY_LABELS[category]} (
-                    {data.colorSchemes.filter((scheme) => scheme.category === category).length})
+                    {COLOR_CATEGORY_LABELS[category]} ({schemeCategoryCount(data, category)})
                   </MenuItem>
                 ))}
               </TextField>
