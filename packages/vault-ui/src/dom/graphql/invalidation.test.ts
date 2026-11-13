@@ -43,12 +43,26 @@ test("parallel bootstrap reads rewind to earliest envelope and never skip the in
   controller.onCursor(() => streams++);
   assert.equal(controller.accepts(controller.capture(), revision("12"), ["LIBRARY"]), true);
   controller.event({ ...revision("14"), reset: false, families: ["LIBRARY"] });
-  assert.equal(controller.accepts(controller.capture(), revision("10"), ["OPTIONS"]), true);
+  assert.equal(controller.accepts(controller.capture(), revision("10"), ["TEMPLATES"]), true);
   assert.deepEqual(controller.getCursor(), revision("10"));
   assert.equal(streams, 2);
   controller.event({ ...revision("14"), reset: false, families: ["PAINT"] });
   assert.deepEqual(controller.getCursor(), revision("14"));
   assert.equal(controller.accepts(controller.capture(), revision("13"), ["PAINT"]), false);
+});
+test("late parallel detail and picker reads cannot regress normalized Paint fields before SSE arrives", () => {
+  const controller = new VaultInvalidationController();
+  const ticket = controller.capture();
+  assert.equal(controller.accepts(ticket, revision("10"), ["LIBRARY"]), true);
+  assert.equal(controller.accepts(ticket, revision("8"), ["PAINT"]), false);
+  assert.equal(controller.accepts(ticket, revision("9"), ["OPTIONS"]), false);
+  assert.equal(controller.accepts(ticket, revision("11"), ["PAINT"]), true);
+  assert.equal(controller.accepts(ticket, revision("10"), ["LIBRARY"]), false);
+  assert.deepEqual(
+    controller.getCursor(),
+    revision("10"),
+    "accepted newer projections must not acknowledge the stream",
+  );
 });
 test("epoch reset rejects old-generation reads and refetches every active family", () => {
   const evictions: unknown[] = [];

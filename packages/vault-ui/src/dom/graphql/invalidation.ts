@@ -25,6 +25,7 @@ export class VaultInvalidationController {
   private cursorListeners = new Set<() => void>();
   private stopped = false;
   private retiredEpochs = new Set<string>();
+  private acceptedPaintRevision = 0n;
 
   constructor(
     private readonly evict: (families: readonly VaultFamily[], reset: boolean) => void = () => {},
@@ -80,7 +81,13 @@ export class VaultInvalidationController {
   accepts(ticket: ReadTicket, revision: Revision, families: readonly VaultFamily[]): boolean {
     if (this.stopped || ticket.generation !== this.generation) return false;
     if (!this.isFresh(revision, families)) return false;
+    // These families normalize the same Paint records. Even before the SSE event
+    // arrives, an older detail/options response must not overwrite a newer list's
+    // inventory (or vice versa). Retry that envelope, without advancing the stream.
+    const includesPaint = families.some((family) => ["LIBRARY", "PAINT", "OPTIONS"].includes(family));
+    if (includesPaint && sequence(revision) < this.acceptedPaintRevision) return false;
     this.observe(revision);
+    if (includesPaint) this.acceptedPaintRevision = sequence(revision);
     return true;
   }
   private invalidate(families: readonly VaultFamily[], reset: boolean) {
@@ -97,6 +104,7 @@ export class VaultInvalidationController {
       if (epochChanged && this.cursor) this.retiredEpochs.add(this.cursor.epoch);
       this.generation += 1;
       this.dirty.clear();
+      this.acceptedPaintRevision = 0n;
       this.cursor = { epoch: event.epoch, seq: event.seq };
       this.earliest = this.cursor;
       for (const family of VAULT_FAMILIES) this.dirty.set(family, sequence(event));

@@ -11,7 +11,7 @@ test("migrated-only saves never initialize the legacy snapshot; cached snapshots
   const original = globalThis.fetch;
   const requests: string[] = [];
   globalThis.fetch = async (url) => {
-    requests.push(String(url));
+    requests.push(url instanceof Request ? url.url : typeof url === "string" ? url : url.href);
     return Response.json({ epoch: "vault", seq: 2, changes: [], reload: false });
   };
   const client = new QueryClient();
