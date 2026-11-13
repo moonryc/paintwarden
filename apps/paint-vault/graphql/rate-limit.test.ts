@@ -1,11 +1,13 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
 
 import { acquireOperation } from "./rate-limit.ts";
 
+const credentialToken = (credential: string) => createHash("sha256").update(credential).digest("hex");
 const request = (client: string, credential: string) =>
   new Request("http://127.0.0.1/api/graphql", {
-    headers: { "x-paint-vault-client": client, authorization: credential },
+    headers: { "x-paint-vault-client": client, authorization: `Bearer ${credentialToken(credential)}` },
   });
 
 void test("client rate budget cannot be bypassed by rotating session headers", () => {
@@ -29,6 +31,18 @@ void test("one session is limited across multiple client addresses", () => {
     releases.push(release);
   }
   assert.equal(acquireOperation(request("concurrent-5", "Bearer session-concurrent"), true), null);
+  assert.equal(
+    acquireOperation(
+      new Request("http://127.0.0.1/api/graphql", {
+        headers: {
+          "x-paint-vault-client": "another-peer",
+          cookie: `unrelated=new; pv_session=${credentialToken("Bearer session-concurrent")}; other=rotated`,
+        },
+      }),
+      true,
+    ),
+    null,
+  );
   releases.forEach((release) => release());
   const recovered = acquireOperation(request("concurrent-6", "Bearer session-concurrent"), true);
   assert.ok(recovered);

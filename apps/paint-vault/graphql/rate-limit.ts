@@ -11,8 +11,13 @@ let streams = 0;
 // Separate client AND credential buckets prevent rotating fake sessions from bypassing client limits.
 export function acquireOperation(request: Request, stream: boolean): (() => void) | null {
   const now = Date.now();
+  const token =
+    request.headers.get("authorization")?.match(/^Bearer ([a-f0-9]{64})$/i)?.[1] ??
+    request.headers.get("cookie")?.match(/(?:^|;\s*)pv_session=([a-f0-9]{64})(?:;|$)/i)?.[1];
+  // Match auth's token selection, not the raw header: irrelevant cookies, bearer casing and
+  // switching between cookie/bearer transport must not create fresh session allowances.
   const identity = createHash("sha256")
-    .update(request.headers.get("authorization") ?? request.headers.get("cookie") ?? "anonymous")
+    .update(token?.toLowerCase() ?? "anonymous")
     .digest("hex");
   const keys = [request.headers.get(CLIENT_ADDRESS_HEADER) ?? "unknown", identity];
   const maps = [clients, sessions];
