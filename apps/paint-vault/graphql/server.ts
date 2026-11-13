@@ -10,8 +10,10 @@ import type { GraphQLContext } from "./context.ts";
 import type { Resolvers } from "./generated/resolvers.ts";
 import { readLibrary } from "./library.ts";
 import { acquireOperation } from "./rate-limit.ts";
+import { Sequence } from "./sequence.ts";
 
 const resolvers: Resolvers<GraphQLContext> = {
+  Sequence,
   Query: {
     library: (_root, args, context) => {
       const page = readLibrary(args);

@@ -25,7 +25,7 @@ const query = `query Library($first:Int! = 48,$after:String) { library(first:$fi
   pageInfo { hasNextPage endCursor } revision { epoch seq }
 } }`;
 const subscription =
-  "subscription Changes($epoch:String!,$since:Int!){vaultChanges(epoch:$epoch,since:$since){epoch seq reset}}";
+  "subscription Changes($epoch:String!,$since:Sequence!){vaultChanges(epoch:$epoch,since:$since){epoch seq reset}}";
 function post(body: unknown, extra: HeadersInit = {}, endpoint = "/api/graphql", signal?: AbortSignal) {
   return routeApi(
     new Request(base + endpoint, {
@@ -52,8 +52,8 @@ function addPaint(id: string, name = "Same name") {
     .prepare("INSERT INTO paint_catalog(id,brand,range,name,color_hex) VALUES(?,'Test','Base',?,'#123456')")
     .run(id, name);
 }
-function streamBody(epoch = changeLogEpoch, since = currentChangeSeq(sqlite)) {
-  return { query: subscription, variables: { epoch, since } };
+function streamBody(epoch = changeLogEpoch, since: string | number = currentChangeSeq(sqlite)) {
+  return { query: subscription, variables: { epoch, since: String(since) } };
 }
 async function nextFrame(reader: ReadableStreamDefaultReader<Uint8Array>) {
   let text = "";
@@ -71,8 +71,10 @@ async function nextFrame(reader: ReadableStreamDefaultReader<Uint8Array>) {
     clearTimeout(timeout);
   }
 }
-type LibraryPage = ReturnType<typeof readLibrary>;
-type StreamData = { data: { vaultChanges: Invalidation } };
+type LibraryPage = Omit<ReturnType<typeof readLibrary>, "revision"> & {
+  revision: { epoch: string; seq: string };
+};
+type StreamData = { data: { vaultChanges: Omit<Invalidation, "seq"> & { seq: string } } };
 function nextData(frame: string): StreamData {
   const line = frame.split("\n").find((line) => line.startsWith("data: "));
   assert.ok(line, frame);
@@ -164,7 +166,7 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
           const payload = (await response.json()) as { errors?: unknown; data: { library: LibraryPage } };
           assert.equal(payload.errors, undefined, JSON.stringify(payload));
           const page = payload.data.library;
-          assert.deepEqual(page.revision, { epoch: changeLogEpoch, seq: currentChangeSeq(sqlite) });
+          assert.deepEqual(page.revision, { epoch: changeLogEpoch, seq: String(currentChangeSeq(sqlite)) });
           assert.ok(page.nodes.length <= 2);
           ids.push(...page.nodes.map((paint: { id: string }) => paint.id));
           if (ids.length === 2)
@@ -205,7 +207,7 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       const prepare = sqlite.prepare;
       let dataReads = 0;
       sqlite.prepare = function (sql: string) {
-        if (sql.includes("FROM paint_catalog p")) dataReads++;
+        if (sql.includes("FROM paint_catalog p") || sql.includes("FROM vault_changes")) dataReads++;
         return prepare.call(sqlite, sql);
       } as typeof sqlite.prepare;
       try {
@@ -223,6 +225,23 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
           },
         ])
           assert.equal((await post(body)).status, 400);
+        for (const since of [
+          0,
+          -1,
+          null,
+          "-1",
+          "01",
+          "1e3",
+          "9007199254740992",
+          "999999999999999999999999",
+        ]) {
+          const response = await post(
+            { query: subscription, variables: { epoch: changeLogEpoch, since } },
+            { accept: "text/event-stream" },
+            "/api/graphql/stream",
+          );
+          assert.equal(response.status, 400);
+        }
         assert.equal(dataReads, 0);
       } finally {
         sqlite.prepare = prepare;
@@ -262,12 +281,12 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       assert.equal(response.headers.get("x-accel-buffering"), "no");
       const reader = response.body!.getReader();
       const initial = nextData(await nextFrame(reader));
-      assert.equal(initial.data.vaultChanges.seq, currentChangeSeq(sqlite));
+      assert.equal(initial.data.vaultChanges.seq, String(currentChangeSeq(sqlite)));
       assert.equal(initial.data.vaultChanges.reset, false);
       const baseline = initial.data.vaultChanges;
       addPaint(paintId(101));
       const change = nextData(await nextFrame(reader));
-      assert.ok(change.data.vaultChanges.seq > baseline.seq);
+      assert.ok(BigInt(change.data.vaultChanges.seq) > BigInt(baseline.seq));
       await reader.cancel();
       addPaint(paintId(102));
       const reconnected = await post(
@@ -276,7 +295,10 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
         "/api/graphql/stream",
       );
       const resumed = reconnected.body!.getReader();
-      assert.equal(nextData(await nextFrame(resumed)).data.vaultChanges.seq, currentChangeSeq(sqlite));
+      assert.equal(
+        nextData(await nextFrame(resumed)).data.vaultChanges.seq,
+        String(currentChangeSeq(sqlite)),
+      );
       await resumed.cancel();
     });
 
@@ -295,6 +317,35 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       sqlite.prepare("INSERT INTO vault_changes(seq,table_key,row_key) VALUES(50000,'$reload','[]')").run();
       pruneChangeLog(sqlite);
       assert.equal(invalidationSince({ epoch: changeLogEpoch, since: 0 }).reset, true);
+    });
+
+    await t.test("Library and SSE preserve decimal sequence revisions beyond Int32", async () => {
+      const largeSequence = 2147483648;
+      sqlite
+        .prepare("INSERT INTO vault_changes(seq,table_key,row_key) VALUES(?,'catalog',?)")
+        .run(largeSequence, JSON.stringify([paintId(0)]));
+      const response = await post({ query });
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as { data: { library: LibraryPage }; errors?: unknown };
+      assert.equal(payload.errors, undefined);
+      assert.equal(payload.data.library.revision.seq, String(largeSequence));
+      addPaint(paintId(200));
+      const catchup = await post(
+        streamBody(changeLogEpoch, String(largeSequence)),
+        { accept: "text/event-stream" },
+        "/api/graphql/stream",
+      );
+      assert.equal(catchup.status, 200);
+      const reader = catchup.body!.getReader();
+      try {
+        assert.deepEqual(nextData(await nextFrame(reader)).data.vaultChanges, {
+          epoch: changeLogEpoch,
+          seq: String(largeSequence + 1),
+          reset: false,
+        });
+      } finally {
+        await reader.cancel();
+      }
     });
 
     await t.test("session expiry terminates an idle SSE connection", async () => {

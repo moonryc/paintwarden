@@ -1,4 +1,9 @@
 """
+Nonnegative safe-integer revision, represented as a canonical decimal string.
+"""
+scalar Sequence
+
+"""
 Phase 1 raw Library projection, not a full vault or availability model.
 """
 type Query {
@@ -30,17 +35,17 @@ type Inventory {
 }
 type VaultRevision {
   epoch: String!
-  seq: Int!
+  seq: Sequence!
 }
 type Subscription {
   """
   Conservative all-family invalidation. Resume using the last received epoch/seq.
   """
-  vaultChanges(epoch: String!, since: Int!): VaultInvalidation!
+  vaultChanges(epoch: String!, since: Sequence!): VaultInvalidation!
 }
 type VaultInvalidation {
   epoch: String!
-  seq: Int!
+  seq: Sequence!
   """
   Epoch/pruning/overflow/source reset: discard the previous revision baseline.
   """

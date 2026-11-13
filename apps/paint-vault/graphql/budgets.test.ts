@@ -3,10 +3,15 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { buildSchema, GraphQLError } from "graphql";
+import { createSchema } from "graphql-yoga";
 
 import { checkOperation, GRAPHQL_BODY_BYTES, OPERATION_BYTES, QUERY_LIMITS } from "./budgets.ts";
+import { Sequence } from "./sequence.ts";
 
-const schema = buildSchema(readFileSync(new URL("./schema.graphql", import.meta.url), "utf8"));
+const schema = createSchema({
+  typeDefs: readFileSync(new URL("./schema.graphql", import.meta.url), "utf8"),
+  resolvers: { Sequence },
+});
 // The public schema is deliberately shallow. A recursive fixture isolates depth and
 // expanded-work limits without depending on a database or future public fields.
 // Keep the collection root named library: its first argument drives the cost model.
@@ -17,7 +22,7 @@ const recursiveSchema = buildSchema(`
 `);
 const libraryQuery = "{ library { nodes { id } } }";
 const streamQuery =
-  "subscription Changes($epoch: String!, $since: Int!) { vaultChanges(epoch: $epoch, since: $since) { epoch seq reset } }";
+  "subscription Changes($epoch: String!, $since: Sequence!) { vaultChanges(epoch: $epoch, since: $since) { epoch seq reset } }";
 
 function check(query: string, variables?: Record<string, unknown>, target = schema, stream = false) {
   return checkOperation(target, { query, variables }, stream);
@@ -280,11 +285,11 @@ test("rejects syntax errors, unknown fields and cyclic fragments", () => {
 
 test("the query endpoint rejects mutations and subscriptions", () => {
   budgetError(() => check("mutation { update }", undefined, recursiveSchema), /accepts queries only/);
-  budgetError(() => check(streamQuery, { epoch: "epoch", since: 0 }), /accepts queries only/);
+  budgetError(() => check(streamQuery, { epoch: "epoch", since: "0" }), /accepts queries only/);
 });
 
 test("the stream endpoint accepts subscriptions, not queries or mutations", () => {
-  assert.doesNotThrow(() => check(streamQuery, { epoch: "epoch", since: 0 }, schema, true));
+  assert.doesNotThrow(() => check(streamQuery, { epoch: "epoch", since: "0" }, schema, true));
   budgetError(() => check(libraryQuery, undefined, schema, true), /accepts subscriptions only/);
   budgetError(
     () => check("mutation { update }", undefined, recursiveSchema, true),
@@ -338,32 +343,33 @@ test("library cursor length allows 8192 characters but not 8193", () => {
   );
 });
 
-test("stream revision cursors enforce epoch length and nonnegative since", () => {
+test("stream revision cursors enforce epoch length and canonical safe decimal sequence", () => {
   for (const variables of [
-    { epoch: "e", since: 0 },
-    { epoch: "e".repeat(128), since: 2_147_483_647 },
-  ]) {
+    { epoch: "e", since: "0" },
+    { epoch: "e".repeat(128), since: "2147483648" },
+    { epoch: "e", since: "9007199254740991" },
+  ])
     assert.doesNotThrow(() => check(streamQuery, variables, schema, true));
-  }
-  for (const variables of [
-    { epoch: "e".repeat(129), since: 0 },
-    { epoch: "e", since: -1 },
-  ]) {
-    budgetError(() => check(streamQuery, variables, schema, true), /Invalid revision cursor/);
-  }
   budgetError(
-    () => check('subscription { vaultChanges(epoch: "e", since: -1) { seq } }', undefined, schema, true),
+    () => check(streamQuery, { epoch: "e".repeat(129), since: "0" }, schema, true),
     /Invalid revision cursor/,
   );
-  for (const variables of [
-    { epoch: 1, since: 0 },
-    { epoch: null, since: 0 },
-    { epoch: "e", since: "0" },
-    { epoch: "e", since: 0.5 },
-    { epoch: "e", since: null },
-    { epoch: "e", since: 2_147_483_648 },
-    { epoch: "e" },
-  ]) {
+  for (const since of ["-1", "01", "1.5", "1e3", " 1", "+1", "9007199254740992", "", 0, 0.5, null])
+    assert.throws(() => check(streamQuery, { epoch: "e", since }, schema, true), /Variable/);
+  for (const variables of [{ epoch: 1, since: "0" }, { epoch: null, since: "0" }, { epoch: "e" }])
     assert.throws(() => check(streamQuery, variables, schema, true), /Variable/);
-  }
+  assert.doesNotThrow(() =>
+    check('subscription { vaultChanges(epoch: "e", since: "2147483648") { seq } }', undefined, schema, true),
+  );
+  for (const literal of ["0", "-1", '"01"', '"9007199254740992"'])
+    assert.throws(
+      () =>
+        check(
+          `subscription { vaultChanges(epoch: "e", since: ${literal}) { seq } }`,
+          undefined,
+          schema,
+          true,
+        ),
+      /Sequence/,
+    );
 });

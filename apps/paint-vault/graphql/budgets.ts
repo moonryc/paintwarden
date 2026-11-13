@@ -101,6 +101,7 @@ function checkExpandedBudget(
               (typeof args.epoch !== "string" ||
                 args.epoch.length > 128 ||
                 typeof args.since !== "number" ||
+                !Number.isSafeInteger(args.since) ||
                 args.since < 0)
             )
               reject("Invalid revision cursor");
