@@ -8,6 +8,7 @@ import { useMiniatureList } from "../../graphql/miniature-list-hooks";
 import { useSchemeOptions } from "../../graphql/miniature-scheme-hooks";
 import {
   useTemplateActions,
+  useTemplateCatalog,
   useTemplateRecipe,
   useTemplateSourceMiniature,
 } from "../../store/template-hooks";
@@ -29,17 +30,47 @@ export function TemplateEditorDialog(props: EditorProps) {
 
 function SelectedTemplateEditor(props: EditorProps) {
   const recipe = useTemplateRecipe(props.template?.id ?? null);
-  const [initialRecipe, setInitialRecipe] = useState<EditorRecipe>();
+  // A clicked card may still be from the previous accepted list window. Never
+  // initialize editable metadata from those stale props after a successful save.
+  const summary = useTemplateCatalog(Boolean(props.template), { id: props.template?.id });
+  const [initial, setInitial] = useState<{ recipe: EditorRecipe; template: MiniatureTemplate }>();
+  const currentTemplate = summary.data?.templates[0];
+  const { data: recipeData, isStale: recipeStale, refetch: refetchRecipe } = recipe;
+  const { revision: summaryRevision, isStale: summaryStale, refetch: refetchSummary } = summary;
   useEffect(() => {
-    if (recipe.data && !recipe.isStale) setInitialRecipe((initial) => initial ?? recipe.data);
-  }, [recipe.data, recipe.isStale]);
-  // Initialize only from an accepted complete recipe. Background invalidation must
-  // never discard an already-open editor's unsaved fields, even on refresh failure.
-  if (props.template && !initialRecipe) {
+    if (initial || !recipeData || recipeStale || !currentTemplate || summaryStale || !summaryRevision) return;
+    const a = recipeData.revision;
+    const b = summaryRevision;
+    if (a.epoch !== b.epoch || a.seq !== b.seq) {
+      // The two small reads must describe one accepted revision before fields
+      // mount. Background refreshes never reinitialize a mounted draft.
+      if (a.epoch === b.epoch && BigInt(a.seq) < BigInt(b.seq)) refetchRecipe();
+      else refetchSummary();
+      return;
+    }
+    setInitial({ recipe: recipeData, template: currentTemplate });
+  }, [
+    initial,
+    recipeData,
+    recipeStale,
+    refetchRecipe,
+    currentTemplate,
+    summaryStale,
+    summaryRevision,
+    refetchSummary,
+  ]);
+  const readError = recipe.error ?? summary.error;
+  const retry = () => {
+    recipe.refetch();
+    summary.refetch();
+  };
+  if (props.template && !initial) {
     return (
       <Modal title="Edit template" subtitle="Load this reusable miniature setup." onClose={props.onClose}>
-        {recipe.error ? (
-          <ReadError error={recipe.error} retry={recipe.refetch} />
+        {readError ? (
+          <ReadError error={readError} retry={retry} />
+        ) : summary.data && !currentTemplate && !summary.loading ? (
+          <Alert severity="error">This template is no longer available.</Alert>
         ) : (
           <CircularProgress size={24} aria-label="Loading template recipe" />
         )}
@@ -49,9 +80,10 @@ function SelectedTemplateEditor(props: EditorProps) {
   return (
     <TemplateEditorFields
       {...props}
-      recipe={initialRecipe}
-      recipeError={recipe.error}
-      retryRecipe={recipe.refetch}
+      template={initial?.template ?? props.template}
+      recipe={initial?.recipe}
+      recipeError={readError}
+      retryRecipe={retry}
     />
   );
 }

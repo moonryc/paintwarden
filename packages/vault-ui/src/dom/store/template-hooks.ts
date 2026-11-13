@@ -222,6 +222,7 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
   return {
     ...result,
     data,
+    revision: result.data?.templates.revision,
     categories: facets.current.categoryCounts.map((facet) => facet.key),
     categoryCounts: facets.current.categoryCounts,
     sourceCounts: facets.current.sourceCounts,
@@ -258,6 +259,7 @@ export function useTemplateRecipe(id: string | null) {
     () =>
       result.data
         ? {
+            revision: result.data.templateRecipe.revision,
             schemeIds: result.data.templateRecipe.schemes.nodes.map((row) => row.schemeId),
             schemeOptions: result.data.templateRecipe.schemes.nodes.map((row) => ({
               id: row.schemeId,

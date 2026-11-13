@@ -8,6 +8,7 @@ import { useVaultGraphQL } from "../../graphql/provider";
 import { miniatures, paints, schemes, vault } from "../../storybook/fixtures";
 import { StoryGraphQL } from "../../storybook/graphql";
 import { fixtureMiniatureResponse } from "../../storybook/miniature-api-fixtures";
+import { fixtureTemplateResponse } from "../../storybook/template-api-fixtures";
 import type { MiniatureTemplate } from "../../types";
 
 import { TemplateEditorDialog } from "./TemplateEditorDialog";
@@ -26,6 +27,7 @@ const template: MiniatureTemplate = {
 const revision = { epoch: "editor-story", seq: "1" };
 const pageInfo = { hasNextPage: false, endCursor: null };
 type FixtureOptions = {
+  currentManufacturer?: string;
   repeatPaint?: boolean;
   failRecipeOnce?: boolean;
   failRefreshOnce?: boolean;
@@ -53,6 +55,10 @@ function editorResponse(options: FixtureOptions = {}) {
     : vault;
   return (operation: Operation): Record<string, unknown> => {
     options.request?.(operation.operationName, operation.variables);
+    if (operation.operationName === "TemplateSummaries")
+      return fixtureTemplateResponse(data, operation.operationName, operation.variables, revision, [
+        { ...template, manufacturer: options.currentManufacturer ?? template.manufacturer },
+      ])!;
     if (operation.operationName === "SelectedTemplateRecipe") {
       recipeReads += 1;
       if ((options.failRecipeOnce || (options.failRefreshOnce && recipeReads > 1)) && !recipeFailed) {
@@ -380,5 +386,15 @@ export const RepeatedPaintSteps: Story = {
         }),
       }),
     );
+  },
+};
+
+export const StaleCardMetadataNeverInitializesFields: Story = {
+  args: { template: { ...template, manufacturer: "Stale card manufacturer" } },
+  parameters: { editorFixture: { currentManufacturer: "Latest committed manufacturer" } },
+  play: async () => {
+    const body = within(document.body);
+    await waitFor(() => expect(body.getByDisplayValue("Latest committed manufacturer")).toBeVisible());
+    await expect(body.queryByDisplayValue("Stale card manufacturer")).not.toBeInTheDocument();
   },
 };

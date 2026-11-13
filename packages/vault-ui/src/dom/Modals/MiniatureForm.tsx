@@ -180,7 +180,9 @@ export function MiniatureForm({
                   Choose a source or personal template to add its name, image, schemes, and paints.
                 </Box>
               </div>
-              {!templateCatalog && !templateError && <CircularProgress size={18} />}
+              {!templateCatalog && !templateError && (
+                <CircularProgress size={18} aria-label="Loading templates" />
+              )}
             </Box>
             <Box
               component="div"
