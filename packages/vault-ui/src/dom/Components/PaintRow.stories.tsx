@@ -57,8 +57,8 @@ export const BrokenSubstitution: Story = {
     await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
     await expect(canvas.getByText("Missing")).toBeVisible();
     await expect(
-      canvas.getByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
-    ).toBeEnabled();
+      canvas.queryByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
+    ).not.toBeInTheDocument();
   },
 };
 
@@ -76,16 +76,20 @@ export const BrokenSubstitutionOriginalOwned: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
-    await expect(canvas.getByText("Packed")).toBeVisible();
+    await expect(canvas.getByText("Missing")).toBeVisible();
   },
 };
 
-// Closing the cycle falls back to Sky Blue, which is on hand; cycle is not an ownership guard.
-export const BrokenCycleAvailable: Story = {
+// Circular recipes remain unavailable even with their original paints owned.
+export const BrokenCycleOriginalOwned: Story = {
   ...Substituted,
   parameters: {
     vault: {
       ...vault,
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
+      },
       paintSubstitutions: [
         ...vault.paintSubstitutions,
         { id: "sky-cycle", targetPaintId: paints.skyBlue.id, name: "Blue cycle", isDefault: true },
@@ -98,6 +102,39 @@ export const BrokenCycleAvailable: Story = {
   },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(canvas.getByText("Missing")).toBeVisible();
+  },
+};
+
+// An ingredient equal to its recipe owner consumes the physical original, not the recipe again.
+export const DirectSelfIngredientPacked: Story = {
+  ...Substituted,
+  parameters: {
+    vault: {
+      ...vault,
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
+      },
+      paintSubstitutionIngredients: [
+        {
+          substitutionId: vault.paintSubstitutions[0].id,
+          paintId: paints.royalBlue.id,
+          parts: 1,
+          sortOrder: 0,
+        },
+        {
+          substitutionId: vault.paintSubstitutions[0].id,
+          paintId: paints.skyBlue.id,
+          parts: 1,
+          sortOrder: 1,
+        },
+      ],
+    },
+  },
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("Packed")).toBeVisible();
+    await expect(canvas.getByText("Teal Mix")).toBeVisible();
+    await expect(canvas.queryByText("Broken: Teal Mix")).not.toBeInTheDocument();
   },
 };

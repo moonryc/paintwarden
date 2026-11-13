@@ -157,27 +157,31 @@ export const SelectiveCacheSubscriptions: Story = {
   },
 };
 
-// An empty saved recipe is broken, not simply out of stock: original-paint actions remain usable.
+// An active broken recipe stays unavailable; owning the original does not repair it.
 export const BrokenSubstitution: Story = {
   args: { paint: paints.royalBlue },
   parameters: { vault: { ...vault, paintSubstitutionIngredients: [] } },
   play: async ({ canvas }) => {
     await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
     await expect(
-      canvas.getByRole("button", { name: `Mark ${paints.royalBlue.name} as owned` }),
-    ).toBeEnabled();
+      canvas.getByRole("button", { name: `${paints.royalBlue.name} is unavailable through Teal Mix` }),
+    ).toBeDisabled();
     await expect(
       canvas.getByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
     ).toBeEnabled();
   },
 };
 
-// Closing the cycle falls back to Sky Blue, which is on hand; cycle is not an ownership guard.
-export const BrokenCycleAvailable: Story = {
+// A circular recipe is unavailable even when both original paints are owned.
+export const BrokenCycleOriginalOwned: Story = {
   args: { paint: paints.royalBlue },
   parameters: {
     vault: {
       ...vault,
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 2 },
+      },
       paintSubstitutions: [
         ...vault.paintSubstitutions,
         { id: "sky-cycle", targetPaintId: paints.skyBlue.id, name: "Blue cycle", isDefault: true },
@@ -191,7 +195,31 @@ export const BrokenCycleAvailable: Story = {
   play: async ({ canvas }) => {
     await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
     await expect(
-      canvas.getByRole("button", { name: `Mark ${paints.royalBlue.name} as owned` }),
-    ).toBeEnabled();
+      canvas.getByRole("button", { name: `${paints.royalBlue.name} is unavailable through Teal Mix` }),
+    ).toBeDisabled();
+  },
+};
+
+export const BrokenSubstitutionOriginalOwned: Story = {
+  args: { paint: paints.royalBlue },
+  parameters: {
+    vault: {
+      ...vault,
+      paintSubstitutionIngredients: [],
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 2 },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(canvas.getByRole("textbox", { name: `${paints.royalBlue.name} quantity` })).toHaveValue("2");
+    await expect(
+      canvas.getByRole("button", { name: `${paints.royalBlue.name} is unavailable through Teal Mix` }),
+    ).toBeDisabled();
+    await expect(
+      canvas.queryByRole("button", { name: `Mark ${paints.royalBlue.name} as owned` }),
+    ).not.toBeInTheDocument();
   },
 };

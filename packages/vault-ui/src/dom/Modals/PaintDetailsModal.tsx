@@ -37,7 +37,7 @@ export function PaintDetailsModal({
   const rec = data.paintRecords[paint.id],
     state = owns(rec) ? "OWNED" : rec?.state === "WISHLIST" ? "WISHLIST" : null;
   const activeSubstitution = defaultSubstitution(data, paint.id);
-  const broken = resolvePaintChoice(data, "", paint.id).broken;
+  const resolved = resolvePaintChoice(data, "", paint.id);
   const available = isPaintAvailable(data, data.paintRecords, paint.id);
   const usedBy = usedByMiniatures(data, paint.id);
   const options: [
@@ -155,15 +155,6 @@ export function PaintDetailsModal({
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        {activeSubstitution && (
-          <Alert severity={!broken && available ? "success" : "warning"} variant="outlined">
-            {broken
-              ? `Broken substitution: ${activeSubstitution.name}. Check the recipe ingredients or circular references.`
-              : available
-                ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
-                : `${activeSubstitution.name} is active, but at least one substitution paint is missing.`}
-          </Alert>
-        )}
         {state === "OWNED" && rec && (
           <Box
             component="div"
@@ -209,6 +200,17 @@ export function PaintDetailsModal({
               }
             />
           </Box>
+        )}
+        {activeSubstitution && (
+          <Alert severity={resolved.broken ? "error" : available ? "success" : "warning"} variant="outlined">
+            {resolved.broken
+              ? `Broken substitution: ${resolved.brokenReason === "empty" ? "empty recipe" : "circular recipe"}.`
+              : resolved.unavailablePaintIds.length
+                ? "Unavailable: a substitution ingredient has a broken recipe."
+                : available
+                  ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
+                  : `${activeSubstitution.name} is active, but at least one substitution paint is missing.`}
+          </Alert>
         )}
         {/* All actions share one row of equal-width buttons; they stack on phones. */}
         <Box

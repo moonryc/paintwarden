@@ -131,7 +131,7 @@ export function PaintRow({
         />
         <PaintRowActions
           wishlist={
-            !owned && (!active || resolved.broken)
+            !owned && !active
               ? {
                   active: wished,
                   label: wished ? `Remove ${paint.name} from wishlist` : `Add ${paint.name} to wishlist`,

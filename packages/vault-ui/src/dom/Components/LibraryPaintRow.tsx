@@ -113,14 +113,13 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
             : undefined
         }
         add={
-          !available || (broken && !directlyOwned)
+          !available
             ? {
-                label:
-                  substitution && !broken
-                    ? `${paint.name} is unavailable through ${substitution.name}`
-                    : `Mark ${paint.name} as owned`,
-                title: substitution && !broken ? `Unavailable through ${substitution.name}` : "Mark as owned",
-                disabled: Boolean(substitution) && !broken,
+                label: substitution
+                  ? `${paint.name} is unavailable through ${substitution.name}`
+                  : `Mark ${paint.name} as owned`,
+                title: substitution ? `Unavailable through ${substitution.name}` : "Mark as owned",
+                disabled: Boolean(substitution),
                 onClick: () => toggleOwned(paint),
               }
             : undefined

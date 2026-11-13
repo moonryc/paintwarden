@@ -23,7 +23,8 @@ export function SavedMixCard({
   onDelete(): void;
 }) {
   const data = useVault();
-  const broken = resolveSubstitution(data, mix.id)?.broken ?? false;
+  const resolved = resolveSubstitution(data, mix.id);
+  const broken = resolved?.broken ?? false;
   const rows = data.paintSubstitutionIngredients
     .filter((row) => row.substitutionId === mix.id)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -90,8 +91,8 @@ export function SavedMixCard({
         </IconButton>
       </Box>
       {broken && (
-        <Alert severity="warning" variant="outlined" sx={{ mt: 1.5 }}>
-          Broken substitution. Check the recipe ingredients or circular references.
+        <Alert severity="error" variant="outlined" sx={{ mt: 1.5 }}>
+          Broken substitution: {resolved?.brokenReason === "empty" ? "empty recipe" : "circular recipe"}.
         </Alert>
       )}
     </Card>

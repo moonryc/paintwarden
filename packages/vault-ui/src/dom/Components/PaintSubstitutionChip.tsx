@@ -8,7 +8,7 @@ export function PaintSubstitutionChip({ name, broken = false }: { name: string; 
   return (
     <Chip
       size="small"
-      color={broken ? "warning" : "default"}
+      color={broken ? "error" : "default"}
       icon={
         broken ? (
           <WarningAmberOutlinedIcon sx={{ fontSize: 15 }} />
