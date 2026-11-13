@@ -1,0 +1,38 @@
+{
+  "measuredAt": "2026-11-13T17:04:38.028Z",
+  "node": "v22.22.2",
+  "profile": "stress",
+  "spec": {
+    "paints": 30000,
+    "miniatures": 10000,
+    "schemes": 3000,
+    "templates": 5000
+  },
+  "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-XHyVGU",
+  "seedMs": 2104.9065,
+  "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
+  "snapshot": {
+    "firstReadMs": 306.42145800000026,
+    "medianMs": 256.0059999999994,
+    "minMs": 236.27512500000012,
+    "maxMs": 318.60554200000024,
+    "preparedStatements": 19,
+    "sqlExecutions": 19,
+    "jsonBytes": 44954964,
+    "gzipBytes": 1883986,
+    "parseMedianMs": 72.67683299999953
+  },
+  "templateSummaries": {
+    "firstReadMs": 42.29808299999968,
+    "medianMs": 29.72387499999968,
+    "minMs": 27.357334000000264,
+    "maxMs": 37.525416999999834,
+    "preparedStatements": 5,
+    "sqlExecutions": 5,
+    "jsonBytes": 1338956,
+    "gzipBytes": 30251,
+    "parseMedianMs": 1.5958749999999782
+  },
+  "snapshotStartupDataBytes": 44954964,
+  "snapshotPlusTemplateSummariesBytes": 46293920
+}
