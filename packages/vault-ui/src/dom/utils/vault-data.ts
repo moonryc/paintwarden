@@ -76,15 +76,41 @@ export function effectiveRequirements(data: State, miniatureId: string) {
   return [...unique.values()];
 }
 
-export function resolvedPaintIds(data: State, miniatureId: string) {
+// Keep blocked terminal owners alongside ordinary leaves. Dropping broken branches would
+// make a partially resolvable recipe (broken B + owned red) incorrectly appear ready.
+export function resolvedRequirements(data: State, miniatureId: string) {
   const index = vaultDataIndex(data);
-  return [
-    ...new Set(
-      effectiveRequirements(data, miniatureId).flatMap(
-        (row) => index.resolvePaintChoice(row.paintId).paintIds,
-      ),
-    ),
-  ];
+  const choices = effectiveRequirements(data, miniatureId).map((row) =>
+    index.resolvePaintChoice(row.paintId),
+  );
+  return {
+    paintIds: [...new Set(choices.flatMap((choice) => choice.paintIds))],
+    unavailablePaintIds: new Set(choices.flatMap((choice) => choice.unavailablePaintIds)),
+  };
+}
+
+export function resolvedPaintIds(data: State, miniatureId: string) {
+  return resolvedRequirements(data, miniatureId).paintIds;
+}
+
+export type PaintRequirementReason = "missingStock" | "brokenSubstitution";
+
+// Reasons stay independent: a blocked recipe may also lack physical stock, but buying
+// paint cannot fix a broken substitution. Never collapse these into an ownership flag.
+export function projectPaintIssues(data: State, miniatureId: string) {
+  const { paintIds, unavailablePaintIds } = resolvedRequirements(data, miniatureId);
+  const issues = new Map<string, Set<PaintRequirementReason>>();
+  for (const id of paintIds) {
+    const reasons = new Set<PaintRequirementReason>();
+    if (!owns(data.paintRecords[id])) reasons.add("missingStock");
+    if (unavailablePaintIds.has(id)) reasons.add("brokenSubstitution");
+    if (reasons.size) issues.set(id, reasons);
+  }
+  return issues;
+}
+
+export function missingRequiredPaintIds(data: State, miniatureId: string) {
+  return [...projectPaintIssues(data, miniatureId).keys()];
 }
 
 export function wishlistPaintIds(data: State) {
@@ -95,8 +121,7 @@ export function missingProjectPaintIds(data: State, status?: Miniature["status"]
   const ids = new Set<string>();
   for (const miniature of data.miniatures) {
     if (status && miniature.status !== status) continue;
-    for (const paintId of resolvedPaintIds(data, miniature.id))
-      if (!owns(data.paintRecords[paintId])) ids.add(paintId);
+    for (const paintId of missingRequiredPaintIds(data, miniature.id)) ids.add(paintId);
   }
   return ids;
 }

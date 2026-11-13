@@ -157,11 +157,16 @@ function referenceProjects(data) {
   return data.miniatures
     .map((mini) => {
       const paintIds = referenceIds(data, mini.id);
+      const unavailable = new Set(
+        referenceRequirements(data, mini.id).flatMap(
+          (row) => resolvePaintChoice(data, mini.id, row.paintId).unavailablePaintIds,
+        ),
+      );
       return {
         mini,
         paints: paintIds.map((id) => data.catalog.find((p) => p.id === id)).filter(Boolean),
         total: paintIds.length,
-        missing: paintIds.filter((id) => !isOwned(data.paintRecords[id])).length,
+        missing: paintIds.filter((id) => unavailable.has(id) || !isOwned(data.paintRecords[id])).length,
       };
     })
     .sort((a, b) => b.mini.createdAt - a.mini.createdAt || a.mini.title.localeCompare(b.mini.title));

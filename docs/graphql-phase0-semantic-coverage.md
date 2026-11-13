@@ -41,14 +41,36 @@ Other UI test paths are relative to that same directory.
 ## Deliberate behavior decision: Q3
 
 The old Library/Schemes versus miniature discrepancy for empty/cyclic substitutions
-is **not** frozen by the semantic suite. The separate Q3 readiness tests define the
-approved unified fallback: an invalid substitution step uses that step's original
-paint and physical ownership. Valid ancestor steps still require their other
-ingredients. Broken saved non-default recipes are observable without changing the
-active default choice. See the readiness implementation/tests for cycle-owner and
-nested fallback details. For example, A → B → A resolves root A to original B
-and root B to original A: the closing step is ignored, not the whole root recipe.
+is **not** frozen by the semantic suite. The current approved rule supersedes the
+earlier fallback decision: **an active broken substitution makes its paint unavailable,
+even when its original is physically owned. There is no ownership fallback.**
 
+- The active option is the global default substitution, otherwise the physical paint.
+  Every ingredient uses its active option recursively. An empty active recipe is blocked.
+- A direct self ingredient (`A = A + white`) means **physical A**, plus white; it is not
+  a loop. Existing/imported self ingredients are evaluated this way; REST/UI creation
+  validation remains unchanged.
+- Longer loops block the closing-step **owner**. For `A → B → A`, root A records B as
+  a blocked terminal requirement, and root B records A. Neither owning A nor B rescues
+  the loop. The result is deterministic per root; only completed roots are cached.
+- A valid ancestor (`A → broken B + red`) remains structurally valid, but unavailable B
+  makes A unavailable even if A, B and red are owned. Broken branches must never be
+  dropped from readiness totals. Every empty/cycle-member owner is flagged, not its
+  valid ancestors. Saved non-default recipes are validated without changing active choices.
+- Project paint issues preserve independent `missingStock` and `brokenSubstitution`
+  reasons; a paint can have both. One paint still counts once in unavailable totals.
+  Owned-but-broken requirements appear in project and Wishlist missing-not-listed
+  panels with a red **Broken substitution** indicator and **Fix substitution** action,
+  not as a bottle purchase. Stock-only/both-reason rows retain explicit wishlist actions.
+- Shopping membership remains explicit wishlist plus depleted-owned inventory. Broken
+  substitutions never add shopping rows automatically. Existing listed rows retain both
+  issue reasons and project associations; model filters do not narrow the missing panel.
+- Broken substitution chips use the existing red/error treatment. Paint detail explains
+  `empty recipe` or `circular recipe` immediately above its substitutions button.
+
+Executable coverage: `readiness-substitutions.test.mjs`, core substitution tests, and
+focused stories for substitution chips, recipe/library rows, paint detail, saved recipes,
+project paint summaries, missing-project paints and Wishlist rows.
 The helper extraction otherwise preserves the existing rules, including current
 locale-based display comparison and full card summaries. It does not introduce
 cursor ordering, canonical collation or pagination behavior.

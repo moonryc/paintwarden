@@ -31,18 +31,21 @@ export function selectedSubstitution(data: SubstitutionData, _miniatureId: strin
 
 export type PaintChoice = {
   paintIds: string[];
-  // Diagnostics only: ownership is evaluated from paintIds, including fallback originals.
+  // Broken terminal owners stay in paintIds for requirement diagnostics, NOT ownership fallback.
+  unavailablePaintIds: string[];
+  // True if traversal reaches a cycle; never sufficient on its own for availability.
   cycle: boolean;
   // True only for this paint's empty or cycle-member recipe, not a broken descendant.
   broken: boolean;
-  // Recipes visited, including an ignored broken recipe, for diagnostics.
+  brokenReason: "empty" | "cycle" | null;
+  // Recipes visited, including a blocked broken recipe, for diagnostics.
   substitutionIds: string[];
 };
 type ChoiceLookup = {
   substitution(paintId: string): PaintSubstitution | null;
   ingredients(substitutionId: string): PaintSubstitutionIngredient[];
 };
-type ResolvedChoice = Omit<PaintChoice, "broken">;
+type ResolvedChoice = Omit<PaintChoice, "broken" | "brokenReason">;
 
 function resolveChoice(
   lookup: ChoiceLookup,
@@ -50,18 +53,33 @@ function resolveChoice(
   trail: string[],
   substitution = lookup.substitution(paintId),
 ): ResolvedChoice {
-  if (trail.includes(paintId)) return { paintIds: [paintId], cycle: true, substitutionIds: [] };
-  if (!substitution) return { paintIds: [paintId], cycle: false, substitutionIds: [] };
+  if (trail.includes(paintId))
+    return { paintIds: [paintId], unavailablePaintIds: [paintId], cycle: true, substitutionIds: [] };
+  if (!substitution)
+    return { paintIds: [paintId], unavailablePaintIds: [], cycle: false, substitutionIds: [] };
   const ingredients = lookup.ingredients(substitution.id);
   const path = [...trail, paintId];
-  // Ignore the whole recipe at the step that would close the cycle, not its parent or
-  // only the offending ingredient. A -> B -> A resolves A to original B, and B to A.
-  const closesCycle = ingredients.some((row) => path.includes(row.paintId));
+  // Block the whole closing-step owner, not just the offending ingredient.
+  // A -> B -> A records B as unavailable from root A (A from root B).
+  // Owning that original never makes the active broken recipe available.
+  const closesCycle = ingredients.some((row) => row.paintId !== paintId && path.includes(row.paintId));
   if (!ingredients.length || closesCycle)
-    return { paintIds: [paintId], cycle: closesCycle, substitutionIds: [substitution.id] };
-  const resolved = ingredients.map((ingredient) => resolveChoice(lookup, ingredient.paintId, path));
+    return {
+      paintIds: [paintId],
+      unavailablePaintIds: [paintId],
+      cycle: closesCycle,
+      substitutionIds: [substitution.id],
+    };
+  // A direct self ingredient means the physical original, not another application of
+  // this recipe. Longer loops still block the closing-step owner.
+  const resolved = ingredients.map((ingredient) =>
+    ingredient.paintId === paintId
+      ? { paintIds: [paintId], unavailablePaintIds: [], cycle: false, substitutionIds: [] }
+      : resolveChoice(lookup, ingredient.paintId, path),
+  );
   return {
     paintIds: [...new Set(resolved.flatMap((row) => row.paintIds))],
+    unavailablePaintIds: [...new Set(resolved.flatMap((row) => row.unavailablePaintIds))],
     cycle: resolved.some((row) => row.cycle),
     substitutionIds: [substitution.id, ...resolved.flatMap((row) => row.substitutionIds)],
   };
@@ -71,7 +89,10 @@ function resolveChoice(
 // broken, and all cycle members must be flagged even when resolution cuts an earlier
 // cycle short. Also supports a non-default root recipe while following nested defaults.
 function isCircularRecipe(lookup: ChoiceLookup, substitution: PaintSubstitution) {
-  const pending = lookup.ingredients(substitution.id).map((row) => row.paintId);
+  const pending = lookup
+    .ingredients(substitution.id)
+    .filter((row) => row.paintId !== substitution.targetPaintId)
+    .map((row) => row.paintId);
   const visited = new Set<string>();
   while (pending.length) {
     const paintId = pending.pop()!;
@@ -79,7 +100,13 @@ function isCircularRecipe(lookup: ChoiceLookup, substitution: PaintSubstitution)
     if (visited.has(paintId)) continue;
     visited.add(paintId);
     const nested = lookup.substitution(paintId);
-    if (nested) pending.push(...lookup.ingredients(nested.id).map((row) => row.paintId));
+    if (nested)
+      pending.push(
+        ...lookup
+          .ingredients(nested.id)
+          .filter((row) => row.paintId !== nested.targetPaintId)
+          .map((row) => row.paintId),
+      );
   }
   return false;
 }
@@ -90,11 +117,17 @@ function paintChoice(
   trail: string[] = [],
   substitution = lookup.substitution(paintId),
 ): PaintChoice {
+  const brokenReason = !substitution
+    ? null
+    : !lookup.ingredients(substitution.id).length
+      ? "empty"
+      : isCircularRecipe(lookup, substitution)
+        ? "cycle"
+        : null;
   return {
     ...resolveChoice(lookup, paintId, trail, substitution),
-    broken:
-      substitution !== null &&
-      (!lookup.ingredients(substitution.id).length || isCircularRecipe(lookup, substitution)),
+    broken: brokenReason !== null,
+    brokenReason,
   };
 }
 
@@ -158,8 +191,11 @@ export function isPaintAvailable(
   paintId: string,
 ) {
   const resolved = resolvePaintChoice(data, "", paintId);
-  return resolved.paintIds.every((id) => {
-    const record = records[id];
-    return isPaintOwned(record?.state ?? null, record?.stockLevel ?? null, record?.quantity ?? 0);
-  });
+  return (
+    !resolved.unavailablePaintIds.length &&
+    resolved.paintIds.every((id) => {
+      const record = records[id];
+      return isPaintOwned(record?.state ?? null, record?.stockLevel ?? null, record?.quantity ?? 0);
+    })
+  );
 }

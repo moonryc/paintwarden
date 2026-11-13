@@ -3,7 +3,7 @@ import { fuzzyFilter } from "@paint-vault/core/fuzzy-search";
 import type { Miniature, Paint, PaintingStatus, State } from "../types";
 import {
   missingProjectPaintIds,
-  owns,
+  missingRequiredPaintIds,
   resolvedPaintIds,
   vaultDataIndex,
   wishlistPaintIds,
@@ -13,7 +13,7 @@ export function readiness(data: State, miniId: string) {
   const ids = resolvedPaintIds(data, miniId);
   const index = vaultDataIndex(data);
   const paints = ids.map((id) => index.paints.get(id)).filter(Boolean) as Paint[];
-  return { paints, total: ids.length, missing: ids.filter((id) => !owns(data.paintRecords[id])).length };
+  return { paints, total: ids.length, missing: missingRequiredPaintIds(data, miniId).length };
 }
 
 export function sortedProjects(data: State) {

@@ -11,8 +11,8 @@ const bundled = await build({
     contents: `
       export * from "@paint-vault/core/paint-substitutions";
       export { readiness, createHomeDerivations } from "../Pages/home.utils.ts";
-      export { resolvedPaintIds, missingProjectPaintIds } from "./vault-data.ts";
-      export { shoppingRows, missingShoppingPaints } from "./semantic-contract.ts";
+      export { resolvedPaintIds, missingProjectPaintIds, projectPaintIssues } from "./vault-data.ts";
+      export { shoppingRows, missingShoppingPaints, retainedShoppingRows } from "./semantic-contract.ts";
       export { emptyState } from "./constants.ts";
     `,
     resolveDir: fileURLToPath(new URL(".", import.meta.url)),
@@ -30,7 +30,9 @@ const {
   createHomeDerivations,
   resolvedPaintIds,
   missingProjectPaintIds,
+  projectPaintIssues,
   shoppingRows,
+  retainedShoppingRows,
   missingShoppingPaints,
   emptyState,
 } = await import(
@@ -84,7 +86,7 @@ function fixture(paintSubstitutions, paintSubstitutionIngredients, paintRecords 
   };
 }
 
-function assertConsumers(data, expectedIds, missingIds, available) {
+function assertConsumers(data, expectedIds, missingIds, available, brokenIds = []) {
   // Library OWNED filtering and both scheme readiness consumers call this shared rule.
   assert.equal(isPaintAvailable(data, data.paintRecords, "a"), available);
   for (const miniatureId of ["m0", "m1"]) {
@@ -92,6 +94,17 @@ function assertConsumers(data, expectedIds, missingIds, available) {
     const result = readiness(data, miniatureId);
     assert.equal(result.total, expectedIds.length);
     assert.equal(result.missing, missingIds.length);
+    const issues = projectPaintIssues(data, miniatureId);
+    assert.deepEqual([...issues.keys()], missingIds);
+    assert.deepEqual(
+      [...issues].filter(([, reasons]) => reasons.has("brokenSubstitution")).map(([id]) => id),
+      brokenIds,
+    );
+    for (const [id, reasons] of issues) {
+      const record = data.paintRecords[id];
+      const stockMissing = record?.state !== "OWNED" || record.quantity <= 0 || record.stockLevel === "EMPTY";
+      assert.equal(reasons.has("missingStock"), stockMissing, id);
+    }
   }
   assert.deepEqual([...missingProjectPaintIds(data)], missingIds);
   assert.equal(createHomeDerivations()(data, false, "ALL", "ALL", "").ready, available ? 2 : 0);
@@ -108,27 +121,29 @@ function assertConsumers(data, expectedIds, missingIds, available) {
   }
 }
 
-test("empty default is broken and ignored consistently; original physical ownership decides", () => {
+test("empty default is unavailable in every consumer even if its original is owned", () => {
   const base = fixture([mix("empty", "a")], []);
   assert.equal(resolvePaintChoice(base, "m0", "a").broken, true);
   assert.equal(resolveSubstitution(base, "empty").broken, true);
-  assertConsumers(base, ["a"], ["a"], false);
-  assertConsumers({ ...base, paintRecords: { a: owned } }, ["a"], [], true);
+  assertConsumers(base, ["a"], ["a"], false, ["a"]);
+  assertConsumers({ ...base, paintRecords: { a: owned } }, ["a"], ["a"], false, ["a"]);
   for (const record of [wish, { ...owned, quantity: 0 }, { ...owned, stockLevel: "EMPTY" }]) {
-    assertConsumers({ ...base, paintRecords: { a: record } }, ["a"], ["a"], false);
+    assertConsumers({ ...base, paintRecords: { a: record } }, ["a"], ["a"], false, ["a"]);
   }
 });
 
-test("nested empty falls back only at that node; its valid parent still needs every ingredient", () => {
+test("nested empty blocks its otherwise valid parent despite owning every original and ingredient", () => {
   const base = fixture(
     [mix("parent", "a"), mix("empty", "b")],
     [ingredient("parent", "b"), ingredient("parent", "red", 1)],
   );
   assert.equal(resolvePaintChoice(base, "m0", "a").broken, false);
   assert.equal(resolvePaintChoice(base, "m0", "b").broken, true);
-  assertConsumers({ ...base, paintRecords: { a: owned } }, ["b", "red"], ["b", "red"], false);
-  assertConsumers({ ...base, paintRecords: { b: owned, red: owned } }, ["b", "red"], [], true);
-  assertConsumers({ ...base, paintRecords: { b: wish, red: owned } }, ["b", "red"], ["b"], false);
+  assertConsumers({ ...base, paintRecords: { a: owned } }, ["b", "red"], ["b", "red"], false, ["b"]);
+  assertConsumers({ ...base, paintRecords: { a: owned, b: owned, red: owned } }, ["b", "red"], ["b"], false, [
+    "b",
+  ]);
+  assertConsumers({ ...base, paintRecords: { b: wish, red: owned } }, ["b", "red"], ["b"], false, ["b"]);
 });
 
 test("non-default empty recipes are visibly broken but never affect active requirements", () => {
@@ -145,7 +160,7 @@ test("non-default empty recipes are visibly broken but never affect active requi
   assertConsumers({ ...inactiveOnly, paintRecords: { a: owned } }, ["a"], [], true);
 });
 
-test("two- and three-paint cycles use the closing owner's original in every consumer", () => {
+test("two- and three-paint cycles block the closing owner in every consumer regardless of stock", () => {
   for (const ids of [
     ["a", "b"],
     ["a", "b", "c"],
@@ -156,18 +171,27 @@ test("two- and three-paint cycles use the closing owner's original in every cons
     );
     const closingOwner = ids.at(-1);
     assert.equal(resolvePaintChoice(base, "m0", "a").broken, true);
-    assertConsumers({ ...base, paintRecords: { a: owned } }, [closingOwner], [closingOwner], false);
-    assertConsumers({ ...base, paintRecords: { [closingOwner]: owned } }, [closingOwner], [], true);
+    assertConsumers({ ...base, paintRecords: { a: owned } }, [closingOwner], [closingOwner], false, [
+      closingOwner,
+    ]);
+    assertConsumers(
+      { ...base, paintRecords: { [closingOwner]: owned } },
+      [closingOwner],
+      [closingOwner],
+      false,
+      [closingOwner],
+    );
     assertConsumers(
       { ...base, paintRecords: { a: wish, [closingOwner]: wish } },
       [closingOwner],
       [closingOwner],
       false,
+      [closingOwner],
     );
   }
 });
 
-test("cycle fallback ignores all ingredients of the closing step; ancestors are not marked broken", () => {
+test("cycle block ignores all ingredients of the closing step; ancestors are not marked broken", () => {
   const base = fixture(
     [mix("parent", "a"), mix("cycle-b", "b"), mix("cycle-c", "c")],
     [
@@ -181,8 +205,8 @@ test("cycle fallback ignores all ingredients of the closing step; ancestors are 
   assert.equal(resolvePaintChoice(base, "m0", "a").cycle, true);
   assert.equal(resolvePaintChoice(base, "m0", "b").broken, true);
   assert.equal(resolvePaintChoice(base, "m0", "c").broken, true);
-  assertConsumers({ ...base, paintRecords: { c: owned } }, ["c"], [], true);
-  assertConsumers({ ...base, paintRecords: { a: owned, b: owned, red: owned } }, ["c"], ["c"], false);
+  assertConsumers({ ...base, paintRecords: { c: owned } }, ["c"], ["c"], false, ["c"]);
+  assertConsumers({ ...base, paintRecords: { a: owned, b: owned, red: owned } }, ["c"], ["c"], false, ["c"]);
 });
 
 test("an inactive cycle is exposed in saved recipes but cannot change active readiness or shopping", () => {
@@ -204,4 +228,57 @@ test("miniatures without any manual or scheme requirements are not ready", () =>
   const result = createHomeDerivations()(data, false, "ALL", "ALL", "");
   assert.equal(result.ready, 0);
   assert.equal(result.pct, 0);
+});
+
+test("a direct-self ingredient uses physical stock, including when reached by another default", () => {
+  const base = fixture(
+    [mix("active-a", "a"), mix("active-b", "b")],
+    [ingredient("active-a", "b"), ingredient("active-b", "b"), ingredient("active-b", "red", 1)],
+  );
+  assert.equal(resolvePaintChoice(base, "m0", "b").broken, false);
+  assertConsumers({ ...base, paintRecords: { a: owned, b: owned, red: owned } }, ["b", "red"], [], true);
+  assertConsumers({ ...base, paintRecords: { a: owned, red: owned } }, ["b", "red"], ["b"], false);
+});
+
+test("broken substitution and missing stock remain separate reasons; neither auto-adds a shopping row", () => {
+  const base = fixture([mix("empty", "a")], []);
+  const ownedBroken = { ...base, paintRecords: { a: owned } };
+  assert.deepEqual([...projectPaintIssues(ownedBroken, "m0").get("a")], ["brokenSubstitution"]);
+  assert.deepEqual(shoppingRows(ownedBroken), [], "owned broken paint is not automatically shopping");
+  assert.deepEqual(
+    missingShoppingPaints(ownedBroken).map(({ paint, projectCount, reasons }) => [
+      paint.id,
+      projectCount,
+      reasons,
+    ]),
+    [["a", 2, ["brokenSubstitution"]]],
+  );
+  assert.deepEqual([...projectPaintIssues(base, "m0").get("a")], ["missingStock", "brokenSubstitution"]);
+  assert.deepEqual(shoppingRows(base), [], "missing stock is not automatically explicit wishlist");
+  assert.deepEqual(missingShoppingPaints(base)[0].reasons, ["missingStock", "brokenSubstitution"]);
+  for (const record of [wish, { ...owned, quantity: 0 }, { ...owned, stockLevel: "EMPTY" }]) {
+    const listed = { ...base, paintRecords: { a: record } };
+    assert.deepEqual(missingShoppingPaints(listed), [], "listed rows stay out of missing-not-listed");
+    const [row] = shoppingRows(listed);
+    assert.equal(row.paint.id, "a");
+    assert.deepEqual(row.reasons, ["missingStock", "brokenSubstitution"]);
+    assert.deepEqual(
+      row.projects.map(({ id }) => id),
+      ["m0", "m1"],
+    );
+    assert.equal(readiness(listed, "m0").missing, 1, "two reasons count as one unavailable requirement");
+  }
+});
+
+test("retained just-bought rows refresh independent stock and broken reasons after purchase and repair", () => {
+  const listed = fixture([mix("empty", "a")], [], { a: wish });
+  const [row] = shoppingRows(listed);
+  const retained = new Map([["a", row]]);
+  const bought = { ...listed, paintRecords: { a: owned } };
+  const [stillBroken] = retainedShoppingRows(shoppingRows(bought), retained, bought.paintRecords, bought);
+  assert.deepEqual(stillBroken.reasons, ["brokenSubstitution"]);
+  const fixed = { ...bought, paintSubstitutions: [] };
+  const [ready] = retainedShoppingRows(shoppingRows(fixed), retained, fixed.paintRecords, fixed);
+  assert.deepEqual(ready.reasons, []);
+  assert.equal(ready.paint.id, "a", "quantity editing row stays until leaving");
 });

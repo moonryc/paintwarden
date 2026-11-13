@@ -35,7 +35,7 @@ import type { Paint, Tab } from "./types";
 import { installBaseStyles } from "./utils/base-styles";
 import { imageFormData } from "./utils/image";
 import { truncateSx } from "./utils/truncate";
-import { owns, resolvedPaintIds, wishlistPaintIds } from "./utils/vault-data";
+import { missingRequiredPaintIds, resolvedPaintIds, wishlistPaintIds } from "./utils/vault-data";
 import { createVaultQueryClient, useServerChecks, useVaultData } from "./utils/vault-query";
 
 // Keep the workbench eager; other screens and overlays load only when opened.
@@ -164,7 +164,8 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
         .map((id) => data.catalog.find((p) => p.id === id))
         .filter(Boolean) as Paint[])
     : [];
-  const missing = required.filter((p) => !owns(data.paintRecords[p.id]));
+  const missingIds = new Set(selected ? missingRequiredPaintIds(data, selected.id) : []);
+  const missing = required.filter((p) => missingIds.has(p.id));
   const stats = useMemo(
     () => ({
       ownedMinis: data.miniatures.filter((m) => m.status === "OWNED").length,

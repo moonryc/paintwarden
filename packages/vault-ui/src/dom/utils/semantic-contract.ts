@@ -6,9 +6,15 @@ import type { ColorScheme, Miniature, Paint, State } from "../types";
 
 import { paintGradient } from "./paint-gradient";
 import { schemePaintRows } from "./scheme-order";
-import { effectiveRequirements, owns, resolvedPaintIds, wishlistPaintIds } from "./vault-data";
+import {
+  effectiveRequirements,
+  owns,
+  projectPaintIssues,
+  wishlistPaintIds,
+  type PaintRequirementReason,
+} from "./vault-data";
 
-export type WishlistRow = { paint: Paint; projects: Miniature[] };
+export type WishlistRow = { paint: Paint; projects: Miniature[]; reasons?: PaintRequirementReason[] };
 
 const compareShoppingRows = (a: WishlistRow, b: WishlistRow) =>
   b.projects.length - a.projects.length || a.paint.name.localeCompare(b.paint.name);
@@ -21,11 +27,11 @@ export function shoppingRows(data: State) {
     if (paint) grouped.set(paintId, { paint, projects: [] });
   }
   for (const mini of data.miniatures)
-    for (const paintId of resolvedPaintIds(data, mini.id)) {
-      if (owns(data.paintRecords[paintId])) continue;
+    for (const [paintId, reasons] of projectPaintIssues(data, mini.id)) {
       const current = grouped.get(paintId);
       if (!current) continue;
       if (!current.projects.some((m) => m.id === mini.id)) current.projects.push(mini);
+      current.reasons = [...new Set([...(current.reasons ?? []), ...reasons])];
     }
   return [...grouped.values()].sort(compareShoppingRows);
 }
@@ -34,11 +40,21 @@ export function retainedShoppingRows(
   rows: WishlistRow[],
   retained: Map<string, WishlistRow>,
   records: State["paintRecords"],
+  data?: State,
 ) {
   const listedIds = new Set(rows.map(({ paint }) => paint.id));
   return [
     ...rows,
-    ...[...retained.values()].filter(({ paint }) => owns(records[paint.id]) && !listedIds.has(paint.id)),
+    ...[...retained.values()]
+      .filter(({ paint }) => owns(records[paint.id]) && !listedIds.has(paint.id))
+      .map((row) => {
+        if (!data) return row;
+        const reasons = new Set<PaintRequirementReason>();
+        for (const mini of data.miniatures)
+          for (const reason of projectPaintIssues(data, mini.id).get(row.paint.id) ?? []) reasons.add(reason);
+        // Retain the row/quantity controls, not stale issue reasons after buying or repairing.
+        return { ...row, reasons: [...reasons] };
+      }),
   ].sort(compareShoppingRows);
 }
 
@@ -71,14 +87,20 @@ export function filterShoppingGroups(groups: ReturnType<typeof shoppingGroups>, 
 export function missingShoppingPaints(data: State) {
   const paintById = new Map(data.catalog.map((paint) => [paint.id, paint]));
   const listed = wishlistPaintIds(data);
-  const projectCounts = new Map<string, number>();
+  const missing = new Map<string, { projectCount: number; reasons: Set<PaintRequirementReason> }>();
   for (const mini of data.miniatures)
-    for (const paintId of resolvedPaintIds(data, mini.id))
-      if (!owns(data.paintRecords[paintId]) && !listed.has(paintId))
-        projectCounts.set(paintId, (projectCounts.get(paintId) ?? 0) + 1);
-  return [...projectCounts]
-    .map(([paintId, projectCount]) => ({ paint: paintById.get(paintId), projectCount }))
-    .filter((item): item is { paint: Paint; projectCount: number } => Boolean(item.paint))
+    for (const [paintId, reasons] of projectPaintIssues(data, mini.id)) {
+      if (listed.has(paintId)) continue;
+      const entry = missing.get(paintId) ?? { projectCount: 0, reasons: new Set<PaintRequirementReason>() };
+      entry.projectCount++;
+      for (const reason of reasons) entry.reasons.add(reason);
+      missing.set(paintId, entry);
+    }
+  return [...missing]
+    .flatMap(([paintId, { projectCount, reasons }]) => {
+      const paint = paintById.get(paintId);
+      return paint ? [{ paint, projectCount, reasons: [...reasons] }] : [];
+    })
     .sort((a, b) => b.projectCount - a.projectCount || a.paint.name.localeCompare(b.paint.name));
 }
 
