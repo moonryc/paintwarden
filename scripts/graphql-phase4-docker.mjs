@@ -4,6 +4,7 @@
  * Default is a NOT RUN plan. --run creates a unique labelled retained fixture volume.
  */
 import assert from "node:assert/strict";
+import { graphqlObservations } from "./graphql-phase4-errors.mjs";
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -288,7 +289,8 @@ async function main() {
         await recorder.settle();
         mergeScenarioChecks(report.checks, "docker", recorder.scenario?.checks ?? []);
         const snapshots = recorder.requests.filter((entry) => /^\/api\/state(?:\/|$)/.test(entry.path));
-        const graphqlErrors = recorder.requests.filter((entry) => entry.data?.errors?.length);
+        const graphql = graphqlObservations(recorder.requests, recorder.scenario?.checks ?? []);
+        const graphqlErrors = graphql.unexpected;
         const serverErrors = recorder.requests.filter((entry) => entry.status >= 500);
         const clean =
           !snapshots.length && !graphqlErrors.length && !serverErrors.length && !recorder.errors.length;
@@ -297,7 +299,9 @@ async function main() {
           status: clean ? "PASS" : "FAIL",
           evidence: {
             snapshots: snapshots.length,
-            graphqlErrors: graphqlErrors.length,
+            unexpectedGraphqlErrors: graphqlErrors.length,
+            rawGraphqlErrorResponses: graphql.rawGraphqlErrorResponses,
+            recoveredStaleCursors: graphql.recoveredStaleCursors,
             serverErrors: serverErrors.length,
             rendererErrors: recorder.errors.length,
           },

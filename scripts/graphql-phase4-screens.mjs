@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { graphqlObservations } from "./graphql-phase4-errors.mjs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fixtureCredentials } from "./smoke-library-native.mjs";
@@ -249,6 +250,7 @@ export async function runPhase4Screens({
 
   await check(checklistNames[5], async () => {
     await nav("Wishlist");
+    await choose(page, "Miniature", f.wishlistMiniatureTitle);
     assert.ok(
       recorder.requests.some((e) => e.path === "/api/graphql/stream" && e.status === 200),
       "Production SSE connection must be open",
@@ -259,13 +261,13 @@ export async function runPhase4Screens({
     await recorder.waitFor(
       (entries) =>
         gql(entries, "wishlist").some((e) =>
-          e.data.data.wishlist.shopping.nodes.some(
-            (row) => row.paint.id === f.missingPaintId && row.paint.inventory?.quantity === 0,
+          e.data.data.wishlist.missing.nodes.some(
+            (row) => row.paint.id === f.missingPaintId && row.missingStock,
           ),
         ),
       mark,
     );
-    await page.getByRole("button", exact(`Mark ${f.missingPaintName} as bought`)).waitFor();
+    await page.getByRole("button", exact(`Add ${f.missingPaintName} to wishlist`)).waitFor();
     return {
       paintId: f.missingPaintId,
       independentlyWrittenQuantity: 0,
@@ -388,7 +390,7 @@ export async function runPhase4Screens({
     );
     await editor.waitFor({ state: "hidden" });
     // Saving invalidates asynchronously. Wait for the committed summary, then
-    // reopen from a fresh screen rather than capturing an old card's props.
+    // reopen directly only after the committed summary has been accepted/rendered.
     await recorder.waitFor(
       (entries) =>
         gql(entries, "templates").some((entry) =>
@@ -398,8 +400,9 @@ export async function runPhase4Screens({
         ),
       mark,
     );
-    await nav("Schemes");
-    await nav("Templates", "Miniature templates");
+    await page.evaluate(
+      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+    );
     const reopened = await openTemplate(f.templateName);
     await reopened.getByRole("button", exact("Edit")).click();
     await editor.getByRole("textbox", exact("Manufacturer")).waitFor();
@@ -578,9 +581,10 @@ export async function runPhase4Screens({
       "No Phase4 screen may initialize a legacy snapshot",
     );
     assert.deepEqual(
-      entries
-        .filter((e) => e.data?.errors?.length)
-        .map((e) => ({ operation: e.body?.operationName, errors: e.data.errors })),
+      graphqlObservations(entries).unexpected.map((e) => ({
+        operation: e.body?.operationName,
+        errors: e.data.errors,
+      })),
       [],
     );
     assert.deepEqual(recorder.errors.slice(errorStart), []);

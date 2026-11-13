@@ -122,3 +122,31 @@ test("Phase4 fixture extends compatible Phase3 records using ordinary commands o
     globalThis.fetch = originalFetch;
   }
 });
+
+test("Only successful same-scope STALE_CURSOR recovery is nonfatal", async () => {
+  const { graphqlObservations } = await import("./graphql-phase4-errors.mjs");
+  const error = (code) => ({
+    status: 200,
+    body: { operationName: "Page", variables: { search: "probe", after: "old" } },
+    data: { errors: [{ extensions: { code } }] },
+  });
+  const success = {
+    status: 200,
+    body: { operationName: "Page", variables: { search: "probe", after: null } },
+    data: { data: { page: { nodes: [] } } },
+  };
+  assert.equal(graphqlObservations([error("STALE_CURSOR"), success]).recoveredStaleCursors.length, 1);
+  assert.equal(graphqlObservations([error("RATE_LIMITED"), success]).unexpected.length, 1);
+  assert.equal(graphqlObservations([error("STALE_CURSOR")]).unexpected.length, 1);
+  assert.equal(
+    graphqlObservations([error("STALE_CURSOR"), success], [{ status: "FAIL" }]).unexpected.length,
+    1,
+  );
+  assert.equal(
+    graphqlObservations([
+      error("STALE_CURSOR"),
+      { ...success, body: { ...success.body, variables: { search: "other" } } },
+    ]).unexpected.length,
+    1,
+  );
+});

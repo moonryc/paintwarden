@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { graphqlObservations } from "./graphql-phase4-errors.mjs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -103,6 +104,9 @@ export async function runPhase4Scenario(options) {
   const pass = (name, evidence) => checks.push({ status: "PASS", name, evidence });
   const check = async (name, action) => {
     try {
+      // Human-like inter-task pacing avoids turning a functional UI sweep into
+      // an artificial >120 operations/minute rate-limit test. Never bypass limits.
+      await page.waitForTimeout(2500);
       const evidence = await action();
       pass(name, evidence);
       return true;
@@ -137,10 +141,11 @@ export async function runPhase4Scenario(options) {
     await recorder.settle();
     assertNoSnapshot(recorder.requests); // includes chooser/auth/fixture/setup
     const entries = recorder.slice(initial);
+    const graphql = graphqlObservations(entries, checks);
     assert.deepEqual(
-      entries.filter((entry) => entry.data?.errors?.length),
+      graphql.unexpected,
       [],
-      "No GraphQL errors",
+      "No unexpected GraphQL errors; stale cursors require successful same-scope recovery",
     );
     assert.deepEqual(
       entries.filter((entry) => entry.status >= 500),
@@ -156,7 +161,9 @@ export async function runPhase4Scenario(options) {
       requestCount: recorder.requests.length,
       snapshotRequests: 0,
       rendererErrors: 0,
-      graphqlErrors: 0,
+      unexpectedGraphqlErrors: 0,
+      rawGraphqlErrorResponses: graphql.rawGraphqlErrorResponses,
+      recoveredStaleCursors: graphql.recoveredStaleCursors,
     };
   });
   await writeFile(

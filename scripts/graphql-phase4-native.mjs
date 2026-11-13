@@ -5,6 +5,7 @@
  * identities for every packaged web asset, raw requests, fixture records and owned-process logs.
  */
 import assert from "node:assert/strict";
+import { graphqlObservations } from "./graphql-phase4-errors.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdir, mkdtemp, readdir, readlink, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -424,7 +425,8 @@ async function main() {
         await recorder.settle();
         mergeScenarioChecks(report.checks, label, recorder.scenario?.checks ?? []);
         const snapshots = recorder.requests.filter((entry) => /^\/api\/state(?:\/|$)/.test(entry.path));
-        const graphqlErrors = recorder.requests.filter((entry) => entry.data?.errors?.length);
+        const graphql = graphqlObservations(recorder.requests, recorder.scenario?.checks ?? []);
+        const graphqlErrors = graphql.unexpected;
         const serverErrors = recorder.requests.filter((entry) => entry.status >= 500);
         const clean =
           !snapshots.length && !graphqlErrors.length && !serverErrors.length && !recorder.errors.length;
@@ -433,7 +435,9 @@ async function main() {
           status: clean ? "PASS" : "FAIL",
           evidence: {
             snapshots: snapshots.length,
-            graphqlErrors: graphqlErrors.length,
+            unexpectedGraphqlErrors: graphqlErrors.length,
+            rawGraphqlErrorResponses: graphql.rawGraphqlErrorResponses,
+            recoveredStaleCursors: graphql.recoveredStaleCursors,
             serverErrors: serverErrors.length,
             rendererErrors: recorder.errors.length,
           },
