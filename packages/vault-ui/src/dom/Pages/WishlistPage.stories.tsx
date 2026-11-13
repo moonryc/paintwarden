@@ -108,6 +108,12 @@ export const ProjectFilterAndPurchaseRetention: Story = {
     await expect(canvas.getByRole("button", { name: "Share list" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: `Increase ${finalPaint.name} quantity` }));
     await expect(canvas.getByRole("textbox", { name: `${finalPaint.name} quantity` })).toHaveValue("2");
+    await userEvent.click(canvas.getByRole("button", { name: `View all 1 project for ${finalPaint.name}` }));
+    const dialog = await within(document.body).findByRole("dialog", {
+      name: `Projects using ${finalPaint.name}`,
+    });
+    await waitFor(() => expect(within(dialog).getByText(finalMini.title)).toBeVisible());
+    await userEvent.keyboard("{Escape}");
   },
 };
 
@@ -173,5 +179,41 @@ export const Empty: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByText("Nothing to buy")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Browse paints" })).toBeVisible();
+  },
+};
+
+const retainedProjects = Array.from({ length: 5 }, (_, index) => ({
+  ...miniatures.scout,
+  id: `retained-project-${index}`,
+  title: `Retained project ${index + 1}`,
+}));
+export const RetainedPurchaseBeyondProjectPreview: Story = {
+  parameters: {
+    vault: {
+      ...largeVault,
+      catalog: [finalPaint],
+      miniatures: retainedProjects,
+      requirements: retainedProjects.map((mini, index) => ({
+        ...requirements.black,
+        id: `retained-requirement-${index}`,
+        miniatureId: mini.id,
+        paintId: finalPaint.id,
+      })),
+    },
+  },
+  render: () => <PurchaseScenario />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: `Mark ${finalPaint.name} as bought` }));
+    await userEvent.click(canvas.getByRole("button", { name: "Sync final paint as bought" }));
+    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    await userEvent.click(picker);
+    await userEvent.type(picker, "Retained project 5");
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    await expect(picker).toHaveValue("Retained project 5");
+    await expect(await canvas.findByRole("textbox", { name: `${finalPaint.name} quantity` })).toHaveValue(
+      "1",
+    );
+    await expect(canvas.getByRole("button", { name: "Share list" })).toBeDisabled();
   },
 };

@@ -45,6 +45,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   const [fixPaint, setFixPaint] = useState<Paint | null>(null);
   const [retained, setRetained] = useState<Map<string, RetainedRow>>(new Map());
   const [sharing, setSharing] = useState(false);
+  const [retainedMembership, setRetainedMembership] = useState<Record<string, boolean>>({});
   const list = useWishlist(selectedMini?.id ?? null);
   const models = useWishlistModelOptions(modelSearch);
   const displayRows = useMemo(() => {
@@ -55,7 +56,8 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
           !ids.has(row.paint.id) &&
           (!selectedMini ||
             miniatureId === selectedMini.id ||
-            row.projects.some((p) => p.id === selectedMini.id)),
+            row.projects.some((p) => p.id === selectedMini.id) ||
+            retainedMembership[`${row.paint.id}:${selectedMini.id}`] === true),
       )
       .map(({ row }) => ({ ...row, reasons: row.reasons.filter((reason) => reason !== "missingStock") }));
     return [...list.rows, ...extra].sort(
@@ -65,7 +67,44 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
         compare(normalized(a.paint.name), normalized(b.paint.name)) ||
         compare(a.paint.id, b.paint.id),
     );
-  }, [list.rows, retained, selectedMini]);
+  }, [list.rows, retained, selectedMini, retainedMembership]);
+  // Preview projects are not the full association set. A later model filter must
+  // resolve membership for bought rows whose selected project is beyond that preview.
+  useEffect(() => {
+    if (!selectedMini) return;
+    let active = true;
+    const miniatureId = selectedMini.id;
+    for (const { row, miniatureId: boughtFor } of retained.values()) {
+      const key = `${row.paint.id}:${miniatureId}`;
+      if (
+        !row.projectsTruncated ||
+        boughtFor === miniatureId ||
+        row.projects.some((p) => p.id === miniatureId) ||
+        key in retainedMembership
+      )
+        continue;
+      void (async () => {
+        let after: string | null = null;
+        do {
+          const page = await list.relatedProjects(row.paint.id, after);
+          if (!active) return;
+          if (page.nodes.some((project) => project.id === miniatureId)) {
+            setRetainedMembership((previous) => ({ ...previous, [key]: true }));
+            return;
+          }
+          after = page.hasNextPage ? page.endCursor : null;
+        } while (after);
+        if (active) setRetainedMembership((previous) => ({ ...previous, [key]: false }));
+      })().catch(() => {
+        if (active)
+          notify("Could not check bought paint project associations. Retry the miniature filter.", "error");
+      });
+    }
+    return () => {
+      active = false;
+    };
+  }, [selectedMini, retained, retainedMembership, list.relatedProjects, notify]);
+
   const groups = useMemo(() => {
     const grouped = new Map<string, WishlistProjection[]>();
     for (const row of displayRows) {
@@ -166,7 +205,14 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
               </li>
             );
           }}
-          renderInput={(params) => <TextField {...params} label="Miniature" placeholder="All miniatures" />}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Miniature"
+              placeholder="All miniatures"
+              sx={{ "& .MuiInputLabel-root.Mui-focused": { color: "var(--ink)" } }}
+            />
+          )}
         />
         {models.hasNextPage && (
           <Button onClick={models.loadMore} disabled={models.loading}>

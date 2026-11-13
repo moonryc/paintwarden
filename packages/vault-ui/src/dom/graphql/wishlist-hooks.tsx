@@ -221,7 +221,7 @@ export function useWishlist(miniatureId: string | null) {
     if (!data || !scope.controller.accepts(ticket, data.wishlistExport.revision, ["WISHLIST"]))
       throw new Error("Wishlist changed while exporting. Try again.");
     return {
-      title: "Paint shopping list",
+      title: data.wishlistExport.text.split("\n", 1)[0] || "Paint shopping list",
       text: data.wishlistExport.text,
       totalCount: data.wishlistExport.totalCount,
     };

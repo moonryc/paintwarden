@@ -1,14 +1,14 @@
 import type { WishlistFixture, WishlistProjection } from "../graphql/wishlist-hooks";
 import type { State } from "../types";
 import { missingShoppingPaints, shoppingRows } from "../utils/semantic-contract";
-import { owns, projectPaintIssues } from "../utils/vault-data";
+import { owns, resolvedPaintIds } from "../utils/vault-data";
 
 // Complete snapshots are allowed in Storybook only, never in the production Wishlist.
 function snapshotFixture(data: State): WishlistFixture {
   const shopping = shoppingRows(data);
   const projectsFor = (paintId: string) =>
     data.miniatures
-      .filter((mini) => projectPaintIssues(data, mini.id).has(paintId))
+      .filter((mini) => resolvedPaintIds(data, mini.id).includes(paintId))
       .map(({ id, title }) => ({ id, title }));
   function project(row: ReturnType<typeof missingShoppingPaints>[number]): WishlistProjection {
     const record = data.paintRecords[row.paint.id];

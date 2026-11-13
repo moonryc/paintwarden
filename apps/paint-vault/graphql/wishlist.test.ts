@@ -5,7 +5,9 @@ import path from "node:path";
 import test, { after, beforeEach } from "node:test";
 
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
-import { GraphQLError } from "graphql";
+import { GraphQLError, print } from "graphql";
+
+import { WishlistPageDocument } from "../../../packages/vault-ui/src/dom/graphql/generated/graphql.ts";
 
 const directory = mkdtempSync(path.join(tmpdir(), "paint-vault-wishlist-"));
 const originalDataDir = process.env.DATA_DIR;
@@ -488,6 +490,20 @@ void test("HTTP exposes bounded wishlist windows, model picker, complete export 
   const response = await post(
     `{wishlist(first:1,missingFirst:1,miniatureId:"${mini}"){revision{epoch seq} counts{shoppingPaints missingStock brokenSubstitution listedMissingStock projectCount} shopping{nodes{id brandGroup restock missingStock brokenSubstitution projectCount relatedProjectsPreview{id title} relatedProjectsTruncated}totalCount pageInfo{hasNextPage endCursor}}missing{nodes{id missingStock brokenSubstitution}}}wishlistModelOptions(first:1,search:"HTTP"){nodes{id title projectCount}}wishlistExport(miniatureId:"${mini}"){text totalCount}}`,
   );
+  const productionDocument = await graphqlResponse(
+    new Request("http://127.0.0.1/api/graphql", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        query: print(WishlistPageDocument),
+        variables: { first: 48, missingFirst: 48, miniatureId: mini },
+      }),
+    }),
+    false,
+  );
+  const productionPayload = await productionDocument.json();
+  assert.equal(productionPayload.errors, undefined, JSON.stringify(productionPayload));
+  assert.equal(productionPayload.data.wishlist.shopping.nodes[0].paint.name, "HTTP paint");
   const payload = await response.json();
   assert.equal(payload.errors, undefined, JSON.stringify(payload));
   assert.equal(response.status, 200);
@@ -519,4 +535,24 @@ void test("HTTP exposes bounded wishlist windows, model picker, complete export 
     assert.ok(rejected.errors);
     assert.equal(rejected.data, undefined);
   }
+});
+
+void test("acquired retained shopping paint keeps all deduplicated project associations after leaving shopping", () => {
+  const p = paint("Retained purchase");
+  const ownedMini = miniature("Owned project");
+  const wishMini = miniature("Wishlist project", "WISHLIST");
+  inventory(p, "WISHLIST", "FULL", 0);
+  requirement(ownedMini, p);
+  requirement(ownedMini, p, 1);
+  scheme(ownedMini, [p]);
+  requirement(wishMini, p);
+  assert.equal(readWishlist({ first: 1 }).shopping.nodes[0].projectCount, 2);
+  sqlite
+    .prepare("UPDATE paint_inventory SET state='OWNED', stock_level='FULL', quantity=2 WHERE paint_id=?")
+    .run(p);
+  assert.equal(readWishlist({ first: 1 }).shopping.totalCount, 0);
+  assert.equal(readWishlistExport({}).totalCount, 0);
+  const related = readWishlistRelatedProjects({ paintId: p, first: 100 });
+  assert.equal(related.totalCount, 2);
+  assert.deepEqual(new Set(ids(related.nodes)), new Set([ownedMini, wishMini]));
 });
