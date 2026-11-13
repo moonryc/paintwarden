@@ -69,7 +69,9 @@ export async function runPhase4Screens({
     const button =
       name === "Data & settings"
         ? page.getByRole("button", { name: /Data & settings$/ })
-        : page.getByRole("button", exact(name));
+        : ["Paints", "Wishlist"].includes(name)
+          ? page.getByRole("button", { name: new RegExp(`^${escapeRegex(name)}(?:\\s|$)`) })
+          : page.getByRole("button", exact(name));
     await button.first().click();
     await page.getByRole("heading", { ...exact(heading), level: 2 }).waitFor({ timeout: 30000 });
   };
@@ -382,6 +384,19 @@ export async function runPhase4Screens({
       mark,
     );
     await editor.waitFor({ state: "hidden" });
+    // Saving invalidates asynchronously. Wait for the committed summary, then
+    // reopen from a fresh screen rather than capturing an old card's props.
+    await recorder.waitFor(
+      (entries) =>
+        gql(entries, "templates").some((entry) =>
+          entry.data.data.templates.templates.nodes.some(
+            (node) => node.id === f.templateId && node.manufacturer === manufacturer,
+          ),
+        ),
+      mark,
+    );
+    await nav("Schemes");
+    await nav("Templates", "Miniature templates");
     const reopened = await openTemplate(f.templateName);
     await reopened.getByRole("button", exact("Edit")).click();
     await editor.getByRole("textbox", exact("Manufacturer")).waitFor();
