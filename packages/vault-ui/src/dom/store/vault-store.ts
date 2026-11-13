@@ -148,10 +148,10 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
         // Cancel/remove cached legacy data even for cookie-only account changes.
         void queryClient.cancelQueries({ queryKey: VAULT_QUERY });
         queryClient.removeQueries({ queryKey: VAULT_QUERY });
-        if (get().token === token) return;
-        set({ token });
-        // Clear another account's data immediately, including inactive recipe queries. Reset
-        // cancels in-flight requests before active consumers refetch with the new credentials.
+        if (get().token !== token) set({ token });
+        // Cookie-only account changes also clear inactive recipes, even when both
+        // old/new bearer tokens are empty. Reset cancels old scoped requests and
+        // active consumers refetch only after the new credentials are installed.
         void queryClient.resetQueries({ queryKey: TEMPLATES_QUERY });
       },
       authHeaders: (): Record<string, string> => {

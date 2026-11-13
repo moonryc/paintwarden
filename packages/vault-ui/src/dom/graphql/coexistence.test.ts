@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 import { createVaultStore } from "../store/vault-store.ts";
 import { emptyState } from "../utils/constants.ts";
+import { TEMPLATES_QUERY } from "../utils/template-query.ts";
 import { AUTH_QUERY, VAULT_QUERY } from "../utils/vault-query.ts";
 
 test("migrated-only saves never initialize the legacy snapshot; cached snapshots still merge deltas", async () => {
@@ -33,10 +34,13 @@ test("cookie-only account transitions cancel/remove sensitive cached snapshots",
   try {
     client.setQueryData(VAULT_QUERY, { ...emptyState, cursor: { epoch: "vault", seq: 1 } });
     client.setQueryData(AUTH_QUERY, { requireSignIn: false });
+    const recipeKey = [...TEMPLATES_QUERY, "recipe", "private"];
+    client.setQueryData(recipeKey, { name: "private recipe" });
     const store = createVaultStore(client);
     store.getState().setToken("");
     assert.equal(store.getState().authGeneration, 1);
     assert.equal(client.getQueryData(VAULT_QUERY), undefined);
+    assert.equal(client.getQueryData(recipeKey), undefined);
   } finally {
     client.clear();
   }
