@@ -16,8 +16,12 @@ export type MiniatureSchemeSummary = {
   name: string;
   category: string | null;
   isSystem: boolean;
+  sourceId: string | null;
   sourceName: string | null;
   sourceLogoUrl: string | null;
+  paintNames: string;
+  usageCount: number;
+  gradient: string;
   paintCount: number;
   availableCount: number;
   previewSwatches: { paintId: string; colorHex: string }[];
@@ -58,7 +62,14 @@ const sourceJoin = `LEFT JOIN catalog_sources c ON c.id=(
   ORDER BY i.source_id DESC LIMIT 1)`;
 type SchemeStats = Pick<
   MiniatureSchemeSummary,
-  "paintCount" | "availableCount" | "previewSwatches" | "previewSwatchesTruncated" | "imageUrl"
+  | "paintCount"
+  | "availableCount"
+  | "previewSwatches"
+  | "previewSwatchesTruncated"
+  | "imageUrl"
+  | "paintNames"
+  | "usageCount"
+  | "gradient"
 >;
 function summary(row: SummaryRow, stats: SchemeStats): MiniatureSchemeSummary {
   return {
@@ -67,12 +78,13 @@ function summary(row: SummaryRow, stats: SchemeStats): MiniatureSchemeSummary {
     name: row.name,
     category: row.category,
     isSystem: !isUserId(row.id),
+    sourceId: row.sourceId,
     sourceName: row.sourceName,
     sourceLogoUrl: row.sourceId ? sourceLogoUrl(row.sourceId, row.logoSvg) : null,
   };
 }
-// Count in SQL and fetch at most eight swatches plus one image per scheme. This never
-// materializes full entry rows on the picker/attached-link path.
+// Aggregate in SQL: compact full card names/gradient plus at most eight preview swatches.
+// This never materializes full entry rows on the picker/attached-link path.
 function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<string, SchemeStats> {
   if (!rows.length) return new Map();
   const availableIds = [...byId.values()].filter((paint) => paint.available).map((paint) => paint.id);
@@ -86,6 +98,13 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
       (SELECT pc.id AS paintId,pc.color_hex AS colorHex FROM color_scheme_paints x
        JOIN paint_catalog pc ON pc.id=x.paint_id WHERE x.scheme_id=s.id AND pc.color_hex IS NOT NULL
        GROUP BY pc.id ORDER BY MIN(x.sort_order),pc.id LIMIT 8) v) AS swatches,
+    (SELECT COUNT(*) FROM miniature_color_schemes l WHERE l.scheme_id=s.id) AS usageCount,
+    (SELECT json_group_array(v.name) FROM
+      (SELECT pc.name FROM color_scheme_paints x JOIN paint_catalog pc ON pc.id=x.paint_id
+       WHERE x.scheme_id=s.id ORDER BY x.sort_order,pc.id) v) AS paintNames,
+    (SELECT json_group_array(v.colorHex) FROM
+      (SELECT pc.color_hex AS colorHex FROM color_scheme_paints x JOIN paint_catalog pc ON pc.id=x.paint_id
+       WHERE x.scheme_id=s.id AND pc.color_hex IS NOT NULL ORDER BY x.sort_order,pc.id) v) AS colors,
     (SELECT COALESCE(NULLIF(thumbnail_url,''),image_url) FROM color_scheme_images x WHERE x.scheme_id=s.id ORDER BY x.sort_order DESC,x.id DESC LIMIT 1) AS imageUrl
     FROM color_schemes s LEFT JOIN color_scheme_paints p ON p.scheme_id=s.id
     WHERE s.id IN (SELECT value FROM json_each(?)) GROUP BY s.id`,
@@ -95,6 +114,9 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
     paintCount: number;
     availableCount: number;
     swatchCount: number;
+    usageCount: number;
+    paintNames: string;
+    colors: string;
     swatches: string;
     imageUrl: string | null;
   }[];
@@ -102,6 +124,9 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
     stats.map((row) => [
       row.id,
       {
+        paintNames: (JSON.parse(row.paintNames) as string[]).join(" · "),
+        usageCount: row.usageCount,
+        gradient: paintGradient(JSON.parse(row.colors) as string[]),
         paintCount: row.paintCount,
         availableCount: row.availableCount,
         previewSwatches: JSON.parse(row.swatches) as MiniatureSchemeSummary["previewSwatches"],
@@ -111,12 +136,22 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
     ]),
   );
 }
+// Match the authored card's complete ordered color sequence (including repeated paints).
+function paintGradient(colors: string[]): string {
+  if (colors.length < 2) return colors[0] ?? "";
+  return `linear-gradient(135deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(", ")})`;
+}
 const opaque = (parts: unknown[]) => Buffer.from(JSON.stringify(parts)).toString("base64url");
 const scopeFor = (parts: unknown[]) => createHash("sha256").update(JSON.stringify(parts)).digest("base64url");
 const badCursor = (): never => {
   throw new GraphQLError("Invalid miniature scheme cursor", { extensions: { code: "BAD_USER_INPUT" } });
 };
-function paginate<T extends { id: string }>(items: T[], args: PageArgs, revision: Revision, scope: string) {
+export function paginateSchemeItems<T extends { id: string }>(
+  items: T[],
+  args: PageArgs,
+  revision: Revision,
+  scope: string,
+) {
   validatePage(args);
   let start = 0;
   if (args.after != null) {
@@ -161,6 +196,7 @@ function paginate<T extends { id: string }>(items: T[], args: PageArgs, revision
 }
 type SearchSet = { at: number; nodes: MiniatureSchemeSummary[] };
 type OptionsProjection = {
+  targetIds: Map<string, Set<string>>;
   revision: Revision;
   nodes: MiniatureSchemeSummary[];
   byId: Map<string, MiniatureSchemeSummary>;
@@ -169,7 +205,7 @@ type OptionsProjection = {
   categoryCounts: { key: string; label: string; count: number }[];
 };
 let cached: OptionsProjection | undefined;
-function optionsProjection(revision: Revision, allowCache: boolean): OptionsProjection {
+export function readSchemeProjection(revision: Revision, allowCache: boolean): OptionsProjection {
   if (allowCache && cached?.revision.epoch === revision.epoch && cached.revision.seq === revision.seq)
     return cached;
   const rows = getSqlite()
@@ -196,7 +232,15 @@ function optionsProjection(revision: Revision, allowCache: boolean): OptionsProj
   const categoryCounts = [...counts]
     .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
     .map(([key, count]) => ({ key, label: key || "Uncategorized", count }));
+  const targetIds = new Map<string, Set<string>>();
+  const targets = getSqlite()
+    .prepare(
+      "SELECT scheme_id AS schemeId,json_group_array(DISTINCT paint_id) AS ids FROM color_scheme_paints GROUP BY scheme_id",
+    )
+    .all() as { schemeId: string; ids: string }[];
+  for (const row of targets) targetIds.set(row.schemeId, new Set(JSON.parse(row.ids) as string[]));
   const projection = {
+    targetIds,
     revision,
     categoryCounts,
     nodes,
@@ -222,7 +266,7 @@ export function readMiniatureSchemeOptions(
     allowCache = !sqlite.inTransaction;
   return sqlite.transaction(() => {
     const revision = readRevision(),
-      projection = optionsProjection(revision, allowCache),
+      projection = readSchemeProjection(revision, allowCache),
       query = args.search?.trim() ?? "",
       category = args.category === "ALL" ? null : (args.category ?? null),
       excluded = [...new Set(args.excludeIds ?? [])].sort(),
@@ -262,7 +306,7 @@ export function readMiniatureSchemeOptions(
           .map((f) => ({ ...f, count: f.count - (excludedCounts.get(f.key) ?? 0) }))
           .filter((f) => f.count > 0)
       : projection.categoryCounts;
-    return { revision, ...paginate(nodes, args, revision, scope), categoryCounts };
+    return { revision, ...paginateSchemeItems(nodes, args, revision, scope), categoryCounts };
   })();
 }
 export function readAttachedMiniatureSchemes(
@@ -349,5 +393,10 @@ export function readMiniatureScheme(id: string): MiniatureSchemeRead {
   })();
 }
 export function miniatureSchemeEntries(parent: MiniatureSchemeRead, args: PageArgs) {
-  return paginate(parent.entries, args, parent.revision, scopeFor(["entries", parent.scheme?.id ?? null]));
+  return paginateSchemeItems(
+    parent.entries,
+    args,
+    parent.revision,
+    scopeFor(["entries", parent.scheme?.id ?? null]),
+  );
 }

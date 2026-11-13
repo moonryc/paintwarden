@@ -401,3 +401,68 @@ type MiniatureRequiredConnection {
   totalCount: Int!
   pageInfo: PageInfo!
 }
+
+# Schemes browse and ordinary owner commands share the miniature scheme projection.
+extend type Query {
+  schemes(
+    first: Int! = 48
+    after: String
+    search: String
+    category: String
+    sourceId: ID
+    noSource: Boolean! = false
+    readiness: SchemeReadiness
+    usesPaintIds: [ID!]! = []
+  ): SchemesView!
+  schemePaintOptions(search: String! = "", excludeIds: [ID!]! = [], first: Int! = 30): PaintOptionsView!
+}
+enum SchemeReadiness {
+  READY
+  MISSING
+}
+type SchemesView {
+  revision: VaultRevision!
+  nodes: [MiniatureScheme!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+  facets: SchemeFacets!
+}
+type SchemeFacets {
+  categories: [FacetCount!]!
+  sources: [FacetCount!]!
+  readiness: [FacetCount!]!
+}
+extend type MiniatureScheme {
+  sourceId: ID
+  paintNames: String!
+  usageCount: Int!
+  gradient: String!
+}
+extend type Mutation {
+  createScheme(input: SchemeInput!, clientMutationId: String): SchemeMutationPayload!
+  updateScheme(id: ID!, input: SchemeInput!, clientMutationId: String): SchemeMutationPayload!
+  deleteScheme(id: ID!, clientMutationId: String): SchemeMutationPayload!
+}
+input SchemeInput {
+  name: String!
+  category: String!
+  entries: [SchemeEntryInput!]!
+}
+input SchemeEntryInput {
+  type: MiniatureSchemeEntryKind!
+  paintId: ID
+  id: ID
+  label: String
+  tone: String
+  role: String
+  imageUrl: String
+  thumbnailUrl: String
+  imageType: String
+  method: String
+}
+type SchemeMutationPayload {
+  revision: VaultRevision!
+  schemeId: ID!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
