@@ -1,27 +1,21 @@
-import { Autocomplete, Box, Card, Divider, TextField } from "@mui/material";
+import { Alert, Autocomplete, Box, Button, Card, Divider, TextField } from "@mui/material";
 import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { PaintBottle } from "../../Components/PaintBottle";
 import { PaintDetailsButton } from "../../Components/PaintDetailsButton";
 import { PaintSimilarityList } from "../../Components/PaintSimilarityList";
+import { usePaintOptions } from "../../graphql/detail-hooks";
+import { paintModel } from "../../graphql/miniature-scheme-model";
+import { usePaintRanking } from "../../graphql/paint-tools-hooks";
 import { ArrowLeftRight } from "../../icons";
-import { useVault } from "../../store/hooks";
 import type { Paint } from "../../types";
-import { useFuzzySearch } from "../../utils/use-fuzzy-search";
-
-const paintSearchText = (paint: Paint) => `${paint.brand} ${paint.range} ${paint.name}`;
 
 export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void }) {
-  const data = useVault();
-  const [selectedPaintId, setSelectedPaintId] = useState<string | null>(null);
+  const [selectedPaint, setSelectedPaint] = useState<Paint | null>(null);
   const [query, setQuery] = useState("");
-  const matches = useFuzzySearch(data.catalog, query.trim(), paintSearchText, 30);
-  const selectedPaint = data.catalog.find((paint) => paint.id === selectedPaintId) ?? null;
-  const ranked = useMemo(
-    () => (selectedPaint ? rankPaintsByColor(selectedPaint, data.catalog) : null),
-    [selectedPaint, data.catalog],
-  );
+  const options = usePaintOptions(query.trim(), []);
+  const matches = options.items.map(paintModel);
 
   return (
     <Card sx={{ p: { xs: 2, sm: 4 } }}>
@@ -30,7 +24,8 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
         inputValue={query}
         onInputChange={(_, value) => setQuery(value)}
         value={selectedPaint}
-        onChange={(_, paint) => setSelectedPaintId(paint?.id ?? null)}
+        onChange={(_, paint) => setSelectedPaint(paint)}
+        loading={options.loading}
         getOptionLabel={(paint) => paint.name}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         filterOptions={(options) => options}
@@ -55,6 +50,11 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
         }}
         fullWidth
       />
+      {options.error && (
+        <Alert severity="error" sx={{ mt: 2 }}>
+          {options.error.message}
+        </Alert>
+      )}
       {!selectedPaint && (
         <Box
           sx={{
@@ -75,6 +75,33 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
             match from a range you already own or to replace a discontinued bottle.
           </span>
         </Box>
+      )}
+      {selectedPaint && <SelectedComparison id={selectedPaint.id} onOpenPaint={onOpenPaint} />}
+    </Card>
+  );
+}
+
+function SelectedComparison({ id, onOpenPaint }: { id: string; onOpenPaint(id: string): void }) {
+  const result = usePaintRanking(id);
+  const selectedPaint = result.data?.paint ? paintModel(result.data.paint) : null;
+  const ranked = result.data?.nodes.map((row) => ({ ...row, paint: paintModel(row.paint) })) ?? [];
+  const validColor = selectedPaint ? rankPaintsByColor(selectedPaint, []) !== null : false;
+  return (
+    <>
+      {result.loading && (
+        <Box role="status" sx={{ mt: 2 }}>
+          Loading color matches…
+        </Box>
+      )}
+      {result.error && (
+        <Alert severity="error" sx={{ mt: 2 }} action={<Button onClick={result.refetch}>Retry</Button>}>
+          {result.error.message}
+        </Alert>
+      )}
+      {!result.loading && !result.error && !selectedPaint && (
+        <Alert severity="info" sx={{ mt: 2 }}>
+          This paint is no longer in the catalog.
+        </Alert>
       )}
       {selectedPaint && (
         <>
@@ -102,8 +129,20 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
             </Box>
           </PaintDetailsButton>
           <Divider sx={{ mt: 2.5 }} />
-          {ranked ? (
-            <PaintSimilarityList key={selectedPaint.id} ranked={ranked} />
+          {validColor ? (
+            <>
+              <PaintSimilarityList key={selectedPaint.id} ranked={ranked} />
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 1.5 }}>
+                <Box sx={{ color: "text.secondary", fontSize: 12 }}>
+                  {ranked.length} of {result.data?.totalCount ?? 0} matches
+                </Box>
+                {result.data?.pageInfo.hasNextPage && (
+                  <Button disabled={result.loading} onClick={result.loadMore}>
+                    Load more matches
+                  </Button>
+                )}
+              </Box>
+            </>
           ) : (
             <Box sx={{ mt: 2.5, color: "text.secondary", fontSize: 13 }}>
               Add a valid hex color to this paint to compare it with the catalog.
@@ -111,6 +150,6 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
           )}
         </>
       )}
-    </Card>
+    </>
   );
 }

@@ -1,0 +1,53 @@
+query PaintToolRanking($id: ID!, $ownedOnly: Boolean! = false, $after: String) {
+  paintRanking(id: $id, ownedOnly: $ownedOnly, first: 30, after: $after) {
+    revision {
+      epoch
+      seq
+    }
+    paint {
+      ...DetailPaint
+    }
+    owned
+    suggestedId
+    nodes {
+      paint {
+        ...DetailPaint
+      }
+      match {
+        score
+        distance
+        lightnessDelta
+        hueDelta
+        intensityDelta
+      }
+      sameType
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+query OwnedPaintPickerOptions($search: String!) {
+  ownedPaintOptions(search: $search, first: 30) {
+    revision {
+      epoch
+      seq
+    }
+    items {
+      ...DetailPaint
+    }
+  }
+}
+query PaintToolChoice($id: ID!) {
+  paint(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    paint {
+      ...DetailPaint
+    }
+  }
+}

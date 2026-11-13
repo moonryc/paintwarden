@@ -23,8 +23,8 @@ export const useVaultGraphQL = () => useContext(VaultGraphQLContext);
 
 const fields: Record<VaultFamily, readonly string[]> = {
   LIBRARY: ["library", "vaultNavigation"],
-  PAINT: ["paint"],
-  OPTIONS: ["paintOptions"],
+  PAINT: ["paint", "paintRanking", "ownedPaintOptions"],
+  OPTIONS: ["paintOptions", "ownedPaintOptions"],
   HOME: ["home"],
   MINIATURES: ["miniatures", "miniature"],
   WISHLIST: [

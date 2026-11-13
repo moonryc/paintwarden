@@ -117,9 +117,10 @@ function ApolloFixture({
               SetSubstitutionDefault: "setSubstitutionDefault",
               DeleteSubstitution: "deleteSubstitution",
             };
-            if (mutations[operation.operationName]) {
+            const mutation = mutations[operation.operationName ?? ""];
+            if (mutation) {
               data = {
-                [mutations[operation.operationName]]: {
+                [mutation]: {
                   revision,
                   invalidatedFamilies: ["PAINT", "OPTIONS", "HOME", "MINIATURES", "WISHLIST"],
                   substitutionId: "saved-server-mix",
