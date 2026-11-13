@@ -56,6 +56,11 @@ void test("HTTP auth is evaluated per operation and each client starts with an i
     fetch: async (url, init) => {
       assert.equal(url, "/api/graphql");
       assert.equal(init?.credentials, "same-origin");
+      assert.deepEqual(
+        Object.keys(body(init)).sort(),
+        ["operationName", "query", "variables"],
+        "HTTP payload obeys the server allowlist; Apollo telemetry extensions are disabled",
+      );
       headers.push(new Headers(init?.headers));
       return json(page(token));
     },

@@ -130,7 +130,14 @@ export function createVaultGraphQLClient(options: Options) {
       return definition.kind === "OperationDefinition" && definition.operation === "subscription";
     },
     createVaultSSELink(options),
-    new HttpLink({ uri: "/api/graphql", credentials: "same-origin", fetch: options.fetch }),
+    new HttpLink({
+      uri: "/api/graphql",
+      credentials: "same-origin",
+      fetch: options.fetch,
+      // Apollo 4 otherwise adds an extensions.clientLibrary telemetry object.
+      // Our endpoint intentionally accepts only query/variables/operationName.
+      enhancedClientAwareness: { transport: false },
+    }),
   );
   const client = new ApolloClient({
     cache: createVaultCache(),
