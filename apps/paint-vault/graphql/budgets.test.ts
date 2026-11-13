@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { buildSchema, GraphQLError, type GraphQLSchema } from "graphql";
+
+import { buildSchema, GraphQLError } from "graphql";
+
 import { checkOperation, GRAPHQL_BODY_BYTES, OPERATION_BYTES, QUERY_LIMITS } from "./budgets.ts";
 
 const schema = buildSchema(readFileSync(new URL("./schema.graphql", import.meta.url), "utf8"));

@@ -21,9 +21,13 @@ await build({
     "express",
     "reflect-metadata",
     "rxjs",
+    "graphql",
+    "graphql-yoga",
   ],
   tsconfig: path.join(import.meta.dirname, "tsconfig.json"),
   logLevel: "info",
 });
 await cp(path.join(root, "apps/paint-vault-web/dist"), path.join(output, "web-dist"), { recursive: true });
 await cp(path.join(import.meta.dirname, "drizzle"), path.join(output, "drizzle"), { recursive: true });
+// esbuild flattens import.meta.url to server.mjs; keep the reviewed schema beside it.
+await cp(path.join(import.meta.dirname, "graphql/schema.graphql"), path.join(output, "schema.graphql"));

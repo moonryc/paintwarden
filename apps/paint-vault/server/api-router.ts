@@ -16,6 +16,8 @@ import * as paintSubstitutions from "../app/api/paint-substitutions/route";
 import * as recipeSteps from "../app/api/recipe-steps/route";
 import * as requirements from "../app/api/requirements/route";
 import * as state from "../app/api/state/route";
+import { GRAPHQL_BODY_BYTES } from "../graphql/budgets";
+import { graphqlResponse } from "../graphql/server";
 import { APP_VERSION } from "../lib/app-version";
 import { authAction, authStatus, authorizeVault, hostRefused, sameOrigin } from "../lib/auth";
 import { MAX_BACKUP_BYTES } from "../lib/backup";
@@ -70,6 +72,8 @@ function staticHandler(path: string, method: string): Handler | undefined {
 const MIB = 1024 * 1024;
 
 function bodyLimit(path: string, method: string, contentType: string): BodyLimit {
+  if (path === "graphql" || path === "graphql/stream")
+    return { maxBytes: GRAPHQL_BODY_BYTES, message: "GraphQL requests must be under 128 KiB" };
   if (path.startsWith("auth/")) return { maxBytes: 16 * 1024, message: "This request is too large" };
   if (path === "backup" && method === "POST")
     return { maxBytes: MAX_BACKUP_BYTES, message: "The backup file must be under 16 GB" };
@@ -115,6 +119,8 @@ async function dispatch(request: Request, path: string, method: string): Promise
   if (!sameOrigin(request)) return Response.json({ error: "Invalid origin" }, { status: 403 });
   const denied = authorizeVault(request);
   if (denied) return denied;
+  if (path === "graphql" || path === "graphql/stream")
+    return graphqlResponse(request, path === "graphql/stream");
   const direct = staticHandler(path, method);
   if (direct) return direct(request);
 

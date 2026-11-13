@@ -24,6 +24,13 @@
     },
     "types": ["node"]
   },
-  "include": ["db/**/*.ts", "lib/**/*.ts", "app/api/**/*.ts", "server/**/*.ts", "drizzle.config.ts"],
+  "include": [
+    "db/**/*.ts",
+    "lib/**/*.ts",
+    "app/api/**/*.ts",
+    "server/**/*.ts",
+    "graphql/**/*.ts",
+    "drizzle.config.ts"
+  ],
   "exclude": ["node_modules", "examples"]
 }

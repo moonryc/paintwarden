@@ -1,0 +1,48 @@
+"""
+Phase 1 raw Library projection, not a full vault or availability model.
+"""
+type Query {
+  library(first: Int! = 48, after: String): PaintConnection!
+}
+type PaintConnection {
+  nodes: [Paint!]!
+  pageInfo: PageInfo!
+  revision: VaultRevision!
+}
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String
+}
+type Paint {
+  id: ID!
+  brand: String!
+  range: String!
+  name: String!
+  colorHex: String
+  type: String
+  discontinued: Boolean!
+  inventory: Inventory
+}
+type Inventory {
+  state: String!
+  stockLevel: String!
+  quantity: Int!
+}
+type VaultRevision {
+  epoch: String!
+  seq: Int!
+}
+type Subscription {
+  """
+  Conservative all-family invalidation. Resume using the last received epoch/seq.
+  """
+  vaultChanges(epoch: String!, since: Int!): VaultInvalidation!
+}
+type VaultInvalidation {
+  epoch: String!
+  seq: Int!
+  """
+  Epoch/pruning/overflow/source reset: discard the previous revision baseline.
+  """
+  reset: Boolean!
+}

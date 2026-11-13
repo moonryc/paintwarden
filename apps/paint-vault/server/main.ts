@@ -31,25 +31,36 @@ async function forward(request: ExpressRequest, response: ExpressResponse) {
     CLIENT_ADDRESS_HEADER,
     clientAddress(request.socket.remoteAddress, request.get("x-forwarded-for")),
   );
+  const abort = new AbortController();
+  const disconnect = () => abort.abort();
+  request.once("aborted", disconnect);
+  response.once("close", disconnect);
   const webRequest = new Request(requestUrl(request), {
     method: request.method,
+    signal: abort.signal,
     headers,
     ...(hasBody ? { body: Readable.toWeb(request) as ReadableStream, duplex: "half" as const } : {}),
   });
-  const result = await compressJsonResponse(webRequest, await routeApi(webRequest));
-  response.status(result.status);
-  result.headers.forEach((value, key) => response.setHeader(key, value));
-  if (!result.body) {
-    response.end();
-    return;
+  try {
+    const result = await compressJsonResponse(webRequest, await routeApi(webRequest));
+    response.status(result.status);
+    result.headers.forEach((value, key) => response.setHeader(key, value));
+    if (!result.body) {
+      response.end();
+      return;
+    }
+    // Streamed, so a large backup is never held in memory. A failure partway through closes the
+    // connection, and the client sees an incomplete download rather than a damaged file.
+    await pipeline(Readable.fromWeb(result.body as NodeReadableStream), response).catch(
+      (error: NodeJS.ErrnoException) => {
+        if (error.code !== "ERR_STREAM_PREMATURE_CLOSE") Logger.error(error);
+      },
+    );
+  } finally {
+    request.off("aborted", disconnect);
+    response.off("close", disconnect);
+    abort.abort();
   }
-  // Streamed, so a large backup is never held in memory. A failure partway through closes the
-  // connection, and the client sees an incomplete download rather than a damaged file.
-  await pipeline(Readable.fromWeb(result.body as NodeReadableStream), response).catch(
-    (error: NodeJS.ErrnoException) => {
-      if (error.code !== "ERR_STREAM_PREMATURE_CLOSE") Logger.error(error);
-    },
-  );
 }
 
 // The same policy as the desktop app's pages, plus refusing to be framed by other sites.

@@ -56,6 +56,7 @@ try {
 
 await cp(path.join(root, "apps/paint-vault/package.json"), path.join(output, "package.json"));
 await cp(path.join(dist, "server.mjs"), path.join(output, "server.mjs"));
+await cp(path.join(dist, "schema.graphql"), path.join(output, "schema.graphql"));
 await cp(path.join(dist, "web-dist"), path.join(output, "web-dist"), { recursive: true });
 await cp(path.join(dist, "drizzle"), path.join(output, "drizzle"), { recursive: true });
 
