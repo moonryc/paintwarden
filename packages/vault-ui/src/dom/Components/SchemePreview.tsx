@@ -1,17 +1,19 @@
-import { imageUrl } from "../utils/image-cache";
-import { Button, Card, Chip } from "@mui/material";
+import { Alert, Button, ButtonBase, Card, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
-import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
 import { useState } from "react";
 
+import type { LibraryPaintProjection } from "../graphql/library-model";
+import type { SchemeSummaryModel } from "../graphql/miniature-scheme-model";
 import { Pencil } from "../icons";
+import { ImageViewer } from "../Modals/ImageViewer";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
-import { useVault, useVaultStore } from "../store/hooks";
-import type { ColorScheme, Paint, SchemeOrderEntry } from "../types";
+import { useVaultStore } from "../store/hooks";
+import type { Paint, SchemeOrderEntry } from "../types";
 import { schemePreviewChipSize } from "../utils/chip-sizes";
 import { listResetSx } from "../utils/element-resets";
-import { schemePaintRows } from "../utils/scheme-order";
+import { imageUrl } from "../utils/image-cache";
+import { displayDividerLabel } from "../utils/scheme-order";
 
 import { LibraryPaintRow } from "./LibraryPaintRow";
 import { Modal } from "./Modal";
@@ -21,27 +23,43 @@ import { SchemeProgressChip } from "./SchemeProgressChip";
 export function SchemePreview({
   active,
   entries,
+  projections,
+  availableCount,
+  paintCount,
   toggleOwned,
   onEdit,
   onClose,
+  error,
+  loading,
+  onRetry,
 }: {
-  active: ColorScheme;
+  active: SchemeSummaryModel;
   entries: SchemeOrderEntry[];
-  // Replaces the usual owned toggle; the project drawer passes one that only marks paints owned.
+  projections: LibraryPaintProjection[];
+  availableCount: number;
+  paintCount: number;
   toggleOwned?(paint: Paint): void;
   onEdit(): void;
   onClose(): void;
+  error?: Error | null;
+  loading?: boolean;
+  onRetry?(): void;
 }) {
-  const data = useVault();
   const openMini = useVaultStore((s) => s.openMini);
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
-  const paintCount = entries.filter((entry) => entry.type === "PAINT").length;
-  const schemePaintIds = new Set(schemePaintRows(data, active.id).map((row) => row.paintId));
-  const availablePaintCount = [...schemePaintIds].filter((paintId) =>
-    isPaintAvailable(data, data.paintRecords, paintId),
-  ).length;
+  const [openImage, setOpenImage] = useState<{ src: string; alt: string } | null>(null);
   return (
     <Modal title={active.name} subtitle="Ordered paint recipe and reference images." onClose={onClose}>
+      {error && (
+        <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
+          {error.message}
+        </Alert>
+      )}
+      {loading && (
+        <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
+          Refreshing scheme…
+        </Box>
+      )}
       <Box
         component="div"
         sx={{
@@ -64,7 +82,7 @@ export function SchemePreview({
             sx={{ ...schemePreviewChipSize, fontSize: 11, fontWeight: 700 }}
           />
           {active.isSystem && <PluginChip name={active.sourceName} logoUrl={active.sourceLogoUrl} />}
-          <SchemeProgressChip available={availablePaintCount} total={schemePaintIds.size} />
+          <SchemeProgressChip available={availableCount} total={paintCount} />
           <Box
             component="span"
             sx={{
@@ -120,7 +138,7 @@ export function SchemePreview({
                         },
                   ]}
                 >
-                  {entry.label}
+                  {displayDividerLabel(entry.role, entry.label)}
                 </Box>
               );
             if (entry.type === "IMAGE")
@@ -137,17 +155,28 @@ export function SchemePreview({
                     bgcolor: "#fff",
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={imageUrl(entry.imageUrl)}
-                    alt={`${active.name} ${entry.imageType?.toLowerCase() ?? "recipe"} example`}
-                    sx={{
-                      marginInline: "auto",
-                      maxHeight: "34rem",
-                      width: "100%",
-                      objectFit: "contain",
-                    }}
-                  />
+                  <ButtonBase
+                    aria-label={`View ${active.name} reference image`}
+                    onClick={() =>
+                      setOpenImage({
+                        src: entry.imageUrl,
+                        alt: `${active.name} ${entry.imageType?.toLowerCase() ?? "recipe"} example`,
+                      })
+                    }
+                    sx={{ display: "block", width: "100%" }}
+                  >
+                    <Box
+                      component="img"
+                      src={imageUrl(entry.imageUrl)}
+                      alt={`${active.name} ${entry.imageType?.toLowerCase() ?? "recipe"} example`}
+                      sx={{
+                        marginInline: "auto",
+                        maxHeight: "34rem",
+                        width: "100%",
+                        objectFit: "contain",
+                      }}
+                    />
+                  </ButtonBase>
                   {entry.imageType && (
                     <Chip
                       size="small"
@@ -167,11 +196,13 @@ export function SchemePreview({
                   )}
                 </Box>
               );
-            const paint = data.catalog.find((item) => item.id === entry.paintId);
+            const projection = projections.find((item) => item.paint.id === entry.paintId);
+            const paint = projection?.paint;
             return paint ? (
               <LibraryPaintRow
                 key={entry.id}
                 paint={paint}
+                projection={projection}
                 toggleOwned={toggleOwned}
                 onOpenPaint={setOpenPaintId}
                 border="bottom"
@@ -210,6 +241,9 @@ export function SchemePreview({
           </Box>
         )}
       </Box>
+      {openImage && (
+        <ImageViewer src={openImage.src} alt={openImage.alt} onClose={() => setOpenImage(null)} />
+      )}
       <PaintDetailsOverlay
         paintId={openPaintId}
         onClose={() => setOpenPaintId(null)}

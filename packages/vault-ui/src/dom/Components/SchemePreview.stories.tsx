@@ -15,6 +15,15 @@ const meta = {
   args: {
     active: scheme(schemes.crimsonArmour.id),
     entries: schemeOrderEntries(vault, schemes.crimsonArmour.id),
+    projections: vault.catalog.map((paint) => ({
+      paint,
+      record: vault.paintRecords[paint.id],
+      available: true,
+      substitution: null,
+      broken: false,
+    })),
+    availableCount: 1,
+    paintCount: 2,
     onEdit: fn(),
     onClose: fn(),
   },
@@ -28,5 +37,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Empty: Story = {
-  args: { active: scheme(schemes.empty.id), entries: schemeOrderEntries(vault, schemes.empty.id) },
+  args: { active: scheme(schemes.empty.id), entries: [], projections: [], availableCount: 0, paintCount: 0 },
 };

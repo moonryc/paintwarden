@@ -15,6 +15,7 @@ import { COLOR_CATEGORIES, COLOR_CATEGORY_LABELS } from "@paint-vault/core/color
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";
+import { useSchemeActions } from "../graphql/scheme-actions";
 import { Plus, Save, Trash2 } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
@@ -38,16 +39,24 @@ import { RequiredMilestone, SchemeEntryRow } from "./SchemeEntryRow";
 // initialized only on mount, so background query refreshes cannot overwrite unsaved changes.
 export function ProjectSchemeEditor({
   scheme,
+  mode = "update",
   entries: initialEntries,
   paints,
+  refreshError,
+  refreshing,
+  onRefresh,
   onClose,
 }: {
   scheme: Pick<ColorScheme, "id" | "name" | "category" | "isSystem" | "sourceName" | "sourceLogoUrl">;
+  mode?: "create" | "update";
   entries: SchemeOrderEntry[];
   paints: Paint[];
+  refreshError?: Error | null;
+  refreshing?: boolean;
+  onRefresh?(): void;
   onClose: () => void;
 }) {
-  const api = useVaultStore((s) => s.api);
+  const actions = useSchemeActions();
   const notify = useVaultStore((s) => s.notify);
   const [name, setName] = useState(scheme.name),
     [category, setCategory] = useState<ColorCategory | "">(scheme.category ?? ""),
@@ -162,11 +171,10 @@ export function ProjectSchemeEditor({
     setBusy(true);
     setError(null);
     try {
-      await api("/api/color-schemes", {
-        method: "PUT",
-        body: JSON.stringify({ id: scheme.id, name, category, entries: payloadEntries }),
-      });
-      notify("Color scheme updated");
+      const input = { name, category, entries: payloadEntries };
+      if (mode === "create") await actions.create(input);
+      else await actions.update(scheme.id, input);
+      notify(mode === "create" ? "Color scheme created" : "Color scheme updated");
       onClose();
     } catch (cause) {
       setError({
@@ -178,11 +186,11 @@ export function ProjectSchemeEditor({
     }
   };
   const deleteScheme = async () => {
-    if (scheme.isSystem || busy || !confirmDelete) return;
+    if (mode === "create" || scheme.isSystem || busy || !confirmDelete) return;
     setBusy(true);
     setError(null);
     try {
-      await api(`/api/color-schemes?id=${encodeURIComponent(scheme.id)}`, { method: "DELETE" });
+      await actions.remove(scheme.id);
       notify("Color scheme deleted");
       onClose();
     } catch (cause) {
@@ -205,6 +213,16 @@ export function ProjectSchemeEditor({
     );
   return (
     <Modal title="Color schemes" subtitle="Group paints into reusable, ordered palettes." onClose={onClose}>
+      {refreshError && (
+        <Alert severity="error" sx={{ mb: 2 }} action={<Button onClick={onRefresh}>Retry refresh</Button>}>
+          {refreshError.message} Your unsaved changes are kept.
+        </Alert>
+      )}
+      {refreshing && (
+        <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
+          Refreshing scheme…
+        </Box>
+      )}
       <Box
         component="fieldset"
         disabled={busy}
@@ -391,18 +409,20 @@ export function ProjectSchemeEditor({
             pt: 0.5,
           }}
         >
-          <Button
-            color="error"
-            variant={confirmDelete ? "contained" : "outlined"}
-            disabled={busy}
-            onClick={() => {
-              if (!confirmDelete) setConfirmDelete(true);
-              else void deleteScheme();
-            }}
-            startIcon={<Trash2 size={15} />}
-          >
-            {confirmDelete ? "Confirm delete" : "Delete"}
-          </Button>
+          {mode === "update" && (
+            <Button
+              color="error"
+              variant={confirmDelete ? "contained" : "outlined"}
+              disabled={busy}
+              onClick={() => {
+                if (!confirmDelete) setConfirmDelete(true);
+                else void deleteScheme();
+              }}
+              startIcon={<Trash2 size={15} />}
+            >
+              {confirmDelete ? "Confirm delete" : "Delete"}
+            </Button>
+          )}
           <Button
             variant="contained"
             loading={busy}
@@ -440,7 +460,6 @@ export function ProjectSchemeEditor({
         <AddSchemeItemDialog
           kind={addItem}
           stepLabel={targetStepEntry?.type === "DIVIDER" ? targetStepEntry.label : undefined}
-          paints={catalog}
           excludedIds={paintIds}
           onAddDivider={addDivider}
           onAddImage={addImage}

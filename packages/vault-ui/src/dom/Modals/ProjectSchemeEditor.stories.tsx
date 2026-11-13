@@ -1,6 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ComponentProps, type ReactNode } from "react";
 import { Observable } from "rxjs";
 import { expect, fn, screen, waitFor } from "storybook/test";
@@ -10,7 +9,7 @@ import { VaultGraphQLContext } from "../graphql/provider";
 import { createVaultStore } from "../store/vault-store";
 import { VaultStoreProvider } from "../store/VaultStoreProvider";
 import { paints } from "../storybook/fixtures";
-import type { Api, SchemeOrderEntry } from "../types";
+import type { SchemeOrderEntry } from "../types";
 import { emptyState } from "../utils/constants";
 
 import { ProjectSchemeEditor } from "./ProjectSchemeEditor";
@@ -28,20 +27,72 @@ const entries: SchemeOrderEntry[] = [
   { type: "PAINT", id: "crimson", paintId: paints.crimson.id, sortOrder: 3 },
   { type: "DIVIDER", id: "complete", label: "COMPLETE", tone: "MILESTONE", role: "COMPLETE", sortOrder: 4 },
 ];
-const saveApi = fn<Api>(async () => ({}));
-const deleteApi = fn<Api>(async () => ({}));
+type MutationVariables = { id?: string; input?: { name: string; category: string; entries: unknown[] } };
+const saveMutation = fn<(variables: MutationVariables) => Promise<unknown>>(async () => ({}));
+const deleteMutation = fn<(variables: MutationVariables) => Promise<unknown>>(async () => ({}));
 const notify = fn();
 
-function Actions({ api, children }: { api: Api; children: ReactNode }) {
-  const queryClient = useQueryClient();
-  const [store] = useState(() => createVaultStore(queryClient, { api, notify }));
-  return <VaultStoreProvider store={store}>{children}</VaultStoreProvider>;
+function Actions({ children }: { children: ReactNode }) {
+  const [store] = useState(() => createVaultStore(undefined, { notify, syncChanges: async () => {} }));
+  const [scope] = useState(() => ({
+    controller: new VaultInvalidationController(),
+    client: new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            const remove = operation.operationName === "DeleteColorScheme";
+            const field = remove
+              ? "deleteScheme"
+              : operation.operationName === "CreateColorScheme"
+                ? "createScheme"
+                : "updateScheme";
+            void (remove ? deleteMutation : saveMutation)(operation.variables).then(
+              () => {
+                observer.next({
+                  data: {
+                    [field]: {
+                      __typename: "SchemeMutationPayload",
+                      schemeId: operation.variables.id ?? "created-scheme",
+                      revision: { epoch: "storybook", seq: "2" },
+                      invalidatedFamilies: ["SCHEMES"],
+                      clientMutationId: operation.variables.clientMutationId,
+                    },
+                  },
+                });
+                observer.complete();
+              },
+              (error: unknown) => observer.error(error),
+            );
+          }),
+      ),
+    }),
+  }));
+  useEffect(
+    () => () => {
+      scope.client.stop();
+      scope.controller.dispose();
+    },
+    [scope],
+  );
+  return (
+    <VaultGraphQLContext.Provider value={scope}>
+      <VaultStoreProvider store={store}>{children}</VaultStoreProvider>
+    </VaultGraphQLContext.Provider>
+  );
 }
 
 const meta = {
   title: "Dialogs/ProjectSchemeEditor",
   component: ProjectSchemeEditor,
   args: { scheme, entries, paints: [paints.black, paints.crimson], onClose: fn() },
+  decorators: [
+    (Story) => (
+      <Actions>
+        <Story />
+      </Actions>
+    ),
+  ],
   argTypes: { scheme: { control: false }, entries: { control: false }, paints: { control: false } },
   // Deliberately no snapshot scheme/catalog: the supplied projection is authoritative.
   parameters: { vault: emptyState, docs: { story: { inline: false, iframeHeight: 760 } } },
@@ -50,15 +101,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const EditAndSave: Story = {
-  decorators: [
-    (Story) => (
-      <Actions api={saveApi}>
-        <Story />
-      </Actions>
-    ),
-  ],
   beforeEach: () => {
-    saveApi.mockReset().mockResolvedValue({});
+    saveMutation.mockReset().mockResolvedValue({});
     notify.mockClear();
   },
   play: async ({ args, userEvent }) => {
@@ -84,27 +128,26 @@ export const EditAndSave: Story = {
     await userEvent.keyboard("[Space]");
     await waitFor(() => expect(screen.getAllByRole("listitem")[2]).toHaveTextContent(paints.black.name));
     await userEvent.click(save);
-    await waitFor(() => expect(saveApi).toHaveBeenCalledOnce());
-    const [path, options] = saveApi.mock.calls[0];
-    await expect(path).toBe("/api/color-schemes");
-    await expect(options.method).toBe("PUT");
-    await expect(JSON.parse(typeof options.body === "string" ? options.body : "{}")).toEqual({
+    await waitFor(() => expect(saveMutation).toHaveBeenCalledOnce());
+    await expect(saveMutation.mock.calls[0][0]).toMatchObject({
       id: scheme.id,
-      name: "Edited palette",
-      category: "BLUE",
-      entries: entries.map((entry) =>
-        entry.type === "PAINT"
-          ? { type: "PAINT", paintId: entry.paintId }
-          : entry.type === "DIVIDER"
-            ? {
-                type: "DIVIDER",
-                id: entry.id,
-                label: entry.label,
-                tone: entry.tone,
-                role: entry.role ?? null,
-              }
-            : entry,
-      ),
+      input: {
+        name: "Edited palette",
+        category: "BLUE",
+        entries: entries.map((entry) =>
+          entry.type === "PAINT"
+            ? { type: "PAINT", paintId: entry.paintId }
+            : entry.type === "DIVIDER"
+              ? {
+                  type: "DIVIDER",
+                  id: entry.id,
+                  label: entry.label,
+                  tone: entry.tone,
+                  role: entry.role ?? null,
+                }
+              : entry,
+        ),
+      },
     });
     await expect(notify).toHaveBeenCalledWith("Color scheme updated");
     await expect(args.onClose).toHaveBeenCalledOnce();
@@ -112,15 +155,11 @@ export const EditAndSave: Story = {
 };
 
 export const SaveErrorAndRetry: Story = {
-  decorators: [
-    (Story) => (
-      <Actions api={saveApi}>
-        <Story />
-      </Actions>
-    ),
-  ],
   beforeEach: () => {
-    saveApi.mockReset().mockRejectedValueOnce(new Error("Save failed; please retry")).mockResolvedValue({});
+    saveMutation
+      .mockReset()
+      .mockRejectedValueOnce(new Error("Save failed; please retry"))
+      .mockResolvedValue({});
   },
   play: async ({ args, userEvent }) => {
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -128,21 +167,14 @@ export const SaveErrorAndRetry: Story = {
     await expect(args.onClose).not.toHaveBeenCalled();
     await expect(screen.getByRole("textbox", { name: "Scheme name" })).toHaveValue(scheme.name);
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
-    await waitFor(() => expect(saveApi).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(saveMutation).toHaveBeenCalledTimes(2));
     await expect(args.onClose).toHaveBeenCalledOnce();
   },
 };
 
 export const DeleteErrorAndRetry: Story = {
-  decorators: [
-    (Story) => (
-      <Actions api={deleteApi}>
-        <Story />
-      </Actions>
-    ),
-  ],
   beforeEach: () => {
-    deleteApi
+    deleteMutation
       .mockReset()
       .mockRejectedValueOnce(new Error("Delete failed; please retry"))
       .mockResolvedValue({});
@@ -150,16 +182,13 @@ export const DeleteErrorAndRetry: Story = {
   },
   play: async ({ args, userEvent }) => {
     await userEvent.click(screen.getByRole("button", { name: "Delete" }));
-    await expect(deleteApi).not.toHaveBeenCalled();
+    await expect(deleteMutation).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Confirm delete" }));
     await expect(await screen.findByRole("alert")).toHaveTextContent("Delete failed; please retry");
     await expect(args.onClose).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
-    await waitFor(() => expect(deleteApi).toHaveBeenCalledTimes(2));
-    await expect(deleteApi).toHaveBeenLastCalledWith(
-      `/api/color-schemes?id=${encodeURIComponent(scheme.id)}`,
-      { method: "DELETE" },
-    );
+    await waitFor(() => expect(deleteMutation).toHaveBeenCalledTimes(2));
+    await expect(deleteMutation).toHaveBeenLastCalledWith(expect.objectContaining({ id: scheme.id }));
     await expect(notify).toHaveBeenCalledWith("Color scheme deleted");
     await expect(args.onClose).toHaveBeenCalledOnce();
     // Deleting closes the editor; it never changes into the legacy create-new flow.
@@ -307,26 +336,16 @@ const legacyImage = {
 } as const;
 export const LegacyPayloadRoundtrip: Story = {
   args: { entries: [...entries.slice(0, -1), legacyDivider, legacyImage, entries[entries.length - 1]] },
-  decorators: [
-    (Story) => (
-      <Actions api={saveApi}>
-        <Story />
-      </Actions>
-    ),
-  ],
   beforeEach: () => {
-    saveApi.mockReset().mockResolvedValue({});
+    saveMutation.mockReset().mockResolvedValue({});
   },
   play: async ({ userEvent }) => {
     await expect(screen.getAllByRole("combobox", { name: "Paint step" })[1]).toHaveTextContent(
       "Legacy custom stage",
     );
     await userEvent.click(screen.getByRole("button", { name: "Save" }));
-    await waitFor(() => expect(saveApi).toHaveBeenCalledOnce());
-    const options = saveApi.mock.calls[0][1];
-    const payload = JSON.parse(typeof options.body === "string" ? options.body : "{}") as {
-      entries: unknown[];
-    };
+    await waitFor(() => expect(saveMutation).toHaveBeenCalledOnce());
+    const payload = saveMutation.mock.calls[0][0].input!;
     await expect(payload.entries).toContainEqual({
       type: "DIVIDER",
       id: legacyDivider.id,
@@ -342,5 +361,30 @@ export const LegacyPayloadRoundtrip: Story = {
       imageType: legacyImage.imageType,
       method: legacyImage.method,
     });
+  },
+};
+
+export const CreateAndRetry: Story = {
+  args: { mode: "create", scheme: { ...scheme, id: "", name: "" } },
+  beforeEach: () => {
+    saveMutation
+      .mockReset()
+      .mockRejectedValueOnce(new Error("Create failed; please retry"))
+      .mockResolvedValue({});
+    deleteMutation.mockClear();
+  },
+  play: async ({ args, userEvent }) => {
+    await expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+    await expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    await userEvent.type(screen.getByRole("textbox", { name: "Scheme name" }), "New reusable palette");
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    await expect(await screen.findByRole("alert")).toHaveTextContent("Create failed; please retry");
+    await expect(screen.getByRole("textbox", { name: "Scheme name" })).toHaveValue("New reusable palette");
+    await expect(args.onClose).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(saveMutation).toHaveBeenCalledTimes(2));
+    await expect(saveMutation.mock.calls[1][0]).toMatchObject({ input: { name: "New reusable palette" } });
+    await expect(saveMutation.mock.calls[1][0]).not.toHaveProperty("id");
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledOnce());
   },
 };

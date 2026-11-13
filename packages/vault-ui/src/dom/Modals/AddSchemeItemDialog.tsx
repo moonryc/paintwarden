@@ -24,7 +24,7 @@ const TITLES: Record<SchemeItemKind, string> = {
 export function AddSchemeItemDialog({
   kind,
   stepLabel,
-  paints,
+  paints = [],
   excludedIds,
   onAddDivider,
   onAddImage,
@@ -34,7 +34,8 @@ export function AddSchemeItemDialog({
   kind: SchemeItemKind;
   // The step a new paint goes into.
   stepLabel?: string;
-  paints: Paint[];
+  // Legacy story adapter only; production paint options come from Apollo.
+  paints?: Paint[];
   // Paints already in the scheme.
   excludedIds: string[];
   onAddDivider(label: string, tone: DividerTone): void;
