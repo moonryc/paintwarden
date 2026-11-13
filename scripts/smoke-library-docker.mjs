@@ -106,7 +106,12 @@ try {
     const page = await context.newPage();
     const recorder = attachLibraryRecorder(page);
     await page.goto(`${baseUrl}/#paints`);
-    await setupAndSeed(page, setupCode);
+    const seeded = await setupAndSeed(page, setupCode);
+    report.checks.push({
+      name: "HTTP picker accepts 101 excluded IDs within existing request bounds",
+      status: "PASS",
+      detail: { excludedCount: seeded.excludedCount, remaining: seeded.pickerRemaining },
+    });
     const result = await runLibraryScenario({
       page,
       recorder,

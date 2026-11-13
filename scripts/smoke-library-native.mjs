@@ -156,11 +156,27 @@ export async function setupAndSeed(page, setupCode) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ paintIds: ids, state: "OWNED", quantity: 2 }),
     });
-    return { count: ids.length, status: response.status };
+    const optionResponse = await fetch("/api/graphql", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        query:
+          "query FixtureLargeExcludes($excludeIds:[ID!]!){paintOptions(excludeIds:$excludeIds,first:30){items{id}}}",
+        variables: { excludeIds: ids.slice(0, 101) },
+      }),
+    });
+    const options = await optionResponse.json();
+    if (!optionResponse.ok || options.errors) throw new Error(JSON.stringify(options));
+    const items = options.data.paintOptions.items;
+    if (items.some((item) => ids.slice(0, 101).includes(item.id)))
+      throw new Error("Excluded fixture ID returned");
+    return { count: ids.length, status: response.status, excludedCount: 101, pickerRemaining: items.length };
   });
   assert.equal(seeded.count, 130);
   assert.equal(seeded.status, 200, "Seed all 130 owned rows");
-  console.log("Fixture stock seeded");
+  assert.equal(seeded.pickerRemaining, 29, "Picker accepts >100 excluded IDs and excludes all of them");
+  console.log("Fixture stock seeded; production picker accepts 101 exclusions");
+  return seeded;
 }
 export async function independentWriter(baseUrl) {
   const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -291,7 +307,12 @@ async function main() {
         await page.getByLabel("Server URL", { exact: true }).fill(remoteBase);
         await page.getByRole("button", { name: "Connect to server", exact: true }).click();
       }
-      await setupAndSeed(page);
+      const seeded = await setupAndSeed(page);
+      report.checks.push({
+        name: `${mode} picker accepts 101 excluded IDs within existing request bounds`,
+        status: "PASS",
+        detail: { excludedCount: seeded.excludedCount, remaining: seeded.pickerRemaining },
+      });
       // Local requests use the production desktop proxy, not a test hook. Remote
       // uses a genuinely independent Node HTTP client and separate bearer session.
       const secondClientWrite =
