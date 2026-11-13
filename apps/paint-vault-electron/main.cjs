@@ -16,6 +16,8 @@ const {
   imageRequest,
   imageProxyCacheControl,
   createImageCache,
+  subscriptionRequest,
+  createSubscriptionStreams,
   parsedChoice,
   serverOrigin,
   versionMismatch,
@@ -63,6 +65,7 @@ let connection = { mode: null };
 let updater;
 const cookies = new Map();
 const imageCache = createImageCache();
+const subscriptionStreams = createSubscriptionStreams();
 // An opaque, process-local generation never contains server names or credentials. A new
 // connection or session gets different image URLs, even when both vaults use the same IDs.
 let imageScope = randomBytes(24).toString("hex");
@@ -216,6 +219,7 @@ async function setConnection(input) {
   } else throw new Error("Choose a connection mode");
   await writeConnection(next);
   connection = next;
+  subscriptionStreams.abortAll();
   authorizationIdentity = undefined;
   rotateImageScope();
   if (next.mode === "remote") stopLocalServer();
@@ -295,6 +299,8 @@ async function proxyApi(request, requestUrl) {
       { status: 503, headers: { "cache-control": "no-store" } },
     );
   const selected = connection;
+  let subscription,
+    streaming = false;
   try {
     if (selected.mode === "local") await ensureLocalServer();
     const origin = selected.mode === "local" ? localUrl : selected.serverUrl;
@@ -345,6 +351,8 @@ async function proxyApi(request, requestUrl) {
     const hasBody = !["GET", "HEAD"].includes(request.method);
     // A backup can take far longer than the usual limit and is too large to hold in memory.
     const backup = requestUrl.pathname === "/api/backup";
+    if (subscriptionRequest(request.method, requestUrl.pathname))
+      subscription = subscriptionStreams.open(request.signal);
     const response = request.uploadFile
       ? await uploadFile(target, headers, request.uploadFile)
       : await fetch(target, {
@@ -352,7 +360,7 @@ async function proxyApi(request, requestUrl) {
           headers,
           body: hasBody ? await request.arrayBuffer() : undefined,
           redirect: "manual",
-          signal: backup ? undefined : AbortSignal.timeout(30_000),
+          signal: subscription ? subscription.signal : backup ? undefined : AbortSignal.timeout(30_000),
         });
     // A response started on a different connection must not populate the new vault or
     // replace its session. Abandon its body instead of leaving a download running.
@@ -374,14 +382,20 @@ async function proxyApi(request, requestUrl) {
       "cache-control",
       imageProxyCacheControl(request.method, requestUrl.pathname, response, scoped && scope === imageScope),
     );
-    const reply = new Response(response.body, { status: response.status, headers: responseHeaders });
+    const body = subscription ? subscription.wrap(response.body) : response.body;
+    const reply = new Response(body, { status: response.status, headers: responseHeaders });
+    streaming = Boolean(subscription);
     if (isImage && scoped && scope === imageScope) await imageCache.put(cacheKey, reply);
     return reply;
   } catch (error) {
+    if (subscription && selected !== connection)
+      return new Response("Connection changed", { status: 409, headers: { "cache-control": "no-store" } });
     return Response.json(
       { error: error instanceof Error ? error.message : "Server unavailable" },
       { status: 503, headers: { "cache-control": "no-store" } },
     );
+  } finally {
+    if (!streaming) subscription?.abort();
   }
 }
 
@@ -585,5 +599,8 @@ app
     app.quit();
   });
 
-app.on("before-quit", stopLocalServer);
+app.on("before-quit", () => {
+  subscriptionStreams.abortAll();
+  stopLocalServer();
+});
 app.on("window-all-closed", () => app.quit());

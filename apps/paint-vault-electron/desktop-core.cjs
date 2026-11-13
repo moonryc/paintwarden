@@ -159,6 +159,81 @@ function createImageCache({
   };
 }
 
+// Only the GraphQL subscription transport opts out of the ordinary API deadline.
+function subscriptionRequest(method, pathname) {
+  return method === "POST" && pathname === "/api/graphql/stream";
+}
+
+// Own a subscription from fetch through EOF. Custom-protocol response cancellation and
+// server switches must also close its upstream socket, including while awaiting headers.
+function createSubscriptionStreams() {
+  const active = new Set();
+  return {
+    abortAll() {
+      for (const stream of active) stream.abort();
+    },
+    open(signal) {
+      const controller = new AbortController();
+      let reader,
+        downstream,
+        finished = false;
+      const finish = () => {
+        finished = true;
+        active.delete(stream);
+        signal?.removeEventListener("abort", abort);
+      };
+      const abort = () => {
+        if (finished) return;
+        controller.abort();
+        downstream?.error(controller.signal.reason);
+        // Never wait for a remote server to acknowledge cancellation.
+        void reader?.cancel().catch(() => undefined);
+        finish();
+      };
+      const stream = {
+        signal: controller.signal,
+        abort,
+        wrap(body) {
+          if (!body) {
+            finish();
+            return null;
+          }
+          reader = body.getReader();
+          return new ReadableStream({
+            start(output) {
+              downstream = output;
+              if (controller.signal.aborted) {
+                output.error(controller.signal.reason);
+                void reader.cancel().catch(() => undefined);
+              }
+            },
+            async pull(output) {
+              try {
+                const { done, value } = await reader.read();
+                if (finished) return;
+                if (done) {
+                  output.close();
+                  finish();
+                } else output.enqueue(value);
+              } catch (error) {
+                if (!finished) {
+                  output.error(error);
+                  finish();
+                }
+              }
+            },
+            cancel: abort,
+          });
+        },
+      };
+      active.add(stream);
+      signal?.addEventListener("abort", abort, { once: true });
+      if (signal?.aborted) abort();
+      return stream;
+    },
+  };
+}
+
 const releaseVersion = (value) => typeof value === "string" && /^\d+\.\d+\.\d+$/.test(value);
 
 function olderThan(left, right) {
@@ -191,5 +266,7 @@ module.exports = {
   imageRequest,
   imageProxyCacheControl,
   createImageCache,
+  subscriptionRequest,
+  createSubscriptionStreams,
   versionMismatch,
 };

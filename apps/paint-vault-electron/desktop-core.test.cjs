@@ -107,3 +107,56 @@ test("only content-hashed shell code, styles and fonts receive immutable caching
     assert.equal(shellCacheControl(pathname), "no-store", pathname);
   }
 });
+
+test("subscription lifecycle releases request listeners on EOF, error and cancellation", async () => {
+  const { getEventListeners } = require("node:events");
+  const { createSubscriptionStreams } = require("./desktop-core.cjs");
+  const streams = createSubscriptionStreams();
+  const finished = [];
+  for (const outcome of ["eof", "error", "cancel", "abort"]) {
+    const request = new AbortController();
+    const stream = streams.open(request.signal);
+    assert.equal(getEventListeners(request.signal, "abort").length, 1);
+    let canceled = false;
+    const body = stream.wrap(
+      new ReadableStream({
+        start(controller) {
+          if (outcome === "eof") controller.close();
+          if (outcome === "error") controller.error(new Error("upstream failed"));
+        },
+        cancel() {
+          canceled = true;
+        },
+      }),
+    );
+    if (outcome === "eof") await new Response(body).text();
+    if (outcome === "error") await assert.rejects(new Response(body).text(), /upstream failed/);
+    if (outcome === "cancel") await body.cancel();
+    if (outcome === "abort") {
+      request.abort();
+      await assert.rejects(new Response(body).text(), /abort/i);
+    }
+    if (["cancel", "abort"].includes(outcome)) assert.equal(canceled, true);
+    assert.equal(getEventListeners(request.signal, "abort").length, 0);
+    finished.push({ stream, aborted: stream.signal.aborted });
+  }
+  streams.abortAll();
+  for (const { stream, aborted } of finished) assert.equal(stream.signal.aborted, aborted);
+});
+
+test("subscription cancellation covers already-aborted requests and all pending fetches", async () => {
+  const { createSubscriptionStreams } = require("./desktop-core.cjs");
+  const streams = createSubscriptionStreams();
+  const request = new AbortController();
+  request.abort();
+  const stale = streams.open(request.signal);
+  assert.equal(stale.signal.aborted, true);
+  const active = Array.from({ length: 3 }, () => streams.open());
+  streams.abortAll();
+  for (const stream of active) assert.equal(stream.signal.aborted, true);
+  const fresh = streams.open();
+  assert.equal(fresh.signal.aborted, false);
+  assert.equal(fresh.wrap(null), null);
+  streams.abortAll();
+  assert.equal(fresh.signal.aborted, false);
+});

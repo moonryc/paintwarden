@@ -197,7 +197,13 @@ test("static shell responses cache only hashed assets and preserve errors and se
 });
 
 function imageProxy() {
-  const { imageRequest, imageProxyCacheControl, createImageCache } = require("./desktop-core.cjs");
+  const {
+    imageRequest,
+    imageProxyCacheControl,
+    createImageCache,
+    subscriptionRequest,
+    createSubscriptionStreams,
+  } = require("./desktop-core.cjs");
   const calls = [];
   let pending;
   const context = vm.createContext({
@@ -210,6 +216,8 @@ function imageProxy() {
     imageRequest,
     imageProxyCacheControl,
     createImageCache,
+    subscriptionRequest,
+    subscriptionStreams: createSubscriptionStreams(),
     randomBytes: require("node:crypto").randomBytes,
     ensureLocalServer: async () => undefined,
     remoteVersionProblem: async () => null,
@@ -391,3 +399,240 @@ test("image byte cache bounds entries and bytes, honors TTL/no-cache, and clears
   await store;
   assert.equal(cache.get("pending"), null);
 });
+
+// Real HTTP peers deliberately keep subscriptions open after their first event. The
+// VM only replaces Electron startup; it runs the actual proxy and connection switch.
+async function subscriptionProxy(t, mode, handler) {
+  const http = require("node:http");
+  const core = require("./desktop-core.cjs");
+  const server = http.createServer(handler);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  t.after(() => {
+    context.subscriptionStreams.abortAll();
+    server.closeAllConnections();
+    server.close();
+  });
+  const timeouts = [],
+    calls = [];
+  const context = vm.createContext({
+    console,
+    URL,
+    Headers,
+    Request,
+    Response,
+    ...core,
+    subscriptionStreams: core.createSubscriptionStreams(),
+    AbortSignal: {
+      timeout: (ms) => {
+        timeouts.push(ms);
+        return AbortSignal.timeout(ms);
+      },
+    },
+    randomBytes: require("node:crypto").randomBytes,
+    ensureLocalServer: async () => undefined,
+    stopLocalServer: () => undefined,
+    writeConnection: async () => undefined,
+    remoteVersionProblem: async () => null,
+    localUrl: origin,
+    fetch: async (url, options) => {
+      calls.push({ url, options });
+      return fetch(url, options);
+    },
+  });
+  vm.runInContext(
+    `let connection = ${JSON.stringify(mode === "local" ? { mode } : { mode, serverUrl: origin })};
+     const cookies = new Map(); const imageCache = createImageCache();
+     let imageScope = "initial", authorizationIdentity;
+     function rotateImageScope() { imageCache.clear(); imageScope = randomBytes(24).toString("hex"); }
+     function session(origin) { return cookies.get(origin); }\n` +
+      source.slice(
+        source.indexOf("async function setConnection("),
+        source.indexOf("// Remote servers must"),
+      ) +
+      source.slice(source.indexOf("function rememberSession("), source.indexOf("// Posts a file")) +
+      source.slice(source.indexOf("async function proxyApi("), source.indexOf("async function serveStatic(")),
+    context,
+  );
+  return {
+    context,
+    origin,
+    timeouts,
+    calls,
+    request: (pathname = "/api/graphql/stream", options = {}) => {
+      const url = new URL(`paintvault://app${pathname}`);
+      return context.proxyApi(
+        new Request(url, {
+          method: "POST",
+          body: JSON.stringify({ query: "subscription { vaultChanges { seq } }" }),
+          headers: { "content-type": "application/json", accept: "text/event-stream" },
+          ...options,
+        }),
+        url,
+      );
+    },
+  };
+}
+
+function deferred() {
+  let resolve;
+  const promise = new Promise((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+for (const mode of ["local", "remote"]) {
+  test(
+    `${mode} subscriptions deliver before EOF, forward auth, retain per-origin sessions and cancel upstream`,
+    { timeout: 5000 },
+    async (t) => {
+      const opened = deferred(),
+        closed = deferred();
+      let responseEnded = false,
+        received;
+      const proxy = await subscriptionProxy(t, mode, async (request, response) => {
+        received = { headers: request.headers, body: "" };
+        for await (const chunk of request) received.body += chunk;
+        response.on("close", () => closed.resolve());
+        response.writeHead(200, {
+          "content-type": "text/event-stream",
+          "cache-control": "no-cache",
+          "set-cookie": "pv_session=new-session; HttpOnly",
+          "access-control-allow-origin": "*",
+        });
+        response.write('event: next\ndata: {"data":{"vaultChanges":{"seq":1}}}\n\n');
+        opened.resolve(() => {
+          responseEnded = true;
+          response.end("event: complete\n\n");
+        });
+      });
+      vm.runInContext(
+        `cookies.set(${JSON.stringify(proxy.origin)}, "pv_session=old-session")`,
+        proxy.context,
+      );
+      const reply = await proxy.request(undefined, {
+        headers: {
+          "content-type": "application/json",
+          accept: "text/event-stream",
+          authorization: "Bearer fixture",
+          cookie: "pv_session=renderer-must-not-leak",
+          origin: "paintvault://app",
+          referer: "paintvault://app/",
+        },
+      });
+      await opened.promise;
+      assert.equal(reply.status, 200);
+      assert.match(reply.headers.get("content-type"), /^text\/event-stream/);
+      assert.equal(reply.headers.get("cache-control"), "no-store");
+      assert.equal(reply.headers.get("set-cookie"), null);
+      assert.equal(reply.headers.get("access-control-allow-origin"), null);
+      assert.ok(reply.headers.get("x-paint-vault-image-scope"));
+      const reader = reply.body.getReader();
+      assert.match(new TextDecoder().decode((await reader.read()).value), /event: next/);
+      assert.equal(responseEnded, false, "the first event arrives while upstream is still open");
+      assert.equal(received.headers.authorization, "Bearer fixture");
+      assert.equal(received.headers.cookie, "pv_session=old-session");
+      assert.equal(received.headers.origin, undefined);
+      assert.equal(received.headers.referer, undefined);
+      assert.deepEqual(JSON.parse(received.body), { query: "subscription { vaultChanges { seq } }" });
+      assert.equal(proxy.context.session(proxy.origin), "pv_session=new-session");
+      assert.deepEqual(proxy.timeouts, [], "subscription never receives the ordinary API deadline");
+      const signal = proxy.calls[0].options.signal;
+      await reader.cancel();
+      await closed.promise;
+      assert.equal(signal.aborted, true);
+    },
+  );
+
+  test(`${mode} renderer abort and server switch close live subscriptions`, { timeout: 5000 }, async (t) => {
+    const closed = [deferred(), deferred()];
+    let count = 0;
+    const proxy = await subscriptionProxy(t, mode, (request, response) => {
+      if (request.url === "/api/auth/status") {
+        response.setHeader("content-type", "application/json");
+        response.end('{"setupRequired":false}');
+        return;
+      }
+      const current = count++;
+      response.on("close", () => closed[current].resolve());
+      response.writeHead(200, { "content-type": "text/event-stream" });
+      response.write("event: next\ndata: {}\n\n");
+    });
+    const controller = new AbortController();
+    const first = await proxy.request(undefined, { signal: controller.signal });
+    const firstReader = first.body.getReader();
+    await firstReader.read();
+    controller.abort();
+    await assert.rejects(firstReader.read(), /abort/i);
+    await closed[0].promise;
+    const second = await proxy.request();
+    const secondReader = second.body.getReader();
+    await secondReader.read();
+    // Even reselecting the same origin is a new connection generation.
+    await proxy.context.setConnection({ mode: "remote", serverUrl: proxy.origin });
+    await assert.rejects(secondReader.read(), /abort/i);
+    await closed[1].promise;
+    assert.equal(
+      proxy.calls
+        .filter((call) => call.url.endsWith("/api/graphql/stream"))
+        .every((call) => call.options.signal.aborted),
+      true,
+    );
+  });
+
+  test(
+    `${mode} switch before headers rejects stale subscription without adopting its session`,
+    { timeout: 5000 },
+    async (t) => {
+      const arrived = deferred(),
+        closed = deferred();
+      let lateResponse;
+      const proxy = await subscriptionProxy(t, mode, (request, response) => {
+        if (request.url === "/api/auth/status") {
+          response.end('{"setupRequired":false}');
+          return;
+        }
+        lateResponse = response;
+        response.on("close", () => closed.resolve());
+        arrived.resolve();
+      });
+      const pending = proxy.request();
+      await arrived.promise;
+      await proxy.context.setConnection({ mode: "remote", serverUrl: proxy.origin });
+      await closed.promise;
+      lateResponse.writeHead(200, { "content-type": "text/event-stream", "set-cookie": "pv_session=stale" });
+      lateResponse.end("event: next\ndata: {}\n\n");
+      const reply = await pending;
+      assert.equal(reply.status, 409);
+      assert.equal(proxy.context.session(proxy.origin), undefined);
+    },
+  );
+}
+
+test(
+  "only exact subscription POSTs bypass API timeout; JSON authentication failures retain session behavior",
+  { timeout: 5000 },
+  async (t) => {
+    const proxy = await subscriptionProxy(t, "remote", (_request, response) => {
+      response.writeHead(401, { "content-type": "application/json", "set-cookie": "pv_session=; Max-Age=0" });
+      response.end('{"error":"Sign in required"}');
+    });
+    vm.runInContext(`cookies.set(${JSON.stringify(proxy.origin)}, "pv_session=expired")`, proxy.context);
+    const denied = await proxy.request();
+    assert.equal(denied.status, 401);
+    assert.deepEqual(await denied.json(), { error: "Sign in required" });
+    assert.equal(proxy.context.session(proxy.origin), undefined);
+    assert.equal(denied.headers.get("set-cookie"), null);
+    for (const [pathname, options] of [
+      ["/api/graphql", {}],
+      ["/api/graphql/stream/", {}],
+      ["/api/graphql/stream", { method: "GET", body: undefined }],
+      ["/api/auth/status", { method: "GET", body: undefined }],
+    ])
+      await (await proxy.request(pathname, options)).text();
+    assert.deepEqual(proxy.timeouts, [30_000, 30_000, 30_000, 30_000]);
+    await (await proxy.request("/api/backup", { method: "GET", body: undefined })).text();
+    assert.equal(proxy.timeouts.length, 4, "backup keeps its existing no-deadline behavior");
+  },
+);
