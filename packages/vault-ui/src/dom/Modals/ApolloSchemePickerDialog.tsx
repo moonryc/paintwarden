@@ -41,9 +41,9 @@ export function ApolloSchemePickerDialog(props: SchemePickerDialogProps) {
       onSearchChange={setSearch}
       onFilterChange={setFilter}
       totalCount={options.categories.reduce((sum, facet) => sum + facet.count, 0)}
-      categoryCounts={options.categories.flatMap((facet) => {
-        const category = COLOR_CATEGORIES.find((value) => value === facet.key);
-        return category ? [{ category, count: facet.count }] : [];
+      categoryCounts={COLOR_CATEGORIES.flatMap((category) => {
+        const facet = options.categories.find((value) => value.key === category);
+        return facet ? [{ category, count: facet.count }] : [];
       })}
       loading={options.loading}
       error={options.error}

@@ -179,7 +179,15 @@ function optionsProjection(revision: Revision, allowCache: boolean): OptionsProj
     rows,
     rows.length ? readPaintProjection(allowCache).byId : new Map<string, PaintRead>(),
   );
-  const nodes = rows.map((row) => summary(row, stats.get(row.id)!));
+  // Preserve the picker's case/accent-insensitive name collation across page boundaries.
+  // IDs make otherwise equivalent names deterministic rather than depending on SQL row order.
+  const nodes = rows
+    .map((row) => summary(row, stats.get(row.id)!))
+    .sort(
+      (a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
   const counts = new Map<string, number>();
   for (const node of nodes) {
     const key = node.category ?? "";
@@ -193,7 +201,7 @@ function optionsProjection(revision: Revision, allowCache: boolean): OptionsProj
     categoryCounts,
     nodes,
     byId: new Map(nodes.map((node) => [node.id, node])),
-    index: createFuzzyIndex(nodes, (s) => `${s.name} ${s.category ?? ""} ${s.sourceName ?? ""}`),
+    index: createFuzzyIndex(nodes, (s) => `${s.name} ${s.category ?? ""}`),
     searches: new Map<string, SearchSet>(),
   };
   if (allowCache) cached = projection;
@@ -232,7 +240,7 @@ export function readMiniatureSchemeOptions(
       else {
         const index =
           category !== null || excluded.length
-            ? createFuzzyIndex(nodes, (s) => `${s.name} ${s.category ?? ""} ${s.sourceName ?? ""}`)
+            ? createFuzzyIndex(nodes, (s) => `${s.name} ${s.category ?? ""}`)
             : projection.index;
         nodes = searchFuzzyIndex(index, query);
         if (projection.searches.size >= 100)

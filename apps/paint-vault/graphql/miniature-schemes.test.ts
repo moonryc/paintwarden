@@ -260,3 +260,52 @@ void test("picker summaries dedupe repeated paint steps and prefer the last imag
     .run(id);
   assert.equal(readMiniatureScheme(id).scheme?.imageUrl, "/last");
 });
+
+void test("scheme picker searches only name/category, never source metadata", () => {
+  const id = scheme("Scarlet"),
+    source = uuid();
+  sqlite
+    .prepare(
+      "INSERT INTO catalog_sources(id,repository,url,branch,name,version,dependencies,updated_at) VALUES(?,'fixture/origin','https://example.invalid','main','XylophoniumManufacturer','1','[]',?)",
+    )
+    .run(source, timestamp);
+  sqlite
+    .prepare("INSERT INTO catalog_source_items(source_id,kind,item_id) VALUES(?,'scheme',?)")
+    .run(source, id);
+  for (const filter of [{}, { category: "RED" }, { excludeIds: [uuid()] }]) {
+    assert.equal(
+      readMiniatureSchemeOptions({ first: 40, search: "XylophoniumManufacturer", ...filter }).totalCount,
+      0,
+    );
+    assert.equal(
+      readMiniatureSchemeOptions({ first: 40, search: "Scarlet", ...filter }).nodes[0].sourceName,
+      "XylophoniumManufacturer",
+    );
+  }
+  assert.equal(readMiniatureSchemeOptions({ first: 40, search: "RED" }).nodes[0].id, id);
+});
+
+void test("scheme picker uses legacy base-sensitivity name order with ID ties across pages", () => {
+  const expected = ["zebra", "éclair", "Alpha", "ÉCLAIR", "alpha", "beta", "Eclair", "Álpha"].map((name) => ({
+    id: scheme(name),
+    name,
+  }));
+  expected.sort(
+    (a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) ||
+      (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+  );
+  const actual: string[] = [];
+  let after: string | null = null;
+  do {
+    const page = readMiniatureSchemeOptions({ first: 2, after });
+    assert.equal(page.totalCount, expected.length);
+    actual.push(...page.nodes.map((node) => node.id));
+    after = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+  } while (after !== null);
+  assert.deepEqual(
+    actual,
+    expected.map((row) => row.id),
+  );
+  assert.equal(new Set(actual).size, expected.length);
+});

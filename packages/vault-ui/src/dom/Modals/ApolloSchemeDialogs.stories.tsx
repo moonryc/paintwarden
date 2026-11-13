@@ -85,7 +85,12 @@ function SchemeConnection({ children }: { children: ReactNode }) {
                         ? [second]
                         : [first],
                     totalCount: searching ? 1 : 2,
-                    categoryCounts: [{ key: category, label: "Armor", count: 3 }],
+                    // Server facet order is not the product's color-category order.
+                    categoryCounts: [
+                      { key: "BLUE", label: "Blue", count: 1 },
+                      { key: "BROWN", label: "Brown", count: 1 },
+                      { key: "RED", label: "Red", count: 1 },
+                    ],
                     pageInfo: {
                       hasNextPage: !searching && !after,
                       endCursor: !searching && !after ? "next-page" : null,
@@ -183,6 +188,22 @@ export const StageAcrossSearchAndPages: Story = {
     await userEvent.click(screen.getByRole("button", { name: "Add 3 schemes" }));
     await expect(args.onSave).toHaveBeenCalledWith(["already-attached", first.id, second.id, third.id]);
     await expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+export const FiltersPreserveCategoryOrder: Story = {
+  play: async ({ canvasElement }) => {
+    const screen = within(canvasElement.ownerDocument.body);
+    await screen.findByRole("button", { name: first.name });
+    await userEvent.click(screen.getByRole("combobox", { name: "Filter schemes" }));
+    await expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "All (3)",
+      "Selected (0)",
+      "Red (1)",
+      "Blue (1)",
+      "Brown (1)",
+    ]);
+    await userEvent.keyboard("{Escape}");
   },
 };
 
