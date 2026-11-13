@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
+import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
 import { Layers, Plus, SearchX } from "../../icons";
 import { ColorSchemesDialog } from "../../Modals/ColorSchemesDialog";
@@ -13,6 +14,8 @@ import { schemeSummaryModel, paintModel } from "../../graphql/miniature-scheme-m
 import { breakpoints, up } from "../../theme-tokens";
 import type { Paint } from "../../types";
 import { schemeGridWindow } from "../../utils/scheme-grid-window";
+import { useInitialPageLoading } from "../useInitialPageLoading";
+
 import { SchemeCard } from "./SchemeCard";
 
 type Readiness = "ALL" | "READY" | "MISSING";
@@ -49,6 +52,7 @@ export function ColorSchemesPage() {
     readiness: readiness === "ALL" ? null : readiness,
     usesPaintIds: selectedPaints.map((paint) => paint.id),
   });
+  const initialLoading = useInitialPageLoading(result.loading, Boolean(result.error));
   const paintOptions = useSchemePaintOptions(
     debouncedPaintQuery.trim(),
     selectedPaints.map((paint) => paint.id),
@@ -103,7 +107,7 @@ export function ColorSchemesPage() {
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, [schemes.length, selectedPaints]);
+  }, [schemes.length, selectedPaints, initialLoading]);
   const columns = viewport.width >= breakpoints.xl ? 3 : viewport.width >= breakpoints.sm ? 2 : 1;
   const rowGap = viewport.width >= breakpoints.sm ? 16 : 12;
   const gridWindow = schemeGridWindow({
@@ -156,6 +160,7 @@ export function ColorSchemesPage() {
   useEffect(() => {
     if (hasNextPage && !loading && !error && gridWindow.endIndex >= schemes.length - columns * 3) loadMore();
   }, [hasNextPage, loading, error, loadMore, gridWindow.endIndex, schemes.length, columns]);
+  if (initialLoading) return <PageSkeleton page="schemes" />;
   return (
     <Box sx={{ "& .MuiFormLabel-root.Mui-focused": { color: "var(--ink)" } }}>
       <PageHeader

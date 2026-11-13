@@ -172,3 +172,39 @@ export const ChangesFromAnotherClient: Story = {
     changedElsewhere = false;
   },
 };
+
+// Access checks use REST, before any page query is allowed. Deep links must not
+// flash the workbench while this check or a lazy page import is pending.
+export const StartupWorkbench: Story = {
+  decorators: [mockApi({ "/api/auth/status": () => new Promise<Response>(() => {}) })],
+  beforeEach: () => {
+    const hash = window.location.hash;
+    window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    return () =>
+      window.history.replaceState(null, "", window.location.pathname + window.location.search + hash);
+  },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole("status")).toHaveTextContent("Loading Workbench");
+    await expect(canvasElement.querySelectorAll("[data-skeleton]")).toHaveLength(1);
+    await expect(canvasElement.querySelector('[data-skeleton="home"]')).toHaveAttribute("aria-busy", "true");
+  },
+};
+
+export const StartupPaintsDeepLink: Story = {
+  decorators: [mockApi({ "/api/auth/status": () => new Promise<Response>(() => {}) })],
+  beforeEach: () => {
+    const hash = window.location.hash;
+    window.history.replaceState(null, "", "#paints");
+    return () =>
+      window.history.replaceState(null, "", window.location.pathname + window.location.search + hash);
+  },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole("status")).toHaveTextContent("Loading Paints");
+    await expect(canvasElement.querySelectorAll("[data-skeleton]")).toHaveLength(1);
+    await expect(canvasElement.querySelector('[data-skeleton="paints"]')).toHaveAttribute(
+      "aria-busy",
+      "true",
+    );
+    await expect(canvasElement.querySelector('[data-skeleton="home"]')).toBeNull();
+  },
+};

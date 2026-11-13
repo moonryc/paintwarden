@@ -131,7 +131,7 @@ export const SchemeSearchAndUsesPaints: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const search = canvas.getByRole("textbox", { name: "Search schemes…" });
+    const search = await canvas.findByRole("textbox", { name: "Search schemes…" });
     await userEvent.type(search, "ocean");
     await waitFor(async () => {
       await expect(canvas.getByText("Ocean cloak")).toBeInTheDocument();

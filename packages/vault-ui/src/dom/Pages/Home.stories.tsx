@@ -166,11 +166,26 @@ export const ApolloLoading: Story = {
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText("Loading miniatures…")).toBeInTheDocument();
+    const status = await canvas.findByRole("status");
+    await expect(status).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute(
+      "data-skeleton",
+      args.view === "dashboard" ? "home" : "miniatures",
+    );
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(canvas.queryByRole("textbox", { name: /Search miniatures/ })).not.toBeInTheDocument();
     await expect(await canvas.findByRole("button", { name: /Synthetic Miniature 0119/ })).toBeInTheDocument();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
   },
+};
+
+export const ApolloMiniaturesLoading: Story = {
+  ...ApolloLoading,
+  args: { view: "miniatures" },
 };
 
 export const ApolloErrorRetry: Story = {

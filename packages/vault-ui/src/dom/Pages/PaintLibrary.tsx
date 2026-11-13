@@ -6,6 +6,7 @@ import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
 import { LibraryPaintRow } from "../Components/LibraryPaintRow";
 import { PageHeader } from "../Components/PageHeader";
+import { PageSkeleton } from "../Components/PageSkeletons";
 import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, useLibraryPaints } from "../graphql/library-hooks";
 import { FlaskConical, Heart, PaintDrop, Plus, SearchX } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
@@ -16,6 +17,8 @@ import { buzz } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { libraryInventoryFilter } from "../utils/semantic-contract";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
+
+import { useInitialPageLoading } from "./useInitialPageLoading";
 
 export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
   const filter = useVaultStore((s) => s.paintFilter);
@@ -29,6 +32,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
   const activeFilter = libraryInventoryFilter(q, filter);
   const library = useLibraryPaints({ search: q, brand, plugin, inventory: activeFilter });
   const { rows: list, loadMore, loading, refreshing, hasNextPage } = library;
+  const initialLoading = useInitialPageLoading(loading, Boolean(library.error));
   const brands = library.brands.map((facet) => facet.key);
   const plugins = library.sources.filter((facet) => facet.key !== "");
   const pluginDescription =
@@ -90,7 +94,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, [list.length]);
+  }, [list.length, initialLoading]);
   const paintWindow = schemeGridWindow({
     itemCount: list.length,
     columns: 1,
@@ -131,6 +135,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
     if (hasNextPage && !loading && !refreshing && !library.error && paintWindow.endIndex >= list.length - 12)
       loadMore();
   }, [hasNextPage, loading, refreshing, library.error, paintWindow.endIndex, list.length, loadMore]);
+  if (initialLoading) return <PageSkeleton page="paints" />;
   return (
     <div>
       <PageHeader

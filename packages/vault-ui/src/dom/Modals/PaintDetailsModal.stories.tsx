@@ -126,3 +126,18 @@ export const ApolloBrokenCycle: Story = {
     await expect(page.queryByText(/Available through/)).not.toBeInTheDocument();
   },
 };
+
+export const Loading: Story = {
+  render: (args) => (
+    <StoryGraphQL pending respond={() => ({})}>
+      <PaintDetailsModal {...args} />
+    </StoryGraphQL>
+  ),
+  play: async ({ canvasElement }) => {
+    const body = canvasElement.ownerDocument.body;
+    const dialog = await within(body).findByRole("dialog");
+    await expect(within(dialog).getByRole("status")).toHaveTextContent("Loading Paint details");
+    await expect(dialog.querySelectorAll("[data-skeleton]")).toHaveLength(1);
+    await expect(dialog.querySelector('[data-skeleton="paint-detail"]')).toHaveAttribute("aria-busy", "true");
+  },
+};

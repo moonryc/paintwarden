@@ -24,10 +24,12 @@ const source = {
 export function SourcesApolloFixture({
   children,
   mode = "installed",
+  delay = 20,
   onOperation = () => {},
 }: {
   children: ReactNode;
   mode?: SourcesFixtureMode;
+  delay?: number;
   onOperation?: (name: string) => void;
 }) {
   const [scope] = useState(() => {
@@ -78,7 +80,7 @@ export function SourcesApolloFixture({
               };
               observer.next({ data: responses[operation.operationName ?? ""] as Record<string, unknown> });
               observer.complete();
-            }, 20);
+            }, delay);
             return () => clearTimeout(timer);
           }),
       ),

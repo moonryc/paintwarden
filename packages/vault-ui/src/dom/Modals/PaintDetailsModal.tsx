@@ -1,12 +1,13 @@
 import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Alert, Button, Chip, CircularProgress, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isPaintOwned } from "@paint-vault/core/paint-state";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";
+import { PageSkeleton } from "../Components/PageSkeletons";
 import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
 import { usePaintDetail } from "../graphql/detail-hooks";
@@ -36,7 +37,11 @@ export function PaintDetailsModal(props: DetailProps) {
   const inventory = stock.complete ? stock.data.inventory : projected?.inventory;
   if (!projected)
     return (
-      <Modal title={props.paint.name} subtitle="Loading the selected paint" onClose={props.onClose}>
+      <Modal
+        title={props.paint.name}
+        subtitle={`${props.paint.brand} · ${props.paint.range}`}
+        onClose={props.onClose}
+      >
         {detail.error ? (
           <Alert severity="error" action={<Button onClick={detail.refresh}>Retry</Button>}>
             {detail.error.message}
@@ -44,7 +49,7 @@ export function PaintDetailsModal(props: DetailProps) {
         ) : detail.data ? (
           <Alert severity="info">This paint is no longer available.</Alert>
         ) : (
-          <CircularProgress aria-label="Loading paint details" />
+          <PageSkeleton page="paint-detail" />
         )}
       </Modal>
     );

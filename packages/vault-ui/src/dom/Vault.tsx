@@ -14,7 +14,7 @@ import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "r
 
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
 import { DeferredDialog } from "./Components/DeferredDialog";
-import { LoadingWorkbench } from "./Components/LoadingWorkbench";
+import { PageSkeleton } from "./Components/PageSkeletons";
 import { PasswordField } from "./Components/PasswordField";
 import { UpdatePrompt } from "./Components/UpdatePrompt";
 import { VaultLoadError } from "./Components/VaultLoadError";
@@ -251,8 +251,6 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
       </Box>
     );
 
-  if (loading) return <LoadingWorkbench />;
-
   if (loadFailed)
     return (
       <VaultLoadError message={loadError} onRetry={() => void refresh()} onChangeServer={onChangeServer} />
@@ -474,7 +472,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                   </Alert>
                 )}
                 {loading ? (
-                  <LoadingWorkbench />
+                  <PageSkeleton page={tab === "dashboard" ? "home" : tab} />
                 ) : (
                   <Box
                     component="div"
@@ -496,7 +494,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                       },
                     }}
                   >
-                    <Suspense fallback={<LoadingWorkbench />}>
+                    <Suspense fallback={<PageSkeleton page={tab === "dashboard" ? "home" : tab} />}>
                       {tab === "dashboard" || tab === "miniatures" ? (
                         <Home view={tab} onAdd={addMini} />
                       ) : tab === "templates" ? (

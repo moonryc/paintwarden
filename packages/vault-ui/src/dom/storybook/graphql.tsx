@@ -11,9 +11,13 @@ import { VaultGraphQLContext } from "../graphql/provider";
 export function StoryGraphQL({
   respond,
   children,
+  pending = false,
+  delay = 0,
 }: {
   respond(operation: Operation): Record<string, unknown>;
   children: ReactNode;
+  pending?: boolean;
+  delay?: number;
 }) {
   const [scope] = useState(() => ({
     controller: new VaultInvalidationController(),
@@ -22,8 +26,17 @@ export function StoryGraphQL({
       link: new ApolloLink(
         (operation) =>
           new Observable((observer) => {
-            observer.next({ data: respond(operation) });
-            observer.complete();
+            if (pending) return;
+            const respondToOperation = () => {
+              observer.next({ data: respond(operation) });
+              observer.complete();
+            };
+            if (!delay) {
+              respondToOperation();
+              return;
+            }
+            const timer = setTimeout(respondToOperation, delay);
+            return () => clearTimeout(timer);
           }),
       ),
     }),

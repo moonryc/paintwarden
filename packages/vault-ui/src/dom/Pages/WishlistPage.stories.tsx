@@ -3,6 +3,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { VaultGraphQLProvider } from "../graphql/provider";
+import { WishlistFixtureContext } from "../graphql/wishlist-hooks";
+import { StoryGraphQL } from "../storybook/graphql";
 import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
 import { mockApi } from "../storybook/mock-api";
 import { useStoryFixture } from "../storybook/story-fixture";
@@ -105,7 +107,7 @@ export const ProjectFilterAndPurchaseRetention: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     window.scrollTo(0, 0);
-    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    const picker = await canvas.findByRole("combobox", { name: "Miniature" });
     await userEvent.click(picker);
     await userEvent.type(picker, "Final");
     await userEvent.keyboard("{ArrowDown}{Enter}");
@@ -168,7 +170,7 @@ export const GlobalPaintIssues: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     window.scrollTo(0, 0);
-    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    const picker = await canvas.findByRole("combobox", { name: "Miniature" });
     await userEvent.click(picker);
     await userEvent.type(picker, "Final");
     await userEvent.keyboard("{ArrowDown}{Enter}");
@@ -190,7 +192,7 @@ export const Empty: Story = {
   parameters: { vault: { ...largeVault, catalog: [], miniatures: [], requirements: [] } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("Nothing to buy")).toBeVisible();
+    await expect(await canvas.findByText("Nothing to buy")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Browse paints" })).toBeVisible();
   },
 };
@@ -219,7 +221,7 @@ export const RetainedPurchaseBeyondProjectPreview: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: `Mark ${finalPaint.name} as bought` }));
     await userEvent.click(canvas.getByRole("button", { name: "Sync final paint as bought" }));
-    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    const picker = await canvas.findByRole("combobox", { name: "Miniature" });
     await userEvent.click(picker);
     await userEvent.type(picker, "Retained project 5");
     await userEvent.keyboard("{ArrowDown}{Enter}");
@@ -228,5 +230,85 @@ export const RetainedPurchaseBeyondProjectPreview: Story = {
       "1",
     );
     await expect(canvas.getByRole("button", { name: "Share list" })).toBeDisabled();
+  },
+};
+
+export const Loading: Story = {
+  render: (args) => (
+    <WishlistFixtureContext.Provider value={null}>
+      <StoryGraphQL
+        delay={750}
+        respond={(operation) => {
+          const revision = { epoch: "wishlist-loading-story", seq: "1" };
+          const pageInfo = { hasNextPage: false, endCursor: null };
+          if (operation.operationName === "WishlistModelOptions")
+            return { wishlistModelOptions: { revision, nodes: [], totalCount: 0, pageInfo } };
+          if (operation.operationName !== "WishlistPage")
+            throw new Error(`Unexpected wishlist loading operation ${operation.operationName}`);
+          return {
+            wishlist: {
+              revision,
+              counts: {
+                shoppingPaints: 1,
+                restockPaints: 0,
+                missingPaints: 0,
+                missingStock: 0,
+                brokenSubstitution: 0,
+                listedMissingStock: 0,
+                projectCount: 0,
+              },
+              shopping: {
+                nodes: [
+                  {
+                    __typename: "WishlistRow",
+                    id: paints.gold.id,
+                    paint: {
+                      __typename: "Paint",
+                      ...paints.gold,
+                      sourceUrl: null,
+                      sourceName: null,
+                      sourceLogoUrl: null,
+                      type: null,
+                      discontinued: false,
+                      inventory: { state: "WISHLIST", stockLevel: "FULL", quantity: 0 },
+                      available: false,
+                      activeSubstitution: null,
+                      brokenSubstitution: false,
+                      brokenReason: null,
+                      missingStock: false,
+                    },
+                    brandGroup: paints.gold.brand,
+                    restock: false,
+                    missingStock: false,
+                    brokenSubstitution: false,
+                    projectCount: 0,
+                    relatedProjectsPreview: [],
+                    relatedProjectsTruncated: false,
+                  },
+                ],
+                totalCount: 1,
+                pageInfo,
+              },
+              missing: { nodes: [], totalCount: 0, pageInfo },
+            },
+          };
+        }}
+      >
+        <WishlistPage {...args} />
+      </StoryGraphQL>
+    </WishlistFixtureContext.Provider>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "wishlist");
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(canvas.queryByRole("combobox", { name: "Miniature" })).not.toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: `Mark ${paints.gold.name} as bought` }),
+    ).toBeVisible();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
   },
 };

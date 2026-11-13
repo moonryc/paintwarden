@@ -6,7 +6,6 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
-  Skeleton,
   TextField,
   Tooltip,
 } from "@mui/material";
@@ -14,9 +13,11 @@ import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
+import { PageSkeleton } from "../../Components/PageSkeletons";
 import { usePluginSources } from "../../graphql/sources-hooks";
 import { Extension, FileUp, Layers, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
+import { useInitialPageLoading } from "../useInitialPageLoading";
 
 import { CreateSourceDialog } from "./CreateSourceDialog";
 import { RemoveSourceDialog } from "./RemoveSourceDialog";
@@ -49,6 +50,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const refresh = useVaultStore((s) => s.refresh);
   const sourceRead = usePluginSources();
+  const initialLoading = useInitialPageLoading(sourceRead.loading, Boolean(sourceRead.error));
   const { sources } = sourceRead;
   const checkedSources = useRef(false);
   const mounted = useRef(true);
@@ -260,22 +262,30 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const updatesAvailable = sources.filter((source) => sourceVersions[source.id]?.updateAvailable).length;
   const nameByKey = new Map(sources.map((source) => [sourceKey(source.url), source.name]));
 
+  const modalProps = {
+    title: "Plugins",
+    subtitle:
+      "Install public catalogs of paints, schemes, and templates from GitHub, or package your own to share.",
+    onClose,
+    footer: (
+      <Button
+        variant="outlined"
+        startIcon={<Extension size={18} />}
+        onClick={() => void openCreate()}
+        disabled={busy}
+      >
+        Create plugin
+      </Button>
+    ),
+  };
+  if (initialLoading)
+    return (
+      <Modal {...modalProps}>
+        <PageSkeleton page="plugins" />
+      </Modal>
+    );
   return (
-    <Modal
-      title="Plugins"
-      subtitle="Install public catalogs of paints, schemes, and templates from GitHub, or package your own to share."
-      onClose={onClose}
-      footer={
-        <Button
-          variant="outlined"
-          startIcon={<Extension size={18} />}
-          onClick={() => void openCreate()}
-          disabled={busy}
-        >
-          Create plugin
-        </Button>
-      }
-    >
+    <Modal {...modalProps}>
       <Box component="section" sx={{ mb: 3 }}>
         <Box component="h3" sx={sectionTitleSx}>
           Add a plugin
@@ -421,13 +431,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         </Alert>
       )}
 
-      {sourceRead.loading && !sources.length ? (
-        <Box sx={{ display: "grid", gap: 1.5 }}>
-          {[0, 1].map((index) => (
-            <Skeleton key={index} variant="rounded" sx={{ height: 128, borderRadius: "16px" }} />
-          ))}
-        </Box>
-      ) : !sources.length && !sourceRead.error ? (
+      {!sources.length && !sourceRead.error ? (
         <EmptyState
           icon={<Layers size={26} />}
           title="No plugins yet"

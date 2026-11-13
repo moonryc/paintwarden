@@ -54,10 +54,12 @@ function PageConnection({
   children,
   empty = false,
   fail = false,
+  delay = 0,
 }: {
   children: ReactNode;
   empty?: boolean;
   fail?: boolean;
+  delay?: number;
 }) {
   const [scope] = useState(() => {
     let seq = 1;
@@ -68,69 +70,77 @@ function PageConnection({
       link: new ApolloLink(
         (operation) =>
           new Observable((observer) => {
-            const revision = { epoch: "schemes-page-story", seq: String(seq) };
-            if (operation.operationName === "SchemeUsedPaintOptions") {
-              const query = String(operation.variables.search).toLowerCase();
-              const excluded = operation.variables.excludeIds as string[];
-              observer.next({
-                data: {
-                  schemePaintOptions: {
-                    revision,
-                    items: paints.filter(
-                      (item) => !excluded.includes(item.id) && item.name.toLowerCase().includes(query),
-                    ),
+            const respond = () => {
+              const revision = { epoch: "schemes-page-story", seq: String(seq) };
+              if (operation.operationName === "SchemeUsedPaintOptions") {
+                const query = String(operation.variables.search).toLowerCase();
+                const excluded = operation.variables.excludeIds as string[];
+                observer.next({
+                  data: {
+                    schemePaintOptions: {
+                      revision,
+                      items: paints.filter(
+                        (item) => !excluded.includes(item.id) && item.name.toLowerCase().includes(query),
+                      ),
+                    },
                   },
-                },
-              });
-            } else if (operation.operationName === "SchemesPage") {
-              if (failRead) {
-                failRead = false;
-                observer.error(new Error("Scheme connection interrupted"));
+                });
+              } else if (operation.operationName === "SchemesPage") {
+                if (failRead) {
+                  failRead = false;
+                  observer.error(new Error("Scheme connection interrupted"));
+                  return;
+                }
+                const ids = operation.variables.usesPaintIds as string[];
+                const search = String(operation.variables.search ?? "");
+                const filtered =
+                  !!search ||
+                  ids.length > 0 ||
+                  operation.variables.readiness === "READY" ||
+                  operation.variables.noSource;
+                const totalCount = empty ? 0 : filtered ? 1 : 49;
+                const start = operation.variables.after ? 48 : 0;
+                const nodes = Array.from(
+                  { length: Math.max(0, Math.min(totalCount - start, 48)) },
+                  (_, offset) => scheme(start + offset, seq),
+                );
+                observer.next({
+                  data: {
+                    schemes: {
+                      revision,
+                      nodes,
+                      totalCount,
+                      pageInfo: {
+                        hasNextPage: !filtered && !empty && start === 0,
+                        endCursor: start === 0 && !filtered && !empty ? "next" : null,
+                      },
+                      facets: {
+                        categories: [{ key: "BROWN", label: "Brown", count: empty ? 0 : 49 }],
+                        sources: [
+                          { key: "source", label: "Example source", count: empty ? 0 : 49 },
+                          { key: "", label: "Not from a plugin", count: 0 },
+                        ],
+                        readiness: [
+                          { key: "ALL", label: "All", count: empty ? 0 : 49 },
+                          { key: "READY", label: "Ready to paint", count: 1 },
+                          { key: "MISSING", label: "Missing paints", count: 48 },
+                        ],
+                      },
+                    },
+                  },
+                });
+              } else {
+                observer.error(new Error(`Unexpected operation ${operation.operationName}`));
                 return;
               }
-              const ids = operation.variables.usesPaintIds as string[];
-              const search = String(operation.variables.search ?? "");
-              const filtered =
-                !!search ||
-                ids.length > 0 ||
-                operation.variables.readiness === "READY" ||
-                operation.variables.noSource;
-              const totalCount = empty ? 0 : filtered ? 1 : 49;
-              const start = operation.variables.after ? 48 : 0;
-              const nodes = Array.from(
-                { length: Math.max(0, Math.min(totalCount - start, 48)) },
-                (_, offset) => scheme(start + offset, seq),
-              );
-              observer.next({
-                data: {
-                  schemes: {
-                    revision,
-                    nodes,
-                    totalCount,
-                    pageInfo: {
-                      hasNextPage: !filtered && !empty && start === 0,
-                      endCursor: start === 0 && !filtered && !empty ? "next" : null,
-                    },
-                    facets: {
-                      categories: [{ key: "BROWN", label: "Brown", count: empty ? 0 : 49 }],
-                      sources: [
-                        { key: "source", label: "Example source", count: empty ? 0 : 49 },
-                        { key: "", label: "Not from a plugin", count: 0 },
-                      ],
-                      readiness: [
-                        { key: "ALL", label: "All", count: empty ? 0 : 49 },
-                        { key: "READY", label: "Ready to paint", count: 1 },
-                        { key: "MISSING", label: "Missing paints", count: 48 },
-                      ],
-                    },
-                  },
-                },
-              });
-            } else {
-              observer.error(new Error(`Unexpected operation ${operation.operationName}`));
-              return;
+              observer.complete();
+            };
+            if (delay) {
+              const timer = setTimeout(respond, delay);
+              return () => clearTimeout(timer);
             }
-            observer.complete();
+            respond();
+            return undefined;
           }),
       ),
     });
@@ -162,8 +172,8 @@ const meta = {
   title: "Schemes/Apollo page",
   component: ColorSchemesPage,
   decorators: [
-    (Story) => (
-      <PageConnection>
+    (Story, context) => (
+      <PageConnection delay={context.parameters.queryDelay ?? 0}>
         <Story />
       </PageConnection>
     ),
@@ -229,5 +239,20 @@ export const ReadFailureRetry: Story = {
     await expect(await canvas.findByText("Scheme connection interrupted")).toBeInTheDocument();
     await userEvent.click(canvas.getByRole("button", { name: "Retry" }));
     await expect(await canvas.findByText("Bronze armor 00")).toBeInTheDocument();
+  },
+};
+
+export const Loading: Story = {
+  parameters: { queryDelay: 750 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "schemes");
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(canvas.queryByPlaceholderText("Search schemes…")).not.toBeInTheDocument();
+    await expect(await canvas.findByRole("button", { name: /Bronze armor 00/ })).toBeVisible();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
   },
 };

@@ -5,11 +5,13 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
+import { PageSkeleton } from "../../Components/PageSkeletons";
 import { Plus, TemplateCopy } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
 import { useTemplateActions, useTemplateCatalog } from "../../store/template-hooks";
 import type { MiniatureTemplate } from "../../types";
 import { schemeGridWindow } from "../../utils/scheme-grid-window";
+import { useInitialPageLoading } from "../useInitialPageLoading";
 
 import { TemplateCard } from "./TemplateCard";
 import { TemplateDetailsDialog } from "./TemplateDetailsDialog";
@@ -34,6 +36,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const error = catalogQuery.error?.message;
   const loadMore = catalogQuery.loadMore;
   const loading = catalogQuery.loading;
+  const initialLoading = useInitialPageLoading(loading, Boolean(catalogQuery.error));
   const loadMoreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const target = loadMoreRef.current;
@@ -51,6 +54,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [selected, setSelected] = useState<MiniatureTemplate | null>(null);
   // The template whose Delete was clicked once; a second click deletes it.
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const hasGrid =
+    !initialLoading &&
+    !(catalog && catalog.totalCount === 0 && !search && category === "ALL" && plugin === "ALL");
   const gridRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ gridTop: 0, gridWidth: 0, scrollY: 0, viewportHeight: 900 });
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
@@ -95,7 +101,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, []);
+  }, [hasGrid]);
   const { gridWidth } = viewport;
   const columns = gridWidth >= 1100 ? 5 : gridWidth >= 840 ? 4 : gridWidth >= 600 ? 3 : 2;
   const gap = gridWidth >= 600 ? 16 : 12;
@@ -136,6 +142,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       /* actions report the error */
     }
   };
+  if (initialLoading) return <PageSkeleton page="templates" />;
   return (
     <>
       <PageHeader
@@ -214,7 +221,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           </TextField>
         </Box>
       </FilterToolbar>
-      {catalog && catalog.totalCount === 0 && !search && category === "ALL" && plugin === "ALL" ? (
+      {!hasGrid ? (
         <EmptyState
           icon={<TemplateCopy size={26} />}
           title="No templates yet"

@@ -7,6 +7,7 @@ import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
+import { PageSkeleton } from "../Components/PageSkeletons";
 import { SectionHeader } from "../Components/SectionHeader";
 import { useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
@@ -18,6 +19,8 @@ import { STAGES } from "../utils/constants";
 import { greeting } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
+
+import { useInitialPageLoading } from "./useInitialPageLoading";
 
 const shelfTileSx = { width: "100%", height: "100%" };
 
@@ -43,6 +46,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     hasNextPage,
     loadMore,
   } = list;
+  const initialLoading = useInitialPageLoading(loading, Boolean(list.error));
   const pct = list.owned ? (ready / list.owned) * 100 : 0;
   const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
   const hasQuery = Boolean(q);
@@ -165,6 +169,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     setShelfViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
     setPendingShelfFocus({ index, origin });
   };
+  if (initialLoading) return <PageSkeleton page={workbench ? "home" : "miniatures"} />;
   return (
     <Box
       component="div"

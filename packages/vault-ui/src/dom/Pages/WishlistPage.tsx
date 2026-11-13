@@ -7,6 +7,7 @@ import { EmptyState } from "../Components/EmptyState";
 import { MissingProjectPaints } from "../Components/MissingProjectPaints";
 import { Modal } from "../Components/Modal";
 import { PageHeader } from "../Components/PageHeader";
+import { PageSkeleton } from "../Components/PageSkeletons";
 import { WishlistPaintList } from "../Components/WishlistPaintList";
 import { WishlistPaintRow } from "../Components/WishlistPaintRow";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
@@ -26,6 +27,8 @@ import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import { owns } from "../utils/vault-data";
+
+import { useInitialPageLoading } from "./useInitialPageLoading";
 
 const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 const normalized = (value: string) =>
@@ -47,6 +50,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   const [sharing, setSharing] = useState(false);
   const [retainedMembership, setRetainedMembership] = useState<Record<string, boolean>>({});
   const list = useWishlist(selectedMini?.id ?? null);
+  const initialLoading = useInitialPageLoading(list.loading, Boolean(list.error));
   const models = useWishlistModelOptions(modelSearch);
   const readRelatedProjects = list.relatedProjects;
   const displayRows = useMemo(() => {
@@ -152,6 +156,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   }
 
   const [projectsPaint, setProjectsPaint] = useState<Paint | null>(null);
+  if (initialLoading) return <PageSkeleton page="wishlist" />;
   return (
     <div>
       <PageHeader

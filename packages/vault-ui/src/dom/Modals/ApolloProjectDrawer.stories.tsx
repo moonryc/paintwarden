@@ -221,7 +221,13 @@ export const Loading: Story = {
   ),
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement.ownerDocument.body).getByRole("status")).toHaveTextContent(
-      "Loading project",
+      "Loading Miniature details",
+    );
+    const body = canvasElement.ownerDocument.body;
+    await expect(body.querySelectorAll("[data-skeleton]")).toHaveLength(1);
+    await expect(body.querySelector('[data-skeleton="miniature-detail"]')).toHaveAttribute(
+      "aria-busy",
+      "true",
     );
   },
 };

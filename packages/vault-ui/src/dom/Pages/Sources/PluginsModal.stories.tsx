@@ -7,15 +7,17 @@ import { PluginsModal } from "./PluginsModal";
 
 function PluginsStory({
   mode,
+  delay,
   onClose,
   onOperation,
 }: {
   mode: SourcesFixtureMode;
+  delay?: number;
   onClose(): void;
   onOperation(name: string): void;
 }) {
   return (
-    <SourcesApolloFixture mode={mode} onOperation={onOperation}>
+    <SourcesApolloFixture mode={mode} delay={delay} onOperation={onOperation}>
       <PluginsModal onClose={onClose} />
     </SourcesApolloFixture>
   );
@@ -44,7 +46,22 @@ export const Empty: Story = {
     await waitFor(() => expect(body.getByText("No plugins yet")).toBeVisible());
   },
 };
-export const Loading: Story = { args: { mode: "loading" } };
+export const Loading: Story = {
+  args: { delay: 750 },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    const dialog = await body.findByRole("dialog", { name: "Plugins" });
+    await expect(await within(dialog).findByRole("status")).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.ownerDocument.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "plugins");
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(dialog).toContainElement(skeletons[0] as HTMLElement);
+    await expect(body.queryByRole("textbox", { name: "GitHub repository" })).not.toBeInTheDocument();
+    await expect(await body.findByText("Example paint source")).toBeVisible();
+    await expect(canvasElement.ownerDocument.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+  },
+};
 export const ErrorAndRetry: Story = {
   args: { mode: "error" },
   play: async ({ args, canvasElement }) => {

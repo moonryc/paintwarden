@@ -48,3 +48,26 @@ Plugins network checks are deferred until Plugins opens; GraphQL field resolvers
 never fetch GitHub. Installed data and the local server remain offline-capable.
 See [architecture](architecture.md), [development](graphql-development.md),
 [final measurements](benchmarks/graphql-final.md), and individual screen contracts.
+
+## Loading presentation
+
+`Components/PageSkeletons.tsx` owns a distinct `data-skeleton` layout for every
+page, Plugins, miniature detail and paint detail. Startup/auth checks keep the app
+shell mounted and select the current route's skeleton (`#paints` included). Page
+chunk Suspense fallbacks use the same mapping; they never fall back to Workbench.
+Pages use `useInitialPageLoading` only until the first successful read, so later
+filtering and invalidation do not replace focused controls or accepted content.
+Settings has no blocking page query; its skeleton covers startup and chunk loads.
+
+Skeleton regions expose `aria-busy`, one polite loading status, and hidden MUI
+shapes with reduced-motion support. Header typography, toolbar footprints, measured
+shelf breakpoints and tile sizes mirror their content. Keep these together when
+changing a page layout. Unknown row counts and conditional Wishlist panels cannot
+reserve an exact final height. Miniature detail shares its real responsive drawer
+frame and reuses a cached list preview's photo presence to choose the hero height;
+a direct open without that preview reserves photograph space until detail arrives.
+Paint detail retains its normal Modal. Lazy **dialog code** loading remains owned
+by `DeferredDialog`, independently of these detail-query skeletons.
+
+Adjacent Storybook stories cover each layout, real delayed Apollo reads, route
+startup, focus retention and template-grid measurement after a skeleton unmounts.

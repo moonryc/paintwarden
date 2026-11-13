@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { vault } from "../../storybook/fixtures";
 import { StoryGraphQL } from "../../storybook/graphql";
@@ -20,8 +20,9 @@ const meta = {
   component: MiniatureTemplatesPage,
   args: { onUse: fn() },
   decorators: [
-    (Story) => (
+    (Story, context) => (
       <StoryGraphQL
+        delay={context.parameters.queryDelay ?? 0}
         respond={(operation) => {
           if (operation.operationName !== "TemplateSummaries")
             throw new Error("Browsing and summary details must not fetch a recipe");
@@ -64,5 +65,29 @@ export const GlobalCategoryFacet: Story = {
     await userEvent.click(within(document.body).getByRole("option", { name: "Dragons" }));
     await expect(await canvas.findByText("1 templates")).toBeInTheDocument();
     await expect(await canvas.findByRole("button", { name: /Distant dragon/ })).toBeInTheDocument();
+  },
+};
+
+export const Loading: Story = {
+  parameters: { queryDelay: 750 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "templates");
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(canvas.queryByPlaceholderText("Search templates…")).not.toBeInTheDocument();
+    await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    const card = await canvas.findByRole("button", { name: /Knight 000/ });
+    // Initial loading unmounts the grid; it still must measure its first mounted width.
+    await expect(card.getBoundingClientRect().width).toBeGreaterThan(100);
+    const grid = card.closest(".MuiCard-root")!.parentElement!.parentElement!;
+    await waitFor(async () => {
+      await expect(grid.getBoundingClientRect().height).toBeGreaterThan(
+        card.getBoundingClientRect().height * 2,
+      );
+    });
   },
 };

@@ -229,3 +229,28 @@ export const LongNamesDesktop: Story = libraryAtWidth(1440);
 export const LongNamesLaptop: Story = libraryAtWidth(1024);
 export const LongNamesTablet: Story = libraryAtWidth(768);
 export const LongNamesPhone: Story = libraryAtWidth(390);
+
+export const ApolloLoading: Story = {
+  render: (args) => (
+    <LibraryApolloFixture pageDelay={750}>
+      <PaintLibrary {...args} />
+    </LibraryApolloFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
+    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
+    await expect(skeletons).toHaveLength(1);
+    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "paints");
+    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
+    await expect(canvas.queryByRole("list", { name: "Paint library" })).not.toBeInTheDocument();
+    await expect(await canvas.findByRole("list", { name: "Paint library" })).toBeInTheDocument();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    const search = canvas.getByPlaceholderText("Search brand, range, or paint…");
+    await userEvent.type(search, "Fixture paint 359");
+    // Query changes keep the toolbar mounted instead of returning to initial skeletons.
+    await expect(search).toHaveFocus();
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    await expect(await canvas.findByText("Fixture paint 359")).toBeInTheDocument();
+  },
+};

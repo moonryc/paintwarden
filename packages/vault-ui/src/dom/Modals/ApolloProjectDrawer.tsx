@@ -1,19 +1,21 @@
-import { Alert, Button, Chip, Dialog, IconButton, SwipeableDrawer, useMediaQuery } from "@mui/material";
+import { useFragment } from "@apollo/client/react";
+import { Alert, Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
-import type { Theme } from "@mui/material/styles";
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";
+import { PageSkeleton } from "../Components/PageSkeletons";
 import { ProjectPaintSummaryView } from "../Components/ProjectPaintSummary";
 import { ProjectRecipeView } from "../Components/ProjectRecipe";
 import { StageStepper } from "../Components/StageStepper";
-import type { DetailPaintFragment } from "../graphql/generated/graphql";
+import { MiniatureTileFragmentDoc, type DetailPaintFragment } from "../graphql/generated/graphql";
 import { useMiniatureActions } from "../graphql/miniature-actions";
 import { useMiniatureDetail } from "../graphql/miniature-detail-hooks";
 import type { MiniatureDetailView } from "../graphql/miniature-detail-loader";
 import { paintModel, schemeEntryModels } from "../graphql/miniature-scheme-model";
+import { useVaultGraphQL } from "../graphql/provider";
 import { usePaintStock } from "../graphql/stock-actions";
-import { Pencil, X } from "../icons";
+import { Pencil } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { Miniature, Paint, PaintingStatus, PaintStatus, RecipeStep } from "../types";
@@ -25,11 +27,29 @@ import { ImageViewer } from "./ImageViewer";
 import { MiniatureForm } from "./MiniatureForm";
 import { PaintDetailsOverlay } from "./PaintDetailsOverlay";
 import { ProjectHero } from "./ProjectHero";
+import { ProjectDrawerFrame } from "./ProjectDrawerFrame";
 
 // This boundary never loads the legacy State snapshot, even when a project is
 // opened directly from a paint's Used by link.
 export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: string; onClose(): void }) {
   const detail = useMiniatureDetail(miniatureId);
+  const scope = useVaultGraphQL();
+  // A list-opened drawer already knows whether the hero has a photograph. Reuse
+  // that normalized preview without issuing another read or inventing detail data.
+  const preview = useFragment({
+    fragment: MiniatureTileFragmentDoc,
+    client: scope?.client,
+    from: { __typename: "Miniature", id: miniatureId },
+  });
+  if (detail.loading && !detail.data?.miniature && !detail.error)
+    return (
+      <ProjectDrawerFrame title="Miniature" onClose={onClose}>
+        <PageSkeleton
+          page="miniature-detail"
+          miniatureImage={preview.data.imageUrl === undefined ? undefined : Boolean(preview.data.imageUrl)}
+        />
+      </ProjectDrawerFrame>
+    );
   if (!detail.data?.miniature)
     return (
       <Modal title="Project" subtitle="Miniature details" onClose={onClose}>
@@ -127,7 +147,6 @@ function ProjectContent({
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
   const [openSchemeId, setOpenSchemeId] = useState<string | null>(null);
-  const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"), { noSsr: true });
   const saveMiniature = (patch: Partial<Miniature>) =>
     run(actions.update(miniature.id, { ...miniature, ...patch }));
   const setStage = (paintingStatus: PaintingStatus) => {
@@ -165,47 +184,6 @@ function ProjectContent({
 
   const content = (
     <>
-      {/* Zero-height sticky rail keeps the close button reachable while scrolling. */}
-      <Box
-        component="div"
-        sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          height: 0,
-        }}
-      >
-        <IconButton
-          color="overlay"
-          onClick={onClose}
-          aria-label="Close project"
-          sx={{
-            boxSizing: "border-box",
-            position: "absolute",
-            top: "0.75rem",
-            right: "0.75rem",
-            height: "2.5rem",
-            width: "2.5rem",
-            borderRadius: "calc(infinity * 1px)",
-            bgcolor: "color-mix(in oklab, var(--scrim) 45%, transparent)",
-            WebkitBackdropFilter: "blur(8px)",
-            backdropFilter: "blur(8px)",
-            // Keeps the dark backing on touch, where MUI's hover would clear it.
-            "&:hover": {
-              bgcolor: "color-mix(in oklab, var(--scrim) 45%, transparent)",
-              "@media (hover: hover)": {
-                bgcolor: "color-mix(in oklab, var(--scrim) 60%, transparent)",
-              },
-            },
-            [up.md]: {
-              top: "1rem",
-              right: "1rem",
-            },
-          }}
-        >
-          <X size={18} />
-        </IconButton>
-      </Box>
       <ProjectHero miniature={miniature} paints={required} onOpenImage={() => setImageViewerOpen(true)} />
 
       <Box
@@ -389,49 +367,9 @@ function ProjectContent({
       )}
     </>
   );
-  return phone ? (
-    <Dialog
-      open
-      fullScreen
-      onClose={onClose}
-      slotProps={{
-        paper: {
-          "aria-label": miniature.title,
-          // Dialog otherwise points the paper at a title element this layout doesn't have.
-          "aria-labelledby": undefined,
-          sx: {
-            boxSizing: "border-box",
-            height: "100dvh",
-            maxHeight: "100dvh",
-            overflowY: "auto",
-            borderRadius: "0",
-            bgcolor: "var(--canvas)",
-          },
-        },
-      }}
-    >
+  return (
+    <ProjectDrawerFrame title={miniature.title} onClose={onClose}>
       {content}
-    </Dialog>
-  ) : (
-    <SwipeableDrawer
-      open
-      anchor="right"
-      onClose={onClose}
-      onOpen={noop}
-      disableSwipeToOpen
-      slotProps={{
-        paper: {
-          "aria-label": miniature.title,
-          sx: {
-            boxSizing: "border-box",
-            width: "100%",
-            maxWidth: "640px",
-            bgcolor: "var(--canvas)",
-          },
-        },
-      }}
-    >
-      {content}
-    </SwipeableDrawer>
+    </ProjectDrawerFrame>
   );
 }

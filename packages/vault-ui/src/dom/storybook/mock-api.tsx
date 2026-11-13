@@ -280,7 +280,7 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
 }
 
 // A story can replace a GET route's response; returning undefined keeps the normal one.
-type MockOverrides = Record<string, () => Response | undefined>;
+type MockOverrides = Record<string, () => Response | undefined | Promise<Response | undefined>>;
 
 function MockApi({
   overrides,
@@ -313,7 +313,7 @@ function MockApi({
               : "{}";
         return Response.json({ data: graphql(JSON.parse(body) as GraphQLRequest) });
       }
-      const override = method === "GET" ? overrides[url.pathname]?.() : undefined;
+      const override = method === "GET" ? await overrides[url.pathname]?.() : undefined;
       return Promise.resolve(override ?? Response.json(respond(url, method)));
     };
     return realFetch;
