@@ -116,3 +116,22 @@ test("late Home/list/detail envelopes cannot regress shared Miniature fields bef
   controller.event({ ...revision("1", "new"), reset: true, families: [] });
   assert.equal(controller.accepts(controller.capture(), revision("1", "new"), ["HOME"]), true);
 });
+
+test("REST refresh retires old reads and refetches metadata even at the same revision", () => {
+  const evictions: unknown[] = [];
+  const controller = new VaultInvalidationController((families, reset) =>
+    evictions.push({ families, reset }),
+  );
+  const revision = { epoch: "vault", seq: "7" };
+  controller.observe(revision);
+  const ticket = controller.capture();
+  let sourceReads = 0;
+  controller.listen(["SOURCES"], () => sourceReads++);
+  controller.refresh();
+  assert.equal(controller.isCurrent(ticket), false);
+  assert.equal(controller.accepts(ticket, revision, ["SOURCES"]), false);
+  assert.equal(controller.accepts(controller.capture(), revision, ["SOURCES"]), true);
+  assert.equal(sourceReads, 1);
+  assert.equal(evictions.length, 1);
+  assert.deepEqual(controller.getCursor(), revision);
+});

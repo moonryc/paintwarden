@@ -143,6 +143,14 @@ export class VaultInvalidationController {
     }
     this.invalidate(families, false);
   }
+  // REST-only operations (images, sources, backup restore) have no GraphQL envelope.
+  // Retire in-flight reads and atomically refetch mounted projections, including
+  // metadata-only changes that do not advance the database revision.
+  refresh() {
+    if (this.stopped) return;
+    this.generation += 1;
+    this.invalidate(VAULT_FAMILIES, false);
+  }
   dispose() {
     this.stopped = true;
     this.generation += 1;

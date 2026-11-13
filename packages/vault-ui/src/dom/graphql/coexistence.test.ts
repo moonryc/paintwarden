@@ -3,10 +3,10 @@ import test from "node:test";
 
 import { QueryClient } from "@tanstack/react-query";
 
-import { createVaultStore } from "../store/vault-store.ts";
+import { createVaultStore } from "../store/legacy-vault-store.ts";
 import { emptyState } from "../utils/constants.ts";
+import { AUTH_QUERY, VAULT_QUERY } from "../utils/legacy-vault-query.ts";
 import { TEMPLATES_QUERY } from "../utils/template-query.ts";
-import { AUTH_QUERY, VAULT_QUERY } from "../utils/vault-query.ts";
 
 test("migrated-only saves never initialize the legacy snapshot; cached snapshots still merge deltas", async () => {
   const original = globalThis.fetch;

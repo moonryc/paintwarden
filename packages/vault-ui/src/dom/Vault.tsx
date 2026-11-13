@@ -10,7 +10,6 @@ import {
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import { ThemeProvider } from "@mui/material/styles";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
 
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
@@ -21,6 +20,7 @@ import { UpdatePrompt } from "./Components/UpdatePrompt";
 import { VaultLoadError } from "./Components/VaultLoadError";
 import { useMiniatureActions } from "./graphql/miniature-actions";
 import { NavigationCountsProvider, useNavigationCounts } from "./graphql/navigation";
+import { usePaintCommands } from "./graphql/paint-actions";
 import { VaultGraphQLProvider } from "./graphql/provider";
 import { MenuIcon } from "./icons";
 import { NAV } from "./Layout/nav-items";
@@ -33,9 +33,8 @@ import { VaultStoreProvider } from "./store/VaultStoreProvider";
 import { theme } from "./theme";
 import { up } from "./theme-tokens";
 import { installBaseStyles } from "./utils/base-styles";
-import { needsLegacySnapshot } from "./utils/legacy-screen";
 import { truncateSx } from "./utils/truncate";
-import { createVaultQueryClient, useServerChecks, useVaultData } from "./utils/vault-query";
+import { useServerChecks, useVaultData } from "./utils/vault-query";
 
 // Keep the workbench eager; other screens and overlays load only when opened.
 const ColorSchemesDialog = lazy(() =>
@@ -75,18 +74,15 @@ const WishlistPage = lazy(() =>
 if (typeof document !== "undefined") installBaseStyles();
 
 export default function Vault(props: { onChangeServer?: () => void } = {}) {
-  const [queryClient] = useState(createVaultQueryClient);
-  const [store] = useState(() => createVaultStore(queryClient));
+  const [store] = useState(() => createVaultStore());
   return (
-    <QueryClientProvider client={queryClient}>
-      <VaultStoreProvider store={store}>
-        <ThemeProvider theme={theme}>
-          <AppErrorBoundary>
-            <VaultContent {...props} />
-          </AppErrorBoundary>
-        </ThemeProvider>
-      </VaultStoreProvider>
-    </QueryClientProvider>
+    <VaultStoreProvider store={store}>
+      <ThemeProvider theme={theme}>
+        <AppErrorBoundary>
+          <VaultContent {...props} />
+        </AppErrorBoundary>
+      </ThemeProvider>
+    </VaultStoreProvider>
   );
 }
 
@@ -109,18 +105,13 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   const setPaintFilter = useVaultStore((s) => s.setPaintFilter);
   const toasts = useVaultStore((s) => s.toasts);
   const dismissToast = useVaultStore((s) => s.dismissToast);
-  const notify = useVaultStore((s) => s.notify);
-  const api = useVaultStore((s) => s.api);
-  const authHeaders = useVaultStore((s) => s.authHeaders);
   const setToken = useVaultStore((s) => s.setToken);
   const refresh = useVaultStore((s) => s.refresh);
-  const syncChanges = useVaultStore((s) => s.syncChanges);
   // Large page titles hand off to the compact app bar once scrolled past.
   const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 48 });
 
   const checkServer = useVaultStore((s) => s.checkServer);
-  const legacyRequired = needsLegacySnapshot(tab, { plugins: pluginsOpen, schemeForm: showSchemeForm });
-  const { auth, loading, loadError, loadFailed } = useVaultData(authHeaders, syncChanges, legacyRequired);
+  const { auth, loading, loadError, loadFailed } = useVaultData();
   useServerChecks(checkServer);
   const displayName = auth?.username || FALLBACK_OWNER_NAME;
   const error = authError || loadError;
@@ -259,6 +250,8 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
         </Card>
       </Box>
     );
+
+  if (loading) return <LoadingWorkbench />;
 
   if (loadFailed)
     return (
@@ -541,18 +534,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
               onClose={() => setShowMiniForm(false)}
             />
           )}
-          {showPaintForm && (
-            <DeferredDialog title="Add paint" onClose={() => setShowPaintForm(false)}>
-              <PaintForm
-                onClose={() => setShowPaintForm(false)}
-                onSave={async (paint) => {
-                  await api("/api/catalog", { method: "POST", body: JSON.stringify({ paints: [paint] }) });
-                  setShowPaintForm(false);
-                  notify(`Added ${paint.name}`);
-                }}
-              />
-            </DeferredDialog>
-          )}
+          {showPaintForm && <CreatePaintDialog onClose={() => setShowPaintForm(false)} />}
           {pluginsOpen && (
             <DeferredDialog title="Plugins" onClose={closePlugins}>
               <PluginsModal onClose={closePlugins} />
@@ -646,6 +628,23 @@ function CreateMiniatureDialog({
           onClose();
           notify(`Added ${values.title}`);
           openMini(id);
+        }}
+      />
+    </DeferredDialog>
+  );
+}
+
+function CreatePaintDialog({ onClose }: { onClose(): void }) {
+  const commands = usePaintCommands();
+  const notify = useVaultStore((store) => store.notify);
+  return (
+    <DeferredDialog title="Add paint" onClose={onClose}>
+      <PaintForm
+        onClose={onClose}
+        onSave={async (paint) => {
+          await commands.importPaints([paint]);
+          onClose();
+          notify(`Added ${paint.name}`);
         }}
       />
     </DeferredDialog>

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { miniatures, paints, vault } from "./storybook/fixtures";
 import { mockApi } from "./storybook/mock-api";
@@ -32,7 +32,7 @@ async function openPage(canvas: Canvas, name: string) {
 export const Workbench: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("heading", { name: /Workbench/ })).toBeInTheDocument();
+    await expect(await canvas.findByRole("heading", { level: 1, name: /Workbench/ })).toBeInTheDocument();
   },
 };
 
@@ -94,18 +94,18 @@ export const AddMiniature: Story = {
 
 const serverError = () => Response.json({ error: "Server error" }, { status: 500 });
 
-// Migrated Home starts without a snapshot; only entering a legacy screen requests it.
-export const VaultLoadFailure: Story = {
-  decorators: [mockApi({ "/api/state": serverError })],
+const legacySnapshotRequest = fn(serverError);
+
+// A failed legacy endpoint cannot affect any migrated screen. Auth failure
+// remains a separate full-shell retry path below.
+export const LegacySnapshotUnavailable: Story = {
+  decorators: [mockApi({ "/api/state": legacySnapshotRequest })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await openPage(canvas, "Wishlist");
-    await expect(
-      await canvas.findByRole("heading", { name: /open your vault/ }, { timeout: 5000 }),
-    ).toBeInTheDocument();
-    await expect(canvas.getByRole("alert")).toHaveTextContent("Could not load your vault");
-    await expect(canvas.getByRole("button", { name: "Try again" })).toBeInTheDocument();
-    await expect(canvas.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    await expect(await canvas.findByRole("heading", { level: 1, name: /Wishlist/ })).toBeInTheDocument();
+    await expect(legacySnapshotRequest).not.toHaveBeenCalled();
+    await expect(canvas.queryByText(/open your vault/)).not.toBeInTheDocument();
   },
 };
 

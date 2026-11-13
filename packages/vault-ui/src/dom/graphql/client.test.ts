@@ -1,8 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { QueryClient } from "@tanstack/react-query";
-
 import { createVaultStore } from "../store/vault-store";
 
 import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
@@ -98,14 +96,12 @@ void test("disposing a scope cancels old requests; a late server result cannot r
 });
 
 void test("cookie-only logout advances the auth generation even with an already-empty bearer token", () => {
-  const queryClient = new QueryClient();
-  const store = createVaultStore(queryClient);
+  const store = createVaultStore();
   assert.equal(store.getState().token, "");
   store.getState().setToken("");
   assert.equal(store.getState().authGeneration, 1);
   store.getState().setToken("new-account");
   assert.equal(store.getState().authGeneration, 2);
-  queryClient.clear();
 });
 
 void test("HTTP access denial immediately clears cached account data", async () => {

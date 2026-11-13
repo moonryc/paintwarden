@@ -1,10 +1,15 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useSyncExternalStore,
+} from "react";
 import { useStore } from "zustand";
 
 import type { State } from "../types";
-import { emptyState } from "../utils/constants";
-import { VAULT_QUERY } from "../utils/vault-query";
 
 import { VaultStoreContext } from "./context";
 import type { VaultStore } from "./vault-store";
@@ -18,9 +23,14 @@ export function useVaultStore<T>(selector: (store: VaultStore) => T): T {
   return useStore(store, selector);
 }
 
-// Reads the query cache, or the empty vault before load/after sign-out. Selected subscribers
-// re-render only when their selection changes. Object.is is the default; pass an equality
-// function (for example zustand's shallow) when selecting a newly constructed object/array.
+// Complete sample snapshots are available only to legacy Storybook adapters. Runtime
+// consumers must use scoped Apollo projections, never construct State from pages.
+export type LegacyVaultAdapter = {
+  subscribe(onChange: () => void): () => void;
+  getSnapshot(): State;
+};
+export const LegacyVaultContext = createContext<LegacyVaultAdapter | null>(null);
+
 const selectVault = (data: State) => data;
 
 export function useVault(): State;
@@ -29,18 +39,11 @@ export function useVault<T>(
   select: (data: State) => T = selectVault as (data: State) => T,
   isEqual: (a: T, b: T) => boolean = Object.is,
 ): T {
-  const queryClient = useQueryClient();
-  const subscribe = useCallback(
-    (onChange: () => void) =>
-      queryClient.getQueryCache().subscribe((event) => {
-        if (event.query.queryKey[0] === VAULT_QUERY[0]) onChange();
-      }),
-    [queryClient],
-  );
-  const snapshot = useCallback(
-    () => queryClient.getQueryData<State>(VAULT_QUERY) ?? emptyState,
-    [queryClient],
-  );
+  const adapter = useContext(LegacyVaultContext);
+  if (!adapter)
+    throw new Error("useVault is fixture-only; runtime screens must use scoped Apollo projections");
+  const subscribe = useCallback((onChange: () => void) => adapter.subscribe(onChange), [adapter]);
+  const snapshot = useCallback(() => adapter.getSnapshot(), [adapter]);
   // Keep the last committed selection across inline-selector changes, but keep snapshot
   // memoization local to each render's selector. A shared mutable selector ref could expose
   // an uncommitted selector to the current subscription during concurrent rendering.

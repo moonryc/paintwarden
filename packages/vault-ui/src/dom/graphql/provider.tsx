@@ -1,7 +1,6 @@
 import type { ApolloClient } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { Alert } from "@mui/material";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   useContext,
@@ -13,7 +12,6 @@ import {
 } from "react";
 
 import { useVaultStore } from "../store/hooks";
-import { VAULT_QUERY } from "../utils/vault-query";
 
 import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
 import { VaultChangesDocument, VaultInvalidationDocument } from "./generated/graphql";
@@ -29,16 +27,22 @@ const fields: Record<VaultFamily, readonly string[]> = {
   OPTIONS: ["paintOptions"],
   HOME: ["home"],
   MINIATURES: ["miniatures", "miniature"],
-  WISHLIST: ["wishlist", "vaultNavigation"],
-  SCHEMES: ["schemes", "scheme", "schemeOptions", "miniatureScheme"],
-  TEMPLATES: ["templates", "template"],
-  SOURCES: ["sources"],
+  WISHLIST: [
+    "wishlist",
+    "wishlistModelOptions",
+    "wishlistRelatedProjects",
+    "wishlistExport",
+    "vaultNavigation",
+  ],
+  SCHEMES: ["schemes", "schemePaintOptions", "miniatureScheme"],
+  TEMPLATES: ["templates", "templateRecipe"],
+  SOURCES: ["sources", "sourceVersions", "sourceRemoval", "sourceShareable"],
 };
 
 function Scope({ children }: { children: ReactNode }) {
   const authHeaders = useVaultStore((store) => store.authHeaders);
   const checkServer = useVaultStore((store) => store.checkServer);
-  const syncChanges = useVaultStore((store) => store.syncChanges);
+  const refreshGeneration = useVaultStore((store) => store.refreshGeneration);
   const [failure, setFailure] = useState<VaultGraphQLError | null>(null);
   const [scope] = useState(() => {
     const transport = createVaultGraphQLClient({
@@ -82,9 +86,6 @@ function Scope({ children }: { children: ReactNode }) {
           if (!event) return;
           connected.current = true;
           scope.controller.event(event);
-          // This is a no-op until a legacy screen has actually loaded a snapshot.
-          // Both transports read the same trigger log with independent cursors.
-          if (event.reset || event.families.length) void syncChanges().catch(() => {});
           setFailure((previous) => (previous?.accessDenied ? previous : null));
         },
         error(error: unknown) {
@@ -104,17 +105,37 @@ function Scope({ children }: { children: ReactNode }) {
         },
       });
     return () => subscription.unsubscribe();
-  }, [baseline, scope, syncChanges, streamAttempt]);
-  const legacyCache = useQueryClient();
-  const checkedSources = useRef(false);
+  }, [baseline, scope, streamAttempt]);
+  const refreshed = useRef(refreshGeneration);
   useEffect(() => {
-    // Preserve deferred source checks for direct Library entry without loading State.
-    // Legacy entry already schedules its own check after the snapshot is usable.
-    if (!baseline || checkedSources.current) return;
-    checkedSources.current = true;
-    if (legacyCache.getQueryData(VAULT_QUERY)) return;
-    void fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() }).catch(() => {});
-  }, [baseline, legacyCache, authHeaders]);
+    if (refreshed.current === refreshGeneration) return;
+    refreshed.current = refreshGeneration;
+    scope.controller.refresh();
+    const cursor = scope.controller.getCursor();
+    if (!cursor) return;
+    let current = true;
+    // Restores can replace the epoch. Reconcile immediately instead of waiting
+    // for focus/polling while new envelopes are correctly rejected as old-scope.
+    void scope.client
+      .query({
+        query: VaultInvalidationDocument,
+        variables: { epoch: cursor.epoch, since: cursor.seq },
+        fetchPolicy: "no-cache",
+      })
+      .then(({ data }) => {
+        if (current && data) scope.controller.event(data.vaultInvalidation);
+      })
+      .catch((error: unknown) => {
+        if (current)
+          setFailure({
+            message: error instanceof Error ? error.message : "Could not refresh live updates",
+            accessDenied: false,
+          });
+      });
+    return () => {
+      current = false;
+    };
+  }, [scope, refreshGeneration]);
   const checking = useRef<Promise<void> | null>(null);
   useEffect(() => {
     const check = () => {
