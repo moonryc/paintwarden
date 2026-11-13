@@ -42,5 +42,6 @@ Electron streams **only the exact subscription POST route**. All other API respo
 
 - [Semantic contract and coverage](graphql-phase0-semantic-coverage.md)
 - [Reproducible large/stress snapshot baseline](benchmarks/graphql-baseline.md)
+- [Apollo/debug bundle delta and clean-build measurement](benchmarks/graphql-bundle.md)
 
 A snapshot byte baseline is not browser startup latency, cold disk, React render time, or full migrated-screen parity. Future phases should compare equivalent screen semantics, loaded-window boundaries, aggregates and final-row reachability on the same fixtures. No existing screen is migrated in this phase.
