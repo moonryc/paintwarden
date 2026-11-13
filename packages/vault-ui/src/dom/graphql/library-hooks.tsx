@@ -111,6 +111,7 @@ export function useLibraryPaints(filters: LibraryFilters): LibraryResult {
     let pages = 1;
     let current: LibraryPageQuery | undefined;
     const { client, controller } = scope;
+    let acceptedTicket: ReturnType<typeof controller.capture> | undefined;
     const run = async () => {
       if (running || !active) return;
       running = true;
@@ -147,6 +148,7 @@ export function useLibraryPaints(filters: LibraryFilters): LibraryResult {
             morePending ||= more;
             continue;
           }
+          acceptedTicket = ticket;
           // A single cache commit and React commit replace the whole loaded window.
           client.writeQuery({
             query: LibraryPageDocument,
@@ -184,7 +186,16 @@ export function useLibraryPaints(filters: LibraryFilters): LibraryResult {
     // Query changes hide the previous result immediately; edits keep the current rows and
     // list geometry in place until every loaded page has been successfully replaced.
     setState((previous) => ({ ...previous, loading: true, refreshing: false, error: "" }));
-    const unsubscribe = controller.listen(["LIBRARY"], refresh);
+    const unsubscribe = controller.listen(["LIBRARY"], () => {
+      if (
+        current &&
+        acceptedTicket &&
+        controller.isCurrent(acceptedTicket) &&
+        controller.isFresh(current.library.revision, ["LIBRARY"])
+      )
+        return;
+      refresh();
+    });
     // Match the previous fuzzy worker's 80ms search debounce, without delaying edits
     // or invalidations. Fast typing must not consume one network request per keystroke.
     const searchTimer = variables.search
