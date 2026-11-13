@@ -1,8 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
+import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { column } from "../storybook/decorators";
-import { paints } from "../storybook/fixtures";
+import { paints, vault } from "../storybook/fixtures";
+import type { Paint } from "../types";
 
 import { MissingProjectPaints } from "./MissingProjectPaints";
 
@@ -112,4 +115,78 @@ export const LargeList: Story = {
 export const LargePhoneList: Story = {
   ...LargeList,
   decorators: [column(320)],
+};
+
+// The original bottle is owned, but its selected recipe is still broken.
+export const BrokenOnly: Story = {
+  args: {
+    items: [{ paint: paints.black, projectCount: 1, reasons: ["brokenSubstitution"] }],
+    onFix: fn(),
+  },
+  parameters: {
+    vault: {
+      ...vault,
+      paintSubstitutions: [
+        ...vault.paintSubstitutions,
+        {
+          id: "user:empty-black-mix",
+          targetPaintId: paints.black.id,
+          name: "Empty black mix",
+          isDefault: true,
+        },
+      ],
+    },
+  },
+  render: function Render(args) {
+    const [fixing, setFixing] = useState<Paint | null>(null);
+    return (
+      <>
+        <MissingProjectPaints
+          {...args}
+          onFix={(paint) => {
+            args.onFix?.(paint);
+            setFixing(paint);
+          }}
+        />
+        {fixing && <SubstitutionDialog paint={fixing} onClose={() => setFixing(null)} />}
+      </>
+    );
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await expect(canvas.getByText("Broken substitution")).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: /Add/ })).toBeNull();
+    await userEvent.click(canvas.getByRole("button", { name: `Fix substitution for ${paints.black.name}` }));
+    await expect(args.onFix).toHaveBeenCalledWith(paints.black);
+    const dialog = await within(document.body).findByRole("dialog", {
+      name: `Substitute ${paints.black.name}`,
+    });
+    await waitFor(() => expect(dialog).toBeVisible());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const MixedReasons: Story = {
+  args: {
+    items: [
+      { paint: paints.black, projectCount: 3, reasons: ["brokenSubstitution"] },
+      { paint: paints.gold, projectCount: 2, reasons: ["missingStock", "brokenSubstitution"] },
+      { paint: paints.blackWash, projectCount: 1, reasons: ["missingStock"] },
+    ],
+    onFix: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await expect(canvas.queryByRole("button", { name: `Add ${paints.black.name} to wishlist` })).toBeNull();
+    await expect(canvas.getByRole("button", { name: `Add ${paints.gold.name} to wishlist` })).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: `Fix substitution for ${paints.gold.name}` }));
+    await expect(args.onFix).toHaveBeenCalledWith(paints.gold);
+    await userEvent.click(canvas.getByRole("button", { name: "Add all 2" }));
+    await expect(args.onAddAll).toHaveBeenCalledWith([paints.gold, paints.blackWash]);
+    await userEvent.click(canvas.getByRole("button", { name: `Add ${paints.gold.name} to wishlist` }));
+    await expect(args.onAdd).toHaveBeenCalledWith(paints.gold);
+  },
 };

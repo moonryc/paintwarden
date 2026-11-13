@@ -5,12 +5,14 @@ import { Heart } from "../icons";
 import type { Paint } from "../types";
 import { listResetSx } from "../utils/element-resets";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
+import type { PaintRequirementReason } from "../utils/vault-data";
 
 import { PaintChecklistItem } from "./PaintChecklistItem";
 import { PaintRowActions } from "./PaintRowActions";
 import { ProgressSummaryCard } from "./ProgressSummaryCard";
+import { StatusChip } from "./StatusChip";
 
-export type MissingPaint = { paint: Paint; projectCount: number };
+export type MissingPaint = { paint: Paint; projectCount: number; reasons?: PaintRequirementReason[] };
 
 // Missing project paints are not on the wishlist until the painter adds them; this offers that step.
 export function MissingProjectPaints({
@@ -18,36 +20,72 @@ export function MissingProjectPaints({
   listedCount,
   onAdd,
   onAddAll,
+  onFix,
 }: {
   items: MissingPaint[];
   listedCount: number;
   onAdd(paint: Paint): void;
-  onAddAll(): void;
+  onAddAll(paints: Paint[]): void;
+  onFix?(paint: Paint): void;
 }) {
   if (!items.length) return null;
   const count = items.length;
-  const totalNeeded = listedCount + count;
+  const stockItems = items.filter(({ reasons = ["missingStock"] }) => reasons.includes("missingStock"));
+  const brokenCount = items.filter(({ reasons }) => reasons?.includes("brokenSubstitution")).length;
+  const broken = brokenCount > 0;
+  const totalNeeded = listedCount + stockItems.length;
   return (
     <ProgressSummaryCard
-      title={`${count} paint${count === 1 ? "" : "s"} your projects need ${count === 1 ? "isn’t" : "aren’t"} on this list`}
-      subtitle="Only bottles marked Owned cross off a project checklist."
-      progress={(listedCount / totalNeeded) * 100}
-      progressLabel={`${listedCount} of ${totalNeeded} missing project paints on the wishlist`}
-      hint="Most-needed first. Select a paint to add it to your wishlist."
+      title={
+        broken
+          ? `${count} project paint${count === 1 ? "" : "s"} need${count === 1 ? "s" : ""} attention`
+          : `${count} paint${count === 1 ? "" : "s"} your projects need ${count === 1 ? "isn’t" : "aren’t"} on this list`
+      }
+      subtitle={
+        broken
+          ? `${stockItems.length} paint${stockItems.length === 1 ? "" : "s"} need stock; ${brokenCount} broken substitution${brokenCount === 1 ? "" : "s"} need fixing.`
+          : "Only bottles marked Owned cross off a project checklist."
+      }
+      progress={totalNeeded ? (listedCount / totalNeeded) * 100 : 100}
+      progressLabel={
+        broken
+          ? `${listedCount} of ${totalNeeded} stock-needed project paints on the wishlist; ${brokenCount} broken substitutions need fixing`
+          : `${listedCount} of ${totalNeeded} missing project paints on the wishlist`
+      }
+      hint={
+        broken
+          ? "Buying a paint won’t fix a broken substitution. Choose Fix substitution to repair it."
+          : "Most-needed first. Select a paint to add it to your wishlist."
+      }
       action={
-        <Button size="small" variant="contained" onClick={onAddAll} startIcon={<Heart size={14} />}>
-          Add {count === 1 ? "it" : `all ${count}`}
-        </Button>
+        stockItems.length > 0 && (
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => onAddAll(stockItems.map(({ paint }) => paint))}
+            startIcon={<Heart size={14} />}
+          >
+            Add {stockItems.length === 1 ? "it" : `all ${stockItems.length}`}
+          </Button>
+        )
       }
       sx={{ mb: { xs: 2, lg: 2.5 } }}
-      checklist={<MissingPaintChecklist items={items} onAdd={onAdd} />}
+      checklist={<MissingPaintChecklist items={items} onAdd={onAdd} onFix={onFix} />}
     />
   );
 }
 
 // The summary only mounts this viewport while expanded. Keep the same auto-fill columns and
 // 360px scroll area as the other progress checklists, but mount only visible rows plus overscan.
-function MissingPaintChecklist({ items, onAdd }: { items: MissingPaint[]; onAdd: (paint: Paint) => void }) {
+function MissingPaintChecklist({
+  items,
+  onAdd,
+  onFix,
+}: {
+  items: MissingPaint[];
+  onAdd: (paint: Paint) => void;
+  onFix?: (paint: Paint) => void;
+}) {
   const listRef = useRef<HTMLUListElement>(null);
   const [viewport, setViewport] = useState({ width: 0, height: 360, scrollTop: 0, rowHeight: 52 });
   const [pendingFocus, setPendingFocus] = useState<{ index: number; reverse: boolean } | null>(null);
@@ -172,31 +210,52 @@ function MissingPaintChecklist({ items, onAdd }: { items: MissingPaint[]; onAdd:
         maxHeight: 360,
         overflowY: "auto",
         overscrollBehavior: "contain",
+        ...(items.some(({ reasons }) => reasons?.includes("brokenSubstitution"))
+          ? { "& > li[data-checklist-index]": { minHeight: 104 } }
+          : {}),
         "&:focus-visible": { outline: "2px solid var(--gold)", outlineOffset: -2 },
       }}
     >
       {listWindow.topOffset > 0 && (
         <li aria-hidden="true" style={{ gridColumn: "1 / -1", height: listWindow.topOffset - 4 }} />
       )}
-      {items.slice(listWindow.startIndex, listWindow.endIndex).map(({ paint, projectCount }, offset) => (
-        <PaintChecklistItem
-          key={paint.id}
-          listPosition={{ index: listWindow.startIndex + offset, count: items.length }}
-          paint={paint}
-          subtitle={`${paint.range} · ${projectCount} project${projectCount === 1 ? "" : "s"}`}
-          selectAction="add to wishlist"
-          onSelect={() => onAdd(paint)}
-          actions={
-            <PaintRowActions
-              wishlist={{
-                label: `Add ${paint.name} to wishlist`,
-                title: "Add to wishlist",
-                onClick: () => onAdd(paint),
-              }}
-            />
-          }
-        />
-      ))}
+      {items
+        .slice(listWindow.startIndex, listWindow.endIndex)
+        .map(({ paint, projectCount, reasons = ["missingStock"] }, offset) => (
+          <PaintChecklistItem
+            key={paint.id}
+            listPosition={{ index: listWindow.startIndex + offset, count: items.length }}
+            paint={paint}
+            subtitle={`${paint.range} · ${projectCount} project${projectCount === 1 ? "" : "s"}`}
+            selectAction={reasons.includes("brokenSubstitution") ? "Fix substitution" : "add to wishlist"}
+            onSelect={() => (reasons.includes("brokenSubstitution") ? onFix?.(paint) : onAdd(paint))}
+            actions={
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+                {reasons.includes("brokenSubstitution") && (
+                  <StatusChip tone="rust">Broken substitution</StatusChip>
+                )}
+                {reasons.includes("brokenSubstitution") && (
+                  <Button
+                    size="small"
+                    aria-label={`Fix substitution for ${paint.name}`}
+                    onClick={() => onFix?.(paint)}
+                  >
+                    Fix substitution
+                  </Button>
+                )}
+                {reasons.includes("missingStock") && (
+                  <PaintRowActions
+                    wishlist={{
+                      label: `Add ${paint.name} to wishlist`,
+                      title: "Add to wishlist",
+                      onClick: () => onAdd(paint),
+                    }}
+                  />
+                )}
+              </Box>
+            }
+          />
+        ))}
       {listWindow.endRow < listWindow.totalRows && (
         <li
           aria-hidden="true"

@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { column } from "../storybook/decorators";
-import { paints } from "../storybook/fixtures";
+import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
 
 import { ProjectPaintSummary } from "./ProjectPaintSummary";
 
@@ -37,3 +37,45 @@ export const PaletteReady: Story = { args: { missing: [] } };
 
 // Renders nothing for a miniature without a recipe.
 export const NoRecipe: Story = { args: { required: [], missing: [] } };
+
+// An empty active default remains broken even when the original bottle is on hand.
+export const OwnedButBroken: Story = {
+  args: {
+    miniatureId: miniatures.knight.id,
+    required: [paints.royalBlue],
+    missing: [paints.royalBlue],
+  },
+  parameters: {
+    vault: {
+      ...vault,
+      requirements: [requirements.royalBlue],
+      miniatureColorSchemes: [],
+      paintStates: { ...vault.paintStates, [paints.royalBlue.id]: "OWNED" },
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
+      },
+      paintSubstitutionIngredients: [],
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByText("Palette ready — go paint!")).toBeNull();
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await expect(canvas.getByText("Broken substitution")).toBeVisible();
+    await expect(
+      canvas.queryByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
+    ).toBeNull();
+    await expect(canvas.getByRole("button", { name: "Wishlist all" })).toBeDisabled();
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Fix substitution for ${paints.royalBlue.name}` }),
+    );
+    const dialog = await within(document.body).findByRole("dialog", {
+      name: `Substitute ${paints.royalBlue.name}`,
+    });
+    await waitFor(() => expect(dialog).toBeVisible());
+    await expect(args.onAddAllToWishlist).not.toHaveBeenCalled();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};

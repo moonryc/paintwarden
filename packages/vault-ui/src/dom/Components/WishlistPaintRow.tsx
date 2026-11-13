@@ -1,7 +1,9 @@
+import { Button } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import { up } from "../theme-tokens";
 import type { Paint } from "../types";
+import type { PaintRequirementReason } from "../utils/vault-data";
 
 import { PaintRowActions } from "./PaintRowActions";
 import { PaintRowLabel, paintRowHoverSx } from "./PaintRowLabel";
@@ -18,8 +20,12 @@ export function WishlistPaintRow({
   onQuantityChange,
   onRemove,
   onOpenPaint,
+  reasons,
+  onFix,
 }: {
   paint: Paint;
+  reasons?: PaintRequirementReason[];
+  onFix?(): void;
   // Position within the full brand list, even when only its viewport fragment is mounted.
   listPosition?: { index: number; size: number };
   // The paint is owned but running low, rather than never bought.
@@ -57,6 +63,14 @@ export function WishlistPaintRow({
         onClick={onOpenPaint}
         accessory={restock && <StatusChip tone="gold">Restock</StatusChip>}
       />
+      {reasons?.includes("brokenSubstitution") && (
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+          <StatusChip tone="rust">Broken substitution</StatusChip>
+          <Button size="small" aria-label={`Fix substitution for ${paint.name}`} onClick={onFix}>
+            Fix substitution
+          </Button>
+        </Box>
+      )}
       {bought ? (
         <PaintRowActions quantity={{ paintName: paint.name, value: quantity, onChange: onQuantityChange }} />
       ) : (

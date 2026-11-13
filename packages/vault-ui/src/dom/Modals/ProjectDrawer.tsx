@@ -222,6 +222,7 @@ export function ProjectDrawer({
         </Box>
 
         <ProjectPaintSummary
+          miniatureId={miniature.id}
           required={required}
           missing={missing}
           onOpenPaint={setOpenPaintId}

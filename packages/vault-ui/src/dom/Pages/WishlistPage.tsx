@@ -9,6 +9,7 @@ import { WishlistPaintList } from "../Components/WishlistPaintList";
 import { WishlistPaintRow } from "../Components/WishlistPaintRow";
 import { PackageCheck, Share2 } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
+import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import {
@@ -29,11 +30,12 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   const [openPaintId, setOpenPaintId] = useState<string | null>(null),
     [miniFilter, setMiniFilter] = useState("ALL"),
     [retainedBoughtRows, setRetainedBoughtRows] = useState<Map<string, WishlistRow>>(new Map());
+  const [fixPaint, setFixPaint] = useState<Paint | null>(null);
   const rows = useMemo(() => shoppingRows(data), [data]);
   // Keep newly bought paints on this page so their bottle count can be adjusted before leaving.
   const displayRows = useMemo(
-    () => retainedShoppingRows(rows, retainedBoughtRows, data.paintRecords),
-    [rows, retainedBoughtRows, data.paintRecords],
+    () => retainedShoppingRows(rows, retainedBoughtRows, data.paintRecords, data),
+    [rows, retainedBoughtRows, data],
   );
   // Grouped by brand so the list follows store shelves; project-heavy paints stay first within a brand.
   const groups = useMemo(() => shoppingGroups(displayRows), [displayRows]);
@@ -115,9 +117,12 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       />
       <MissingProjectPaints
         items={missingItems}
-        listedCount={rows.filter((row) => row.projects.length > 0).length}
+        listedCount={
+          rows.filter((row) => row.projects.length > 0 && row.reasons?.includes("missingStock")).length
+        }
         onAdd={(paint) => addToWishlist([paint])}
-        onAddAll={() => addToWishlist(missingItems.map((item) => item.paint))}
+        onAddAll={addToWishlist}
+        onFix={setFixPaint}
       />
       {displayRows.length > 0 && (
         <Box
@@ -162,6 +167,8 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
               paint={row.paint}
               listPosition={listPosition}
               restock={isRestock(row.paint)}
+              reasons={row.reasons}
+              onFix={() => setFixPaint(row.paint)}
               quantity={
                 retainedBoughtRows.has(row.paint.id) && owns(data.paintRecords[row.paint.id])
                   ? data.paintRecords[row.paint.id].quantity
@@ -187,7 +194,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
             selectedMini
               ? "This miniature has no paints on your wishlist yet."
               : missingItems.length
-                ? "Add the paints your projects need above, or browse the library for something new."
+                ? "Review your project paint issues above, or browse the library for something new."
                 : "Your wishlist has no paints to buy or restock. Tap the heart on any paint to add it here."
           }
           action={
@@ -199,6 +206,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
           }
         />
       )}
+      {fixPaint && <SubstitutionDialog paint={fixPaint} onClose={() => setFixPaint(null)} />}
       <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />
     </div>
   );
