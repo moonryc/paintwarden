@@ -1,27 +1,59 @@
-// Gives every story the vault context the app provides: a query cache holding the sample vault
+// Gives every story a fixture-only snapshot holding the sample vault
 // and a vault store whose server actions are spies, so components render without a server.
 // A story can show different data with `parameters: { vault: someState }`.
 import type { Decorator } from "@storybook/react-vite";
-import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { fn } from "storybook/test";
 
+import { PaintCommandsContext, type PaintCommands } from "../graphql/paint-actions";
+import { WishlistFixtureContext } from "../graphql/wishlist-hooks";
 import { createVaultStore } from "../store/vault-store";
 import { VaultStoreProvider } from "../store/VaultStoreProvider";
 import type { State } from "../types";
-import { VAULT_QUERY, createVaultQueryClient } from "../utils/vault-query";
 
+import {
+  createFixtureSnapshotClient,
+  FixtureSnapshotProvider,
+  type FixtureSnapshotClient,
+} from "./fixture-snapshot";
 import { vault } from "./fixtures";
+import { createWishlistFixture } from "./wishlist-fixture";
+
+// Isolate this subscription so snapshot edits do not render unrelated stories/controls.
+function WishlistFixtureProvider({
+  client,
+  children,
+}: {
+  client: FixtureSnapshotClient;
+  children: ReactNode;
+}) {
+  const data = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
+  const fixture = useMemo(() => createWishlistFixture(() => data), [data]);
+  return <WishlistFixtureContext.Provider value={fixture}>{children}</WishlistFixtureContext.Provider>;
+}
 
 function StoryVault({ data, children }: { data: State; children: ReactNode }) {
-  const [queryClient] = useState(() => {
-    const client = createVaultQueryClient();
-    client.setQueryData(VAULT_QUERY, data);
-    return client;
-  });
+  const [client] = useState(() => createFixtureSnapshotClient(data));
+  const [paintCommands] = useState<PaintCommands>(() => ({
+    importPaints: fn<PaintCommands["importPaints"]>(async (paints) => ({
+      imported: paints.length,
+      skipped: 0,
+    })).mockName("importPaints"),
+    updatePaint: fn<PaintCommands["updatePaint"]>(async () => undefined).mockName("updatePaint"),
+    deletePaint: fn<PaintCommands["deletePaint"]>(async () => undefined).mockName("deletePaint"),
+    createSubstitution: fn<PaintCommands["createSubstitution"]>(async () => "story-substitution").mockName(
+      "createSubstitution",
+    ),
+    setSubstitutionDefault: fn<PaintCommands["setSubstitutionDefault"]>(async () => undefined).mockName(
+      "setSubstitutionDefault",
+    ),
+    deleteSubstitution: fn<PaintCommands["deleteSubstitution"]>(async () => undefined).mockName(
+      "deleteSubstitution",
+    ),
+  }));
   const [store] = useState(() =>
-    createVaultStore(queryClient, {
+    createVaultStore(undefined, {
       api: fn(async () => ({})).mockName("api"),
       refresh: fn(async () => undefined).mockName("refresh"),
       syncChanges: fn(async () => undefined).mockName("syncChanges"),
@@ -35,9 +67,13 @@ function StoryVault({ data, children }: { data: State; children: ReactNode }) {
     }),
   );
   return (
-    <QueryClientProvider client={queryClient}>
-      <VaultStoreProvider store={store}>{children}</VaultStoreProvider>
-    </QueryClientProvider>
+    <FixtureSnapshotProvider client={client}>
+      <VaultStoreProvider store={store}>
+        <PaintCommandsContext.Provider value={paintCommands}>
+          <WishlistFixtureProvider client={client}>{children}</WishlistFixtureProvider>
+        </PaintCommandsContext.Provider>
+      </VaultStoreProvider>
+    </FixtureSnapshotProvider>
   );
 }
 

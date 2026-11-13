@@ -1,19 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { expect, userEvent, waitFor } from "storybook/test";
 
+import {
+  createFixtureSnapshotClient,
+  FixtureSnapshotProvider,
+  VAULT_QUERY,
+} from "../storybook/fixture-snapshot";
 import type { State } from "../types";
 import { emptyState } from "../utils/constants";
-import { VAULT_QUERY } from "../utils/vault-query";
 
 import { useVault } from "./hooks";
 
 // These clients never fetch, and override the sample-vault provider outside this story.
 function createClient(name: string) {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity, gcTime: Infinity } },
-  });
+  const client = createFixtureSnapshotClient();
   client.setQueryData<State>(VAULT_QUERY, {
     ...emptyState,
     catalog: [
@@ -135,7 +136,7 @@ function RegressionFixture() {
     </>
   ));
   return (
-    <QueryClientProvider client={client}>
+    <FixtureSnapshotProvider client={client}>
       <section aria-label="Vault subscription regression fixture">
         <button
           onClick={() =>
@@ -206,7 +207,7 @@ function RegressionFixture() {
         </button>
         {subscribers}
       </section>
-    </QueryClientProvider>
+    </FixtureSnapshotProvider>
   );
 }
 

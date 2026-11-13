@@ -1,12 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useQueryClient } from "@tanstack/react-query";
 import { Profiler, useRef, useState, type RefObject } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { list } from "../storybook/decorators";
+import { useFixtureSnapshotClient, VAULT_QUERY } from "../storybook/fixture-snapshot";
 import { paints, vault } from "../storybook/fixtures";
 import type { State } from "../types";
-import { VAULT_QUERY } from "../utils/vault-query";
 
 import { LibraryPaintRow } from "./LibraryPaintRow";
 
@@ -36,7 +35,7 @@ export const CustomPaint: Story = { args: { paint: paints.tealMix } };
 
 // Sampling commits lives in a sibling, so reading the counter cannot itself render the rows.
 function CacheControls({ commits }: { commits: RefObject<{ direct: number; mix: number }> }) {
-  const client = useQueryClient();
+  const client = useFixtureSnapshotClient();
   const [sample, setSample] = useState({ direct: 0, mix: 0 });
   return (
     <li>

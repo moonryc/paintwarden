@@ -1,12 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useQueryClient } from "@tanstack/react-query";
 import { Profiler, useRef, useState, type ComponentProps, type RefObject } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { column } from "../../storybook/decorators";
-import { paints, vault } from "../../storybook/fixtures";
-import type { State } from "../../types";
-import { VAULT_QUERY } from "../../utils/vault-query";
+import { vault } from "../../storybook/fixtures";
+import { schemeCardSummary } from "../../utils/semantic-contract";
 
 import { SchemeCard } from "./SchemeCard";
 
@@ -15,6 +13,7 @@ const meta = {
   component: SchemeCard,
   args: {
     scheme: vault.colorSchemes[0],
+    summary: schemeCardSummary(vault, vault.colorSchemes[0].id),
     index: 0,
     available: 2,
     total: 3,
@@ -28,7 +27,37 @@ type Story = StoryObj<typeof meta>;
 
 export const MissingPaints: Story = {};
 export const ReadyToPaint: Story = { args: { available: 3 } };
-export const Empty: Story = { args: { scheme: vault.colorSchemes[2], available: 0, total: 0 } };
+export const Empty: Story = {
+  args: {
+    scheme: vault.colorSchemes[2],
+    summary: schemeCardSummary(vault, vault.colorSchemes[2].id),
+    available: 0,
+    total: 0,
+  },
+};
+export const CatalogSource: Story = {
+  args: { scheme: { ...vault.colorSchemes[0], isSystem: true, sourceName: "Example source" } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Example source")).toBeVisible();
+  },
+};
+export const LongName: Story = {
+  args: {
+    scheme: { ...vault.colorSchemes[0], name: "An unusually long name for a custom miniature color scheme" },
+  },
+};
+export const PreviewImage: Story = {
+  args: {
+    summary: {
+      ...schemeCardSummary(vault, vault.colorSchemes[0].id),
+      previewUrl:
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cpath fill='%236b263d' d='M0 0h200v200H0z'/%3E%3C/svg%3E",
+    },
+  },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByRole("img", { name: `${args.scheme.name} finished example` })).toBeVisible();
+  },
+};
 
 export const OpenAndKeyboard: Story = {
   args: { index: 7 },
@@ -41,80 +70,53 @@ export const OpenAndKeyboard: Story = {
   },
 };
 
-// Query mutations and counter sampling are siblings: neither action renders the card's parent.
-function CacheControls({ commits }: { commits: RefObject<number> }) {
-  const client = useQueryClient();
+// Reading commits and unrelated fixture edits live in a sibling, not the card's parent.
+function ProjectionControls({
+  commits,
+  updateSummary,
+}: {
+  commits: RefObject<number>;
+  updateSummary: (change: Partial<ComponentProps<typeof SchemeCard>["summary"]>) => void;
+}) {
   const [sample, setSample] = useState(0);
+  const [notes, setNotes] = useState("");
   return (
     <div>
       <button onClick={() => setSample(commits.current)}>Read card commits</button>
       <span data-testid="card-commits">{sample}</span>
-      <button
-        onClick={() =>
-          client.setQueryData<State>(VAULT_QUERY, (data) =>
-            data
-              ? { ...data, miniatures: data.miniatures.map((mini) => ({ ...mini, notes: "Unrelated edit" })) }
-              : data,
-          )
-        }
-      >
+      <button onClick={() => setNotes("Unrelated edit")} title={notes}>
         Update unrelated notes
       </button>
-      <button
-        onClick={() =>
-          client.setQueryData<State>(VAULT_QUERY, (data) =>
-            data
-              ? {
-                  ...data,
-                  catalog: data.catalog.map((paint) =>
-                    paint.id === paints.black.id ? { ...paint, name: "Updated fixture paint" } : paint,
-                  ),
-                }
-              : data,
-          )
-        }
-      >
+      <button onClick={() => updateSummary({ paintNames: "Updated fixture paint" })}>
         Rename scheme paint
       </button>
-      <button
-        onClick={() =>
-          client.setQueryData<State>(VAULT_QUERY, (data) =>
-            data
-              ? {
-                  ...data,
-                  miniatureColorSchemes: [
-                    ...data.miniatureColorSchemes,
-                    { miniatureId: "fixture:second", schemeId: vault.colorSchemes[0].id, sortOrder: 0 },
-                  ],
-                }
-              : data,
-          )
-        }
-      >
-        Link second miniature
-      </button>
+      <button onClick={() => updateSummary({ uses: 2 })}>Link second miniature</button>
     </div>
   );
 }
 
 function ProfiledCard(props: ComponentProps<typeof SchemeCard>) {
   const commits = useRef(0);
+  const [summary, setSummary] = useState(props.summary);
   return (
     <>
-      <CacheControls commits={commits} />
+      <ProjectionControls
+        commits={commits}
+        updateSummary={(change) => setSummary((current) => ({ ...current, ...change }))}
+      />
       <Profiler
         id="scheme"
         onRender={() => {
           commits.current += 1;
         }}
       >
-        <SchemeCard {...props} />
+        <SchemeCard {...props} summary={summary} />
       </Profiler>
     </>
   );
 }
 
-export const SelectiveCacheSubscriptions: Story = {
+export const ProjectionUpdates: Story = {
   render: (args) => <ProfiledCard {...args} />,
   play: async ({ canvas }) => {
     const readCommits = async () => {
