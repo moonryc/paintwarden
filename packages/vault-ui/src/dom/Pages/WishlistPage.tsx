@@ -48,6 +48,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   const [retainedMembership, setRetainedMembership] = useState<Record<string, boolean>>({});
   const list = useWishlist(selectedMini?.id ?? null);
   const models = useWishlistModelOptions(modelSearch);
+  const readRelatedProjects = list.relatedProjects;
   const displayRows = useMemo(() => {
     const ids = new Set(list.rows.map(({ paint }) => paint.id));
     const extra = [...retained.values()]
@@ -86,7 +87,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       void (async () => {
         let after: string | null = null;
         do {
-          const page = await list.relatedProjects(row.paint.id, after);
+          const page = await readRelatedProjects(row.paint.id, after);
           if (!active) return;
           if (page.nodes.some((project) => project.id === miniatureId)) {
             setRetainedMembership((previous) => ({ ...previous, [key]: true }));
@@ -103,7 +104,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
     return () => {
       active = false;
     };
-  }, [selectedMini, retained, retainedMembership, list.relatedProjects, notify]);
+  }, [selectedMini, retained, retainedMembership, readRelatedProjects, notify]);
 
   const groups = useMemo(() => {
     const grouped = new Map<string, WishlistProjection[]>();
