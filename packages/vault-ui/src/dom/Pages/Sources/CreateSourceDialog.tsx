@@ -52,7 +52,7 @@ function StepSection({
         >
           {step}
         </Box>
-        <Box component="h4" sx={{ m: 0, fontSize: 14, fontWeight: 650, flex: 1, minWidth: 0 }}>
+        <Box component="h3" sx={{ m: 0, fontSize: 14, fontWeight: 650, flex: 1, minWidth: 0 }}>
           {title}
         </Box>
         {aside}

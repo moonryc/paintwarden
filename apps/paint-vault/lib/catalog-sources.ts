@@ -277,14 +277,56 @@ export function listCatalogSources() {
     }));
 }
 
-const sourceVersionChecks = new Map<string, ReturnType<typeof checkSourceVersion>>();
+type SourceVersionResult = {
+  id: string;
+  availableVersion?: string;
+  updateAvailable?: boolean;
+  error?: string;
+};
+const sourceVersionChecks = new Map<string, Promise<SourceVersionResult>>();
+const sourceVersionResults = new Map<string, { identity: string; result: SourceVersionResult }>();
+const versionIdentity = (source: { repository: string; branch: string; version: string }) =>
+  JSON.stringify([source.repository, source.branch, source.version]);
+
+// GraphQL reads only locally cached check results. GitHub work remains an explicit
+// REST source operation, not a field resolver. Cache membership is bounded by the
+// installed sources, and a reinstall/version/branch change cannot reuse old data.
+export function cachedCatalogSourceVersions() {
+  const installed = getDb()
+    .select({
+      id: catalogSources.id,
+      repository: catalogSources.repository,
+      branch: catalogSources.branch,
+      version: catalogSources.version,
+    })
+    .from(catalogSources)
+    .all();
+  const ids = new Set(installed.map((source) => source.id));
+  for (const id of sourceVersionResults.keys()) if (!ids.has(id)) sourceVersionResults.delete(id);
+  return installed.map((source): SourceVersionResult => {
+    const cached = sourceVersionResults.get(source.id);
+    if (cached?.identity === versionIdentity(source)) return cached.result;
+    sourceVersionResults.delete(source.id);
+    return { id: source.id };
+  });
+}
 
 export async function checkCatalogSourceVersions() {
+  // Drop removed or changed identities before accepting another set of checks.
+  cachedCatalogSourceVersions();
   return Promise.all(
     listCatalogSources().map((source) => {
       const pending = sourceVersionChecks.get(source.id);
       if (pending) return pending;
-      const check = checkSourceVersion(source).finally(() => sourceVersionChecks.delete(source.id));
+      const identity = versionIdentity(source);
+      const check = checkSourceVersion(source)
+        .then((result) => {
+          const current = installedSource(source.repository);
+          if (current?.id === source.id && versionIdentity(current) === identity)
+            sourceVersionResults.set(source.id, { identity, result });
+          return result;
+        })
+        .finally(() => sourceVersionChecks.delete(source.id));
       sourceVersionChecks.set(source.id, check);
       return check;
     }),

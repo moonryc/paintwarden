@@ -1,0 +1,107 @@
+import { ApolloClient, ApolloLink, Observable } from "@apollo/client";
+import { type ReactNode, useEffect, useState } from "react";
+
+import { createVaultCache } from "../graphql/cache";
+import { VaultInvalidationController } from "../graphql/invalidation";
+import { VaultGraphQLContext } from "../graphql/provider";
+
+export type SourcesFixtureMode = "installed" | "empty" | "loading" | "error";
+const source = {
+  id: "fixture-plugin",
+  repository: "example/paints",
+  url: "https://github.com/example/paints",
+  name: "Example paint source",
+  version: "1.0.0",
+  license: "CC-BY-4.0",
+  attribution: "Example authors",
+  dependencies: [],
+  lastError: null,
+  logoUrl: null,
+  counts: { paints: 12, schemes: 2, templates: 1 },
+};
+
+// Exercises the actual no-cache/accept/commit hook with no production HTTP server.
+export function SourcesApolloFixture({
+  children,
+  mode = "installed",
+  onOperation = () => {},
+}: {
+  children: ReactNode;
+  mode?: SourcesFixtureMode;
+  onOperation?: (name: string) => void;
+}) {
+  const [scope] = useState(() => {
+    const controller = new VaultInvalidationController();
+    const client = new ApolloClient({
+      cache: createVaultCache(),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            onOperation(operation.operationName ?? "");
+            if (mode === "loading") return undefined;
+            const timer = setTimeout(() => {
+              if (mode === "error") {
+                observer.error(new Error("Could not load fixture plugins"));
+                return;
+              }
+              const revision = { epoch: "sources-story", seq: "1" };
+              const responses: Record<string, unknown> = {
+                InstalledSources: { sources: { revision, sources: mode === "empty" ? [] : [source] } },
+                PluginVersions: {
+                  sourceVersions: {
+                    revision,
+                    versions: [
+                      { id: source.id, availableVersion: "1.1.0", updateAvailable: true, error: null },
+                    ],
+                  },
+                },
+                PluginShareable: {
+                  sourceShareable: {
+                    revision,
+                    paints: ["Silver", "Gold", "White", "Black", "Red", "Blue"].map((name) => ({
+                      id: `user:${name}`,
+                      name: `Custom · ${name}`,
+                    })),
+                    schemes: [],
+                    templates: [],
+                  },
+                },
+                PluginRemoval: {
+                  sourceRemoval: {
+                    revision,
+                    source: { id: source.id, name: source.name, version: source.version },
+                    removes: source.counts,
+                    blockers: [],
+                    canRemove: true,
+                  },
+                },
+              };
+              observer.next({ data: responses[operation.operationName ?? ""] as Record<string, unknown> });
+              observer.complete();
+            }, 20);
+            return () => clearTimeout(timer);
+          }),
+      ),
+    });
+    return { client, controller };
+  });
+  const [originalFetch] = useState(() => {
+    const original = window.fetch;
+    window.fetch = async (input, init) => {
+      const url = new URL(input instanceof Request ? input.url : String(input), location.origin);
+      if (url.pathname === "/api/catalog-sources") return Response.json({ results: [], updated: true });
+      if (url.pathname === "/api/version") return Response.json({ version: "story-fixture" });
+      throw new Error(`Unexpected source story request: ${url.pathname} (${init?.method ?? "GET"})`);
+    };
+    return original;
+  });
+  useEffect(
+    () => () => {
+      window.fetch = originalFetch;
+      scope.client.stop();
+      scope.controller.dispose();
+    },
+    [scope, originalFetch],
+  );
+  return <VaultGraphQLContext.Provider value={scope}>{children}</VaultGraphQLContext.Provider>;
+}

@@ -11,6 +11,7 @@ const {
   addCatalogSource,
   checkCatalogSource,
   checkCatalogSourceVersions,
+  cachedCatalogSourceVersions,
   checkCatalogSources,
   listCatalogSources,
   normalizeRepository,
@@ -506,8 +507,13 @@ test("source imports once per version, updates by ID, and stays usable offline",
     assert.deepEqual(await checkCatalogSourceVersions(), [
       { id: sourceId("example/paint-source"), availableVersion: "1.0.1", updateAvailable: true },
     ]);
+    assert.deepEqual(cachedCatalogSourceVersions(), [
+      { id: sourceId("example/paint-source"), availableVersion: "1.0.1", updateAvailable: true },
+    ]);
     assert.equal(listCatalogSources()[0].version, "1.0.0");
     assert.equal((await checkCatalogSources())[0].updated, true);
+    // The installed version changed: the old available-update result is invalid.
+    assert.deepEqual(cachedCatalogSourceVersions(), [{ id: sourceId("example/paint-source") }]);
     assert.equal(getDb().select().from(paintCatalog).get()!.colorHex, "#2244bb");
     assert.equal(getDb().select().from(paintCatalog).all().length, 1);
     assert.equal(catalogRequests, 5);
@@ -549,6 +555,7 @@ test("source imports once per version, updates by ID, and stays usable offline",
     assert.equal(getDb().select().from(colorSchemes).all().length, 0);
     assert.equal(getDb().select().from(miniatureTemplates).all().length, 0);
     assert.equal((await sourceImage(imageUrl.split("/").at(-1)!)).status, 404);
+    assert.deepEqual(cachedCatalogSourceVersions(), []);
   } finally {
     globalThis.fetch = originalFetch;
     rmSync(directory, { recursive: true, force: true });

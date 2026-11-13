@@ -14,6 +14,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
+import { usePluginSources } from "../../graphql/sources-hooks";
 import { Extension, FileUp, Layers, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
 
@@ -21,7 +22,6 @@ import { CreateSourceDialog } from "./CreateSourceDialog";
 import { RemoveSourceDialog } from "./RemoveSourceDialog";
 import { SourceCard } from "./SourceCard";
 import {
-  type CatalogSource,
   type SourceVersion,
   type Shareable,
   type Pending,
@@ -48,25 +48,36 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const notify = useVaultStore((s) => s.notify);
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const refresh = useVaultStore((s) => s.refresh);
-  const [sources, setSources] = useState<CatalogSource[]>([]);
+  const sourceRead = usePluginSources();
+  const { sources } = sourceRead;
+  const checkedSources = useRef(false);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const [sourceVersions, setSourceVersions] = useState<Record<string, SourceVersion>>({});
   const [versionsChecking, setVersionsChecking] = useState(false);
   const [shareable, setShareable] = useState<Shareable>({ paints: [], schemes: [], templates: [] });
   const [url, setUrl] = useState("");
-  const [pending, setPending] = useState<Pending>("load");
+  const [pending, setPending] = useState<Pending>(null);
   const [error, setError] = useState("");
   const [addError, setAddError] = useState("");
   const [removal, setRemoval] = useState<SourceRemoval | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const busy = pending !== null;
+  const busy = pending !== null || sourceRead.loading;
 
   async function loadVersions() {
     setVersionsChecking(true);
     try {
+      // Source/network operations intentionally stay REST; Apollo reads the locally
+      // cached result. A GraphQL field resolver never contacts GitHub.
       const response = await fetch("/api/catalog-sources?versions=1", { headers: authHeaders() });
       if (!response.ok) throw new Error("Could not check for plugin updates");
-      const { versions } = (await response.json()) as { versions: SourceVersion[] };
+      const versions = await sourceRead.versions();
       setSourceVersions(Object.fromEntries(versions.map((item) => [item.id, item])));
     } catch {
       setSourceVersions({});
@@ -75,23 +86,37 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     }
   }
   async function loadSources() {
-    const response = await fetch("/api/catalog-sources", { headers: authHeaders() });
-    if (!response.ok) throw new Error("Could not load plugins");
-    setSources(((await response.json()) as { sources: CatalogSource[] }).sources);
-    void loadVersions();
+    await sourceRead.reload();
+    await loadVersions();
   }
-  async function loadShareable() {
-    const response = await fetch("/api/catalog-share", { headers: authHeaders() });
-    if (!response.ok) throw new Error("Could not load shareable content");
-    setShareable((await response.json()) as Shareable);
-  }
-  useEffect(() => {
+  async function openCreate() {
     setPending("load");
-    void Promise.all([loadSources(), loadShareable()])
-      .catch((cause) => setError(message(cause, "Could not load plugins")))
-      .finally(() => setPending(null));
+    setError("");
+    try {
+      setShareable(await sourceRead.shareable());
+      setCreateOpen(true);
+    } catch (cause) {
+      setError(message(cause, "Could not load shareable content"));
+    } finally {
+      setPending(null);
+    }
+  }
+  // The old startup PUT had no badge/toast consumer. Keep its non-blocking
+  // behavior, but only once the Plugins list is usable, never on Settings entry.
+  useEffect(() => {
+    if (sourceRead.loading || sourceRead.error || checkedSources.current) return;
+    checkedSources.current = true;
+    void (async () => {
+      await loadVersions();
+      if (!mounted.current) return;
+      const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
+      if (!response.ok || !mounted.current) return;
+      // The write may change every data family; do not retain/parse its payload.
+      await refresh();
+      await loadSources();
+    })().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authHeaders]);
+  }, [sourceRead.loading, sourceRead.error]);
 
   async function addSource() {
     if (busy || !url.trim()) return;
@@ -106,7 +131,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       const result = (await response.json()) as { error?: string; updated?: boolean };
       if (!response.ok) throw new Error(result.error || "Could not install plugin");
       setUrl("");
-      await Promise.all([loadSources(), loadShareable(), refresh()]);
+      await refresh();
+      await loadSources();
       notify(result.updated ? "Plugin installed" : "Plugin is already installed and up to date");
     } catch (cause) {
       setAddError(message(cause, "Could not install plugin"));
@@ -131,7 +157,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         updated?: boolean;
       };
       if (!response.ok) throw new Error(result.error || "Could not install plugin");
-      await Promise.all([loadSources(), loadShareable(), refresh()]);
+      await refresh();
+      await loadSources();
       const plugin = result.name ?? "Plugin";
       notify(
         result.updated === false ? `${plugin} is already installed at this version` : `${plugin} installed`,
@@ -154,7 +181,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       });
       const result = (await response.json()) as { error?: string; updated?: boolean };
       if (!response.ok || result.error) throw new Error(result.error || "Could not update plugin");
-      await Promise.all([loadSources(), refresh()]);
+      await refresh();
+      await loadSources();
       notify(result.updated ? "Plugin updated" : "Plugin is up to date");
     } catch (cause) {
       setError(message(cause, "Could not update plugin"));
@@ -172,7 +200,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
       if (!response.ok) throw new Error("Could not update plugins");
       const { results } = (await response.json()) as { results: { updated?: boolean; error?: string }[] };
-      await Promise.all([loadSources(), refresh()]);
+      await refresh();
+      await loadSources();
       const updated = results.filter((result) => result.updated).length;
       const failed = results.filter((result) => result.error).length;
       if (failed) setError(`${plural(failed, "plugins")} could not be updated`);
@@ -188,12 +217,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   async function previewRemoval(id: string) {
     setError("");
     try {
-      const response = await fetch(`/api/catalog-sources?preview=${encodeURIComponent(id)}`, {
-        headers: authHeaders(),
-      });
-      const result = (await response.json()) as SourceRemoval & { error?: string };
-      if (!response.ok) throw new Error(result.error || "Could not check plugin usage");
-      setRemoval(result);
+      setRemoval(await sourceRead.removal(id));
     } catch (cause) {
       setError(message(cause, "Could not check plugin usage"));
     }
@@ -215,7 +239,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       }
       if (!response.ok) throw new Error(result.error || "Could not remove plugin");
       setRemoval(null);
-      await Promise.all([loadSources(), loadShareable(), refresh()]);
+      await refresh();
+      await loadSources();
       notify("Plugin removed");
     } catch (cause) {
       setError(message(cause, "Could not remove plugin"));
@@ -241,7 +266,12 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       subtitle="Install public catalogs of paints, schemes, and templates from GitHub, or package your own to share."
       onClose={onClose}
       footer={
-        <Button variant="outlined" startIcon={<Extension size={18} />} onClick={() => setCreateOpen(true)}>
+        <Button
+          variant="outlined"
+          startIcon={<Extension size={18} />}
+          onClick={() => void openCreate()}
+          disabled={busy}
+        >
           Create plugin
         </Button>
       }
@@ -353,7 +383,11 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
                   disabled={versionsChecking || busy}
                   onClick={() => void loadVersions()}
                 >
-                  {versionsChecking ? <CircularProgress size={16} /> : <RotateCw size={18} />}
+                  {versionsChecking ? (
+                    <CircularProgress size={16} aria-label="Checking plugin updates" />
+                  ) : (
+                    <RotateCw size={18} />
+                  )}
                 </IconButton>
               </span>
             </Tooltip>
@@ -370,19 +404,30 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         )}
       </Box>
 
-      {error && (
-        <Alert severity="error" onClose={() => setError("")} sx={{ mb: 2 }}>
-          {error}
+      {(error || sourceRead.error) && (
+        <Alert
+          severity="error"
+          onClose={error ? () => setError("") : undefined}
+          action={
+            sourceRead.error ? (
+              <Button color="inherit" onClick={() => void loadSources()}>
+                Retry
+              </Button>
+            ) : undefined
+          }
+          sx={{ mb: 2 }}
+        >
+          {error || sourceRead.error}
         </Alert>
       )}
 
-      {pending === "load" && !sources.length ? (
+      {sourceRead.loading && !sources.length ? (
         <Box sx={{ display: "grid", gap: 1.5 }}>
           {[0, 1].map((index) => (
             <Skeleton key={index} variant="rounded" sx={{ height: 128, borderRadius: "16px" }} />
           ))}
         </Box>
-      ) : !sources.length ? (
+      ) : !sources.length && !sourceRead.error ? (
         <EmptyState
           icon={<Layers size={26} />}
           title="No plugins yet"

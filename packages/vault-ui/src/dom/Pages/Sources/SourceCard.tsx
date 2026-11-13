@@ -29,7 +29,11 @@ function SourceStatus({
             `v${remote.availableVersion} available`,
           ] as const)
         : checking && !remote
-          ? (["muted", <CircularProgress key="i" size={10} color="inherit" />, "Checking…"] as const)
+          ? ([
+              "muted",
+              <CircularProgress key="i" size={10} color="inherit" aria-label="Checking plugin update" />,
+              "Checking…",
+            ] as const)
           : remote && !remote.error
             ? (["ok", <CheckCircleOutlineIcon key="i" sx={{ fontSize: 14 }} />, "Up to date"] as const)
             : (["muted", null, "Offline copy"] as const);
