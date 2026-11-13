@@ -9,17 +9,20 @@ import {
   PaintPickerOptionsDocument,
   type DetailPaintFragment,
 } from "./generated/graphql";
-import type { VaultFamily } from "./invalidation";
+import type { ReadTicket, Revision, VaultFamily } from "./invalidation";
 import { useVaultGraphQL } from "./provider";
 
 const DETAIL_FAMILIES: readonly VaultFamily[] = ["PAINT", "MINIATURES", "SOURCES"];
 const OPTION_FAMILIES: readonly VaultFamily[] = ["OPTIONS", "PAINT", "SOURCES"];
+type AcceptedRead = { ticket: ReadTicket; revision: Revision };
+
 const initialWindow = (): DetailWindow => ({ substitutions: 1, usedBy: 1, ingredients: {} });
 
 export function usePaintDetail(id: string) {
   const graphql = useVaultGraphQL();
   const [window, setWindow] = useState(initialWindow);
   const previousId = useRef(id);
+  const accepted = useRef<AcceptedRead | null>(null);
   const [version, setVersion] = useState(0);
   const [result, setResult] = useState<{
     id: string;
@@ -35,7 +38,19 @@ export function usePaintDetail(id: string) {
       setWindow(initialWindow());
     }
   }, [id]);
-  useEffect(() => graphql?.controller.listen(DETAIL_FAMILIES, refresh), [graphql, refresh]);
+  useEffect(
+    () =>
+      graphql?.controller.listen(DETAIL_FAMILIES, () => {
+        const previous = accepted.current;
+        if (
+          !previous ||
+          !graphql.controller.isCurrent(previous.ticket) ||
+          !graphql.controller.isFresh(previous.revision, DETAIL_FAMILIES)
+        )
+          refresh();
+      }),
+    [graphql, refresh],
+  );
   useEffect(() => {
     if (!graphql) return;
     let current = true;
@@ -54,6 +69,7 @@ export function usePaintDetail(id: string) {
           refresh();
           return;
         }
+        accepted.current = { ticket, revision: data.revision };
         // The view is already unmasked at this boundary; runtime fragment fields remain intact.
         graphql.client.writeQuery({
           query: PaintDetailsDocument,
@@ -114,6 +130,7 @@ export function usePaintDetail(id: string) {
 
 export function usePaintOptions(search: string, excludeIds: string[], first = 30) {
   const graphql = useVaultGraphQL();
+  const accepted = useRef<AcceptedRead | null>(null);
   const key = JSON.stringify([...new Set(excludeIds)].sort());
   const variables = useMemo(
     () => ({ search, excludeIds: JSON.parse(key) as string[], first }),
@@ -128,7 +145,16 @@ export function usePaintOptions(search: string, excludeIds: string[], first = 30
     error: Error | null;
   }>({ variables, scope: graphql, items: [], loading: true, error: null });
   useEffect(
-    () => graphql?.controller.listen(OPTION_FAMILIES, () => setVersion((value) => value + 1)),
+    () =>
+      graphql?.controller.listen(OPTION_FAMILIES, () => {
+        const previous = accepted.current;
+        if (
+          !previous ||
+          !graphql.controller.isCurrent(previous.ticket) ||
+          !graphql.controller.isFresh(previous.revision, OPTION_FAMILIES)
+        )
+          setVersion((value) => value + 1);
+      }),
     [graphql],
   );
   useEffect(() => {
@@ -146,6 +172,7 @@ export function usePaintOptions(search: string, excludeIds: string[], first = 30
             setVersion((value) => value + 1);
             return;
           }
+          accepted.current = { ticket, revision: data.paintOptions.revision };
           graphql.client.writeQuery({ query: PaintPickerOptionsDocument, variables, data });
           setResult({
             variables,
