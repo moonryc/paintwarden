@@ -1,0 +1,92 @@
+mutation ImportCustomPaints($paints: [CustomPaintImportInput!]!, $clientMutationId: String) {
+  importCustomPaints(paints: $paints, clientMutationId: $clientMutationId) {
+    imported
+    skipped
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation UpdateCustomPaint($id: ID!, $input: CustomPaintInput!, $clientMutationId: String) {
+  updateCustomPaint(id: $id, input: $input, clientMutationId: $clientMutationId) {
+    paintId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation DeleteCustomPaint($id: ID!, $clientMutationId: String) {
+  deleteCustomPaint(id: $id, clientMutationId: $clientMutationId) {
+    paintId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation CreateSubstitution($input: SubstitutionInput!, $clientMutationId: String) {
+  createSubstitution(input: $input, clientMutationId: $clientMutationId) {
+    substitutionId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation SetSubstitutionDefault($id: ID!, $enabled: Boolean!, $clientMutationId: String) {
+  setSubstitutionDefault(id: $id, enabled: $enabled, clientMutationId: $clientMutationId) {
+    substitutionId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation DeleteSubstitution($id: ID!, $clientMutationId: String) {
+  deleteSubstitution(id: $id, clientMutationId: $clientMutationId) {
+    substitutionId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
+mutation SelectPaintSubstitution(
+  $miniatureId: ID!
+  $targetPaintId: ID!
+  $substitutionId: ID
+  $useOriginal: Boolean! = false
+  $clientMutationId: String
+) {
+  selectPaintSubstitution(
+    miniatureId: $miniatureId
+    targetPaintId: $targetPaintId
+    substitutionId: $substitutionId
+    useOriginal: $useOriginal
+    clientMutationId: $clientMutationId
+  ) {
+    miniatureId
+    paintId
+    substitutionId
+    revision {
+      epoch
+      seq
+    }
+    clientMutationId
+    invalidatedFamilies
+  }
+}
