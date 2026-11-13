@@ -102,6 +102,12 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
   });
   useLayoutEffect(() => {
     if (!pendingFocus) return;
+    // A network boundary may take time. If the person clicked away meanwhile, do not
+    // steal focus back when the page arrives.
+    if (!listRef.current?.contains(document.activeElement)) {
+      setPendingFocus(null);
+      return;
+    }
     const row = listRef.current?.querySelector<HTMLElement>(`[data-paint-index="${pendingFocus.index}"]`);
     if (!row) return;
     // Text inputs participate in native tab order, but handoff never focuses a text field.
@@ -317,11 +323,19 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           </Button>
         </Box>
       )}
-      {refreshing && (
-        <Box role="status" sx={{ textAlign: "center", mt: 1 }}>
-          Updating paints…
-        </Box>
-      )}
+      <Box
+        role="status"
+        sx={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          overflow: "hidden",
+          clipPath: "inset(50%)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {refreshing ? "Updating paints…" : ""}
+      </Box>
       {library.catalogCount > 0 && (
         <Box
           component="p"

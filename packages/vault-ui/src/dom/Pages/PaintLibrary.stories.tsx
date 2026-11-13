@@ -148,3 +148,33 @@ export const ApolloKeyboardCrossesPageBoundary: Story = {
     }
   },
 };
+
+export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
+  render: (args) => (
+    <LibraryApolloFixture pageDelay={300}>
+      <PaintLibrary {...args} />
+    </LibraryApolloFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    try {
+      const list = await canvas.findByRole("list", { name: "Paint library" });
+      window.scrollTo(0, document.body.scrollHeight);
+      const last = await waitFor(() => {
+        const row = list.querySelector<HTMLElement>('[data-paint-index="47"]');
+        if (!row) throw new Error("Last row of the first page is not rendered");
+        return row;
+      });
+      within(last)
+        .getByRole("button", { name: `Set ${catalog[47].name} quantity to 0` })
+        .focus();
+      await userEvent.tab();
+      const addPaint = canvas.getByRole("button", { name: "Add paint" });
+      await userEvent.click(addPaint);
+      await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "96"));
+      await expect(addPaint).toHaveFocus();
+    } finally {
+      window.scrollTo(0, 0);
+    }
+  },
+};
