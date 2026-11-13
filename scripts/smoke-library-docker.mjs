@@ -114,6 +114,7 @@ try {
       label: "docker",
       initialNavigate: async () => {
         await page.goto(`${baseUrl}/#paints`);
+        await page.reload(); // Hash-only navigation does not remount the initial-tab store.
       },
       secondClientWrite: await independentWriter(baseUrl),
     });

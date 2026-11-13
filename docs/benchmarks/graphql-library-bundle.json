@@ -1,0 +1,310 @@
+{
+  "measuredAt": "2026-11-13T18:26:00.351Z",
+  "node": "v22.22.2",
+  "method": "Emitted .js assets only, summed raw bytes and per-file gzipSync default level 6. Excludes CSS/maps/fonts; not startup transfer or parse time.",
+  "baseline": {
+    "directory": "/tmp/paint-vault-phase01-bundle-0Hmoie/dist",
+    "jsBytes": 1003108,
+    "sumGzipBytes": 335480,
+    "entry": {
+      "file": "index-B0k9GOnk.js",
+      "bytes": 600383,
+      "gzipBytes": 189680
+    },
+    "apolloDebugChunk": [],
+    "files": [
+      {
+        "file": "Autocomplete-se44-QKy.js",
+        "bytes": 27009,
+        "gzipBytes": 9488
+      },
+      {
+        "file": "Chip-dvAqfZ5J.js",
+        "bytes": 8153,
+        "gzipBytes": 2663
+      },
+      {
+        "file": "ColorSchemesDialog-CvMqAVU6.js",
+        "bytes": 17956,
+        "gzipBytes": 6329
+      },
+      {
+        "file": "ColorSchemesPage-DkG-GfSn.js",
+        "bytes": 10384,
+        "gzipBytes": 4234
+      },
+      {
+        "file": "FilterPlugin-D9kKmZBb.js",
+        "bytes": 914,
+        "gzipBytes": 553
+      },
+      {
+        "file": "LibraryPaintRow-D4UUw8Aq.js",
+        "bytes": 3168,
+        "gzipBytes": 1569
+      },
+      {
+        "file": "MiniatureForm-D61kT9q9.js",
+        "bytes": 10144,
+        "gzipBytes": 3903
+      },
+      {
+        "file": "MiniatureTemplatesPage-C9efZxEH.js",
+        "bytes": 10991,
+        "gzipBytes": 4395
+      },
+      {
+        "file": "PaintDetailsButton-CrElYo6x.js",
+        "bytes": 91173,
+        "gzipBytes": 31801
+      },
+      {
+        "file": "PaintForm-D3cM-zqb.js",
+        "bytes": 3230,
+        "gzipBytes": 1584
+      },
+      {
+        "file": "PaintLibrary-BdBqli6M.js",
+        "bytes": 6312,
+        "gzipBytes": 2940
+      },
+      {
+        "file": "PaintRowLabel-SEyKrp3l.js",
+        "bytes": 3313,
+        "gzipBytes": 1470
+      },
+      {
+        "file": "PaintToolsPage-Dbb19HcS.js",
+        "bytes": 18825,
+        "gzipBytes": 6641
+      },
+      {
+        "file": "PluginChip-Bxpnkd0r.js",
+        "bytes": 889,
+        "gzipBytes": 555
+      },
+      {
+        "file": "PluginsModal-3-tzvT45.js",
+        "bytes": 27051,
+        "gzipBytes": 9413
+      },
+      {
+        "file": "Popper-NhyAlCyS.js",
+        "bytes": 23197,
+        "gzipBytes": 8730
+      },
+      {
+        "file": "ProjectDrawer-3mvovYA1.js",
+        "bytes": 58633,
+        "gzipBytes": 18228
+      },
+      {
+        "file": "SettingsScreen-BEVA6UDe.js",
+        "bytes": 29826,
+        "gzipBytes": 11527
+      },
+      {
+        "file": "StatusChip-NlayHkQr.js",
+        "bytes": 8213,
+        "gzipBytes": 3057
+      },
+      {
+        "file": "Switch-Dzw9Z6jg.js",
+        "bytes": 8296,
+        "gzipBytes": 2669
+      },
+      {
+        "file": "SwitchBase-DMZlUEnL.js",
+        "bytes": 2398,
+        "gzipBytes": 1170
+      },
+      {
+        "file": "ToggleButtonGroup-ZJLCIdxD.js",
+        "bytes": 6560,
+        "gzipBytes": 2215
+      },
+      {
+        "file": "Tooltip-DEkUzQJw.js",
+        "bytes": 8103,
+        "gzipBytes": 3123
+      },
+      {
+        "file": "WishlistPage-Cc5_JhtD.js",
+        "bytes": 14382,
+        "gzipBytes": 5754
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "bytes": 2940,
+        "gzipBytes": 1339
+      },
+      {
+        "file": "index-B0k9GOnk.js",
+        "bytes": 600383,
+        "gzipBytes": 189680
+      },
+      {
+        "file": "lift-card-YvGsyxFd.js",
+        "bytes": 418,
+        "gzipBytes": 271
+      },
+      {
+        "file": "template-hooks-cQRxyyWf.js",
+        "bytes": 247,
+        "gzipBytes": 179
+      }
+    ]
+  },
+  "candidate": {
+    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paint-vault-web/dist",
+    "jsBytes": 1229603,
+    "sumGzipBytes": 401980,
+    "entry": {
+      "file": "index-D0SnFNqY.js",
+      "bytes": 807692,
+      "gzipBytes": 249759
+    },
+    "apolloDebugChunk": [],
+    "files": [
+      {
+        "file": "Autocomplete-CjNSvU85.js",
+        "bytes": 27009,
+        "gzipBytes": 9489
+      },
+      {
+        "file": "Chip-CUmPPqm_.js",
+        "bytes": 8153,
+        "gzipBytes": 2664
+      },
+      {
+        "file": "ColorSchemesDialog-CkDEgigl.js",
+        "bytes": 18480,
+        "gzipBytes": 6522
+      },
+      {
+        "file": "ColorSchemesPage-2mxGeeGC.js",
+        "bytes": 10344,
+        "gzipBytes": 4214
+      },
+      {
+        "file": "LibraryPaintRow-D07jVf0R.js",
+        "bytes": 4373,
+        "gzipBytes": 2015
+      },
+      {
+        "file": "MiniatureForm-suw2Ak03.js",
+        "bytes": 10144,
+        "gzipBytes": 3903
+      },
+      {
+        "file": "MiniatureTemplatesPage-Dm56uKq9.js",
+        "bytes": 10951,
+        "gzipBytes": 4377
+      },
+      {
+        "file": "PaintDetailsButton-BzXEh4AU.js",
+        "bytes": 104174,
+        "gzipBytes": 35899
+      },
+      {
+        "file": "PaintForm-CwMWcYqv.js",
+        "bytes": 3230,
+        "gzipBytes": 1584
+      },
+      {
+        "file": "PaintLibrary-DHBnxR6Q.js",
+        "bytes": 10862,
+        "gzipBytes": 4719
+      },
+      {
+        "file": "PaintRowLabel-DCLx7Nc8.js",
+        "bytes": 3313,
+        "gzipBytes": 1472
+      },
+      {
+        "file": "PaintToolsPage-CQFgbHOz.js",
+        "bytes": 18825,
+        "gzipBytes": 6643
+      },
+      {
+        "file": "PluginChip-BlbluX1U.js",
+        "bytes": 889,
+        "gzipBytes": 554
+      },
+      {
+        "file": "PluginsModal-NxdvbEk0.js",
+        "bytes": 27046,
+        "gzipBytes": 9409
+      },
+      {
+        "file": "Popper-JrmaLNxp.js",
+        "bytes": 23197,
+        "gzipBytes": 8731
+      },
+      {
+        "file": "ProjectDrawer-RgYVcDnG.js",
+        "bytes": 58633,
+        "gzipBytes": 18223
+      },
+      {
+        "file": "SettingsScreen-B6NI5g0q.js",
+        "bytes": 29826,
+        "gzipBytes": 11528
+      },
+      {
+        "file": "StatusChip-CRm2aUnz.js",
+        "bytes": 8213,
+        "gzipBytes": 3059
+      },
+      {
+        "file": "Switch-CZfwLm-G.js",
+        "bytes": 8296,
+        "gzipBytes": 2670
+      },
+      {
+        "file": "SwitchBase-vG9eKMDe.js",
+        "bytes": 2398,
+        "gzipBytes": 1169
+      },
+      {
+        "file": "ToggleButtonGroup-CAFE5Xnc.js",
+        "bytes": 6560,
+        "gzipBytes": 2217
+      },
+      {
+        "file": "Tooltip-BXyxkhIW.js",
+        "bytes": 8103,
+        "gzipBytes": 3123
+      },
+      {
+        "file": "WishlistPage-HNA3FsTY.js",
+        "bytes": 14382,
+        "gzipBytes": 5752
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "bytes": 2940,
+        "gzipBytes": 1339
+      },
+      {
+        "file": "index-D0SnFNqY.js",
+        "bytes": 807692,
+        "gzipBytes": 249759
+      },
+      {
+        "file": "lift-card-D5fxah0u.js",
+        "bytes": 1323,
+        "gzipBytes": 765
+      },
+      {
+        "file": "template-hooks-Cm4mytAn.js",
+        "bytes": 247,
+        "gzipBytes": 181
+      }
+    ]
+  },
+  "candidateMinusBaseline": {
+    "jsBytes": 226495,
+    "sumGzipBytes": 66500
+  }
+}

@@ -1,0 +1,742 @@
+{
+  "measuredAt": "2026-11-13T18:29:10.745Z",
+  "node": "v22.22.2",
+  "profile": "stress",
+  "fixture": {
+    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-stress-vcwyDU",
+    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-stress-vcwyDU/snapshot.json",
+    "baseline": {
+      "measuredAt": "2026-11-13T18:29:02.758Z",
+      "node": "v22.22.2",
+      "profile": "stress",
+      "spec": {
+        "paints": 30000,
+        "miniatures": 10000,
+        "schemes": 3000,
+        "templates": 5000
+      },
+      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-oib48R",
+      "seedMs": 1957.1949999999997,
+      "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
+      "snapshot": {
+        "firstReadMs": 333.76708299999973,
+        "medianMs": 232.79933299999993,
+        "minMs": 229.07745800000066,
+        "maxMs": 263.64287500000046,
+        "preparedStatements": 19,
+        "sqlExecutions": 19,
+        "jsonBytes": 44954964,
+        "gzipBytes": 1880390,
+        "parseMedianMs": 71.80395899999985
+      },
+      "templateSummaries": {
+        "firstReadMs": 39.53104100000019,
+        "medianMs": 27.481458000000202,
+        "minMs": 24.90362499999992,
+        "maxMs": 29.713999999999942,
+        "preparedStatements": 5,
+        "sqlExecutions": 5,
+        "jsonBytes": 1338956,
+        "gzipBytes": 30251,
+        "parseMedianMs": 1.6589169999997466
+      },
+      "snapshotStartupDataBytes": 44954964,
+      "snapshotPlusTemplateSummariesBytes": 46293920
+    },
+    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-oib48R"
+  },
+  "method": "Identical Phase 0 synthetic fixture. Full production LibraryPage document via GraphQL execute + JSON serialization. 11 fresh-process first operations (cold derived cache, NOT cold disk); warm 1 warmup + 11 samples. SQL instruments actual statement methods; transaction helper BEGIN/COMMIT excluded. setImmediate delay observes synchronous operation blocking, not a production event-loop histogram. No HTTP/auth/browser/Electron time. Mutation invalidation measured separately after warm samples.",
+  "coldSamples": [
+    {
+      "ms": 143.52966600000002,
+      "eventLoopBlockMs": 143.59500000000003,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1451
+    },
+    {
+      "ms": 148.97125000000005,
+      "eventLoopBlockMs": 149.71295899999996,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1452
+    },
+    {
+      "ms": 149.91287500000004,
+      "eventLoopBlockMs": 150.66537499999998,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1451
+    },
+    {
+      "ms": 144.48808300000007,
+      "eventLoopBlockMs": 144.55925000000002,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1453
+    },
+    {
+      "ms": 146.56104200000004,
+      "eventLoopBlockMs": 146.62041699999997,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1450
+    },
+    {
+      "ms": 154.99808400000006,
+      "eventLoopBlockMs": 155.05987500000003,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1451
+    },
+    {
+      "ms": 146.44245900000004,
+      "eventLoopBlockMs": 146.50291699999997,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1451
+    },
+    {
+      "ms": 147.22216700000007,
+      "eventLoopBlockMs": 147.28245900000007,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1452
+    },
+    {
+      "ms": 171.828417,
+      "eventLoopBlockMs": 171.89445900000004,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1452
+    },
+    {
+      "ms": 146.34450000000004,
+      "eventLoopBlockMs": 146.40333399999997,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1451
+    },
+    {
+      "ms": 145.95533299999994,
+      "eventLoopBlockMs": 146.02045800000002,
+      "sqlExecutions": 6,
+      "jsonBytes": 20160,
+      "gzipBytes": 1452
+    }
+  ],
+  "cold": {
+    "ms": {
+      "median": 146.56104200000004,
+      "min": 143.52966600000002,
+      "max": 171.828417,
+      "p95": 171.828417
+    },
+    "sqlExecutions": {
+      "median": 6,
+      "min": 6,
+      "max": 6,
+      "p95": 6
+    },
+    "jsonBytes": {
+      "median": 20160,
+      "min": 20160,
+      "max": 20160,
+      "p95": 20160
+    },
+    "eventLoopBlockMs": {
+      "median": 146.62041699999997,
+      "min": 143.59500000000003,
+      "max": 171.89445900000004,
+      "p95": 171.89445900000004
+    }
+  },
+  "warm": {
+    "first1": {
+      "variables": {
+        "first": 1
+      },
+      "samples": [
+        {
+          "ms": 5.340249999999969,
+          "eventLoopBlockMs": 5.409708000000023,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 5.083166000000006,
+          "eventLoopBlockMs": 5.107916000000046,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 4.816291999999976,
+          "eventLoopBlockMs": 4.836500000000001,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 3.8104170000000295,
+          "eventLoopBlockMs": 3.8351670000000695,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 3.947208000000046,
+          "eventLoopBlockMs": 3.9828750000000355,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 4.311374999999998,
+          "eventLoopBlockMs": 5.063583999999992,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 5.178208999999924,
+          "eventLoopBlockMs": 5.201624999999922,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 4.0508330000000115,
+          "eventLoopBlockMs": 4.069082999999978,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 3.7258330000000797,
+          "eventLoopBlockMs": 3.743791999999985,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 3.7174999999999727,
+          "eventLoopBlockMs": 3.737124999999992,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        },
+        {
+          "ms": 4.482833000000028,
+          "eventLoopBlockMs": 4.506208000000015,
+          "sqlExecutions": 2,
+          "jsonBytes": 1982,
+          "gzipBytes": 719
+        }
+      ],
+      "ms": {
+        "median": 4.311374999999998,
+        "min": 3.7174999999999727,
+        "max": 5.340249999999969,
+        "p95": 5.340249999999969
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 1982
+    },
+    "first48": {
+      "variables": {
+        "first": 48
+      },
+      "samples": [
+        {
+          "ms": 5.168457999999987,
+          "eventLoopBlockMs": 5.194041999999968,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 5.3142500000000155,
+          "eventLoopBlockMs": 5.3431659999999965,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.524874999999952,
+          "eventLoopBlockMs": 4.547665999999936,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 3.831916999999976,
+          "eventLoopBlockMs": 3.8514999999999873,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 3.947125000000028,
+          "eventLoopBlockMs": 4.532416000000012,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.091792000000055,
+          "eventLoopBlockMs": 4.117667000000097,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.8093750000000455,
+          "eventLoopBlockMs": 4.834375000000023,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.778415999999993,
+          "eventLoopBlockMs": 4.799750000000017,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 3.989541999999915,
+          "eventLoopBlockMs": 4.010541999999987,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.029667000000018,
+          "eventLoopBlockMs": 4.637499999999932,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        },
+        {
+          "ms": 4.311166000000071,
+          "eventLoopBlockMs": 4.330916000000002,
+          "sqlExecutions": 2,
+          "jsonBytes": 20160,
+          "gzipBytes": 1452
+        }
+      ],
+      "ms": {
+        "median": 4.311166000000071,
+        "min": 3.831916999999976,
+        "max": 5.3142500000000155,
+        "p95": 5.3142500000000155
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 20160
+    },
+    "first100": {
+      "variables": {
+        "first": 100
+      },
+      "samples": [
+        {
+          "ms": 3.8947079999999232,
+          "eventLoopBlockMs": 3.9142909999999347,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.7303329999999733,
+          "eventLoopBlockMs": 4.24208299999998,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.6197919999999613,
+          "eventLoopBlockMs": 3.63737500000002,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.5738750000000437,
+          "eventLoopBlockMs": 3.6019580000000815,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 4.411999999999921,
+          "eventLoopBlockMs": 4.439209000000005,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.8869580000000497,
+          "eventLoopBlockMs": 4.3901670000000195,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.713707999999997,
+          "eventLoopBlockMs": 3.7332079999999905,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.5055830000000014,
+          "eventLoopBlockMs": 3.5247920000000477,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 3.5213340000000244,
+          "eventLoopBlockMs": 3.539292000000046,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 4.51233400000001,
+          "eventLoopBlockMs": 5.015834000000041,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        },
+        {
+          "ms": 4.285542000000078,
+          "eventLoopBlockMs": 4.301917000000003,
+          "sqlExecutions": 2,
+          "jsonBytes": 40271,
+          "gzipBytes": 2221
+        }
+      ],
+      "ms": {
+        "median": 3.7303329999999733,
+        "min": 3.5055830000000014,
+        "max": 4.51233400000001,
+        "p95": 4.51233400000001
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 40271
+    },
+    "owned": {
+      "variables": {
+        "first": 48,
+        "filter": "OWNED"
+      },
+      "samples": [
+        {
+          "ms": 3.77537499999994,
+          "eventLoopBlockMs": 3.7938329999999496,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.605875000000083,
+          "eventLoopBlockMs": 4.625875000000065,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.993291999999997,
+          "eventLoopBlockMs": 5.02029200000004,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.963000000000079,
+          "eventLoopBlockMs": 4.984375,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 5.037374999999997,
+          "eventLoopBlockMs": 5.063916999999947,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.5925829999999905,
+          "eventLoopBlockMs": 4.615499999999997,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.603917000000024,
+          "eventLoopBlockMs": 4.624750000000063,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 4.84216600000002,
+          "eventLoopBlockMs": 4.864166000000068,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 3.9457080000000815,
+          "eventLoopBlockMs": 3.9696660000000747,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 3.640292000000045,
+          "eventLoopBlockMs": 3.660833000000025,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        },
+        {
+          "ms": 3.520332999999937,
+          "eventLoopBlockMs": 3.543374999999969,
+          "sqlExecutions": 2,
+          "jsonBytes": 22337,
+          "gzipBytes": 1539
+        }
+      ],
+      "ms": {
+        "median": 4.603917000000024,
+        "min": 3.520332999999937,
+        "max": 5.037374999999997,
+        "p95": 5.037374999999997
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 22337
+    },
+    "search": {
+      "variables": {
+        "first": 48,
+        "search": "Paint 001"
+      },
+      "samples": [
+        {
+          "ms": 3.716000000000008,
+          "eventLoopBlockMs": 3.73599999999999,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.3851250000000164,
+          "eventLoopBlockMs": 3.0422090000000708,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 3.4562499999999545,
+          "eventLoopBlockMs": 3.472958999999946,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.9230830000000196,
+          "eventLoopBlockMs": 2.9452499999999873,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.373083000000065,
+          "eventLoopBlockMs": 2.391208000000006,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.312667000000033,
+          "eventLoopBlockMs": 2.3332080000000133,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.1688749999999573,
+          "eventLoopBlockMs": 2.1860000000000355,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.217041999999992,
+          "eventLoopBlockMs": 2.2347080000000688,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.10029099999997,
+          "eventLoopBlockMs": 2.1182909999999993,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 2.0132500000000846,
+          "eventLoopBlockMs": 2.0318750000000136,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        },
+        {
+          "ms": 3.040208000000007,
+          "eventLoopBlockMs": 3.0637080000000196,
+          "sqlExecutions": 2,
+          "jsonBytes": 21802,
+          "gzipBytes": 1680
+        }
+      ],
+      "ms": {
+        "median": 2.373083000000065,
+        "min": 2.0132500000000846,
+        "max": 3.716000000000008,
+        "p95": 3.716000000000008
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 21802
+    },
+    "brand": {
+      "variables": {
+        "first": 48,
+        "brand": "Invented brand 2"
+      },
+      "samples": [
+        {
+          "ms": 2.6924999999999955,
+          "eventLoopBlockMs": 3.1314160000000584,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.5947499999999764,
+          "eventLoopBlockMs": 2.6160830000000033,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.376082999999994,
+          "eventLoopBlockMs": 2.3966669999999795,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.821125000000052,
+          "eventLoopBlockMs": 2.8407909999999674,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 3.373166000000083,
+          "eventLoopBlockMs": 3.394958000000088,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.492417000000046,
+          "eventLoopBlockMs": 2.511500000000069,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.3042910000000347,
+          "eventLoopBlockMs": 2.324416000000042,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.2520840000000817,
+          "eventLoopBlockMs": 2.2670000000000528,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.177500000000009,
+          "eventLoopBlockMs": 2.1942080000000033,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.247792000000004,
+          "eventLoopBlockMs": 2.2650840000000017,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        },
+        {
+          "ms": 2.1989589999999453,
+          "eventLoopBlockMs": 2.571833999999967,
+          "sqlExecutions": 2,
+          "jsonBytes": 22512,
+          "gzipBytes": 1550
+        }
+      ],
+      "ms": {
+        "median": 2.376082999999994,
+        "min": 2.177500000000009,
+        "max": 3.373166000000083,
+        "p95": 3.373166000000083
+      },
+      "sqlExecutions": [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+      "jsonBytes": 22512
+    },
+    "afterStockInvalidation": {
+      "ms": 112.15170899999998,
+      "eventLoopBlockMs": 112.99458400000003,
+      "sqlExecutions": 6,
+      "jsonBytes": 20206,
+      "gzipBytes": 1508
+    }
+  },
+  "snapshotComparison": {
+    "phase0": {
+      "firstReadMs": 306.42145800000026,
+      "medianMs": 256.0059999999994,
+      "minMs": 236.27512500000012,
+      "maxMs": 318.60554200000024,
+      "preparedStatements": 19,
+      "sqlExecutions": 19,
+      "jsonBytes": 44954964,
+      "gzipBytes": 1883986,
+      "parseMedianMs": 72.67683299999953
+    },
+    "current": {
+      "firstReadMs": 333.76708299999973,
+      "medianMs": 232.79933299999993,
+      "minMs": 229.07745800000066,
+      "maxMs": 263.64287500000046,
+      "preparedStatements": 19,
+      "sqlExecutions": 19,
+      "jsonBytes": 44954964,
+      "gzipBytes": 1880390,
+      "parseMedianMs": 71.80395899999985
+    }
+  }
+}

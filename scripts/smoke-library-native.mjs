@@ -5,7 +5,8 @@
  */
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 import { mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import net from "node:net";
 import os from "node:os";
@@ -109,11 +110,12 @@ export function launchOwned(file, args, options, logPath) {
   };
 }
 export async function setupAndSeed(page, setupCode) {
-  await page.getByLabel("Username", { exact: true }).fill(fixtureCredentials.username);
-  await page.getByLabel("Password", { exact: true }).fill(fixtureCredentials.password);
-  if (setupCode) await page.getByLabel("Setup code", { exact: true }).fill(setupCode);
+  await page.getByRole("textbox", { name: /^Username/ }).fill(fixtureCredentials.username);
+  await page.getByLabel(/^Password/).fill(fixtureCredentials.password);
+  if (setupCode) await page.getByRole("textbox", { name: /^Setup code/ }).fill(setupCode);
   await page.getByRole("button", { name: "Create account", exact: true }).click();
   await page.getByRole("button", { name: "Create account", exact: true }).waitFor({ state: "hidden" });
+  console.log("Fixture owner setup complete");
   const result = await page.evaluate(async () => {
     const paints = Array.from({ length: 130 }, (_, i) => ({
       brand: "Invented brand 0",
@@ -129,6 +131,7 @@ export async function setupAndSeed(page, setupCode) {
     return { status: response.status, body: await response.json() };
   });
   assert.equal(result.status, 201, JSON.stringify(result));
+  console.log("Fixture catalog seeded");
   const seeded = await page.evaluate(async () => {
     const ids = [];
     let after = null;
@@ -157,6 +160,7 @@ export async function setupAndSeed(page, setupCode) {
   });
   assert.equal(seeded.count, 130);
   assert.equal(seeded.status, 200, "Seed all 130 owned rows");
+  console.log("Fixture stock seeded");
 }
 export async function independentWriter(baseUrl) {
   const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -211,6 +215,7 @@ async function main() {
   }
   const processes = [];
   let browser;
+  let currentPage;
   try {
     assert.equal(process.platform, "darwin", "Requires actual packaged macOS app");
     assert.ok(options.app, "--app is required with --run");
@@ -255,6 +260,7 @@ async function main() {
     processes.push(remote);
     await waitForOutput(remote, /Nest application successfully started/, "isolated remote server");
     for (const mode of ["local", "remote"]) {
+      console.log("Launching packaged mode", mode);
       const dataDir = await mkdtemp(path.join(os.tmpdir(), `pv-library-desktop-${mode}-`));
       report.fixtures.push({ type: `${mode} desktop data`, path: dataDir, retained: true });
       const debugPort = await freePort();
@@ -276,6 +282,7 @@ async function main() {
       browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
       const context = browser.contexts()[0];
       const page = context.pages()[0] || (await context.waitForEvent("page"));
+      currentPage = page;
       const recorder = attachLibraryRecorder(page);
       await page.waitForURL("paintvault://app/**");
       if (mode === "local")
@@ -304,6 +311,7 @@ async function main() {
               );
               assert.equal(status, 200);
             };
+      console.log("Starting Library scenario", mode);
       const result = await runLibraryScenario({
         page,
         recorder,
@@ -311,11 +319,51 @@ async function main() {
         label: `native-${mode}`,
         initialNavigate: async () => {
           await page.goto("paintvault://app/#paints");
+          await page.reload(); // Hash-only navigation does not remount the initial-tab store.
         },
         secondClientWrite,
       });
       report.checks.push(...result.checks);
       (report.metrics ??= {})[mode] = result.metrics;
+      const candidate = await page.evaluate(async () => {
+        const reply = await fetch("/api/graphql", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ query: "{library(first:1){nodes{id name inventory{quantity}}}}" }),
+        });
+        const payload = await reply.json();
+        if (payload.errors) throw new Error(JSON.stringify(payload.errors));
+        return payload.data.library.nodes[0];
+      });
+      const require = createRequire(import.meta.url);
+      const Database = require("better-sqlite3");
+      const fixtureDb = new Database(
+        path.join(mode === "local" ? dataDir : remoteData, "paint-vault.sqlite"),
+      );
+      try {
+        fixtureDb.pragma("busy_timeout = 5000");
+        fixtureDb
+          .prepare(
+            "INSERT INTO paint_substitutions(id,target_paint_id,name,is_default,created_at,updated_at) VALUES (?,?,?,1,?,?)",
+          )
+          .run(randomUUID(), candidate.id, "Imported empty native recipe", Date.now(), Date.now());
+      } finally {
+        fixtureDb.close();
+      }
+      // Publish an ordinary app revision after test-only imported-corruption injection:
+      // change-log triggers are connection-local, unlike the injected fixture connection.
+      await secondClientWrite(candidate.id, candidate.inventory.quantity);
+      await page.getByPlaceholder("Search brand, range, or paint…").fill(candidate.name);
+      const broken = page.getByText("Broken: Imported empty native recipe", { exact: true });
+      await broken.waitFor({ timeout: 20000 });
+      assert.ok((await broken.locator("..").getAttribute("class")).includes("MuiChip-colorError"));
+      await page.locator("[data-paint-index]").filter({ has: broken }).getByRole("button").first().click();
+      await page.getByText("Broken substitution: empty recipe.", { exact: true }).waitFor();
+      report.checks.push({
+        name: `${mode} imported broken substitution red chip and details warning`,
+        status: "PASS",
+        detail: { paintId: candidate.id, physicalQuantity: candidate.inventory.quantity },
+      });
       report.checks.push({
         name: `${mode} second client scope`,
         status: mode === "remote" ? "PASS" : "PARTIAL",
@@ -337,14 +385,69 @@ async function main() {
       ]);
       assert.equal(exit.code, 0);
       report.checks.push({ name: `${mode} intentional packaged quit`, status: "PASS", detail: exit });
+      const relaunchPort = await freePort();
+      const relaunched = launchOwned(
+        executable,
+        [`--remote-debugging-port=${relaunchPort}`, "--remote-debugging-address=127.0.0.1"],
+        {
+          env: {
+            ...process.env,
+            DATABASE_PATH: "",
+            PAINT_VAULT_DESKTOP_DATA_DIR: dataDir,
+            PAINT_VAULT_DISABLE_UPDATES: "1",
+          },
+        },
+        path.join(evidence, `${mode}-relaunch.log`),
+      );
+      processes.push(relaunched);
+      await waitForOutput(relaunched, /DevTools listening on ws:\/\//, `${mode} relaunch CDP`);
+      browser = await chromium.connectOverCDP(`http://127.0.0.1:${relaunchPort}`);
+      const relaunchedContext = browser.contexts()[0];
+      const relaunchedPage = relaunchedContext.pages()[0] || (await relaunchedContext.waitForEvent("page"));
+      currentPage = relaunchedPage;
+      await relaunchedPage.waitForFunction(() => Boolean(window.paintVaultDesktop));
+      const retained = await relaunchedPage.evaluate(async () => ({
+        connection: await window.paintVaultDesktop.getConnection(),
+        auth: await (await fetch("/api/auth/status")).json(),
+      }));
+      assert.equal(retained.connection.mode, mode);
+      assert.equal(retained.auth.setupRequired, false);
+      report.checks.push({
+        name: `${mode} relaunch retains isolated connection and fixture owner`,
+        status: "PASS",
+        detail: { mode: retained.connection.mode, setupRequired: retained.auth.setupRequired },
+      });
+      const relaunchExit = new Promise((resolve) =>
+        relaunched.child.once("exit", (code, signal) => resolve({ code, signal })),
+      );
+      await relaunchedPage.close();
+      const finalExit = await Promise.race([
+        relaunchExit,
+        sleep(8000).then(() => {
+          throw new Error("Relaunch window close did not quit");
+        }),
+      ]);
+      assert.equal(finalExit.code, 0);
+      report.checks.push({
+        name: `${mode} final intentional packaged quit`,
+        status: "PASS",
+        detail: finalExit,
+      });
       browser = undefined;
     }
     report.checks.push({
-      name: "quit/relaunch persisted connection",
+      name: "Full native controls, Windows executable, signing and distribution install",
       status: "NOT RUN",
-      reason: "This focused harness uses a fresh data directory for each mode; no relaunch claim.",
+      reason: "Focused macOS production Library vertical-slice smoke only; no full-app or Windows claim.",
     });
   } catch (error) {
+    if (currentPage) {
+      report.failureBody = await currentPage
+        .locator("body")
+        .innerText()
+        .catch(() => "unavailable");
+      await currentPage.screenshot({ path: path.join(evidence, "native-failure.png") }).catch(() => {});
+    }
     report.checks.push({ name: "native harness", status: "FAIL", detail: error.stack });
     process.exitCode = 1;
   } finally {
