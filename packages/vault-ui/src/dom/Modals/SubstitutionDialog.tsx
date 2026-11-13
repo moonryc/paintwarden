@@ -1,9 +1,13 @@
-import { Autocomplete, Button, Card, IconButton, TextField } from "@mui/material";
+import { Alert, Autocomplete, Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
+import { resolveSubstitution } from "@paint-vault/core/paint-substitutions";
 import { useMemo, useState } from "react";
 
 import { Modal } from "../Components/Modal";
 import { PaintBottle } from "../Components/PaintBottle";
+import { usePaintDetail, usePaintOptions } from "../graphql/detail-hooks";
+import type { DetailPaintFragment } from "../graphql/generated/graphql";
+import { useVaultGraphQL } from "../graphql/provider";
 import { Plus, X } from "../icons";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
@@ -11,32 +15,118 @@ import { noop } from "../utils/constants";
 import { truncateSx } from "../utils/truncate";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
-import { SavedMixCard } from "./SavedMixCard";
+import { SavedMixCard, type SavedMixProjection } from "./SavedMixCard";
 
 const paintSearchText = (paint: Paint) => `${paint.name} ${paint.brand} ${paint.range}`;
 
-export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose(): void }) {
+const detailPaint = (paint: DetailPaintFragment): Paint => ({
+  ...paint,
+  sourceName: paint.sourceName ?? undefined,
+});
+
+type DialogProps = { paint: Paint; onClose: () => void };
+type PickerSource = { catalog: Paint[] } | { graphql: true };
+type PickerProps = {
+  source: PickerSource;
+  excludeIds: string[];
+  choice: Paint | null;
+  query: string;
+  onChoice: (value: Paint | null) => void;
+  onQuery: (value: string) => void;
+};
+
+export function SubstitutionDialog(props: DialogProps) {
+  const graphql = useVaultGraphQL();
+  return graphql ? <ApolloSubstitutionDialog {...props} /> : <LegacySubstitutionDialog {...props} />;
+}
+
+function ApolloSubstitutionDialog(props: DialogProps) {
+  const detail = usePaintDetail(props.paint.id);
+  const recipes = (detail.data?.substitutions.nodes ?? []).map((mix) => ({
+    mix,
+    ingredients: mix.ingredients.nodes.map((row) => ({ ...row, paint: detailPaint(row.paint) })),
+    brokenReason: mix.brokenReason,
+    hasMoreIngredients: mix.ingredients.pageInfo.hasNextPage,
+    onLoadMoreIngredients: () => void detail.loadMoreIngredients(mix.id),
+  }));
+  return (
+    <SubstitutionDialogView
+      {...props}
+      recipes={recipes}
+      defaultRecipe={detail.data?.paint?.activeSubstitution ?? undefined}
+      pickerSource={{ graphql: true }}
+      loading={detail.loading}
+      error={detail.error?.message}
+      onRetry={() => void detail.refresh()}
+      hasMore={detail.data?.substitutions.pageInfo.hasNextPage}
+      onLoadMore={() => void detail.loadMoreSubstitutions()}
+    />
+  );
+}
+
+function LegacySubstitutionDialog(props: DialogProps) {
   const data = useVault();
+  const recipes = data.paintSubstitutions
+    .filter((row) => row.targetPaintId === props.paint.id)
+    .map((mix) => {
+      const resolved = resolveSubstitution(data, mix.id);
+      return {
+        mix,
+        ingredients: data.paintSubstitutionIngredients
+          .filter((row) => row.substitutionId === mix.id)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .flatMap((row) => {
+            const paint = data.catalog.find((item) => item.id === row.paintId);
+            return paint ? [{ paint, parts: row.parts, sortOrder: row.sortOrder }] : [];
+          }),
+        brokenReason: resolved?.broken
+          ? resolved.brokenReason === "empty"
+            ? ("EMPTY" as const)
+            : ("CYCLE" as const)
+          : null,
+      };
+    });
+  return (
+    <SubstitutionDialogView
+      {...props}
+      recipes={recipes}
+      defaultRecipe={recipes.find((row) => row.mix.isDefault)?.mix}
+      pickerSource={{ catalog: data.catalog }}
+    />
+  );
+}
+
+function SubstitutionDialogView({
+  paint,
+  onClose,
+  recipes,
+  defaultRecipe,
+  pickerSource,
+  loading,
+  error,
+  onRetry,
+  hasMore,
+  onLoadMore,
+}: DialogProps & {
+  recipes: SavedMixProjection[];
+  defaultRecipe?: { id: string };
+  pickerSource: PickerSource;
+  loading?: boolean;
+  error?: string;
+  onRetry?: () => void;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+}) {
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
-  const recipes = data.paintSubstitutions.filter((row) => row.targetPaintId === paint.id);
-  const defaultRecipe = recipes.find((recipe) => recipe.isDefault);
   const [name, setName] = useState(""),
-    [ingredients, setIngredients] = useState<{ paintId: string; parts: number }[]>([]),
+    [ingredients, setIngredients] = useState<{ paint: Paint; parts: number }[]>([]),
     [choice, setChoice] = useState<Paint | null>(null),
     [ingredientQuery, setIngredientQuery] = useState(""),
     [busy, setBusy] = useState(false);
-  const candidates = useMemo(
-    () =>
-      data.catalog.filter(
-        (candidate) => candidate.id !== paint.id && !ingredients.some((row) => row.paintId === candidate.id),
-      ),
-    [data.catalog, paint.id, ingredients],
-  );
-  const ingredientMatches = useFuzzySearch(candidates, ingredientQuery, paintSearchText, 60);
   const addIngredient = () => {
     if (!choice) return;
-    setIngredients((rows) => [...rows, { paintId: choice.id, parts: 1 }]);
+    setIngredients((rows) => [...rows, { paint: choice, parts: 1 }]);
     setChoice(null);
     setIngredientQuery("");
   };
@@ -47,12 +137,7 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
       onClose={onClose}
     >
       <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-        <Card
-          sx={{
-            boxSizing: "border-box",
-            p: 1.5,
-          }}
-        >
+        <Card sx={{ boxSizing: "border-box", p: 1.5 }}>
           <Box
             component="div"
             sx={{
@@ -134,33 +219,58 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
             Substitutions
           </Box>
         </Box>
-        {recipes.map((recipe) => (
+        {error && (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" onClick={onRetry}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        )}
+        {recipes.map((projection) => (
           <SavedMixCard
-            key={recipe.id}
-            mix={recipe}
+            key={projection.mix.id}
+            projection={projection}
             onToggleDefault={() =>
               api("/api/paint-substitutions", {
                 method: "PUT",
-                body: JSON.stringify({ action: "default", id: recipe.id, enabled: !recipe.isDefault }),
+                body: JSON.stringify({
+                  action: "default",
+                  id: projection.mix.id,
+                  enabled: !projection.mix.isDefault,
+                }),
               }).then(
                 () =>
                   notify(
-                    recipe.isDefault
+                    projection.mix.isDefault
                       ? `${paint.name} is now the default`
-                      : `${recipe.name} is now the default`,
+                      : `${projection.mix.name} is now the default`,
                   ),
                 noop,
               )
             }
             onDelete={() =>
-              api(`/api/paint-substitutions?id=${encodeURIComponent(recipe.id)}`, { method: "DELETE" }).then(
-                () => notify("Substitution deleted"),
-                noop,
-              )
+              api(`/api/paint-substitutions?id=${encodeURIComponent(projection.mix.id)}`, {
+                method: "DELETE",
+              }).then(() => notify("Substitution deleted"), noop)
             }
           />
         ))}
-        {!recipes.length && (
+        {hasMore && (
+          <Button onClick={onLoadMore} disabled={loading}>
+            Load more substitutions
+          </Button>
+        )}
+        {loading && !recipes.length && (
+          <Box component="p" role="status">
+            Loading substitutions…
+          </Box>
+        )}
+        {!loading && !error && !recipes.length && (
           <Box
             component="p"
             sx={{
@@ -214,42 +324,25 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
           onChange={(event) => setName(event.target.value)}
           placeholder="e.g. Two-paint mix"
         />
-        <Box
-          component="div"
-          sx={{
-            display: "flex",
-            gap: 1,
-          }}
-        >
-          <Autocomplete
-            fullWidth
-            size="small"
-            value={choice}
-            inputValue={ingredientQuery}
-            options={ingredientMatches}
-            filterOptions={(options) => options}
-            getOptionLabel={(option) => `${option.name} · ${option.brand}`}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            onInputChange={(_, value) => setIngredientQuery(value)}
-            onChange={(_, value) => setChoice(value)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Ingredient paint"
-                placeholder="Search by paint, brand, or range…"
-              />
-            )}
+        <Box component="div" sx={{ display: "flex", gap: 1 }}>
+          <IngredientPicker
+            source={pickerSource}
+            excludeIds={[paint.id, ...ingredients.map((row) => row.paint.id)]}
+            choice={choice}
+            query={ingredientQuery}
+            onChoice={setChoice}
+            onQuery={setIngredientQuery}
           />
           <Button variant="outlined" disabled={!choice} onClick={addIngredient}>
             Add
           </Button>
         </Box>
         {ingredients.map((ingredient, index) => {
-          const ingredientPaint = data.catalog.find((item) => item.id === ingredient.paintId);
+          const ingredientPaint = ingredient.paint;
           return (
             <Box
               component="div"
-              key={ingredient.paintId}
+              key={ingredient.paint.id}
               sx={{
                 boxSizing: "border-box",
                 display: "flex",
@@ -262,7 +355,7 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
                 p: 1,
               }}
             >
-              <PaintBottle paint={ingredientPaint!} size="sm" />
+              <PaintBottle paint={ingredientPaint} size="sm" />
               <Box
                 component="span"
                 sx={{
@@ -274,7 +367,7 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
                   fontWeight: 600,
                 }}
               >
-                {ingredientPaint?.name}
+                {ingredientPaint.name}
               </Box>
               <TextField
                 size="small"
@@ -290,15 +383,12 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
                     ),
                   )
                 }
-                sx={{
-                  boxSizing: "border-box",
-                  width: "6rem",
-                }}
+                sx={{ boxSizing: "border-box", width: "6rem" }}
               />
               <IconButton
                 size="small"
                 onClick={() => setIngredients((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}
-                aria-label={`Remove ${ingredientPaint?.name}`}
+                aria-label={`Remove ${ingredientPaint.name}`}
               >
                 <X size={15} />
               </IconButton>
@@ -316,7 +406,11 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
             try {
               await api("/api/paint-substitutions", {
                 method: "POST",
-                body: JSON.stringify({ targetPaintId: paint.id, name, ingredients }),
+                body: JSON.stringify({
+                  targetPaintId: paint.id,
+                  name,
+                  ingredients: ingredients.map((row) => ({ paintId: row.paint.id, parts: row.parts })),
+                }),
               });
               setName("");
               setIngredients([]);
@@ -330,5 +424,69 @@ export function SubstitutionDialog({ paint, onClose }: { paint: Paint; onClose()
         </Button>
       </Box>
     </Modal>
+  );
+}
+
+function IngredientPicker(props: PickerProps) {
+  return "graphql" in props.source ? (
+    <ApolloIngredientPicker {...props} />
+  ) : (
+    <LegacyIngredientPicker {...props} catalog={props.source.catalog} />
+  );
+}
+
+function ApolloIngredientPicker(props: PickerProps) {
+  const { items, loading, error } = usePaintOptions(props.query, props.excludeIds);
+  return (
+    <IngredientPickerView
+      {...props}
+      options={items.map(detailPaint)}
+      loading={loading}
+      error={error?.message}
+    />
+  );
+}
+
+function LegacyIngredientPicker(props: PickerProps & { catalog: Paint[] }) {
+  const candidates = useMemo(
+    () => props.catalog.filter((paint) => !props.excludeIds.includes(paint.id)),
+    [props.catalog, props.excludeIds],
+  );
+  const options = useFuzzySearch(candidates, props.query, paintSearchText, 60);
+  return <IngredientPickerView {...props} options={options} />;
+}
+
+function IngredientPickerView({
+  choice,
+  query,
+  onChoice,
+  onQuery,
+  options,
+  loading,
+  error,
+}: PickerProps & { options: Paint[]; loading?: boolean; error?: string }) {
+  return (
+    <Autocomplete
+      fullWidth
+      size="small"
+      value={choice}
+      inputValue={query}
+      options={options}
+      loading={loading}
+      filterOptions={(rows) => rows}
+      getOptionLabel={(option) => `${option.name} · ${option.brand}`}
+      isOptionEqualToValue={(option, value) => option.id === value.id}
+      onInputChange={(_, value) => onQuery(value)}
+      onChange={(_, value) => onChoice(value)}
+      renderInput={(params) => (
+        <TextField
+          {...params}
+          label="Ingredient paint"
+          placeholder="Search by paint, brand, or range…"
+          error={!!error}
+          helperText={error}
+        />
+      )}
+    />
   );
 }

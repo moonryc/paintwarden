@@ -5,32 +5,63 @@ import { resolveSubstitution } from "@paint-vault/core/paint-substitutions";
 
 import { Trash2 } from "../icons";
 import { useVault } from "../store/hooks";
-import type { Paint, State } from "../types";
+import type { Paint } from "../types";
 import { paintGradient } from "../utils/paint-gradient";
 import { truncateSx } from "../utils/truncate";
 
-type Mix = State["paintSubstitutions"][number];
-
-// A saved substitution mix for a paint: its blended swatch, name and parts, a button to make it
-// (or stop it being) the paint's default, and Delete.
-export function SavedMixCard({
-  mix,
-  onToggleDefault,
-  onDelete,
-}: {
+type Mix = { id: string; name: string; isDefault: boolean };
+export type SavedMixProjection = {
   mix: Mix;
-  onToggleDefault(): void;
-  onDelete(): void;
-}) {
+  ingredients: { paint: Paint; parts: number; sortOrder: number }[];
+  brokenReason: "EMPTY" | "CYCLE" | null;
+  hasMoreIngredients?: boolean;
+  onLoadMoreIngredients?: () => void;
+};
+type Actions = { onToggleDefault: () => void; onDelete: () => void };
+
+// Production callers supply only the server projection, never a vault snapshot.
+export function SavedMixCard(props: Actions & ({ projection: SavedMixProjection } | { mix: Mix })) {
+  return "projection" in props ? (
+    <SavedMixCardView
+      {...props.projection}
+      onToggleDefault={props.onToggleDefault}
+      onDelete={props.onDelete}
+    />
+  ) : (
+    <LegacySavedMixCard {...props} />
+  );
+}
+
+// The snapshot adapter is used only by standalone legacy stories.
+function LegacySavedMixCard({ mix, ...actions }: Actions & { mix: Mix }) {
   const data = useVault();
   const resolved = resolveSubstitution(data, mix.id);
-  const broken = resolved?.broken ?? false;
-  const rows = data.paintSubstitutionIngredients
+  const ingredients = data.paintSubstitutionIngredients
     .filter((row) => row.substitutionId === mix.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder);
-  const ingredientPaints = rows
-    .map((row) => data.catalog.find((item) => item.id === row.paintId))
-    .filter(Boolean) as Paint[];
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .flatMap((row) => {
+      const paint = data.catalog.find((item) => item.id === row.paintId);
+      return paint ? [{ paint, parts: row.parts, sortOrder: row.sortOrder }] : [];
+    });
+  return (
+    <SavedMixCardView
+      mix={mix}
+      ingredients={ingredients}
+      brokenReason={resolved?.broken ? (resolved.brokenReason === "empty" ? "EMPTY" : "CYCLE") : null}
+      {...actions}
+    />
+  );
+}
+
+function SavedMixCardView({
+  mix,
+  ingredients,
+  brokenReason,
+  hasMoreIngredients,
+  onLoadMoreIngredients,
+  onToggleDefault,
+  onDelete,
+}: SavedMixProjection & Actions) {
   return (
     <Card
       sx={{
@@ -46,7 +77,7 @@ export function SavedMixCard({
           gap: 1.5,
         }}
       >
-        <SubstitutionSwatch paints={ingredientPaints} />
+        <SubstitutionSwatch paints={ingredients.map((row) => row.paint)} />
         <Box
           component="div"
           sx={{
@@ -75,12 +106,7 @@ export function SavedMixCard({
               color: "var(--ink-faint)",
             }}
           >
-            {rows
-              .map(
-                (row) =>
-                  `${row.parts}× ${data.catalog.find((item) => item.id === row.paintId)?.name ?? "Unknown"}`,
-              )
-              .join(" + ")}
+            {ingredients.map((row) => `${row.parts}× ${row.paint.name}`).join(" + ")}
           </Box>
         </Box>
         <Button size="small" variant={mix.isDefault ? "contained" : "outlined"} onClick={onToggleDefault}>
@@ -90,9 +116,14 @@ export function SavedMixCard({
           <Trash2 size={15} />
         </IconButton>
       </Box>
-      {broken && (
+      {hasMoreIngredients && (
+        <Button size="small" onClick={onLoadMoreIngredients} sx={{ mt: 1 }}>
+          Load more ingredients
+        </Button>
+      )}
+      {brokenReason && (
         <Alert severity="error" variant="outlined" sx={{ mt: 1.5 }}>
-          Broken substitution: {resolved?.brokenReason === "empty" ? "empty recipe" : "circular recipe"}.
+          Broken substitution: {brokenReason === "EMPTY" ? "empty recipe" : "circular recipe"}.
         </Alert>
       )}
     </Card>
