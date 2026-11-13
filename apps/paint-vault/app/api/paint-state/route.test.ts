@@ -11,6 +11,9 @@ const { PUT } = await import("./route");
 const { getDb, getSqlite } = await import("../../../db");
 const { paintCatalog, paintInventory } = await import("../../../db/schema");
 const { testUserId } = await import("../../../lib/test-ids");
+const { PaintStockError, setPaintStock } = await import("../../../lib/paint-stock");
+const { currentChangeSeq } = await import("../../../db/change-log");
+const { vaultSnapshot, vaultChangesSince } = await import("../../../lib/vault-state");
 
 const ids = Array.from({ length: 502 }, (_, i) => testUserId(`inventory-paint-${i}`));
 const call = (body: unknown) =>
@@ -45,16 +48,17 @@ test.after(() => {
 void test("bulk upserts roll back earlier inserts and updates when a paint id does not exist", async () => {
   await call({ paintId: ids[0], state: "WISHLIST", stockLevel: "EMPTY" });
   const before = inventory();
-  await assert.rejects(
-    call({
-      paintIds: [ids[0], ids[1], testUserId("missing-inventory-paint")],
-      state: "OWNED",
-      quantity: 7,
-      stockLevel: "LOW",
-    }),
-    /FOREIGN KEY constraint failed/,
-  );
+  const seq = currentChangeSeq(getSqlite());
+  const response = await call({
+    paintIds: [ids[0], ids[1], testUserId("missing-inventory-paint")],
+    state: "OWNED",
+    quantity: 7,
+    stockLevel: "LOW",
+  });
+  assert.equal(response.status, 404);
+  assert.deepEqual(await response.json(), { error: "Paint not found" });
   assert.deepEqual(inventory(), before);
+  assert.equal(currentChangeSeq(getSqlite()), seq);
 });
 
 void test("bulk ownership and wishlist updates preserve stock and quantity rules", async () => {
@@ -117,6 +121,81 @@ void test("requests without paint ids return 400 and leave inventory unchanged",
     const response = await call(body);
     assert.equal(response.status, 400);
     assert.deepEqual(await response.json(), { error: "Paint is required" });
+  }
+  assert.deepEqual(inventory(), []);
+});
+
+void test("shared stock command preserves non-finite and nullable quantity defaults", () => {
+  for (const quantity of [undefined, null, NaN, Infinity, -Infinity]) {
+    const result = setPaintStock({ paintId: ids[0], state: "OWNED", quantity });
+    assert.deepEqual(result, { ok: true, updated: 1 });
+    assert.deepEqual(inventory(), expected([ids[0]], "OWNED", "FULL", 1));
+  }
+});
+
+void test("shared command is synchronous and its writes and change log join an outer transaction", () => {
+  const sqlite = getSqlite();
+  const before = vaultSnapshot().cursor;
+  const abort = new Error("Abort outer mutation");
+  assert.throws(
+    () =>
+      sqlite.transaction(() => {
+        const result = setPaintStock({ paintId: ids[0], state: "OWNED", quantity: 4 });
+        assert.deepEqual(result, { ok: true, updated: 1 });
+        assert.equal(inventory()[0].quantity, 4);
+        assert.ok(currentChangeSeq(sqlite) > before.seq);
+        throw abort;
+      })(),
+    (error) => error === abort,
+  );
+  assert.deepEqual(inventory(), []);
+  assert.equal(currentChangeSeq(sqlite), before.seq);
+
+  const committed = sqlite.transaction(() => {
+    const result = setPaintStock({ paintIds: ids.slice(0, 2), state: "OWNED", stockLevel: "LOW" });
+    const delta = vaultChangesSince(before.epoch, before.seq);
+    return { result, delta };
+  })();
+  assert.deepEqual(committed.result, { ok: true, updated: 2 });
+  assert.equal(committed.delta.reload, false);
+  assert.deepEqual(
+    committed.delta.changes.map(({ table, key, row }) => ({
+      table,
+      key,
+      row: row && {
+        paintId: row.paintId,
+        state: row.state,
+        stockLevel: row.stockLevel,
+        quantity: row.quantity,
+      },
+    })),
+    ids.slice(0, 2).map((paintId) => ({
+      table: "paintRecords",
+      key: { paintId },
+      row: { paintId, state: "OWNED", stockLevel: "LOW", quantity: 1 },
+    })),
+  );
+  const cursor = committed.delta;
+  setPaintStock({ paintId: ids[0], state: null });
+  const deletion = vaultChangesSince(cursor.epoch, cursor.seq);
+  assert.deepEqual(deletion.changes, [{ table: "paintRecords", key: { paintId: ids[0] }, row: null }]);
+});
+
+void test("shared command exposes typed errors and keeps clearing unknown IDs harmless", async () => {
+  assert.throws(
+    () => setPaintStock({}),
+    (error) =>
+      error instanceof PaintStockError && error.status === 400 && error.message === "Paint is required",
+  );
+  assert.throws(
+    () => setPaintStock({ paintId: testUserId("unknown"), state: "OWNED" }),
+    (error) => error instanceof PaintStockError && error.status === 404,
+  );
+  assert.deepEqual(setPaintStock({ paintId: testUserId("unknown"), state: null }), { ok: true, updated: 1 });
+  for (const paintIds of [[null], [123], [""], [{}]]) {
+    const response = await call({ paintIds, state: "OWNED" });
+    assert.equal(response.status, 400);
+    assert.deepEqual(await response.json(), { error: "Paint IDs must be non-empty strings" });
   }
   assert.deepEqual(inventory(), []);
 });
