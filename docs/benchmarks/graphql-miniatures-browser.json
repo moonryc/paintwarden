@@ -1,0 +1,123 @@
+{
+  "method": "Summary of accepted revised browser-owner Chromium reports, not a new execution or an n11 benchmark. Original raw reports/checks/artifact hashes retained under external audit graphql-phase-3-evidence. All29 JS/index hashes independently matched the measured revised Phase3 bundle in each profile. Browser fixture extends unchanged Phase0 seed with360 focused smoke miniatures, so response bytes differ from the unchanged benchmark fixture. Superseded pre-picker browser reports retained browser/pre-picker-parity.",
+  "profiles": {
+    "large": {
+      "sourceReport": "browser/final/large-results.json",
+      "sourceReportSha256": "7748eeec32f7e2a1d5b3bd983415e0b68d8a5e2d7c4110bd70e7ed5efe15dd29",
+      "startedAt": "2026-11-13T19:17:00.757Z",
+      "finishedAt": "2026-11-13T19:17:20.262Z",
+      "node": "v22.22.2",
+      "scope": "Default Home and migrated Miniatures production Chromium interactions; synthetic Phase0 baseline plus 360 focused smoke projects; not a full app control sweep.",
+      "checks": {
+        "PASS": 10
+      },
+      "metrics": {
+        "defaultHome": {
+          "elapsedToPaintMs": 293.73974999999973,
+          "loaded": 96,
+          "total": 1489,
+          "projectionBytes": 23798,
+          "completedApiBytes": 24329,
+          "api": [
+            {
+              "path": "/api/auth/status",
+              "bytes": 124,
+              "durationMs": 23.922333000000435
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 11952,
+              "durationMs": 76.80445899999995,
+              "operationName": "MiniatureList"
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 203,
+              "durationMs": 74.61570800000027,
+              "operationName": "VaultNavigation"
+            },
+            {
+              "path": "/api/catalog-sources",
+              "bytes": 204,
+              "durationMs": 117.94087499999932
+            },
+            {
+              "path": "/api/graphql/stream",
+              "operationName": "VaultChanges"
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 11846,
+              "durationMs": 8.37329200000022,
+              "operationName": "MiniatureList"
+            }
+          ],
+          "method": "Single fresh default-document observation; production JSON bytes, navigation/render/harness time. Excludes streamed SSE bytes and JS/CSS/fonts. Not a percentile or Phase0 speedup."
+        },
+        "secondClientReadinessMs": 430.2520829999994,
+        "loadedWindowRefreshBytes": 35641
+      },
+      "matchedBundleArtifactSha256": "7e7c2407e19f0a4d06c3c08ab4ea70b9e6c15f4ae1fc800f3dac3aab6a33305f",
+      "matchedJsAndHtmlFiles": 29
+    },
+    "stress": {
+      "sourceReport": "browser/final/stress-results.json",
+      "sourceReportSha256": "4a45739adec00e6f520361f429800fa591fa4e2befbdb3791670fa91e5ff9dcd",
+      "startedAt": "2026-11-13T19:17:33.018Z",
+      "finishedAt": "2026-11-13T19:18:08.437Z",
+      "node": "v22.22.2",
+      "scope": "Default Home and migrated Miniatures production Chromium interactions; synthetic Phase0 baseline plus 360 focused smoke projects; not a full app control sweep.",
+      "checks": {
+        "PASS": 10
+      },
+      "metrics": {
+        "defaultHome": {
+          "elapsedToPaintMs": 973.0874169999988,
+          "loaded": 96,
+          "total": 8289,
+          "projectionBytes": 23812,
+          "completedApiBytes": 24345,
+          "api": [
+            {
+              "path": "/api/auth/status",
+              "bytes": 124,
+              "durationMs": 32.61599999999817
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 11959,
+              "durationMs": 401.5117500000015,
+              "operationName": "MiniatureList"
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 205,
+              "durationMs": 398.25504100000035,
+              "operationName": "VaultNavigation"
+            },
+            {
+              "path": "/api/catalog-sources",
+              "bytes": 204,
+              "durationMs": 115.61504099999729
+            },
+            {
+              "path": "/api/graphql/stream",
+              "operationName": "VaultChanges"
+            },
+            {
+              "path": "/api/graphql",
+              "bytes": 11853,
+              "durationMs": 8.316000000002532,
+              "operationName": "MiniatureList"
+            }
+          ],
+          "method": "Single fresh default-document observation; production JSON bytes, navigation/render/harness time. Excludes streamed SSE bytes and JS/CSS/fonts. Not a percentile or Phase0 speedup."
+        },
+        "secondClientReadinessMs": 518.8168750000004,
+        "loadedWindowRefreshBytes": 35662
+      },
+      "matchedBundleArtifactSha256": "7e7c2407e19f0a4d06c3c08ab4ea70b9e6c15f4ae1fc800f3dac3aab6a33305f",
+      "matchedJsAndHtmlFiles": 29
+    }
+  }
+}

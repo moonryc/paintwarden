@@ -1,0 +1,3084 @@
+{
+  "runtime": {
+    "sha256": "eebf5ba40bf8c69135ea08e5f60d60d222da5a6adf67dadc27981a255c209de1",
+    "files": [
+      {
+        "file": "apps/paint-vault/db/change-log.ts",
+        "sha256": "e783f9a7e628d27b58b83596df8cf6bb22d306893eedf2e67dd3dd00424b1338"
+      },
+      {
+        "file": "apps/paint-vault/db/index.ts",
+        "sha256": "ab3444ad7f2019ceaa6b7ca4ac3a9352f5ab5fc9a2e498e772f3a3bd0cfd954b"
+      },
+      {
+        "file": "apps/paint-vault/db/migrate.ts",
+        "sha256": "dfc9c9135c398fd8f0d83357d03758a095c1d16fcbabc34bdfff528d44d30730"
+      },
+      {
+        "file": "apps/paint-vault/db/migration-backup.ts",
+        "sha256": "9de2ecde123fc51e46ebdf98f4f6820165b4cb4d3b1a527192c17b13ad2a82ff"
+      },
+      {
+        "file": "apps/paint-vault/db/schema-checks.ts",
+        "sha256": "fc7ec251de6577cc3880ddade8979b219872c911340dd902baac6e88e924937c"
+      },
+      {
+        "file": "apps/paint-vault/db/schema.ts",
+        "sha256": "a6a0ea8a9bea4a3a942916e219fbebdfa0e8692e53ea86e33fc571f64255633d"
+      },
+      {
+        "file": "apps/paint-vault/graphql/budgets.ts",
+        "sha256": "dd5bb2878f996345beffa2ba759edc435a5145a3dfa80e86599728f2d05d30e1"
+      },
+      {
+        "file": "apps/paint-vault/graphql/changes.ts",
+        "sha256": "b6e3c4a7932a3a048ba8f588076c7f42c06c3a3bac043ecc2fe1d0c6b09029d8"
+      },
+      {
+        "file": "apps/paint-vault/graphql/context.ts",
+        "sha256": "f5840e539a32bcc75c63a955846f3fc00be562a4b45b99dbaadcc751318d591e"
+      },
+      {
+        "file": "apps/paint-vault/graphql/generated/resolvers.ts",
+        "sha256": "311d4aff7e938fcdb3b3fa4a184f4fe43954930055d2ab58939c9246b2032a55"
+      },
+      {
+        "file": "apps/paint-vault/graphql/library.ts",
+        "sha256": "44cf28405a8c1555b548cc5f32f63e9a453f152e5996b50e497a8914e21ad53e"
+      },
+      {
+        "file": "apps/paint-vault/graphql/miniature-mutations.ts",
+        "sha256": "a15a8c55b520b6153ef3167182869d6a5347c49b0d7fd9441c994648e9c5b571"
+      },
+      {
+        "file": "apps/paint-vault/graphql/miniature-schemes.ts",
+        "sha256": "08fe0a09d700e1da59e33cfcea01dc5ca2bf70af958607e14f6dd0c8d21f1c6f"
+      },
+      {
+        "file": "apps/paint-vault/graphql/miniatures.ts",
+        "sha256": "698f92f1744aae96a3b8247909a2b7af7eec48e1ba92fb00b6faa779d763d725"
+      },
+      {
+        "file": "apps/paint-vault/graphql/rate-limit.ts",
+        "sha256": "d7d321cfb519ddc3889acfb0070ccfb906a9f56e6406092cc5f9d9e184ec6135"
+      },
+      {
+        "file": "apps/paint-vault/graphql/schema.graphql",
+        "sha256": "0070f52db71d323700f1efb386a74875bb468224e310932b29af8d27d6c6743a"
+      },
+      {
+        "file": "apps/paint-vault/graphql/sequence.ts",
+        "sha256": "26b123229902a2c6d33d449a1bc1667863652b1b0ff521d1325909ffaecc6613"
+      },
+      {
+        "file": "apps/paint-vault/graphql/server.ts",
+        "sha256": "bc56a2b7d7fdeb598fc6755fe975c30de735bbfba66b422ad1e4d9857bcf6364"
+      },
+      {
+        "file": "apps/paint-vault/lib/app-version.ts",
+        "sha256": "5cc085950d571a5aaaf5d1165d414689669ca109d8ea58ba9fa7110a2f923406"
+      },
+      {
+        "file": "apps/paint-vault/lib/auth.ts",
+        "sha256": "6af2b95e26866a2d33c65e5927c94b7162c931bd76c225a5e0ef1222d89c37b8"
+      },
+      {
+        "file": "apps/paint-vault/lib/backup-format.ts",
+        "sha256": "30c1e7767b93d120feebcaf18fbafa1f297436f58630189ce97d8a4c302ce8dd"
+      },
+      {
+        "file": "apps/paint-vault/lib/backup.ts",
+        "sha256": "7986a758d653dffe35d7b1da4c6ca15956f7cc17883ac23f35c3ce3355336dd0"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-source-assets.ts",
+        "sha256": "7b6933a8fbd4197ba77b819510318751b0316ee23c682d394c1680bce22325a2"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-source-dropped.ts",
+        "sha256": "382c1f383c8c3fd2edaa2259377273b5fccc84c62fb41097a37bd01e3a94cdbb"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-source-install.ts",
+        "sha256": "4f050e8c20c1b30a680bd9d721fa16fc8ca13d5f271494a4193962878021aba2"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-source-removal.ts",
+        "sha256": "8f8a70b44c68d9f6ea640d98df3246c754d5f8ba7d9ca30bbc66fb3c4edc1296"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-source-upload.ts",
+        "sha256": "fad477cd391ca92f78679eeafa7db005d3d31576ddfa451bb042d4010c4f5532"
+      },
+      {
+        "file": "apps/paint-vault/lib/catalog-sources.ts",
+        "sha256": "b0298a804fe1c4e57db64920cbc2fa0daa6e74c672608a10c661173381997276"
+      },
+      {
+        "file": "apps/paint-vault/lib/client-config.ts",
+        "sha256": "92a5b13a6b9fdb0ef098fddad392b04c4caed3fd970d282ea7692f37be1b8a89"
+      },
+      {
+        "file": "apps/paint-vault/lib/commands/miniature-recipe.ts",
+        "sha256": "3b454d04458cd583d551cc556b7937e2ec84339bc9988de54790bde00755e888"
+      },
+      {
+        "file": "apps/paint-vault/lib/commands/miniatures.ts",
+        "sha256": "b1a7e4edd583db3ecd22db39357247a0de2b27838f2fde6a48f10cf2b88662a9"
+      },
+      {
+        "file": "apps/paint-vault/lib/github-source.ts",
+        "sha256": "72133facbb9955f46a538677a34891067f93ee4a7563121f5b0e404d4432f3fc"
+      },
+      {
+        "file": "apps/paint-vault/lib/http-compression.ts",
+        "sha256": "360d91a2dbdee3d5aa32ff203dd32a1053ee7830a13b9c9cd0c0e2d620b2c962"
+      },
+      {
+        "file": "apps/paint-vault/lib/image-mutations.ts",
+        "sha256": "d81435f0448d5ecfa73e6b5ef0f6346e1f27c387f625b640103a5339e7574aa7"
+      },
+      {
+        "file": "apps/paint-vault/lib/image-store.ts",
+        "sha256": "22dd1738131e8c703384948ac4c02348b5e828b0987f0b90a6b6351e1219b88f"
+      },
+      {
+        "file": "apps/paint-vault/lib/legacy-backup.ts",
+        "sha256": "359f505377e405b7fcdd4923b6d339adad54f5c6ef39007b7d2dbeda9ad61df8"
+      },
+      {
+        "file": "apps/paint-vault/lib/paint-stock.ts",
+        "sha256": "dca6139d3d09e13f735911ee624ff5433817d92aac1f24154405b49075973522"
+      },
+      {
+        "file": "apps/paint-vault/lib/password-hash.ts",
+        "sha256": "f4aa633229eff9c916389a07ff5b756ca16bda694b4b066ed284ddd549d44fdd"
+      },
+      {
+        "file": "apps/paint-vault/lib/public-fetch.ts",
+        "sha256": "982bf12e3dce6c030a87a287e46bd9245eb5421e4b59466290b434bac466258f"
+      },
+      {
+        "file": "apps/paint-vault/lib/request-limits.ts",
+        "sha256": "8d1bf21584f68a33c81fb8b53540009e8ca8ee4c7ca0d5b06d29eb8c43efbda4"
+      },
+      {
+        "file": "apps/paint-vault/lib/source-format.ts",
+        "sha256": "0c97fcbf6380e7ddbbbac8ac5039ea601a24c9712f428992983b48f114957b47"
+      },
+      {
+        "file": "apps/paint-vault/lib/sqlite-read-cache.ts",
+        "sha256": "f8c200107601d3c0143963bac37052b41e0955e929d75efddf2d69399b1ebcf8"
+      },
+      {
+        "file": "apps/paint-vault/lib/template-recipes.ts",
+        "sha256": "f71d27f13cf6a306d10bc84f7e21e2b02434b46d79c5d65e7fa6a205952e230d"
+      },
+      {
+        "file": "apps/paint-vault/lib/test-ids.ts",
+        "sha256": "b5bca3e4ef1c413ce20150ac2a3e75a2f61d33899e0cc353310e11ad8b41261e"
+      },
+      {
+        "file": "apps/paint-vault/lib/text-limits.ts",
+        "sha256": "2ac8bfa3b458c84c9983c78c7f8cee8e5ce5f5b1cec0e1736ea10d9b9da7d8b2"
+      },
+      {
+        "file": "apps/paint-vault/lib/vault-state.ts",
+        "sha256": "66b3dcfebf6e78e1350fdc9e62db5873ccc72545c37a1105aff2be37362cae94"
+      },
+      {
+        "file": "apps/paint-vault/lib/zip-entry.ts",
+        "sha256": "ed859a80fc1c46db25ac74e0502bdebbc8658ef16baa797e2e8e261eb58bd81d"
+      },
+      {
+        "file": "apps/paint-vault/lib/zip-writer.ts",
+        "sha256": "3b50f7a05224dfc6cfb763456ef45ab572a7f9d50a2e43d7c1ff469d54bcd7ff"
+      },
+      {
+        "file": "packages/paint-core/catalog-import.ts",
+        "sha256": "b195df82b6c92e38c2afae6a8e62668029769b3671b4c1d275cb369d214078ad"
+      },
+      {
+        "file": "packages/paint-core/color-categories.ts",
+        "sha256": "9893bb6601b500b1bdb7eeb04ee760f15231b6f7fe8635937ac9fd9b21227f36"
+      },
+      {
+        "file": "packages/paint-core/color-hex.ts",
+        "sha256": "8d2f0a0ed86e477e49622482a529ddbfb82b5205acac4c6525b911f6a524e682"
+      },
+      {
+        "file": "packages/paint-core/fuzzy-search.ts",
+        "sha256": "349e53813432dbae675e76e776c5ae68d804e61de39892e53da4dec73ed0677d"
+      },
+      {
+        "file": "packages/paint-core/paint-color-similarity.ts",
+        "sha256": "5fef821102ee4a2b3563da0b6c90f25bb219df80f4a23a843fc21540c3efa332"
+      },
+      {
+        "file": "packages/paint-core/paint-state.ts",
+        "sha256": "a49c829de1058d2288295ed255079e96d83b67c00094da04b69632d6fda902ea"
+      },
+      {
+        "file": "packages/paint-core/paint-substitutions.ts",
+        "sha256": "43bf1c139f95019b0ecb7021e178927cea4ec12dd29e24422576973da89f4f3b"
+      },
+      {
+        "file": "packages/paint-core/paint-types.ts",
+        "sha256": "fb956c28193c0db888d616ddad0141336cab370e0ab9212af4310e2b7b285c92"
+      },
+      {
+        "file": "packages/paint-core/recipe-converter.ts",
+        "sha256": "3e87b7ff709dda308fcaaaff00f057aa51193712ac1de606bb05d2e4bfcfb042"
+      },
+      {
+        "file": "packages/paint-core/recipe-steps.ts",
+        "sha256": "49f80c0bb6474eae581eaf031952951d9b18dba51bd82a05484f211ca08180e2"
+      },
+      {
+        "file": "packages/paint-core/text-limits.ts",
+        "sha256": "8ce829aebbed19e6787401d277a6ee35ede1cd7838fc27582388b811269dee84"
+      },
+      {
+        "file": "packages/paint-core/vault-changes.ts",
+        "sha256": "5d3b6b74b2355333d1d9c07edde43477da2bffd01e241c636fa7ec1606e3e48b"
+      },
+      {
+        "file": "packages/paint-core/vault-ids.ts",
+        "sha256": "578301b48a381da8545db02f4f889f56a97c82a64327e5a04d2611575b1244e7"
+      },
+      {
+        "file": "packages/paint-core/zip-reader.ts",
+        "sha256": "fe49f6c946f649f554fa06de81a5b25aeb0f0d07ebed034cc4b96c13f30fb91e"
+      },
+      {
+        "file": "packages/vault-ui/src/dom/graphql/miniature-list.graphql",
+        "sha256": "9ac716e72ef13a71f9510ff7b90a245eaa54c80ad39579ba80171c3fc2e5ce60"
+      },
+      {
+        "file": "packages/vault-ui/src/dom/graphql/navigation.graphql",
+        "sha256": "77cf260267f7cc4b067eb9204dbfe86917d9f1c615e56b6309db13b21125f1aa"
+      }
+    ]
+  },
+  "measuredAt": "2026-11-13T19:15:49.659Z",
+  "node": "v22.22.2",
+  "profile": "large",
+  "fixture": {
+    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-large-rIqicZ",
+    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-large-rIqicZ/snapshot.json",
+    "baseline": {
+      "measuredAt": "2026-11-13T19:15:20.942Z",
+      "node": "v22.22.2",
+      "profile": "large",
+      "spec": {
+        "paints": 4500,
+        "miniatures": 1500,
+        "schemes": 300,
+        "templates": 500
+      },
+      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-large-5KbLkS",
+      "seedMs": 248.75599999999997,
+      "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
+      "snapshot": {
+        "firstReadMs": 41.30391700000007,
+        "medianMs": 29.947166999999922,
+        "minMs": 28.963084000000094,
+        "maxMs": 40.142582999999945,
+        "preparedStatements": 19,
+        "sqlExecutions": 19,
+        "jsonBytes": 6518884,
+        "gzipBytes": 280960,
+        "parseMedianMs": 8.501541999999972
+      },
+      "templateSummaries": {
+        "firstReadMs": 15.190458000000035,
+        "medianMs": 3.5157500000000255,
+        "minMs": 3.087541999999985,
+        "maxMs": 5.240332999999964,
+        "preparedStatements": 5,
+        "sqlExecutions": 5,
+        "jsonBytes": 133456,
+        "gzipBytes": 3196,
+        "parseMedianMs": 0.16279099999997015
+      },
+      "snapshotStartupDataBytes": 6518884,
+      "snapshotPlusTemplateSummariesBytes": 6652340
+    },
+    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-large-5KbLkS"
+  },
+  "source": {
+    "head": "421c564bfd20f4f3215a6d9653b110167f1c7ede",
+    "changes": " M apps/paint-vault/graphql/miniature-schemes.test.ts\n M apps/paint-vault/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
+  },
+  "method": "Actual production documents with Apollo addTypenameToDocument, GraphQL execute and JSON serialization. 11 independent fresh-process first operations per scenario; cold DERIVED caches, NOT cold disk or import/startup time. Warm uses one warmup plus 11 samples. launch is navigation then Home in one process (sum operation ms/SQL/bytes, maximum per-operation setImmediate block). SQL counts actual all/get/run/iterate statement calls, excluding transaction helper BEGIN/COMMIT and trigger internals. setImmediate probe measures synchronous operation blocking, NOT a production event-loop-delay histogram. Excludes HTTP/auth/TCP/browser/React/Electron and non-projection startup traffic. Gzip bytes are size only, not timed. Eleven-sample p95 is the largest observation. Stock rebuilds are separate from writes, 11 repeated revisions in the final home worker.",
+  "snapshotComparison": {
+    "phase0": {
+      "firstReadMs": 43.699250000000006,
+      "medianMs": 31.95337500000005,
+      "minMs": 30.954250000000002,
+      "maxMs": 35.702208999999925,
+      "preparedStatements": 19,
+      "sqlExecutions": 19,
+      "jsonBytes": 6518884,
+      "gzipBytes": 281145,
+      "parseMedianMs": 8.81533300000001
+    },
+    "currentSameFixture": {
+      "firstReadMs": 41.30391700000007,
+      "medianMs": 29.947166999999922,
+      "minMs": 28.963084000000094,
+      "maxMs": 40.142582999999945,
+      "preparedStatements": 19,
+      "sqlExecutions": 19,
+      "jsonBytes": 6518884,
+      "gzipBytes": 280960,
+      "parseMedianMs": 8.501541999999972
+    },
+    "phase0SnapshotPlusTemplateSummariesBytes": 6652340
+  },
+  "scenarios": {
+    "miniatures": {
+      "cold": {
+        "ms": {
+          "n": 11,
+          "median": 53.128167000000076,
+          "p95": 60.574792,
+          "min": 51.56741599999998,
+          "max": 60.574792
+        },
+        "eventLoopBlockMs": {
+          "n": 11,
+          "median": 54.022334,
+          "p95": 61.574833999999896,
+          "min": 51.6345409999999,
+          "max": 61.574833999999896
+        },
+        "sqlExecutions": {
+          "n": 11,
+          "median": 12,
+          "p95": 12,
+          "min": 12,
+          "max": 12
+        },
+        "jsonBytes": {
+          "n": 11,
+          "median": 32107,
+          "p95": 32107,
+          "min": 32107,
+          "max": 32107
+        },
+        "gzipBytes": {
+          "n": 11,
+          "median": 3023,
+          "p95": 3026,
+          "min": 3022,
+          "max": 3026
+        }
+      },
+      "coldSamples": [
+        {
+          "ms": 51.75729200000001,
+          "eventLoopBlockMs": 52.83795900000007,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3026
+        },
+        {
+          "ms": 52.04600000000005,
+          "eventLoopBlockMs": 53.107875000000035,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3026
+        },
+        {
+          "ms": 52.57658300000003,
+          "eventLoopBlockMs": 53.446750000000065,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3023
+        },
+        {
+          "ms": 51.56741599999998,
+          "eventLoopBlockMs": 51.6345409999999,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3025
+        },
+        {
+          "ms": 53.128167000000076,
+          "eventLoopBlockMs": 54.022334,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3022
+        },
+        {
+          "ms": 51.57095800000002,
+          "eventLoopBlockMs": 52.501249999999914,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3022
+        },
+        {
+          "ms": 55.16620799999998,
+          "eventLoopBlockMs": 56.56545799999992,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3022
+        },
+        {
+          "ms": 53.31950000000006,
+          "eventLoopBlockMs": 54.24400000000003,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3026
+        },
+        {
+          "ms": 55.51158299999997,
+          "eventLoopBlockMs": 56.49183300000004,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3026
+        },
+        {
+          "ms": 60.574792,
+          "eventLoopBlockMs": 61.574833999999896,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3023
+        },
+        {
+          "ms": 56.01537499999995,
+          "eventLoopBlockMs": 57.15308399999992,
+          "sqlExecutions": 12,
+          "jsonBytes": 32107,
+          "gzipBytes": 3022
+        }
+      ],
+      "warm": {
+        "first48": {
+          "variables": {},
+          "samples": [
+            {
+              "ms": 1.5419160000000147,
+              "eventLoopBlockMs": 1.560083000000077,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 1.4667500000000473,
+              "eventLoopBlockMs": 4.0715000000000146,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 1.016917000000035,
+              "eventLoopBlockMs": 1.0255420000000868,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.7069159999999783,
+              "eventLoopBlockMs": 0.7116660000000365,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.6844579999999496,
+              "eventLoopBlockMs": 0.6884169999999585,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.9096250000000055,
+              "eventLoopBlockMs": 1.0825419999999895,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.9817919999999276,
+              "eventLoopBlockMs": 1.002375000000029,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.5527499999999463,
+              "eventLoopBlockMs": 0.5696669999999813,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.39020800000002964,
+              "eventLoopBlockMs": 0.40516600000000835,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.3490830000000642,
+              "eventLoopBlockMs": 0.3632920000000013,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            },
+            {
+              "ms": 0.33029099999998834,
+              "eventLoopBlockMs": 0.3444579999999178,
+              "sqlExecutions": 2,
+              "jsonBytes": 32107,
+              "gzipBytes": 3022
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.7069159999999783,
+              "p95": 1.5419160000000147,
+              "min": 0.33029099999998834,
+              "max": 1.5419160000000147
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.7116660000000365,
+              "p95": 4.0715000000000146,
+              "min": 0.3444579999999178,
+              "max": 4.0715000000000146
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 32107,
+              "p95": 32107,
+              "min": 32107,
+              "max": 32107
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3022,
+              "p95": 3022,
+              "min": 3022,
+              "max": 3022
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "first1": {
+          "variables": {
+            "first": 1
+          },
+          "samples": [
+            {
+              "ms": 0.11174999999991542,
+              "eventLoopBlockMs": 0.12662499999999,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.06645900000000893,
+              "eventLoopBlockMs": 0.08041700000001129,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.06362500000000182,
+              "eventLoopBlockMs": 0.07804199999998218,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.05962499999998272,
+              "eventLoopBlockMs": 0.07416699999998855,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.06274999999993724,
+              "eventLoopBlockMs": 0.07704200000000583,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.05895799999996143,
+              "eventLoopBlockMs": 0.07324999999991633,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.08358399999997346,
+              "eventLoopBlockMs": 0.09808399999997164,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.06308400000000347,
+              "eventLoopBlockMs": 0.07624999999995907,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.0649590000000444,
+              "eventLoopBlockMs": 0.07829200000003311,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.05895799999996143,
+              "eventLoopBlockMs": 0.07295799999997143,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            },
+            {
+              "ms": 0.05758400000001984,
+              "eventLoopBlockMs": 0.0715420000000222,
+              "sqlExecutions": 2,
+              "jsonBytes": 1859,
+              "gzipBytes": 676
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.06308400000000347,
+              "p95": 0.11174999999991542,
+              "min": 0.05758400000001984,
+              "max": 0.11174999999991542
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.07704200000000583,
+              "p95": 0.12662499999999,
+              "min": 0.0715420000000222,
+              "max": 0.12662499999999
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 1859,
+              "p95": 1859,
+              "min": 1859,
+              "max": 1859
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 676,
+              "p95": 676,
+              "min": 676,
+              "max": 676
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "first100": {
+          "variables": {
+            "first": 100
+          },
+          "samples": [
+            {
+              "ms": 0.6487090000000535,
+              "eventLoopBlockMs": 0.7023340000000644,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.7273329999999305,
+              "eventLoopBlockMs": 0.7462079999999105,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.6571249999999509,
+              "eventLoopBlockMs": 0.6739579999999705,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.5142909999999574,
+              "eventLoopBlockMs": 0.5295409999999947,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.4873330000000351,
+              "eventLoopBlockMs": 0.5032079999999723,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.623958000000016,
+              "eventLoopBlockMs": 0.6418750000000273,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.7259579999999914,
+              "eventLoopBlockMs": 1.2701250000000073,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.6089590000000271,
+              "eventLoopBlockMs": 0.6257920000000468,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.5422089999999571,
+              "eventLoopBlockMs": 0.5575000000000045,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.5299999999999727,
+              "eventLoopBlockMs": 0.5471250000000509,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            },
+            {
+              "ms": 0.5192500000000564,
+              "eventLoopBlockMs": 0.5333750000000919,
+              "sqlExecutions": 2,
+              "jsonBytes": 65576,
+              "gzipBytes": 5480
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.6089590000000271,
+              "p95": 0.7273329999999305,
+              "min": 0.4873330000000351,
+              "max": 0.7273329999999305
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.6257920000000468,
+              "p95": 1.2701250000000073,
+              "min": 0.5032079999999723,
+              "max": 1.2701250000000073
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 65576,
+              "p95": 65576,
+              "min": 65576,
+              "max": 65576
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 5480,
+              "p95": 5480,
+              "min": 5480,
+              "max": 5480
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "owned": {
+          "variables": {
+            "ownership": "OWNED"
+          },
+          "samples": [
+            {
+              "ms": 0.2896250000000009,
+              "eventLoopBlockMs": 0.30291699999997945,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.3081250000000182,
+              "eventLoopBlockMs": 0.33187499999996817,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.3595830000000433,
+              "eventLoopBlockMs": 1.1159999999999854,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.37112500000000637,
+              "eventLoopBlockMs": 0.3890410000000202,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.29312499999991815,
+              "eventLoopBlockMs": 0.3086669999999003,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.2745830000000069,
+              "eventLoopBlockMs": 0.2923749999999927,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.29462499999999636,
+              "eventLoopBlockMs": 0.3089159999999538,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.2837080000000469,
+              "eventLoopBlockMs": 0.2991660000000138,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.26683299999990595,
+              "eventLoopBlockMs": 0.28054199999996854,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.25774999999998727,
+              "eventLoopBlockMs": 0.27320899999995163,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            },
+            {
+              "ms": 0.28612499999997,
+              "eventLoopBlockMs": 0.3019170000000031,
+              "sqlExecutions": 2,
+              "jsonBytes": 32080,
+              "gzipBytes": 3061
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.2896250000000009,
+              "p95": 0.37112500000000637,
+              "min": 0.25774999999998727,
+              "max": 0.37112500000000637
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.30291699999997945,
+              "p95": 1.1159999999999854,
+              "min": 0.27320899999995163,
+              "max": 1.1159999999999854
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 32080,
+              "p95": 32080,
+              "min": 32080,
+              "max": 32080
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3061,
+              "p95": 3061,
+              "min": 3061,
+              "max": 3061
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 2
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 2
+            }
+          }
+        },
+        "wishlist": {
+          "variables": {
+            "ownership": "WISHLIST"
+          },
+          "samples": [
+            {
+              "ms": 0.2644159999999829,
+              "eventLoopBlockMs": 0.2777499999999691,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.26137500000004366,
+              "eventLoopBlockMs": 0.27729199999998855,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.2988749999999527,
+              "eventLoopBlockMs": 0.6831250000000182,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.3269999999999982,
+              "eventLoopBlockMs": 0.3421660000000202,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.2810419999999567,
+              "eventLoopBlockMs": 0.29491699999994125,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.26712499999996453,
+              "eventLoopBlockMs": 0.2831669999999349,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.27816600000005565,
+              "eventLoopBlockMs": 0.30341599999997015,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.28270899999995436,
+              "eventLoopBlockMs": 0.3010419999999385,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.2646660000000338,
+              "eventLoopBlockMs": 0.2796660000000202,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.25824999999997544,
+              "eventLoopBlockMs": 0.27358300000003055,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            },
+            {
+              "ms": 0.24691700000005312,
+              "eventLoopBlockMs": 0.26291700000001583,
+              "sqlExecutions": 2,
+              "jsonBytes": 32223,
+              "gzipBytes": 3208
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.26712499999996453,
+              "p95": 0.3269999999999982,
+              "min": 0.24691700000005312,
+              "max": 0.3269999999999982
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.2831669999999349,
+              "p95": 0.6831250000000182,
+              "min": 0.26291700000001583,
+              "max": 0.6831250000000182
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 32223,
+              "p95": 32223,
+              "min": 32223,
+              "max": 32223
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3208,
+              "p95": 3208,
+              "min": 3208,
+              "max": 3208
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 3
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 3
+            }
+          }
+        },
+        "search": {
+          "variables": {
+            "search": "Miniature 1"
+          },
+          "samples": [
+            {
+              "ms": 0.2797499999999218,
+              "eventLoopBlockMs": 0.2956249999999727,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.2640830000000278,
+              "eventLoopBlockMs": 0.27795800000001236,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.2585000000000264,
+              "eventLoopBlockMs": 0.6672090000000708,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.2565829999999778,
+              "eventLoopBlockMs": 0.27137500000003456,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.2464589999999589,
+              "eventLoopBlockMs": 0.26441699999998036,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.24516700000003766,
+              "eventLoopBlockMs": 0.2599999999999909,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.24625000000003183,
+              "eventLoopBlockMs": 0.2622079999999869,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.24166700000000674,
+              "eventLoopBlockMs": 0.2557080000000269,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.2454169999999749,
+              "eventLoopBlockMs": 0.25900000000001455,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.25433300000008785,
+              "eventLoopBlockMs": 0.2683749999999918,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            },
+            {
+              "ms": 0.24858399999993708,
+              "eventLoopBlockMs": 0.2711669999999913,
+              "sqlExecutions": 2,
+              "jsonBytes": 32106,
+              "gzipBytes": 3024
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.24858399999993708,
+              "p95": 0.2797499999999218,
+              "min": 0.24166700000000674,
+              "max": 0.2797499999999218
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.2683749999999918,
+              "p95": 0.6672090000000708,
+              "min": 0.2557080000000269,
+              "max": 0.6672090000000708
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 32106,
+              "p95": 32106,
+              "min": 32106,
+              "max": 32106
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3024,
+              "p95": 3024,
+              "min": 3024,
+              "max": 3024
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 1,
+              "resultSets": 4
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 1,
+              "resultSets": 4
+            }
+          }
+        }
+      },
+      "documents": {
+        "list": {
+          "file": "packages/vault-ui/src/dom/graphql/miniature-list.graphql",
+          "sha256": "9ac716e72ef13a71f9510ff7b90a245eaa54c80ad39579ba80171c3fc2e5ce60"
+        },
+        "navigation": {
+          "file": "packages/vault-ui/src/dom/graphql/navigation.graphql",
+          "sha256": "77cf260267f7cc4b067eb9204dbfe86917d9f1c615e56b6309db13b21125f1aa"
+        }
+      },
+      "observations": {
+        "totalCount": 1500,
+        "loaded": 48,
+        "ownershipCounts": [
+          {
+            "key": "ALL",
+            "label": "ALL",
+            "count": 1500,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "OWNED",
+            "label": "OWNED",
+            "count": 1200,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "WISHLIST",
+            "label": "WISHLIST",
+            "count": 300,
+            "__typename": "FacetCount"
+          }
+        ],
+        "stageCounts": [
+          {
+            "key": "ALL",
+            "label": "ALL",
+            "count": 1500,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "NOT_STARTED",
+            "label": "NOT_STARTED",
+            "count": 300,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "ASSEMBLED",
+            "label": "ASSEMBLED",
+            "count": 300,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "PRIMED",
+            "label": "PRIMED",
+            "count": 300,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "IN_PROGRESS",
+            "label": "IN_PROGRESS",
+            "count": 300,
+            "__typename": "FacetCount"
+          },
+          {
+            "key": "COMPLETE",
+            "label": "COMPLETE",
+            "count": 300,
+            "__typename": "FacetCount"
+          }
+        ]
+      }
+    },
+    "launch": {
+      "cold": {
+        "ms": {
+          "n": 11,
+          "median": 63.689959000000044,
+          "p95": 65.70450000000005,
+          "min": 61.136916999999926,
+          "max": 65.70450000000005
+        },
+        "eventLoopBlockMs": {
+          "n": 11,
+          "median": 41.94166599999994,
+          "p95": 44.438334000000054,
+          "min": 40.43895799999996,
+          "max": 44.438334000000054
+        },
+        "sqlExecutions": {
+          "n": 11,
+          "median": 14,
+          "p95": 14,
+          "min": 14,
+          "max": 14
+        },
+        "jsonBytes": {
+          "n": 11,
+          "median": 32161,
+          "p95": 32161,
+          "min": 32161,
+          "max": 32161
+        },
+        "gzipBytes": {
+          "n": 11,
+          "median": 3262,
+          "p95": 3264,
+          "min": 3260,
+          "max": 3264
+        }
+      },
+      "coldSamples": [
+        {
+          "ms": 65.35624900000005,
+          "eventLoopBlockMs": 44.03558300000009,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3262
+        },
+        {
+          "ms": 61.86570900000004,
+          "eventLoopBlockMs": 40.43895799999996,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3264
+        },
+        {
+          "ms": 62.11149999999998,
+          "eventLoopBlockMs": 41.95062500000006,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3261
+        },
+        {
+          "ms": 62.975374999999985,
+          "eventLoopBlockMs": 41.708708,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3263
+        },
+        {
+          "ms": 64.96462499999984,
+          "eventLoopBlockMs": 43.13591699999995,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3260
+        },
+        {
+          "ms": 65.70450000000005,
+          "eventLoopBlockMs": 44.438334000000054,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3264
+        },
+        {
+          "ms": 61.136916999999926,
+          "eventLoopBlockMs": 40.99995899999999,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3262
+        },
+        {
+          "ms": 63.93429200000003,
+          "eventLoopBlockMs": 41.29070899999999,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3262
+        },
+        {
+          "ms": 63.689959000000044,
+          "eventLoopBlockMs": 41.82320800000002,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3264
+        },
+        {
+          "ms": 64.928,
+          "eventLoopBlockMs": 42.72595799999999,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3262
+        },
+        {
+          "ms": 62.98837500000002,
+          "eventLoopBlockMs": 41.94166599999994,
+          "sqlExecutions": 14,
+          "jsonBytes": 32161,
+          "gzipBytes": 3262
+        }
+      ],
+      "warm": {
+        "default": {
+          "variables": {},
+          "samples": [
+            {
+              "ms": 1.119374999999991,
+              "eventLoopBlockMs": 1.062041000000022,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.707958000000076,
+              "eventLoopBlockMs": 0.6596250000000055,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 1.0092499999999518,
+              "eventLoopBlockMs": 0.7929159999999911,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.7146249999999554,
+              "eventLoopBlockMs": 0.672292000000084,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.7599579999999833,
+              "eventLoopBlockMs": 0.6860000000000355,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.5417920000001004,
+              "eventLoopBlockMs": 0.5164170000000468,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.48762499999998,
+              "eventLoopBlockMs": 0.46249999999997726,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.39991600000007566,
+              "eventLoopBlockMs": 0.37570800000003146,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.4017079999999851,
+              "eventLoopBlockMs": 0.3825410000000602,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.351750999999922,
+              "eventLoopBlockMs": 0.33037500000000364,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            },
+            {
+              "ms": 0.3469169999999622,
+              "eventLoopBlockMs": 0.6614999999999327,
+              "sqlExecutions": 4,
+              "jsonBytes": 32161,
+              "gzipBytes": 3262
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.5417920000001004,
+              "p95": 1.119374999999991,
+              "min": 0.3469169999999622,
+              "max": 1.119374999999991
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.6596250000000055,
+              "p95": 1.062041000000022,
+              "min": 0.33037500000000364,
+              "max": 1.062041000000022
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 4,
+              "p95": 4,
+              "min": 4,
+              "max": 4
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 32161,
+              "p95": 32161,
+              "min": 32161,
+              "max": 32161
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3262,
+              "p95": 3262,
+              "min": 3262,
+              "max": 3262
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        }
+      },
+      "documents": {
+        "list": {
+          "file": "packages/vault-ui/src/dom/graphql/miniature-list.graphql",
+          "sha256": "9ac716e72ef13a71f9510ff7b90a245eaa54c80ad39579ba80171c3fc2e5ce60"
+        },
+        "navigation": {
+          "file": "packages/vault-ui/src/dom/graphql/navigation.graphql",
+          "sha256": "77cf260267f7cc4b067eb9204dbfe86917d9f1c615e56b6309db13b21125f1aa"
+        }
+      },
+      "observations": {
+        "totalCount": 1200,
+        "loaded": 48,
+        "counts": {
+          "catalogCount": 4500,
+          "owned": 1200,
+          "ready": 0,
+          "distinctMissingPaints": 2162,
+          "wishlistedMissingPaints": 662,
+          "stages": [
+            {
+              "key": "ALL",
+              "label": "ALL",
+              "count": 1200,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "NOT_STARTED",
+              "label": "NOT_STARTED",
+              "count": 0,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "ASSEMBLED",
+              "label": "ASSEMBLED",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "PRIMED",
+              "label": "PRIMED",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "IN_PROGRESS",
+              "label": "IN_PROGRESS",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "COMPLETE",
+              "label": "COMPLETE",
+              "count": 300,
+              "__typename": "FacetCount"
+            }
+          ],
+          "__typename": "HomeCounts"
+        }
+      },
+      "coldComponents": {
+        "navigation": {
+          "ms": {
+            "n": 11,
+            "median": 23.159332999999947,
+            "p95": 24.306208000000083,
+            "min": 22.05641700000001,
+            "max": 24.306208000000083
+          },
+          "eventLoopBlockMs": {
+            "n": 11,
+            "median": 23.47066700000005,
+            "p95": 24.574500000000057,
+            "min": 22.283916999999974,
+            "max": 24.574500000000057
+          },
+          "sqlExecutions": {
+            "n": 11,
+            "median": 6,
+            "p95": 6,
+            "min": 6,
+            "max": 6
+          },
+          "jsonBytes": {
+            "n": 11,
+            "median": 203,
+            "p95": 203,
+            "min": 203,
+            "max": 203
+          },
+          "gzipBytes": {
+            "n": 11,
+            "median": 165,
+            "p95": 165,
+            "min": 164,
+            "max": 165
+          }
+        },
+        "home": {
+          "ms": {
+            "n": 11,
+            "median": 40.04437500000006,
+            "p95": 42.49954200000002,
+            "min": 38.52800000000002,
+            "max": 42.49954200000002
+          },
+          "eventLoopBlockMs": {
+            "n": 11,
+            "median": 41.94166599999994,
+            "p95": 44.438334000000054,
+            "min": 40.43895799999996,
+            "max": 44.438334000000054
+          },
+          "sqlExecutions": {
+            "n": 11,
+            "median": 8,
+            "p95": 8,
+            "min": 8,
+            "max": 8
+          },
+          "jsonBytes": {
+            "n": 11,
+            "median": 31958,
+            "p95": 31958,
+            "min": 31958,
+            "max": 31958
+          },
+          "gzipBytes": {
+            "n": 11,
+            "median": 3097,
+            "p95": 3100,
+            "min": 3096,
+            "max": 3100
+          }
+        },
+        "samples": [
+          {
+            "navigation": {
+              "ms": 23.085958000000005,
+              "eventLoopBlockMs": 23.420000000000073,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 42.27029100000004,
+              "eventLoopBlockMs": 44.03558300000009,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            }
+          },
+          {
+            "navigation": {
+              "ms": 23.337709000000018,
+              "eventLoopBlockMs": 23.585292000000095,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 38.52800000000002,
+              "eventLoopBlockMs": 40.43895799999996,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3099
+            }
+          },
+          {
+            "navigation": {
+              "ms": 22.05641700000001,
+              "eventLoopBlockMs": 22.283916999999974,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 40.05508299999997,
+              "eventLoopBlockMs": 41.95062500000006,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3096
+            }
+          },
+          {
+            "navigation": {
+              "ms": 22.98087499999997,
+              "eventLoopBlockMs": 23.298874999999953,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 39.994500000000016,
+              "eventLoopBlockMs": 41.708708,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3098
+            }
+          },
+          {
+            "navigation": {
+              "ms": 23.159332999999947,
+              "eventLoopBlockMs": 23.5943749999999,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 164
+            },
+            "home": {
+              "ms": 41.805291999999895,
+              "eventLoopBlockMs": 43.13591699999995,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3096
+            }
+          },
+          {
+            "navigation": {
+              "ms": 23.204958000000033,
+              "eventLoopBlockMs": 23.47066700000005,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 42.49954200000002,
+              "eventLoopBlockMs": 44.438334000000054,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3099
+            }
+          },
+          {
+            "navigation": {
+              "ms": 22.51420799999994,
+              "eventLoopBlockMs": 22.823291999999924,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 164
+            },
+            "home": {
+              "ms": 38.622708999999986,
+              "eventLoopBlockMs": 40.99995899999999,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3098
+            }
+          },
+          {
+            "navigation": {
+              "ms": 24.306208000000083,
+              "eventLoopBlockMs": 24.574500000000057,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 39.628083999999944,
+              "eventLoopBlockMs": 41.29070899999999,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            }
+          },
+          {
+            "navigation": {
+              "ms": 23.645583999999985,
+              "eventLoopBlockMs": 23.878041999999937,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 164
+            },
+            "home": {
+              "ms": 40.04437500000006,
+              "eventLoopBlockMs": 41.82320800000002,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            }
+          },
+          {
+            "navigation": {
+              "ms": 23.869042000000036,
+              "eventLoopBlockMs": 24.231833999999935,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 41.05895799999996,
+              "eventLoopBlockMs": 42.72595799999999,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            }
+          },
+          {
+            "navigation": {
+              "ms": 22.960375,
+              "eventLoopBlockMs": 23.17879199999993,
+              "sqlExecutions": 6,
+              "jsonBytes": 203,
+              "gzipBytes": 165
+            },
+            "home": {
+              "ms": 40.02800000000002,
+              "eventLoopBlockMs": 41.94166599999994,
+              "sqlExecutions": 8,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            }
+          }
+        ]
+      }
+    },
+    "home": {
+      "cold": {
+        "ms": {
+          "n": 11,
+          "median": 55.33404200000007,
+          "p95": 73.75762499999996,
+          "min": 51.972125000000005,
+          "max": 73.75762499999996
+        },
+        "eventLoopBlockMs": {
+          "n": 11,
+          "median": 56.398416999999995,
+          "p95": 73.83083299999998,
+          "min": 52.88229200000001,
+          "max": 73.83083299999998
+        },
+        "sqlExecutions": {
+          "n": 11,
+          "median": 12,
+          "p95": 12,
+          "min": 12,
+          "max": 12
+        },
+        "jsonBytes": {
+          "n": 11,
+          "median": 31958,
+          "p95": 31958,
+          "min": 31958,
+          "max": 31958
+        },
+        "gzipBytes": {
+          "n": 11,
+          "median": 3097,
+          "p95": 3098,
+          "min": 3096,
+          "max": 3098
+        }
+      },
+      "coldSamples": [
+        {
+          "ms": 51.972125000000005,
+          "eventLoopBlockMs": 52.88229200000001,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3096
+        },
+        {
+          "ms": 52.943040999999994,
+          "eventLoopBlockMs": 53.928540999999996,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3096
+        },
+        {
+          "ms": 55.74437499999999,
+          "eventLoopBlockMs": 57.25841600000001,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3097
+        },
+        {
+          "ms": 52.69862499999999,
+          "eventLoopBlockMs": 53.51720799999998,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3096
+        },
+        {
+          "ms": 55.33404200000007,
+          "eventLoopBlockMs": 56.398416999999995,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3096
+        },
+        {
+          "ms": 57.12008299999991,
+          "eventLoopBlockMs": 58.435749999999985,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3097
+        },
+        {
+          "ms": 73.75762499999996,
+          "eventLoopBlockMs": 73.83083299999998,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3098
+        },
+        {
+          "ms": 57.51795800000002,
+          "eventLoopBlockMs": 57.58800000000008,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3097
+        },
+        {
+          "ms": 66.76279199999999,
+          "eventLoopBlockMs": 67.76237500000002,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3096
+        },
+        {
+          "ms": 54.112750000000005,
+          "eventLoopBlockMs": 54.186000000000035,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3097
+        },
+        {
+          "ms": 52.72304200000008,
+          "eventLoopBlockMs": 53.88491699999997,
+          "sqlExecutions": 12,
+          "jsonBytes": 31958,
+          "gzipBytes": 3097
+        }
+      ],
+      "warm": {
+        "first48": {
+          "variables": {},
+          "samples": [
+            {
+              "ms": 1.3200410000000602,
+              "eventLoopBlockMs": 1.3743330000000924,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 1.3994579999999814,
+              "eventLoopBlockMs": 3.756999999999948,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.8677500000000009,
+              "eventLoopBlockMs": 0.8722910000000184,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.6461249999999836,
+              "eventLoopBlockMs": 0.6493339999999534,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.6458340000000362,
+              "eventLoopBlockMs": 0.6490840000000162,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.6627920000000813,
+              "eventLoopBlockMs": 0.6822500000000673,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.8821659999999838,
+              "eventLoopBlockMs": 0.8972499999999854,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.6581249999999272,
+              "eventLoopBlockMs": 0.6771249999999327,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.36149999999997817,
+              "eventLoopBlockMs": 0.3770829999999705,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.32379199999991215,
+              "eventLoopBlockMs": 0.35912499999994907,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            },
+            {
+              "ms": 0.45333400000004076,
+              "eventLoopBlockMs": 0.46954200000004676,
+              "sqlExecutions": 2,
+              "jsonBytes": 31958,
+              "gzipBytes": 3097
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.6581249999999272,
+              "p95": 1.3994579999999814,
+              "min": 0.32379199999991215,
+              "max": 1.3994579999999814
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.6771249999999327,
+              "p95": 3.756999999999948,
+              "min": 0.35912499999994907,
+              "max": 3.756999999999948
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 31958,
+              "p95": 31958,
+              "min": 31958,
+              "max": 31958
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3097,
+              "p95": 3097,
+              "min": 3097,
+              "max": 3097
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "first1": {
+          "variables": {
+            "first": 1
+          },
+          "samples": [
+            {
+              "ms": 0.12770799999998417,
+              "eventLoopBlockMs": 0.14212499999996453,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.0729590000000826,
+              "eventLoopBlockMs": 0.08729200000004766,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.09383300000001782,
+              "eventLoopBlockMs": 0.11020800000005693,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.06266600000003564,
+              "eventLoopBlockMs": 0.078125,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.05895800000007512,
+              "eventLoopBlockMs": 0.0724160000000893,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.05691699999999855,
+              "eventLoopBlockMs": 0.07516700000007859,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.08570799999995415,
+              "eventLoopBlockMs": 0.10058299999991505,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.06795799999997598,
+              "eventLoopBlockMs": 0.0841249999999718,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.059416999999939435,
+              "eventLoopBlockMs": 0.07283399999994344,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.060332999999900494,
+              "eventLoopBlockMs": 0.07695799999999053,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            },
+            {
+              "ms": 0.05566599999997379,
+              "eventLoopBlockMs": 0.06895799999995234,
+              "sqlExecutions": 2,
+              "jsonBytes": 1737,
+              "gzipBytes": 706
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.06266600000003564,
+              "p95": 0.12770799999998417,
+              "min": 0.05566599999997379,
+              "max": 0.12770799999998417
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.078125,
+              "p95": 0.14212499999996453,
+              "min": 0.06895799999995234,
+              "max": 0.14212499999996453
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 1737,
+              "p95": 1737,
+              "min": 1737,
+              "max": 1737
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 706,
+              "p95": 706,
+              "min": 706,
+              "max": 706
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "first100": {
+          "variables": {
+            "first": 100
+          },
+          "samples": [
+            {
+              "ms": 0.49412499999994,
+              "eventLoopBlockMs": 0.5093749999999773,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.4767500000000382,
+              "eventLoopBlockMs": 0.4934170000000222,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5404999999999518,
+              "eventLoopBlockMs": 0.5541249999999991,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.4801670000000513,
+              "eventLoopBlockMs": 0.4936249999999518,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5602089999999862,
+              "eventLoopBlockMs": 0.5867500000000518,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5670000000000073,
+              "eventLoopBlockMs": 0.5837500000000091,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5281250000000455,
+              "eventLoopBlockMs": 0.9616660000000365,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5760000000000218,
+              "eventLoopBlockMs": 0.5946670000000722,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5271249999999554,
+              "eventLoopBlockMs": 0.5431250000000318,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.5032079999999723,
+              "eventLoopBlockMs": 0.5176250000000664,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            },
+            {
+              "ms": 0.49025000000006,
+              "eventLoopBlockMs": 0.5060000000000855,
+              "sqlExecutions": 2,
+              "jsonBytes": 65394,
+              "gzipBytes": 5611
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.5271249999999554,
+              "p95": 0.5760000000000218,
+              "min": 0.4767500000000382,
+              "max": 0.5760000000000218
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.5431250000000318,
+              "p95": 0.9616660000000365,
+              "min": 0.4934170000000222,
+              "max": 0.9616660000000365
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 65394,
+              "p95": 65394,
+              "min": 65394,
+              "max": 65394
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 5611,
+              "p95": 5611,
+              "min": 5611,
+              "max": 5611
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 1
+            }
+          }
+        },
+        "stage": {
+          "variables": {
+            "stage": "IN_PROGRESS"
+          },
+          "samples": [
+            {
+              "ms": 0.27891699999997854,
+              "eventLoopBlockMs": 0.2945839999999862,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.29358400000000984,
+              "eventLoopBlockMs": 0.3076249999999163,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.2590420000000222,
+              "eventLoopBlockMs": 0.8883749999999964,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.3604159999999865,
+              "eventLoopBlockMs": 0.37695800000005875,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.2909579999999323,
+              "eventLoopBlockMs": 0.3058329999998932,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.2843749999999545,
+              "eventLoopBlockMs": 0.2992500000000291,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.25787500000001273,
+              "eventLoopBlockMs": 0.2720840000000635,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.2917499999999791,
+              "eventLoopBlockMs": 0.30674999999996544,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.2813749999999118,
+              "eventLoopBlockMs": 0.29566699999998036,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.25833299999999326,
+              "eventLoopBlockMs": 0.2748750000000655,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            },
+            {
+              "ms": 0.25283300000000963,
+              "eventLoopBlockMs": 0.2674580000000333,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3239
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.2813749999999118,
+              "p95": 0.3604159999999865,
+              "min": 0.25283300000000963,
+              "max": 0.3604159999999865
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.2992500000000291,
+              "p95": 0.8883749999999964,
+              "min": 0.2674580000000333,
+              "max": 0.8883749999999964
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 31957,
+              "p95": 31957,
+              "min": 31957,
+              "max": 31957
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3239,
+              "p95": 3239,
+              "min": 3239,
+              "max": 3239
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 2
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 0,
+              "resultSets": 2
+            }
+          }
+        },
+        "search": {
+          "variables": {
+            "search": "Miniature 1"
+          },
+          "samples": [
+            {
+              "ms": 0.27137500000003456,
+              "eventLoopBlockMs": 0.28641700000002857,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.25324999999998,
+              "eventLoopBlockMs": 0.2665839999999662,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.27700000000004366,
+              "eventLoopBlockMs": 0.7412500000000364,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.2639159999999947,
+              "eventLoopBlockMs": 0.27958300000000236,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.2669589999999289,
+              "eventLoopBlockMs": 0.28158399999995254,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.2549589999999853,
+              "eventLoopBlockMs": 0.26908400000002075,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.2577919999999949,
+              "eventLoopBlockMs": 0.2716249999999718,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.2471659999999929,
+              "eventLoopBlockMs": 0.26300000000003365,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.25458400000002257,
+              "eventLoopBlockMs": 0.2680839999999307,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.3044590000000653,
+              "eventLoopBlockMs": 0.3202920000001086,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            },
+            {
+              "ms": 0.25483299999996234,
+              "eventLoopBlockMs": 0.27033300000005056,
+              "sqlExecutions": 2,
+              "jsonBytes": 31957,
+              "gzipBytes": 3098
+            }
+          ],
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 0.2577919999999949,
+              "p95": 0.3044590000000653,
+              "min": 0.2471659999999929,
+              "max": 0.3044590000000653
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 0.2716249999999718,
+              "p95": 0.7412500000000364,
+              "min": 0.26300000000003365,
+              "max": 0.7412500000000364
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 2,
+              "p95": 2,
+              "min": 2,
+              "max": 2
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 31957,
+              "p95": 31957,
+              "min": 31957,
+              "max": 31957
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3098,
+              "p95": 3098,
+              "min": 3098,
+              "max": 3098
+            }
+          },
+          "diagnostics": {
+            "before": {
+              "builds": 1,
+              "searchRanks": 1,
+              "resultSets": 3
+            },
+            "after": {
+              "builds": 1,
+              "searchRanks": 1,
+              "resultSets": 3
+            }
+          }
+        },
+        "afterStockInvalidation": {
+          "summary": {
+            "ms": {
+              "n": 11,
+              "median": 34.88587499999994,
+              "p95": 49.203666999999996,
+              "min": 33.20933299999979,
+              "max": 49.203666999999996
+            },
+            "eventLoopBlockMs": {
+              "n": 11,
+              "median": 35.62520800000016,
+              "p95": 51.21854200000007,
+              "min": 33.2506249999999,
+              "max": 51.21854200000007
+            },
+            "sqlExecutions": {
+              "n": 11,
+              "median": 12,
+              "p95": 12,
+              "min": 12,
+              "max": 12
+            },
+            "jsonBytes": {
+              "n": 11,
+              "median": 31958,
+              "p95": 31960,
+              "min": 31958,
+              "max": 31960
+            },
+            "gzipBytes": {
+              "n": 11,
+              "median": 3100,
+              "p95": 3102,
+              "min": 3099,
+              "max": 3102
+            }
+          },
+          "samples": [
+            {
+              "ms": 41.37362499999995,
+              "eventLoopBlockMs": 41.42491699999994,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 37.98912500000006,
+              "eventLoopBlockMs": 38.025292000000036,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 35.26904200000001,
+              "eventLoopBlockMs": 36.126959000000056,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 34.87695800000006,
+              "eventLoopBlockMs": 35.587375000000065,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3099
+            },
+            {
+              "ms": 34.88587499999994,
+              "eventLoopBlockMs": 35.740792000000056,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 34.846542,
+              "eventLoopBlockMs": 35.542625000000044,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 34.875541999999996,
+              "eventLoopBlockMs": 35.62520800000016,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3100
+            },
+            {
+              "ms": 49.203666999999996,
+              "eventLoopBlockMs": 51.21854200000007,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3099
+            },
+            {
+              "ms": 35.23508300000003,
+              "eventLoopBlockMs": 35.2701669999999,
+              "sqlExecutions": 12,
+              "jsonBytes": 31958,
+              "gzipBytes": 3101
+            },
+            {
+              "ms": 34.01766699999985,
+              "eventLoopBlockMs": 34.05395899999985,
+              "sqlExecutions": 12,
+              "jsonBytes": 31960,
+              "gzipBytes": 3101
+            },
+            {
+              "ms": 33.20933299999979,
+              "eventLoopBlockMs": 33.2506249999999,
+              "sqlExecutions": 12,
+              "jsonBytes": 31960,
+              "gzipBytes": 3102
+            }
+          ],
+          "reused": [
+            {
+              "miniatures": {
+                "ms": 0.5573329999999714,
+                "eventLoopBlockMs": 0.5741669999999885,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3024
+              },
+              "home": {
+                "ms": 0.2649589999999762,
+                "eventLoopBlockMs": 0.2804169999999431,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.6062500000000455,
+                "eventLoopBlockMs": 0.6247090000000526,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3024
+              },
+              "home": {
+                "ms": 0.3000410000000784,
+                "eventLoopBlockMs": 0.9442910000000211,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.5719169999999849,
+                "eventLoopBlockMs": 0.5960830000000215,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3024
+              },
+              "home": {
+                "ms": 0.4487500000000182,
+                "eventLoopBlockMs": 0.46737499999994725,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.5820840000000089,
+                "eventLoopBlockMs": 0.5976249999999936,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3022
+              },
+              "home": {
+                "ms": 0.3100419999999531,
+                "eventLoopBlockMs": 0.3246669999999767,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3099
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.5630419999999958,
+                "eventLoopBlockMs": 0.5802919999998721,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3023
+              },
+              "home": {
+                "ms": 0.29758300000003146,
+                "eventLoopBlockMs": 0.31495799999993324,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.5934999999999491,
+                "eventLoopBlockMs": 0.6102499999999509,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3023
+              },
+              "home": {
+                "ms": 0.3135000000002037,
+                "eventLoopBlockMs": 0.32891700000004676,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.6955419999999322,
+                "eventLoopBlockMs": 0.7322500000000218,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3023
+              },
+              "home": {
+                "ms": 0.41933399999993526,
+                "eventLoopBlockMs": 0.4232499999998254,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3100
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.5325840000000426,
+                "eventLoopBlockMs": 0.537499999999909,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3022
+              },
+              "home": {
+                "ms": 0.2798330000000533,
+                "eventLoopBlockMs": 0.2827500000000782,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3099
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.49558300000012423,
+                "eventLoopBlockMs": 0.5117079999999987,
+                "sqlExecutions": 2,
+                "jsonBytes": 32107,
+                "gzipBytes": 3024
+              },
+              "home": {
+                "ms": 0.5687080000000151,
+                "eventLoopBlockMs": 0.5864579999999933,
+                "sqlExecutions": 2,
+                "jsonBytes": 31958,
+                "gzipBytes": 3101
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.4952089999999316,
+                "eventLoopBlockMs": 0.5122499999999945,
+                "sqlExecutions": 2,
+                "jsonBytes": 32109,
+                "gzipBytes": 3025
+              },
+              "home": {
+                "ms": 0.2885000000001128,
+                "eventLoopBlockMs": 0.30404199999998127,
+                "sqlExecutions": 2,
+                "jsonBytes": 31960,
+                "gzipBytes": 3101
+              }
+            },
+            {
+              "miniatures": {
+                "ms": 0.4542919999998958,
+                "eventLoopBlockMs": 0.4700829999999314,
+                "sqlExecutions": 2,
+                "jsonBytes": 32109,
+                "gzipBytes": 3026
+              },
+              "home": {
+                "ms": 0.2755840000002081,
+                "eventLoopBlockMs": 0.2913340000000062,
+                "sqlExecutions": 2,
+                "jsonBytes": 31960,
+                "gzipBytes": 3102
+              }
+            }
+          ],
+          "writes": [
+            {
+              "ms": 2.198750000000018,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.4507499999999709,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.5676249999999072,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.45279200000004494,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.5325000000000273,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.3832089999998516,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.4989170000001195,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.46299999999996544,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 3.158292000000074,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.35133399999995163,
+              "sqlExecutions": 2
+            },
+            {
+              "ms": 0.34329200000001947,
+              "sqlExecutions": 2
+            }
+          ],
+          "diagnostics": {
+            "builds": 12,
+            "searchRanks": 1,
+            "resultSets": 2
+          }
+        }
+      },
+      "documents": {
+        "list": {
+          "file": "packages/vault-ui/src/dom/graphql/miniature-list.graphql",
+          "sha256": "9ac716e72ef13a71f9510ff7b90a245eaa54c80ad39579ba80171c3fc2e5ce60"
+        },
+        "navigation": {
+          "file": "packages/vault-ui/src/dom/graphql/navigation.graphql",
+          "sha256": "77cf260267f7cc4b067eb9204dbfe86917d9f1c615e56b6309db13b21125f1aa"
+        }
+      },
+      "observations": {
+        "totalCount": 1200,
+        "loaded": 48,
+        "counts": {
+          "catalogCount": 4500,
+          "owned": 1200,
+          "ready": 0,
+          "distinctMissingPaints": 2162,
+          "wishlistedMissingPaints": 662,
+          "stages": [
+            {
+              "key": "ALL",
+              "label": "ALL",
+              "count": 1200,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "NOT_STARTED",
+              "label": "NOT_STARTED",
+              "count": 0,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "ASSEMBLED",
+              "label": "ASSEMBLED",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "PRIMED",
+              "label": "PRIMED",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "IN_PROGRESS",
+              "label": "IN_PROGRESS",
+              "count": 300,
+              "__typename": "FacetCount"
+            },
+            {
+              "key": "COMPLETE",
+              "label": "COMPLETE",
+              "count": 300,
+              "__typename": "FacetCount"
+            }
+          ],
+          "__typename": "HomeCounts"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,553 @@
+{
+  "measuredAt": "2026-11-13T19:16:48.011Z",
+  "node": "v22.22.2",
+  "method": "Emitted .js assets only, summed raw bytes and per-file gzipSync default level 6. Excludes CSS/maps/fonts; not startup transfer or parse time.",
+  "baseline": {
+    "directory": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-phase2-bundle-6Usu5Q/apps/paint-vault-web/dist",
+    "jsBytes": 1229603,
+    "sumGzipBytes": 401980,
+    "entry": {
+      "file": "index-D0SnFNqY.js",
+      "bytes": 807692,
+      "gzipBytes": 249759
+    },
+    "apolloDebugChunk": [],
+    "files": [
+      {
+        "file": "Autocomplete-CjNSvU85.js",
+        "bytes": 27009,
+        "gzipBytes": 9489
+      },
+      {
+        "file": "Chip-CUmPPqm_.js",
+        "bytes": 8153,
+        "gzipBytes": 2664
+      },
+      {
+        "file": "ColorSchemesDialog-CkDEgigl.js",
+        "bytes": 18480,
+        "gzipBytes": 6522
+      },
+      {
+        "file": "ColorSchemesPage-2mxGeeGC.js",
+        "bytes": 10344,
+        "gzipBytes": 4214
+      },
+      {
+        "file": "LibraryPaintRow-D07jVf0R.js",
+        "bytes": 4373,
+        "gzipBytes": 2015
+      },
+      {
+        "file": "MiniatureForm-suw2Ak03.js",
+        "bytes": 10144,
+        "gzipBytes": 3903
+      },
+      {
+        "file": "MiniatureTemplatesPage-Dm56uKq9.js",
+        "bytes": 10951,
+        "gzipBytes": 4377
+      },
+      {
+        "file": "PaintDetailsButton-BzXEh4AU.js",
+        "bytes": 104174,
+        "gzipBytes": 35899
+      },
+      {
+        "file": "PaintForm-CwMWcYqv.js",
+        "bytes": 3230,
+        "gzipBytes": 1584
+      },
+      {
+        "file": "PaintLibrary-DHBnxR6Q.js",
+        "bytes": 10862,
+        "gzipBytes": 4719
+      },
+      {
+        "file": "PaintRowLabel-DCLx7Nc8.js",
+        "bytes": 3313,
+        "gzipBytes": 1472
+      },
+      {
+        "file": "PaintToolsPage-CQFgbHOz.js",
+        "bytes": 18825,
+        "gzipBytes": 6643
+      },
+      {
+        "file": "PluginChip-BlbluX1U.js",
+        "bytes": 889,
+        "gzipBytes": 554
+      },
+      {
+        "file": "PluginsModal-NxdvbEk0.js",
+        "bytes": 27046,
+        "gzipBytes": 9409
+      },
+      {
+        "file": "Popper-JrmaLNxp.js",
+        "bytes": 23197,
+        "gzipBytes": 8731
+      },
+      {
+        "file": "ProjectDrawer-RgYVcDnG.js",
+        "bytes": 58633,
+        "gzipBytes": 18223
+      },
+      {
+        "file": "SettingsScreen-B6NI5g0q.js",
+        "bytes": 29826,
+        "gzipBytes": 11528
+      },
+      {
+        "file": "StatusChip-CRm2aUnz.js",
+        "bytes": 8213,
+        "gzipBytes": 3059
+      },
+      {
+        "file": "Switch-CZfwLm-G.js",
+        "bytes": 8296,
+        "gzipBytes": 2670
+      },
+      {
+        "file": "SwitchBase-vG9eKMDe.js",
+        "bytes": 2398,
+        "gzipBytes": 1169
+      },
+      {
+        "file": "ToggleButtonGroup-CAFE5Xnc.js",
+        "bytes": 6560,
+        "gzipBytes": 2217
+      },
+      {
+        "file": "Tooltip-BXyxkhIW.js",
+        "bytes": 8103,
+        "gzipBytes": 3123
+      },
+      {
+        "file": "WishlistPage-HNA3FsTY.js",
+        "bytes": 14382,
+        "gzipBytes": 5752
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "bytes": 2940,
+        "gzipBytes": 1339
+      },
+      {
+        "file": "index-D0SnFNqY.js",
+        "bytes": 807692,
+        "gzipBytes": 249759
+      },
+      {
+        "file": "lift-card-D5fxah0u.js",
+        "bytes": 1323,
+        "gzipBytes": 765
+      },
+      {
+        "file": "template-hooks-Cm4mytAn.js",
+        "bytes": 247,
+        "gzipBytes": 181
+      }
+    ]
+  },
+  "candidate": {
+    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paint-vault-web/dist",
+    "jsBytes": 1291985,
+    "sumGzipBytes": 413247,
+    "entry": {
+      "file": "index-ov_193ZS.js",
+      "bytes": 844588,
+      "gzipBytes": 252001
+    },
+    "apolloDebugChunk": [],
+    "files": [
+      {
+        "file": "ApolloProjectDrawer-BixZRkx0.js",
+        "bytes": 80553,
+        "gzipBytes": 25064
+      },
+      {
+        "file": "Chip-DupSak1n.js",
+        "bytes": 8153,
+        "gzipBytes": 2663
+      },
+      {
+        "file": "ColorSchemesDialog-CP28-_16.js",
+        "bytes": 9197,
+        "gzipBytes": 3677
+      },
+      {
+        "file": "ColorSchemesPage-CM9pdMoV.js",
+        "bytes": 10417,
+        "gzipBytes": 4240
+      },
+      {
+        "file": "LibraryPaintRow-BqKdi4SS.js",
+        "bytes": 4382,
+        "gzipBytes": 2016
+      },
+      {
+        "file": "MiniatureForm-BT1LV_8_.js",
+        "bytes": 10147,
+        "gzipBytes": 3904
+      },
+      {
+        "file": "MiniatureTemplatesPage-KLltTbF0.js",
+        "bytes": 10950,
+        "gzipBytes": 4374
+      },
+      {
+        "file": "PaintDetailsButton-C4193AKe.js",
+        "bytes": 104144,
+        "gzipBytes": 35902
+      },
+      {
+        "file": "PaintForm-Bi6itJOx.js",
+        "bytes": 3235,
+        "gzipBytes": 1581
+      },
+      {
+        "file": "PaintLibrary-D9Si6O49.js",
+        "bytes": 9965,
+        "gzipBytes": 4360
+      },
+      {
+        "file": "PaintRowLabel-BWKR6XHR.js",
+        "bytes": 3312,
+        "gzipBytes": 1471
+      },
+      {
+        "file": "PaintToolsPage-NW1IVKGz.js",
+        "bytes": 18836,
+        "gzipBytes": 6641
+      },
+      {
+        "file": "PluginChip-CTmzyad1.js",
+        "bytes": 889,
+        "gzipBytes": 549
+      },
+      {
+        "file": "PluginsModal-Be_ES-J1.js",
+        "bytes": 27051,
+        "gzipBytes": 9408
+      },
+      {
+        "file": "Popper-DngkA-Fn.js",
+        "bytes": 23197,
+        "gzipBytes": 8733
+      },
+      {
+        "file": "SchemeEntryRow-BbzbWgDq.js",
+        "bytes": 9693,
+        "gzipBytes": 3729
+      },
+      {
+        "file": "SettingsScreen-CkT0JjXS.js",
+        "bytes": 29826,
+        "gzipBytes": 11524
+      },
+      {
+        "file": "StatusChip-COUS1kXJ.js",
+        "bytes": 8218,
+        "gzipBytes": 3059
+      },
+      {
+        "file": "Switch-BJFfNokv.js",
+        "bytes": 8296,
+        "gzipBytes": 2668
+      },
+      {
+        "file": "SwitchBase-DhONpu00.js",
+        "bytes": 2398,
+        "gzipBytes": 1170
+      },
+      {
+        "file": "ToggleButtonGroup-DiCGdIX1.js",
+        "bytes": 6560,
+        "gzipBytes": 2218
+      },
+      {
+        "file": "Tooltip-CGdtt8Yn.js",
+        "bytes": 8103,
+        "gzipBytes": 3124
+      },
+      {
+        "file": "WishlistPage-Bh2lRyZU.js",
+        "bytes": 14393,
+        "gzipBytes": 5756
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "bytes": 2940,
+        "gzipBytes": 1339
+      },
+      {
+        "file": "index-ov_193ZS.js",
+        "bytes": 844588,
+        "gzipBytes": 252001
+      },
+      {
+        "file": "lift-card-Lz3ZtWQJ.js",
+        "bytes": 1323,
+        "gzipBytes": 766
+      },
+      {
+        "file": "template-hooks-BRJK7xsI.js",
+        "bytes": 248,
+        "gzipBytes": 181
+      },
+      {
+        "file": "use-fuzzy-search-DtWU6D0z.js",
+        "bytes": 30971,
+        "gzipBytes": 11129
+      }
+    ]
+  },
+  "candidateMinusBaseline": {
+    "jsBytes": 62382,
+    "sumGzipBytes": 11267,
+    "entryJsBytes": 36896,
+    "entryGzipBytes": 2242
+  },
+  "baselineArtifact": {
+    "sha256": "7b989adcf1389add256f99ab2b34c8e88ce12a560551d7a03c6878dca91a3799",
+    "files": [
+      {
+        "file": "Autocomplete-CjNSvU85.js",
+        "sha256": "8d7add695ed2aefbaa9cb933a7cd363db5fa83269603c57ea0c8aedfb8be8aca"
+      },
+      {
+        "file": "Chip-CUmPPqm_.js",
+        "sha256": "20f81fe1fa53b256a0f59cb79dc0a8186cc366f37dd2a65b269facaa9b83829a"
+      },
+      {
+        "file": "ColorSchemesDialog-CkDEgigl.js",
+        "sha256": "c0afa0aab2272993b7a7a02bb31481145e71e14a025c5ffd05ab57a3fa2f8128"
+      },
+      {
+        "file": "ColorSchemesPage-2mxGeeGC.js",
+        "sha256": "6fa3bee13288be066e60d6940fb6be7228405110120aa3e849895d9bf509fcf2"
+      },
+      {
+        "file": "LibraryPaintRow-D07jVf0R.js",
+        "sha256": "df2f8dc361056ad58166ec865cecc6ceddbc61bf18ca06b4bd53d3421cdf30ce"
+      },
+      {
+        "file": "MiniatureForm-suw2Ak03.js",
+        "sha256": "4ac905b9bd9b820be9ba81ade5f696f355e9b595c65c6d7ee14d19eb09ae8e89"
+      },
+      {
+        "file": "MiniatureTemplatesPage-Dm56uKq9.js",
+        "sha256": "462657aa53a6bea6ed29925ce1856a00b66ea86084939b749976a81e8dd8f3bf"
+      },
+      {
+        "file": "PaintDetailsButton-BzXEh4AU.js",
+        "sha256": "7f8d18f662678720b570a1ef1b8d31cefb9eb51969292cccd437db5db404416b"
+      },
+      {
+        "file": "PaintForm-CwMWcYqv.js",
+        "sha256": "4b37284a16116a3822d4e9c6fcd1c9978d8e7119ea2fa87e3e46df9b6655e012"
+      },
+      {
+        "file": "PaintLibrary-DHBnxR6Q.js",
+        "sha256": "ec8ba1735e0fcdbfa68bdd35032fbd74a36ab85552e7e7b7c17e983481f97fdf"
+      },
+      {
+        "file": "PaintRowLabel-DCLx7Nc8.js",
+        "sha256": "fd2b807539b581d751cbe82abd0df1d4690149e497ce0735b128375dbcdd1474"
+      },
+      {
+        "file": "PaintToolsPage-CQFgbHOz.js",
+        "sha256": "2b0ceb1b1e55c4bad5ae87feebb65653e0ac89934678c1fda29372e7bea92657"
+      },
+      {
+        "file": "PluginChip-BlbluX1U.js",
+        "sha256": "4c8c973b3b849548d9c624cd589e0dc783e0f1535ce634cbeb566fcc2338f092"
+      },
+      {
+        "file": "PluginsModal-NxdvbEk0.js",
+        "sha256": "e1705f21bada7c7ae8207d807cd432d87304715ed339dda3724f24f477ec3600"
+      },
+      {
+        "file": "Popper-JrmaLNxp.js",
+        "sha256": "06a46eee471e71f0dd46ab7f75dc6cd0adbfb6465371ffd3971f8b4380a2aa0f"
+      },
+      {
+        "file": "ProjectDrawer-RgYVcDnG.js",
+        "sha256": "0bd10dd870632c5ee9f83d89abea9489ae1b789509483e348b25fa4806cb226b"
+      },
+      {
+        "file": "SettingsScreen-B6NI5g0q.js",
+        "sha256": "5afb2879d2a34272bc913e243fe0faaf12cdc2d91a33ccfdc2b99ff24fcc0c0d"
+      },
+      {
+        "file": "StatusChip-CRm2aUnz.js",
+        "sha256": "99b906f38e30be2e2a1bafd4fa18f63a7ab6a281708879ed84a30a3a4de27f77"
+      },
+      {
+        "file": "Switch-CZfwLm-G.js",
+        "sha256": "a7e276282ba31453d6687458b699c2afe8a9c16813902b28d7f23e77d4cdb7fc"
+      },
+      {
+        "file": "SwitchBase-vG9eKMDe.js",
+        "sha256": "f8754fc3828b618822bc1348efbca7522fed64238c00d72dd40c39b385f19692"
+      },
+      {
+        "file": "ToggleButtonGroup-CAFE5Xnc.js",
+        "sha256": "f0987d9560a5d2edf3cadd8e7794d97cfebaf3797469bd1c20c139444d2112fc"
+      },
+      {
+        "file": "Tooltip-BXyxkhIW.js",
+        "sha256": "36606895ab1ae77207d707f76dfc167c088ace392084c95d787e73777cdbf062"
+      },
+      {
+        "file": "WishlistPage-HNA3FsTY.js",
+        "sha256": "f14e457076cff3efe597c7c1593f098dd17883ea69b5be04a97878aced572d01"
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "sha256": "0dd6a8356fdb91f2ce964db90c51c601e6ffbdb6812dd1e6a29ce651606cd945"
+      },
+      {
+        "file": "index-D0SnFNqY.js",
+        "sha256": "ecf2f8ce2ef630b56bf2e84821453319768ac6e81587dcfe57b12e1a60e0495a"
+      },
+      {
+        "file": "lift-card-D5fxah0u.js",
+        "sha256": "d23551935b49fd6980b1600b115ba0d1d93794a269f607fff763cff4ae3adb4b"
+      },
+      {
+        "file": "template-hooks-Cm4mytAn.js",
+        "sha256": "d9bd50dddf7466206deb26fcd629da4043b4e8375b3bc64db946096b7cc0b3a9"
+      },
+      {
+        "file": "../index.html",
+        "sha256": "9053191827468e76d277343b939d11f0484ffa723751f3ed05bf21d2e8914612"
+      }
+    ]
+  },
+  "candidateArtifact": {
+    "sha256": "7e7c2407e19f0a4d06c3c08ab4ea70b9e6c15f4ae1fc800f3dac3aab6a33305f",
+    "files": [
+      {
+        "file": "ApolloProjectDrawer-BixZRkx0.js",
+        "sha256": "aa289140789fdd0e09a9986b0e46811c80308bab820a3fe84e99e8cadfb3bef3"
+      },
+      {
+        "file": "Chip-DupSak1n.js",
+        "sha256": "bce444a7aa53340ea4f830cbc40c5e0c9dbcb544d9d5d3c3860f4bea99f380cf"
+      },
+      {
+        "file": "ColorSchemesDialog-CP28-_16.js",
+        "sha256": "cae13c53ace62dab51daf63eedf3f76c1f2ccefb5ecb97d336756509c209adcd"
+      },
+      {
+        "file": "ColorSchemesPage-CM9pdMoV.js",
+        "sha256": "bccdaff7c4cf265a47ebbeacc03d6b14f6bb56c1cab563db8108e12d88557160"
+      },
+      {
+        "file": "LibraryPaintRow-BqKdi4SS.js",
+        "sha256": "1bfd89095c3da19238f6c8a686ec28d4b92ad702980c6281c9ed04d73e273846"
+      },
+      {
+        "file": "MiniatureForm-BT1LV_8_.js",
+        "sha256": "5161032d5c630b592990d96761032e2422609bc9cf340f1fb8ad8d82280cfaba"
+      },
+      {
+        "file": "MiniatureTemplatesPage-KLltTbF0.js",
+        "sha256": "1bef85a0459816e988cc9b3c81ead8a017f1350667bf656c72b05da115a740e2"
+      },
+      {
+        "file": "PaintDetailsButton-C4193AKe.js",
+        "sha256": "965fa0fab85fc0184ce44cad5f47d3381eb7dd32a888c2c418aefe27f2e5bac4"
+      },
+      {
+        "file": "PaintForm-Bi6itJOx.js",
+        "sha256": "f60edc964a89dfc32ee561f0d258b1f6a253cca0b8684e7440c3fbe0fb0d6557"
+      },
+      {
+        "file": "PaintLibrary-D9Si6O49.js",
+        "sha256": "33bd818fba05835968837cbd1425be4d2c8ce8418ff9c80ea5d0aa14c5eba973"
+      },
+      {
+        "file": "PaintRowLabel-BWKR6XHR.js",
+        "sha256": "c26ffde415d6cbd075ee1997162568239c46665afb0a92fbc3e0acd2bb261525"
+      },
+      {
+        "file": "PaintToolsPage-NW1IVKGz.js",
+        "sha256": "fa3d33bfacf2c7f1894f6456ae2619c11cf45933b1e605d4ad96a822edf6cb1d"
+      },
+      {
+        "file": "PluginChip-CTmzyad1.js",
+        "sha256": "369fbbdc738904b5cc947553d299d3874d4a81efd0eef82293861ea86eb1a7dc"
+      },
+      {
+        "file": "PluginsModal-Be_ES-J1.js",
+        "sha256": "f3c09e569a9beb26d8abc580fb8611110d8401ff8084192e1f5956afaa164f3f"
+      },
+      {
+        "file": "Popper-DngkA-Fn.js",
+        "sha256": "bfb5ab3daf06fba2a2e294a2e25107e826fac6bc73c54a22cedce3cdddfbbde2"
+      },
+      {
+        "file": "SchemeEntryRow-BbzbWgDq.js",
+        "sha256": "4b9c9e1897a72140d325c4ef49e3ae38ac491488f2951118eb67fc0823dffdba"
+      },
+      {
+        "file": "SettingsScreen-CkT0JjXS.js",
+        "sha256": "55c01fb4b662fe79cbc726de1385318347b117416454a57ce817a5af04303c1a"
+      },
+      {
+        "file": "StatusChip-COUS1kXJ.js",
+        "sha256": "1491e52e78691bee7e3a3bf92686b064bb393cabca57a4d284ee79fd16152969"
+      },
+      {
+        "file": "Switch-BJFfNokv.js",
+        "sha256": "7ee72e4df00b2a65722998897ca1006120adc62cab521cf142ae100a30dd45b6"
+      },
+      {
+        "file": "SwitchBase-DhONpu00.js",
+        "sha256": "1ea7142e20c3fcc241d326e5833244a32d05be3ad759864d7d1ebcbcac636693"
+      },
+      {
+        "file": "ToggleButtonGroup-DiCGdIX1.js",
+        "sha256": "092edc04fd24dbd3da2a130ce06767e3bd97a2d87f516b59c59e2177152540b5"
+      },
+      {
+        "file": "Tooltip-CGdtt8Yn.js",
+        "sha256": "1c3e4b07dd995f07f1516897d811b7854a9040b6d3562c72b6934cc6ffa779b4"
+      },
+      {
+        "file": "WishlistPage-Bh2lRyZU.js",
+        "sha256": "deb1a7deff1661f0232ad5fa6aef1815da0bc305e826d825ec2e1a3a18e950b0"
+      },
+      {
+        "file": "fuzzy-search.worker-B2h_ORwE.js",
+        "sha256": "0dd6a8356fdb91f2ce964db90c51c601e6ffbdb6812dd1e6a29ce651606cd945"
+      },
+      {
+        "file": "index-ov_193ZS.js",
+        "sha256": "455a51fe216290f6323264e4ba911f80211e154e16cedf89aefc1f5d50cc7b14"
+      },
+      {
+        "file": "lift-card-Lz3ZtWQJ.js",
+        "sha256": "0a4e6336c34d1de7133f82a8caecb29c1bf166c7474ef501b44054cd82963a76"
+      },
+      {
+        "file": "template-hooks-BRJK7xsI.js",
+        "sha256": "065c70ae47a395110db6176fcb77f1d11293f172c5ec6e2020bac516a5ce86c0"
+      },
+      {
+        "file": "use-fuzzy-search-DtWU6D0z.js",
+        "sha256": "8d7f1593843e34a3d2ed65ecb8d4bee699fe5e639431192a8ce3f37ffd366505"
+      },
+      {
+        "file": "../index.html",
+        "sha256": "8452ad6dfe9fa287f6f1c69b96f78d6793eccd0b14252aedf8209e13b400d4d6"
+      }
+    ]
+  },
+  "baselineSource": "e1f345a",
+  "candidateSource": "421c564bfd20f4f3215a6d9653b110167f1c7ede",
+  "candidateWorkingTree": " M apps/paint-vault/graphql/miniature-schemes.test.ts\n M apps/paint-vault/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
+}
