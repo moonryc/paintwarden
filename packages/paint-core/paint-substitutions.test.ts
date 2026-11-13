@@ -5,6 +5,7 @@ import {
   createPaintChoiceResolver,
   isPaintAvailable,
   resolvePaintChoice,
+  resolveSubstitution,
   selectedSubstitution,
   type SubstitutionData,
 } from "./paint-substitutions.ts";
@@ -93,7 +94,7 @@ test("only the active substitution affects availability", () => {
   assert.equal(isPaintAvailable(data, { green: owned }, "target"), false);
   assert.equal(
     isPaintAvailable({ ...data, paintSubstitutionIngredients: [] }, { target: owned }, "target"),
-    false,
+    true,
   );
 });
 
@@ -119,13 +120,15 @@ test("indexed resolver shares traversal semantics and caches only complete roots
   const before = structuredClone(snapshot);
   const resolve = createPaintChoiceResolver(snapshot);
   assert.deepEqual(resolve("one"), {
-    paintIds: ["blue", "red"],
+    paintIds: ["two", "red"],
     cycle: true,
+    broken: true,
     substitutionIds: ["a", "b"],
   });
   assert.deepEqual(resolve("two"), {
-    paintIds: ["red", "blue"],
+    paintIds: ["one", "blue"],
     cycle: true,
+    broken: true,
     substitutionIds: ["b", "a"],
   });
   for (const id of ["one", "two", "empty", "original", "one", "two"]) {
@@ -134,15 +137,164 @@ test("indexed resolver shares traversal semantics and caches only complete roots
   }
   assert.deepEqual(snapshot, before, "indexing never sorts input arrays in place");
   const changed = createPaintChoiceResolver({ ...snapshot, paintSubstitutions: [] });
-  assert.deepEqual(changed("one"), { paintIds: ["one"], cycle: false, substitutionIds: [] });
+  assert.deepEqual(changed("one"), { paintIds: ["one"], cycle: false, broken: false, substitutionIds: [] });
   assert.equal(resolve("one").cycle, true, "new snapshots do not alter existing resolvers");
   assert.deepEqual(
     resolvePaintChoice(snapshot, "mini", "one", ["one"]),
     {
-      paintIds: [],
+      paintIds: ["one"],
       cycle: true,
+      broken: true,
       substitutionIds: [],
     },
     "the original public trail argument remains supported",
   );
+});
+
+const owned = { state: "OWNED" as const, stockLevel: "LOW" as const, quantity: 1 };
+const mix = (id: string, targetPaintId: string, isDefault = true) => ({
+  id,
+  targetPaintId,
+  name: id,
+  isDefault,
+});
+const ingredient = (substitutionId: string, paintId: string, sortOrder = 0) => ({
+  substitutionId,
+  paintId,
+  parts: 2,
+  sortOrder,
+});
+
+test("empty recipes are broken, ignored locally and use physical ownership of their original", () => {
+  const empty: SubstitutionData = {
+    paintSubstitutions: [mix("parent", "a"), mix("empty", "b")],
+    paintSubstitutionIngredients: [ingredient("parent", "b"), ingredient("parent", "red", 1)],
+    miniaturePaintSubstitutions: [],
+  };
+  assert.equal(resolvePaintChoice(empty, "mini", "b").broken, true);
+  assert.deepEqual(resolvePaintChoice(empty, "mini", "a"), {
+    paintIds: ["b", "red"],
+    cycle: false,
+    broken: false,
+    substitutionIds: ["parent", "empty"],
+  });
+  assert.equal(isPaintAvailable(empty, { b: owned, red: owned }, "a"), true);
+  assert.equal(isPaintAvailable(empty, { a: owned }, "a"), false);
+  for (const record of [
+    undefined,
+    { ...owned, quantity: 0 },
+    { ...owned, stockLevel: "EMPTY" as const },
+    { ...owned, state: "WISHLIST" as const },
+  ]) {
+    assert.equal(isPaintAvailable(empty, { b: record }, "b"), false);
+  }
+  assert.equal(isPaintAvailable(empty, { b: owned }, "b"), true);
+});
+
+test("two- and three-paint cycles ignore the closing owner's whole recipe for each root", () => {
+  for (const ids of [
+    ["a", "b"],
+    ["a", "b", "c"],
+  ]) {
+    const circular: SubstitutionData = {
+      paintSubstitutions: ids.map((id) => mix(id, id)),
+      paintSubstitutionIngredients: ids.flatMap((id, index) => [
+        ingredient(id, ids[(index + 1) % ids.length]),
+        ingredient(id, "red", 1),
+      ]),
+      miniaturePaintSubstitutions: [],
+    };
+    const resolver = createPaintChoiceResolver(circular);
+    for (const order of [ids, [...ids].reverse(), ids]) {
+      for (const root of order) {
+        const closingOwner = ids[(ids.indexOf(root) + ids.length - 1) % ids.length];
+        const expected = { paintIds: [closingOwner, "red"], cycle: true, broken: true };
+        for (const actual of [resolver(root), resolvePaintChoice(circular, "mini", root)]) {
+          assert.deepEqual(actual.paintIds, expected.paintIds);
+          assert.equal(actual.cycle, true);
+          assert.equal(actual.broken, true);
+        }
+        assert.equal(isPaintAvailable(circular, { [closingOwner]: owned, red: owned }, root), true);
+        assert.equal(isPaintAvailable(circular, { [root]: owned, red: owned }, root), false);
+      }
+    }
+  }
+});
+
+test("self-cycles and ancestors of cycles are distinguished from cycle members", () => {
+  const circular: SubstitutionData = {
+    paintSubstitutions: [mix("self", "self"), mix("parent", "parent"), mix("a", "a"), mix("b", "b")],
+    paintSubstitutionIngredients: [
+      ingredient("self", "self"),
+      ingredient("self", "red", 1),
+      ingredient("parent", "a"),
+      ingredient("a", "b"),
+      ingredient("b", "a"),
+    ],
+    miniaturePaintSubstitutions: [],
+  };
+  assert.deepEqual(resolvePaintChoice(circular, "mini", "self"), {
+    paintIds: ["self"],
+    cycle: true,
+    broken: true,
+    substitutionIds: ["self"],
+  });
+  assert.equal(isPaintAvailable(circular, { self: owned }, "self"), true);
+  const parent = resolvePaintChoice(circular, "mini", "parent");
+  assert.deepEqual(parent.paintIds, ["b"]);
+  assert.equal(parent.cycle, true);
+  assert.equal(parent.broken, false, "a valid ancestor is not itself a cycle member");
+});
+
+test("saved non-default recipes validate independently while nested defaults remain authoritative", () => {
+  const recipes: SubstitutionData = {
+    paintSubstitutions: [
+      mix("active", "a"),
+      mix("empty", "a", false),
+      mix("inactive-cycle", "a", false),
+      mix("nested", "b"),
+      mix("inactive-nested", "b", false),
+    ],
+    paintSubstitutionIngredients: [
+      ingredient("active", "red"),
+      ingredient("inactive-cycle", "b"),
+      ingredient("nested", "a"),
+      ingredient("inactive-nested", "b"),
+    ],
+    miniaturePaintSubstitutions: [],
+  };
+  assert.equal(resolveSubstitution(recipes, "empty")?.broken, true);
+  assert.equal(resolveSubstitution(recipes, "inactive-cycle")?.broken, true);
+  assert.equal(resolveSubstitution(recipes, "inactive-nested")?.broken, true);
+  assert.equal(resolveSubstitution(recipes, "missing"), null);
+  assert.equal(resolvePaintChoice(recipes, "mini", "a").broken, false);
+  assert.deepEqual(resolvePaintChoice(recipes, "mini", "a").paintIds, ["red"]);
+  assert.equal(isPaintAvailable(recipes, { red: owned }, "a"), true);
+  assert.equal(isPaintAvailable(recipes, { a: owned }, "a"), false);
+  const onlyInactive = {
+    ...recipes,
+    paintSubstitutions: recipes.paintSubstitutions.map((row) => ({ ...row, isDefault: false })),
+  };
+  assert.equal(resolvePaintChoice(onlyInactive, "mini", "a").broken, false);
+  assert.deepEqual(resolvePaintChoice(onlyInactive, "mini", "a").paintIds, ["a"]);
+  assert.equal(isPaintAvailable(onlyInactive, { a: owned }, "a"), true);
+});
+
+test("owner diagnostics discover all cycle members even when resolution cuts another cycle short", () => {
+  const graph: SubstitutionData = {
+    paintSubstitutions: ["a", "b", "c", "d", "parent"].map((id) => mix(id, id)),
+    paintSubstitutionIngredients: [
+      ingredient("a", "b"),
+      ingredient("b", "c"),
+      ingredient("c", "b"),
+      ingredient("c", "d", 1),
+      ingredient("d", "a"),
+      ingredient("parent", "a"),
+    ],
+    miniaturePaintSubstitutions: [],
+  };
+  for (const id of ["a", "b", "c", "d"]) {
+    assert.equal(resolvePaintChoice(graph, "mini", id).broken, true, id);
+  }
+  assert.equal(resolvePaintChoice(graph, "mini", "parent").broken, false);
 });

@@ -313,7 +313,7 @@ test("nested defaults and cycles match core resolution; legacy per-miniature cho
     ],
   });
   assert.equal(resolvePaintChoice(data, "z", "red").cycle, true);
-  assert.deepEqual(resolvePaintChoice(data, "z", "red").paintIds, ["empty", "green"]);
+  assert.deepEqual(resolvePaintChoice(data, "z", "red").paintIds, ["blue", "green"]);
   for (const m of data.miniatures) assert.deepEqual(resolvedPaintIds(data, m.id), referenceIds(data, m.id));
   assert.deepEqual(derive(createHomeDerivations(), data).projects, referenceProjects(data));
   const noIngredients = freeze({ ...data, paintSubstitutionIngredients: [] });
