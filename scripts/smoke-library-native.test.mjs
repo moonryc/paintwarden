@@ -34,3 +34,21 @@ test("artifact identity captures content hash and filesystem timestamp", async (
     await rm(directory, { recursive: true });
   }
 });
+
+test("startup marker wait is event-driven and removes owned listeners", async () => {
+  const { EventEmitter } = await import("node:events");
+  const { waitForOutput } = await import("./smoke-library-native.mjs");
+  const child = new EventEmitter();
+  child.stdout = new EventEmitter();
+  child.stderr = new EventEmitter();
+  child.exitCode = null;
+  let log = "";
+  const owned = { child, log: () => log, error: () => undefined };
+  const ready = waitForOutput(owned, /ready/, "fixture readiness", 1000);
+  log = "server ready";
+  child.stdout.emit("data", log);
+  assert.equal(await ready, log);
+  assert.equal(child.stdout.listenerCount("data"), 0);
+  assert.equal(child.listenerCount("exit"), 0);
+  assert.equal(await waitForOutput(owned, /ready/, "existing marker"), log);
+});

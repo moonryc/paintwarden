@@ -52,18 +52,31 @@ export async function identity(file) {
   };
 }
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-export async function waitUntil(probe, description, timeout = 30000) {
-  const end = Date.now() + timeout;
-  while (Date.now() < end) {
-    try {
-      const value = await probe();
-      if (value) return value;
-    } catch {
-      /* Startup is not ready. */
-    }
-    await sleep(150);
-  }
-  throw new Error(`Timed out waiting for ${description}`);
+export async function waitForOutput(owned, pattern, description, timeout = 30000) {
+  return new Promise((resolve, reject) => {
+    const done = (error) => {
+      clearTimeout(timer);
+      owned.child.stdout.off("data", check);
+      owned.child.stderr.off("data", check);
+      owned.child.off("exit", exited);
+      owned.child.off("error", failed);
+      if (error) reject(error);
+      else resolve(owned.log());
+    };
+    const check = () => {
+      if (pattern.test(owned.log())) done();
+    };
+    const exited = () => done(new Error(`Process exited waiting for ${description}`));
+    const failed = (error) => done(error);
+    const timer = setTimeout(() => done(new Error(`Timed out waiting for ${description}`)), timeout);
+    owned.child.stdout.on("data", check);
+    owned.child.stderr.on("data", check);
+    owned.child.once("exit", exited);
+    owned.child.once("error", failed);
+    if (owned.error()) failed(owned.error());
+    else if (owned.child.exitCode !== null) exited();
+    else check();
+  });
 }
 export async function stopOwned(child) {
   if (!child || child.exitCode !== null || child.signalCode !== null) return;
@@ -117,31 +130,33 @@ export async function setupAndSeed(page, setupCode) {
   });
   assert.equal(result.status, 201, JSON.stringify(result));
   const seeded = await page.evaluate(async () => {
-    const response = await fetch("/api/graphql", {
-      method: "POST",
+    const ids = [];
+    let after = null;
+    do {
+      const response = await fetch("/api/graphql", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "query Seed($after: String) { library(first: 100, after: $after) { nodes { id } pageInfo { hasNextPage endCursor } } }",
+          variables: { after },
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok || payload.errors) throw new Error(JSON.stringify(payload));
+      const library = payload.data.library;
+      ids.push(...library.nodes.map((node) => node.id));
+      after = library.pageInfo.hasNextPage ? library.pageInfo.endCursor : null;
+    } while (after);
+    const response = await fetch("/api/paint-state", {
+      method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: "{ library(first: 3) { nodes { id } } }" }),
+      body: JSON.stringify({ paintIds: ids, state: "OWNED", quantity: 2 }),
     });
-    const payload = await response.json();
-    if (!response.ok || payload.errors) throw new Error(JSON.stringify(payload));
-    return Promise.all(
-      payload.data.library.nodes.map(
-        async ({ id }) =>
-          (
-            await fetch("/api/paint-state", {
-              method: "PUT",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({ paintId: id, state: "OWNED", quantity: 2 }),
-            })
-          ).status,
-      ),
-    );
+    return { count: ids.length, status: response.status };
   });
-  assert.equal(seeded.length, 3);
-  assert.ok(
-    seeded.every((status) => status === 200),
-    "Seed three owned rows",
-  );
+  assert.equal(seeded.count, 130);
+  assert.equal(seeded.status, 200, "Seed all 130 owned rows");
 }
 export async function independentWriter(baseUrl) {
   const response = await fetch(`${baseUrl}/api/auth/login`, {
@@ -238,10 +253,7 @@ async function main() {
       path.join(evidence, "remote-server.log"),
     );
     processes.push(remote);
-    await waitUntil(
-      async () => (await fetch(`${remoteBase}/api/auth/status`, { signal: AbortSignal.timeout(1000) })).ok,
-      "isolated remote server",
-    );
+    await waitForOutput(remote, /Nest application successfully started/, "isolated remote server");
     for (const mode of ["local", "remote"]) {
       const dataDir = await mkdtemp(path.join(os.tmpdir(), `pv-library-desktop-${mode}-`));
       report.fixtures.push({ type: `${mode} desktop data`, path: dataDir, retained: true });
@@ -260,12 +272,7 @@ async function main() {
         path.join(evidence, `${mode}-electron.log`),
       );
       processes.push(native);
-      await waitUntil(
-        async () =>
-          (await fetch(`http://127.0.0.1:${debugPort}/json/version`, { signal: AbortSignal.timeout(1000) }))
-            .ok,
-        `${mode} packaged CDP`,
-      );
+      await waitForOutput(native, /DevTools listening on ws:/, `${mode} packaged CDP`);
       browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`);
       const context = browser.contexts()[0];
       const page = context.pages()[0] || (await context.waitForEvent("page"));

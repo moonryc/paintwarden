@@ -12,7 +12,9 @@ import {
   parseOptions,
   setupAndSeed,
   independentWriter,
-  waitUntil,
+  waitForOutput,
+  launchOwned,
+  stopOwned,
   identity,
 } from "./smoke-library-native.mjs";
 
@@ -26,6 +28,7 @@ const report = {
 };
 const resultPath = path.join(options.evidenceDir, "docker-results.json");
 let browser;
+let logFollower;
 let containerCreated = false;
 let volumeCreated = false;
 const name = `pv-library-smoke-${randomUUID()}`;
@@ -85,11 +88,13 @@ try {
     assert.equal(binding[0].HostIp, "127.0.0.1");
     const baseUrl = `http://127.0.0.1:${binding[0].HostPort}`;
     report.baseUrl = baseUrl;
-    await waitUntil(
-      async () => (await fetch(`${baseUrl}/api/auth/status`, { signal: AbortSignal.timeout(1000) })).ok,
-      "fresh Docker server",
-      60000,
+    logFollower = launchOwned(
+      "docker",
+      ["logs", "--follow", name],
+      {},
+      path.join(options.evidenceDir, "docker-follow.log"),
     );
+    await waitForOutput(logFollower, /Nest application successfully started/, "fresh Docker server", 60000);
     const logs = containerLogs();
     const setupCode = logs.match(/owner account: ([a-f0-9-]+)/i)?.[1];
     assert.ok(setupCode, "Fresh non-loopback container must print fixture setup code");
@@ -130,6 +135,19 @@ try {
     report.checks.push({ name: "owned browser cleanup", status: "FAIL", detail: String(error) });
     process.exitCode = 1;
   });
+  if (logFollower) {
+    try {
+      await stopOwned(logFollower.child);
+      await logFollower.save();
+    } catch (error) {
+      report.checks.push({
+        name: "owned Docker log follower cleanup",
+        status: "FAIL",
+        detail: String(error),
+      });
+      process.exitCode = 1;
+    }
+  }
   if (containerCreated) {
     try {
       // Never remove/stop a same-name container unless its unique ownership label matches.
