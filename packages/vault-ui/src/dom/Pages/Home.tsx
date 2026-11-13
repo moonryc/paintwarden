@@ -1,6 +1,6 @@
 import { Alert, Button, ButtonBase, Card, CircularProgress, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { AddMiniatureTile } from "../Components/AddMiniatureTile";
 import { EmptyState } from "../Components/EmptyState";
@@ -8,22 +8,20 @@ import { FilterToolbar } from "../Components/FilterToolbar";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { SectionHeader } from "../Components/SectionHeader";
+import { useMiniatureList } from "../graphql/miniature-list-hooks";
+import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
 import { Archive, Plus, SearchX } from "../icons";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { PaintingStatus } from "../types";
 import { STAGES } from "../utils/constants";
 import { greeting } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
-import { useFuzzySearch } from "../utils/use-fuzzy-search";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
-
-import { createHomeDerivations, projectSearchText, type Project } from "./home.utils";
 
 const shelfTileSx = { width: "100%", height: "100%" };
 
 export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(): void }) {
-  const data = useVault();
   const filter = useVaultStore((s) => s.miniatureFilter);
   const setFilter = useVaultStore((s) => s.setMiniatureFilter);
   const goTab = useVaultStore((s) => s.go);
@@ -32,20 +30,21 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     q = search.trim();
   const [stageFilter, setStageFilter] = useState<PaintingStatus | "ALL">("ALL");
   const workbench = view === "dashboard";
-  const deriveHome = useMemo(createHomeDerivations, []);
+  const list = useMiniatureList({ workbench, ownership: filter, stage: stageFilter, search: q });
   const {
-    projects,
-    pageProjects,
-    visibleProjects: searchCandidates,
+    rows: visibleProjects,
     statusCounts,
     stageCounts,
     ready,
-    pct,
     missingProjectPaints,
     wishlistedMissingPaints,
-  } = deriveHome(data, workbench, filter, stageFilter, "");
-  const visibleProjects = useFuzzySearch(searchCandidates, q, projectSearchText);
-  const shelfItems: (Project | null)[] = q ? visibleProjects : [null, ...visibleProjects];
+    loading,
+    refreshing,
+    hasNextPage,
+    loadMore,
+  } = list;
+  const pct = list.owned ? (ready / list.owned) * 100 : 0;
+  const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
   const hasQuery = Boolean(q);
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
@@ -54,7 +53,17 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     viewportHeight: 900,
     width: 0,
   });
-  const [pendingShelfFocus, setPendingShelfFocus] = useState<number | null>(null);
+  const [pendingShelfFocus, setPendingShelfFocus] = useState<{ index: number; origin: HTMLElement } | null>(
+    null,
+  );
+  useEffect(() => {
+    const cancelOutside = (event: PointerEvent) => {
+      if (!shelfRef.current?.contains(event.target as Node)) setPendingShelfFocus(null);
+    };
+    document.addEventListener("pointerdown", cancelOutside, true);
+    return () => document.removeEventListener("pointerdown", cancelOutside, true);
+  }, []);
+  useEffect(() => setPendingShelfFocus(null), [q, filter, stageFilter, workbench]);
   useLayoutEffect(() => {
     const shelf = shelfRef.current;
     if (!shelf) return;
@@ -111,21 +120,47 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
   });
   useLayoutEffect(() => {
     if (pendingShelfFocus === null) return;
+    // Network/virtualized handoff must not steal focus after a click elsewhere.
+    const active = document.activeElement;
+    const originUnmounted = active === document.body && !pendingShelfFocus.origin.isConnected;
+    if (active !== pendingShelfFocus.origin && !originUnmounted) {
+      setPendingShelfFocus(null);
+      return;
+    }
     const target = shelfRef.current?.querySelector<HTMLElement>(
-      `[data-mini-index="${pendingShelfFocus}"] button`,
+      `[data-mini-index="${pendingShelfFocus.index}"] button`,
     );
     if (!target) return;
     target.focus();
     setPendingShelfFocus(null);
-  }, [pendingShelfFocus, shelfWindow.startIndex, shelfWindow.endIndex]);
-  const focusShelfItem = (index: number) => {
+  }, [pendingShelfFocus, shelfWindow.startIndex, shelfWindow.endIndex, visibleProjects.length]);
+  useEffect(() => {
+    if (
+      hasNextPage &&
+      !loading &&
+      !refreshing &&
+      !list.error &&
+      shelfWindow.endIndex >= shelfItems.length - shelfColumns * 2
+    )
+      loadMore();
+  }, [
+    hasNextPage,
+    loading,
+    refreshing,
+    list.error,
+    shelfWindow.endIndex,
+    shelfItems.length,
+    shelfColumns,
+    loadMore,
+  ]);
+  const focusShelfItem = (index: number, origin: HTMLElement) => {
     const row = Math.floor(index / shelfColumns);
     window.scrollTo({
       top: shelfViewport.gridTop + row * (shelfRowHeight + shelfGap) - 120,
       behavior: "auto",
     });
     setShelfViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
-    setPendingShelfFocus(index);
+    setPendingShelfFocus({ index, origin });
   };
   return (
     <Box
@@ -146,7 +181,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             : "Browse your owned and wishlisted miniatures."
         }
       />
-      {workbench && data.catalog.length === 0 && (
+      {workbench && !loading && !list.error && list.catalogCount === 0 && (
         // A new vault has no catalog until a plugin is installed, so point there first.
         <Alert severity="info">
           Your paint library is empty. Install a plugin from Data &amp; settings → Plugins to add paints,
@@ -214,8 +249,8 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 value={pct}
                 size="100%"
                 thickness={4.5}
-                color={ready && ready === projects.length ? "success" : "secondary"}
-                aria-label={`${ready} of ${pageProjects.length} projects ready to paint`}
+                color={ready && ready === list.owned ? "success" : "secondary"}
+                aria-label={`${ready} of ${list.collectionCount} projects ready to paint`}
                 sx={[
                   {
                     boxSizing: "border-box",
@@ -250,7 +285,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                     color: "var(--ink-faint)",
                   }}
                 >
-                  /{pageProjects.length}
+                  /{list.collectionCount}
                 </Box>
               </Box>
             </Box>
@@ -276,10 +311,10 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   },
                 }}
               >
-                {pageProjects.length
-                  ? ready === pageProjects.length
+                {list.collectionCount
+                  ? ready === list.collectionCount
                     ? "Everything's ready to paint"
-                    : `${ready} of ${pageProjects.length} ready to paint`
+                    : `${ready} of ${list.collectionCount} ready to paint`
                   : "Start your first project"}
               </Box>
               <Box
@@ -292,7 +327,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   color: "var(--ink-faint)",
                 }}
               >
-                {pageProjects.length
+                {list.collectionCount
                   ? missingProjectPaints
                     ? `${missingProjectPaints} paint${missingProjectPaints === 1 ? "" : "s"} missing from projects`
                     : "Every project paint is ready"
@@ -430,10 +465,32 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 ]}
           </TextField>
         </FilterToolbar>
-        {visibleProjects.length || !q ? (
+        {list.error && (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" onClick={list.retry}>
+                Retry
+              </Button>
+            }
+          >
+            {list.error}
+          </Alert>
+        )}
+        {(loading || refreshing) && (
+          <Box role="status" sx={{ py: 1, color: "var(--ink-faint)" }}>
+            {loading ? "Loading miniatures…" : "Updating miniatures…"}
+          </Box>
+        )}
+        {visibleProjects.length || (!q && !loading && !list.error) ? (
           <Box
             component="div"
             ref={shelfRef}
+            role="list"
+            aria-label="Miniature shelf"
+            aria-busy={loading || refreshing}
+            data-loaded-count={visibleProjects.length}
+            data-total-count={list.totalCount}
             sx={{
               position: "relative",
               minWidth: 0,
@@ -459,10 +516,18 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 const current = (event.target as HTMLElement).closest<HTMLElement>("[data-mini-index]");
                 if (!current) return;
                 const index = Number(current.dataset.miniIndex) + (event.shiftKey ? -1 : 1);
-                if (index < 0 || index >= shelfItems.length) return;
+                if (index < 0) return;
+                if (index >= shelfItems.length) {
+                  if (!event.shiftKey && hasNextPage) {
+                    event.preventDefault();
+                    setPendingShelfFocus({ index, origin: event.target as HTMLElement });
+                    loadMore();
+                  }
+                  return;
+                }
                 if (index >= shelfWindow.startIndex && index < shelfWindow.endIndex) return;
                 event.preventDefault();
-                focusShelfItem(index);
+                focusShelfItem(index, event.target as HTMLElement);
               }}
             >
               {shelfItems.slice(shelfWindow.startIndex, shelfWindow.endIndex).map((project, visibleIndex) => {
@@ -471,7 +536,9 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   <Box
                     component="div"
                     key={project?.mini.id ?? "add"}
+                    role="listitem"
                     data-mini-index={index}
+                    data-miniature-index={index}
                     sx={{
                       minWidth: 0,
                     }}
@@ -479,7 +546,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                     {project ? (
                       <MiniatureTile
                         mini={project.mini}
-                        paints={project.paints}
+                        swatches={project.swatches}
                         total={project.total}
                         missing={project.missing}
                         onOpen={openMini}
@@ -493,7 +560,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
               })}
             </Box>
           </Box>
-        ) : pageProjects.length ? (
+        ) : loading || list.error ? null : list.collectionCount ? (
           <EmptyState
             icon={<SearchX size={26} />}
             title="No miniatures match"
@@ -526,6 +593,11 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
               </Button>
             }
           />
+        )}
+        {hasNextPage && (
+          <Button onClick={loadMore} disabled={loading || refreshing} sx={{ mt: 2 }}>
+            Load more miniatures
+          </Button>
         )}
       </Box>
     </Box>

@@ -26,6 +26,7 @@ export class VaultInvalidationController {
   private stopped = false;
   private retiredEpochs = new Set<string>();
   private acceptedPaintRevision = 0n;
+  private acceptedMiniatureRevision = 0n;
 
   constructor(
     private readonly evict: (families: readonly VaultFamily[], reset: boolean) => void = () => {},
@@ -86,8 +87,11 @@ export class VaultInvalidationController {
     // inventory (or vice versa). Retry that envelope, without advancing the stream.
     const includesPaint = families.some((family) => ["LIBRARY", "PAINT", "OPTIONS"].includes(family));
     if (includesPaint && sequence(revision) < this.acceptedPaintRevision) return false;
+    const includesMiniature = families.some((family) => ["HOME", "MINIATURES"].includes(family));
+    if (includesMiniature && sequence(revision) < this.acceptedMiniatureRevision) return false;
     this.observe(revision);
     if (includesPaint) this.acceptedPaintRevision = sequence(revision);
+    if (includesMiniature) this.acceptedMiniatureRevision = sequence(revision);
     return true;
   }
   private invalidate(families: readonly VaultFamily[], reset: boolean) {
@@ -105,6 +109,7 @@ export class VaultInvalidationController {
       this.generation += 1;
       this.dirty.clear();
       this.acceptedPaintRevision = 0n;
+      this.acceptedMiniatureRevision = 0n;
       this.cursor = { epoch: event.epoch, seq: event.seq };
       this.earliest = this.cursor;
       for (const family of VAULT_FAMILIES) this.dirty.set(family, sequence(event));

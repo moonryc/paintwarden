@@ -18,6 +18,7 @@ import { owns } from "../utils/vault-data";
 
 import { paints, vault } from "./fixtures";
 import { fixtureLibraryView } from "./library-fixtures";
+import { fixtureMiniatureResponse } from "./miniature-api-fixtures";
 
 const auth: AuthStatus = {
   setupRequired: false,
@@ -88,10 +89,12 @@ function respond(url: URL, method: string): unknown {
 
 type GraphQLRequest = { operationName?: string; variables?: Record<string, unknown> };
 
-function createGraphQLResponder() {
-  const data = structuredClone(vault);
+type MockGraphQLOptions = { data?: () => State; revision?: () => number };
+
+function createGraphQLResponder(options: MockGraphQLOptions) {
+  let data = structuredClone(vault);
   let sequence = 0;
-  const revision = () => ({ epoch: "story", seq: String(sequence) });
+  const revision = () => ({ epoch: "story", seq: String(options.revision?.() ?? sequence) });
   const projectPaint = (paint: Paint) => {
     const resolved = resolvePaintChoice(data, "", paint.id);
     const active = defaultSubstitution(data, paint.id);
@@ -144,8 +147,20 @@ function createGraphQLResponder() {
     };
   };
   return ({ operationName, variables: vars = {} }: GraphQLRequest): Record<string, unknown> => {
+    data = options.data?.() ?? data;
     if (operationName === "VaultInvalidation")
-      return { vaultInvalidation: { ...revision(), reset: false, families: [] } };
+      return {
+        vaultInvalidation: {
+          ...revision(),
+          reset: false,
+          families:
+            Number(revision().seq) > Number(vars.since ?? 0)
+              ? ["HOME", "MINIATURES", "LIBRARY", "PAINT", "OPTIONS"]
+              : [],
+        },
+      };
+    const miniature = fixtureMiniatureResponse(data, operationName, vars, revision(), projectPaint);
+    if (miniature) return miniature;
     if (operationName === "SetPaintStock") {
       const id = String(vars.paintId);
       const paint = data.catalog.find((row) => row.id === id);
@@ -233,11 +248,19 @@ function createGraphQLResponder() {
 // A story can replace a GET route's response; returning undefined keeps the normal one.
 type MockOverrides = Record<string, () => Response | undefined>;
 
-function MockApi({ overrides, children }: { overrides: MockOverrides; children: () => ReactNode }) {
+function MockApi({
+  overrides,
+  options,
+  children,
+}: {
+  overrides: MockOverrides;
+  options: MockGraphQLOptions;
+  children: () => ReactNode;
+}) {
   // Installed before the first render so the app's first requests reach the stand-in.
   const [original] = useState(() => {
     const realFetch = window.fetch;
-    const graphql = createGraphQLResponder();
+    const graphql = createGraphQLResponder(options);
     window.fetch = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input), window.location.origin);
       if (!url.pathname.startsWith("/api/")) return realFetch(input, init);
@@ -270,8 +293,12 @@ function MockApi({ overrides, children }: { overrides: MockOverrides; children: 
   return children();
 }
 
-export function mockApi(overrides: MockOverrides = {}): Decorator {
+export function mockApi(overrides: MockOverrides = {}, options: MockGraphQLOptions = {}): Decorator {
   return function WithMockApi(Story) {
-    return <MockApi overrides={overrides}>{() => <Story />}</MockApi>;
+    return (
+      <MockApi overrides={overrides} options={options}>
+        {() => <Story />}
+      </MockApi>
+    );
   };
 }

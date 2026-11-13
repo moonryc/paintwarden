@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { getDb } from "../../../../../db";
 import { miniatures } from "../../../../../db/schema";
+import { setMiniatureImage } from "../../../../../lib/commands/miniatures.ts";
 import { serializeImageMutation } from "../../../../../lib/image-mutations";
 import { deleteImage, imageCacheControl, loadImage, saveImage } from "../../../../../lib/image-store";
 import { downloadPublicImage } from "../../../image-import/route";
@@ -9,25 +10,6 @@ import { downloadPublicImage } from "../../../image-import/route";
 async function findMiniature(id: string) {
   const [row] = await getDb().select().from(miniatures).where(eq(miniatures.id, id));
   return row;
-}
-
-// Points a miniature at another photo and returns the key it had, or undefined when the miniature
-// doesn't exist. Reading and updating in one transaction means two overlapping changes each remove
-// the photo they actually replaced.
-function setImageKey(id: string, imageKey: string | null) {
-  return getDb().transaction((tx) => {
-    const row = tx
-      .select({ imageKey: miniatures.imageKey })
-      .from(miniatures)
-      .where(eq(miniatures.id, id))
-      .get();
-    if (!row) return undefined;
-    tx.update(miniatures)
-      .set({ imageKey, sourceImageUrl: null, updatedAt: Date.now() })
-      .where(eq(miniatures.id, id))
-      .run();
-    return row.imageKey;
-  });
 }
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -73,7 +55,7 @@ export const POST = serializeImageMutation(async function POST(
   const key = await saveImage(file);
   let previous: string | null | undefined;
   try {
-    previous = setImageKey(id, key);
+    previous = setMiniatureImage(id, key);
   } catch (error) {
     await deleteImage(key);
     throw error;
@@ -93,7 +75,7 @@ export const DELETE = serializeImageMutation(async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const previous = setImageKey(id, null);
+  const previous = setMiniatureImage(id, null);
   if (previous === undefined) return Response.json({ error: "Not found" }, { status: 404 });
   await deleteImage(previous);
   return Response.json({ ok: true });

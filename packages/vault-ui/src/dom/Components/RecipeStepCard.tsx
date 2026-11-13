@@ -4,18 +4,57 @@ import type { RecipeStep } from "@paint-vault/core/recipe-steps";
 import type { ReactNode } from "react";
 
 import { Plus, X } from "../icons";
-import type { Paint, Requirement } from "../types";
+import { useVault, useVaultStore } from "../store/hooks";
+import type { Paint, PaintStateSetter, Requirement } from "../types";
 import { listResetSx } from "../utils/element-resets";
 import type { RecipePaint } from "../utils/recipe-merge";
 
 import { DashedAddButton } from "./DashedAddButton";
-import { PaintRow } from "./PaintRow";
+import { legacyRecipePaintStatus, ProjectedPaintRow, type RecipePaintStatus } from "./PaintRow";
+import { SchemeChip } from "./SchemeChip";
 
 export type RecipeStepRow = RecipePaint<Omit<Requirement, "miniatureId">> & { paint: Paint };
 
 // One step of a project's recipe: a numbered header, then its paints as sortable rows. In edit
 // mode the header can add a paint, or remove the step while it is empty.
-export function RecipeStepCard({
+export type RecipeStepCardProps = {
+  step: RecipeStep;
+  label: string;
+  // Position in the recipe, starting at 1.
+  number: number;
+  rows: RecipeStepRow[];
+  miniatureId: string;
+  editMode: boolean;
+  // The paint search is open below this step's rows.
+  adding: boolean;
+  // The paint search shown while adding.
+  addPanel?: ReactNode;
+  onToggleAdd: () => void;
+  onRemoveStep: () => void;
+  onRemovePaint: (paint: Paint) => void;
+  onOpenPaint: (id: string) => void;
+};
+
+export function RecipeStepCard(props: RecipeStepCardProps) {
+  const data = useVault();
+  const setPaintState = useVaultStore((s) => s.setPaintState);
+  return (
+    <RecipeStepCardView
+      {...props}
+      paintStatus={(id) => legacyRecipePaintStatus(data, props.miniatureId, id)}
+      onSetPaintState={setPaintState}
+      renderSchemeChip={(scheme) => <SchemeChip scheme={scheme} />}
+    />
+  );
+}
+
+export type RecipeStepCardViewProps = RecipeStepCardProps & {
+  paintStatus: (id: string) => RecipePaintStatus;
+  onSetPaintState: PaintStateSetter;
+  renderSchemeChip: (scheme: { id: string; name: string }) => ReactNode;
+};
+
+export function RecipeStepCardView({
   step,
   label,
   number,
@@ -28,23 +67,10 @@ export function RecipeStepCard({
   onRemoveStep,
   onRemovePaint,
   onOpenPaint,
-}: {
-  step: RecipeStep;
-  label: string;
-  // Position in the recipe, starting at 1.
-  number: number;
-  rows: RecipeStepRow[];
-  miniatureId: string;
-  editMode: boolean;
-  // The paint search is open below this step's rows.
-  adding: boolean;
-  // The paint search shown while adding.
-  addPanel?: ReactNode;
-  onToggleAdd(): void;
-  onRemoveStep(): void;
-  onRemovePaint(paint: Paint): void;
-  onOpenPaint(id: string): void;
-}) {
+  paintStatus,
+  onSetPaintState,
+  renderSchemeChip,
+}: RecipeStepCardViewProps) {
   return (
     <Card sx={{ overflow: "visible" }}>
       <Box
@@ -90,7 +116,7 @@ export function RecipeStepCard({
             variant="text"
             startIcon={adding ? <X size={14} /> : <Plus size={14} />}
             aria-expanded={adding}
-            aria-label={adding ? `Stop adding to ${label}` : `Add paint to ${label}`}
+            aria-label={adding ? `Close adding to ${label}` : `Add paint to ${label}`}
             onClick={onToggleAdd}
             sx={{ color: "var(--ink-soft)", minWidth: 0 }}
           >
@@ -118,9 +144,12 @@ export function RecipeStepCard({
           }}
         >
           {rows.map(({ manual, paint, schemeSources }) => (
-            <PaintRow
+            <ProjectedPaintRow
               key={`${step}:${paint.id}`}
               paint={paint}
+              {...paintStatus(paint.id)}
+              onSetPaintState={onSetPaintState}
+              renderSchemeChip={renderSchemeChip}
               requirement={{
                 id: manual?.id ?? `${step}:${paint.id}`,
                 miniatureId,

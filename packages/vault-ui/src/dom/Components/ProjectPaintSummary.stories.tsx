@@ -4,22 +4,24 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { column } from "../storybook/decorators";
 import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
 
-import { ProjectPaintSummary } from "./ProjectPaintSummary";
+import { ProjectPaintSummary, ProjectPaintSummaryView } from "./ProjectPaintSummary";
 
 const required = [paints.black, paints.crimson, paints.scarlet, paints.gold, paints.blackWash];
 
 const meta = {
   title: "Components/ProjectPaintSummary",
-  component: ProjectPaintSummary,
+  component: ProjectPaintSummaryView,
   args: {
     required,
+    paintStates: vault.paintStates,
+    onSetPaintState: fn(),
     // Scarlet Layer is already on the wishlist in the sample vault.
     missing: [paints.scarlet, paints.gold, paints.blackWash],
     onOpenPaint: fn(),
     onAddAllToWishlist: fn(),
   },
   decorators: [column(720)],
-} satisfies Meta<typeof ProjectPaintSummary>;
+} satisfies Meta<typeof ProjectPaintSummaryView>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -42,6 +44,8 @@ export const NoRecipe: Story = { args: { required: [], missing: [] } };
 export const OwnedButBroken: Story = {
   args: {
     miniatureId: miniatures.knight.id,
+    paintStates: { ...vault.paintStates, [paints.royalBlue.id]: "OWNED" },
+    issues: new Map([[paints.royalBlue.id, new Set(["brokenSubstitution" as const])]]),
     required: [paints.royalBlue],
     missing: [paints.royalBlue],
   },
@@ -79,3 +83,20 @@ export const OwnedButBroken: Story = {
     await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
   },
 };
+
+export const WishlistAction: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await userEvent.click(canvas.getByRole("button", { name: `Add ${paints.gold.name} to wishlist` }));
+    await expect(args.onSetPaintState).toHaveBeenCalledWith(paints.gold.id, "WISHLIST");
+    await userEvent.click(
+      canvas.getByRole("button", { name: `Remove ${paints.scarlet.name} from wishlist` }),
+    );
+    await expect(args.onSetPaintState).toHaveBeenCalledWith(paints.scarlet.id, null);
+    await userEvent.click(canvas.getByRole("button", { name: "Wishlist all" }));
+    await expect(args.onAddAllToWishlist).toHaveBeenCalledWith([paints.gold, paints.blackWash]);
+  },
+};
+
+export const LegacyWrapper: Story = { render: (args) => <ProjectPaintSummary {...args} /> };

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Heart } from "../icons";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { useVault, useVaultStore } from "../store/hooks";
-import type { Paint } from "../types";
+import type { Paint, PaintStatus } from "../types";
 import { projectPaintIssues } from "../utils/vault-data";
 
 import { PaintChecklistItem } from "./PaintChecklistItem";
@@ -12,33 +12,52 @@ import { PaintRowActions } from "./PaintRowActions";
 import { ProgressSummaryCard } from "./ProgressSummaryCard";
 import { StatusChip } from "./StatusChip";
 
+export type ProjectPaintSummaryProps = {
+  miniatureId?: string;
+  required: Paint[];
+  missing: Paint[];
+  onOpenPaint: (id: string) => void;
+  onAddAllToWishlist: (paints: Paint[]) => void;
+};
+
+export type ProjectPaintSummaryViewProps = ProjectPaintSummaryProps & {
+  issues?: ReadonlyMap<string, ReadonlySet<"missingStock" | "brokenSubstitution">> | null;
+  paintStates: Record<string, PaintStatus>;
+  onSetPaintState: (id: string, state: PaintStatus | null) => void;
+};
+
+// Legacy snapshot adapter; migrated callers provide their projection to the view.
+export function ProjectPaintSummary(props: ProjectPaintSummaryProps) {
+  const data = useVault();
+  const setPaintState = useVaultStore((s) => s.setPaintState);
+  return (
+    <ProjectPaintSummaryView
+      {...props}
+      issues={props.miniatureId ? projectPaintIssues(data, props.miniatureId) : null}
+      paintStates={data.paintStates}
+      onSetPaintState={setPaintState}
+    />
+  );
+}
+
 // Keep the paint shortfall visible while the detailed list is collapsed.
-export function ProjectPaintSummary({
-  miniatureId,
+export function ProjectPaintSummaryView({
   required,
   missing,
   onOpenPaint,
   onAddAllToWishlist,
-}: {
-  miniatureId?: string;
-  required: Paint[];
-  missing: Paint[];
-  onOpenPaint(id: string): void;
-  onAddAllToWishlist(paints: Paint[]): void;
-}) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
+  issues,
+  paintStates,
+  onSetPaintState,
+}: ProjectPaintSummaryViewProps) {
   const [fixPaint, setFixPaint] = useState<Paint | null>(null);
-  const issues = miniatureId ? projectPaintIssues(data, miniatureId) : null;
   const broken = missing.some((paint) => issues?.get(paint.id)?.has("brokenSubstitution"));
   const needsStock = (paint: Paint) => (issues ? Boolean(issues.get(paint.id)?.has("missingStock")) : true);
   const total = required.length;
   if (!total) return null;
   const have = total - missing.length;
   const ready = missing.length === 0;
-  const notWishlisted = missing.filter(
-    (paint) => needsStock(paint) && data.paintStates[paint.id] !== "WISHLIST",
-  );
+  const notWishlisted = missing.filter((paint) => needsStock(paint) && paintStates[paint.id] !== "WISHLIST");
   return (
     <>
       <ProgressSummaryCard
@@ -70,7 +89,7 @@ export function ProjectPaintSummary({
       >
         {missing.map((paint) => {
           const isBroken = issues?.get(paint.id)?.has("brokenSubstitution");
-          const wished = data.paintStates[paint.id] === "WISHLIST";
+          const wished = paintStates[paint.id] === "WISHLIST";
           return (
             <PaintChecklistItem
               key={paint.id}
@@ -99,7 +118,7 @@ export function ProjectPaintSummary({
                           ? `Remove ${paint.name} from wishlist`
                           : `Add ${paint.name} to wishlist`,
                         title: wished ? "Remove from wishlist" : "Add to wishlist",
-                        onClick: () => setPaintState(paint.id, wished ? null : "WISHLIST"),
+                        onClick: () => onSetPaintState(paint.id, wished ? null : "WISHLIST"),
                       }}
                     />
                   )}

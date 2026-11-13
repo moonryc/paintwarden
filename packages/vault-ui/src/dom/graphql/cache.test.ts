@@ -187,3 +187,67 @@ test("cache instances do not share state", () => {
   writePage(cache, ["a"], "a");
   assert.equal(read(createVaultCache()), undefined);
 });
+
+const miniatureQuery = gql`
+  query MiniatureList($first: Int!, $after: String, $stage: String) {
+    home(first: $first, after: $after, stage: $stage) {
+      miniatures {
+        nodes {
+          id
+          title
+          readiness {
+            ready
+            missing
+          }
+        }
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+      }
+      revision {
+        epoch
+        seq
+      }
+    }
+  }
+`;
+test("miniature atomic windows share pagination slot but not filters and normalize IDs", () => {
+  const cache = createVaultCache();
+  const write = (ids: string[], stage?: string, first = 48) =>
+    cache.writeQuery({
+      query: miniatureQuery,
+      variables: { first, stage },
+      data: {
+        home: {
+          __typename: "HomeView",
+          revision: { __typename: "VaultRevision", epoch: "e", seq: "1" },
+          miniatures: {
+            __typename: "MiniatureConnection",
+            nodes: ids.map((id) => ({
+              __typename: "Miniature",
+              id,
+              title: id,
+              readiness: { __typename: "MiniatureReadiness", ready: true, missing: 0 },
+            })),
+            pageInfo: { __typename: "PageInfo", endCursor: null, hasNextPage: false },
+          },
+        },
+      },
+    });
+  const readIds = (stage?: string) =>
+    cache
+      .readQuery<{ home: { miniatures: { nodes: { id: string }[] } } }>({
+        query: miniatureQuery,
+        variables: { first: 48, stage },
+      })
+      ?.home.miniatures.nodes.map((node) => node.id);
+  write(["a", "b"]);
+  write(["a", "b", "c"], undefined, 96);
+  write(["done"], "COMPLETE");
+  assert.deepEqual(readIds(), ["a", "b", "c"]);
+  assert.deepEqual(readIds("COMPLETE"), ["done"]);
+  write(["b"]);
+  assert.deepEqual(readIds(), ["b"]);
+  assert.ok(cache.identify({ __typename: "Miniature", id: "b" }));
+});

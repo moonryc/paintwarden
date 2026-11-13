@@ -34,7 +34,37 @@ enum VaultFamily {
   SOURCES
 }
 
+enum PaintingStatus {
+  NOT_STARTED
+  ASSEMBLED
+  PRIMED
+  IN_PROGRESS
+  COMPLETE
+}
+enum MiniatureSchemeEntryKind {
+  PAINT
+  DIVIDER
+  IMAGE
+}
 type Query {
+  home(first: Int! = 48, after: String, stage: PaintingStatus, search: String): HomeView!
+  miniatures(
+    first: Int! = 48
+    after: String
+    ownership: Ownership
+    stage: PaintingStatus
+    search: String
+  ): MiniaturesView!
+  miniature(id: ID!): MiniatureView!
+  schemeOptions(
+    first: Int! = 40
+    after: String
+    search: String
+    category: String
+    excludeIds: [ID!]! = []
+  ): MiniatureSchemeOptionsView!
+  miniatureScheme(id: ID!): MiniatureSchemeView!
+  vaultNavigation: NavigationView!
   library(
     first: Int! = 48
     after: String
@@ -52,6 +82,17 @@ type Query {
   vaultInvalidation(epoch: String!, since: Sequence!): VaultInvalidation!
 }
 type Mutation {
+  createMiniature(input: MiniatureInput!, clientMutationId: String): MiniatureMutationPayload!
+  updateMiniature(id: ID!, input: MiniatureInput!, clientMutationId: String): MiniatureMutationPayload!
+  deleteMiniature(id: ID!, clientMutationId: String): MiniatureMutationPayload!
+  setMiniatureRecipe(
+    id: ID!
+    entries: [MiniatureRecipeEntryInput!]!
+    steps: [String!]
+    schemeIds: [ID!]
+    clientMutationId: String
+  ): MiniatureMutationPayload!
+  setMiniatureSchemes(id: ID!, schemeIds: [ID!]!, clientMutationId: String): MiniatureMutationPayload!
   setPaintStock(
     paintId: ID!
     state: Ownership
@@ -187,4 +228,176 @@ type VaultInvalidation {
   """
   reset: Boolean!
   families: [VaultFamily!]!
+}
+
+type NavigationView {
+  revision: VaultRevision!
+  availablePaints: Int!
+  shoppingPaints: Int!
+}
+type Readiness {
+  total: Int!
+  missing: Int!
+  ready: Boolean!
+  missingStock: Int!
+  brokenSubstitution: Int!
+}
+type MiniatureSwatch {
+  paintId: ID!
+  colorHex: String!
+}
+type Miniature {
+  id: ID!
+  title: String!
+  status: Ownership!
+  paintingStatus: PaintingStatus!
+  imageUrl: String
+  createdAt: Float!
+  updatedAt: Float!
+  notes: String!
+  manufacturer: String!
+  faction: String!
+  scale: String!
+  readiness: Readiness!
+  previewSwatches: [MiniatureSwatch!]!
+  previewSwatchesTruncated: Boolean!
+}
+type MiniatureConnection {
+  nodes: [Miniature!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type HomeCounts {
+  catalogCount: Int!
+  owned: Int!
+  ready: Int!
+  distinctMissingPaints: Int!
+  wishlistedMissingPaints: Int!
+  stages: [FacetCount!]!
+}
+type HomeView {
+  revision: VaultRevision!
+  counts: HomeCounts!
+  miniatures: MiniatureConnection!
+}
+type MiniaturesView {
+  revision: VaultRevision!
+  ownershipCounts: [FacetCount!]!
+  stageCounts: [FacetCount!]!
+  miniatures: MiniatureConnection!
+}
+type MiniatureRecipeEntry {
+  id: ID!
+  paint: Paint!
+  step: String!
+  notes: String!
+  sortOrder: Int!
+}
+type MiniatureRecipeConnection {
+  nodes: [MiniatureRecipeEntry!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type MiniatureScheme {
+  id: ID!
+  name: String!
+  category: String
+  isSystem: Boolean!
+  sourceName: String
+  sourceLogoUrl: String
+  paintCount: Int!
+  availableCount: Int!
+  previewSwatches: [MiniatureSwatch!]!
+  previewSwatchesTruncated: Boolean!
+  imageUrl: String
+}
+type MiniatureSchemeLink {
+  id: ID!
+  sortOrder: Int!
+  scheme: MiniatureScheme!
+}
+type MiniatureSchemeConnection {
+  nodes: [MiniatureSchemeLink!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type MiniatureMissingPaint {
+  id: ID!
+  paint: Paint!
+  missingStock: Boolean!
+  brokenSubstitution: Boolean!
+}
+type MiniatureMissingConnection {
+  nodes: [MiniatureMissingPaint!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type MiniatureView {
+  revision: VaultRevision!
+  miniature: Miniature
+  recipeSteps: [String!]!
+  recipe(first: Int! = 100, after: String): MiniatureRecipeConnection!
+  schemes(first: Int! = 100, after: String): MiniatureSchemeConnection!
+  missing(first: Int! = 100, after: String): MiniatureMissingConnection!
+  required(first: Int! = 100, after: String): MiniatureRequiredConnection!
+}
+type MiniatureSchemeOptionsView {
+  categoryCounts: [FacetCount!]!
+  revision: VaultRevision!
+  nodes: [MiniatureScheme!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type MiniatureSchemeView {
+  revision: VaultRevision!
+  scheme: MiniatureScheme
+  entries(first: Int! = 100, after: String): MiniatureSchemeEntryConnection!
+}
+type MiniatureSchemeEntry {
+  id: ID!
+  kind: MiniatureSchemeEntryKind!
+  sortOrder: Int!
+  paint: Paint
+  label: String
+  tone: String
+  role: String
+  imageUrl: String
+  thumbnailUrl: String
+  imageType: String
+  method: String
+}
+type MiniatureSchemeEntryConnection {
+  nodes: [MiniatureSchemeEntry!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+input MiniatureInput {
+  title: String
+  status: Ownership
+  paintingStatus: PaintingStatus
+  notes: String
+  manufacturer: String
+  faction: String
+  scale: String
+  templateId: ID
+  includeTemplateImage: Boolean
+}
+input MiniatureRecipeEntryInput {
+  id: ID
+  paintId: ID!
+  step: String
+  notes: String
+  sortOrder: Int
+}
+type MiniatureMutationPayload {
+  revision: VaultRevision!
+  miniatureId: ID!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
+
+type MiniatureRequiredConnection {
+  nodes: [Paint!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
 }

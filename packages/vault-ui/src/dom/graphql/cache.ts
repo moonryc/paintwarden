@@ -41,10 +41,33 @@ const libraryPolicy: FieldPolicy<PaintConnection | undefined, PaintConnection> =
   },
 };
 
+const paginationKeys: NonNullable<FieldPolicy["keyArgs"]> = (args) =>
+  Object.keys(args ?? {})
+    .filter((key) => key !== "first" && key !== "after")
+    .sort();
+
 export function createVaultCache(): InMemoryCache {
   return new InMemoryCache({
     typePolicies: {
-      Query: { fields: { library: libraryPolicy } },
+      Query: {
+        fields: {
+          library: libraryPolicy,
+          // Miniature hooks fetch with no-cache and publish one accepted complete
+          // window. Pagination arguments must share a slot; only that atomic
+          // publication may replace it (never normalize in-flight page results).
+          home: { keyArgs: paginationKeys, merge: false },
+          miniatures: { keyArgs: paginationKeys, merge: false },
+          vaultNavigation: { merge: false },
+          miniature: { merge: false },
+          schemeOptions: { keyArgs: paginationKeys, merge: false },
+          miniatureScheme: { merge: false },
+        },
+      },
+      Miniature: { keyFields: ["id"], fields: { readiness: { merge: false } } },
+      MiniatureConnection: { keyFields: false },
+      HomeView: { keyFields: false },
+      MiniaturesView: { keyFields: false },
+      MiniatureView: { keyFields: false },
       Paint: { keyFields: ["id"], fields: { inventory: { merge: false } } },
       Inventory: { keyFields: false },
       PaintConnection: { keyFields: false },

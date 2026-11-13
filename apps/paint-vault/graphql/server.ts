@@ -22,12 +22,42 @@ import {
   similarPaints,
   substitutionIngredients,
 } from "./library.ts";
+import { miniatureMutations } from "./miniature-mutations.ts";
+import {
+  readMiniatureSchemeOptions,
+  readMiniatureScheme,
+  miniatureSchemeEntries,
+} from "./miniature-schemes.ts";
+import {
+  readHome,
+  readMiniatures,
+  readMiniature,
+  readVaultNavigation,
+  miniatureRecipe,
+  miniatureSchemes,
+  miniatureMissing,
+  miniatureRequired,
+} from "./miniatures.ts";
 import { acquireOperation } from "./rate-limit.ts";
 import { Sequence } from "./sequence.ts";
 
 const resolvers: Resolvers<GraphQLContext> = {
   Sequence,
   Query: {
+    home: (_root, args, context) => {
+      const view = readHome(args);
+      if (context.metrics) context.metrics.rows += view.miniatures.nodes.length;
+      return view;
+    },
+    miniatures: (_root, args, context) => {
+      const view = readMiniatures(args);
+      if (context.metrics) context.metrics.rows += view.miniatures.nodes.length;
+      return view;
+    },
+    miniature: (_root, args) => readMiniature(args.id),
+    vaultNavigation: () => readVaultNavigation(),
+    schemeOptions: (_root, args) => readMiniatureSchemeOptions(args),
+    miniatureScheme: (_root, args) => readMiniatureScheme(args.id),
     library: (_root, args, context) => {
       const page = readLibrary(args);
       if (context.metrics) context.metrics.rows += page.nodes.length;
@@ -43,6 +73,13 @@ const resolvers: Resolvers<GraphQLContext> = {
     vaultRevision: () => getSqlite().transaction(readRevision)(),
     vaultInvalidation: (_root, args) => invalidationSince(args),
   },
+  MiniatureView: {
+    recipe: (parent, args) => miniatureRecipe(parent, args),
+    schemes: (parent, args) => miniatureSchemes(parent, args),
+    missing: (parent, args) => miniatureMissing(parent, args),
+    required: (parent, args) => miniatureRequired(parent, args),
+  },
+  MiniatureSchemeView: { entries: (parent, args) => miniatureSchemeEntries(parent, args) },
   PaintView: {
     substitutions: (parent, args) => paintSubstitutions(parent, args),
     usedBy: (parent, args) => paintUsages(parent, args),
@@ -50,6 +87,7 @@ const resolvers: Resolvers<GraphQLContext> = {
   },
   Substitution: { ingredients: (parent, args) => substitutionIngredients(parent, args) },
   Mutation: {
+    ...miniatureMutations,
     setPaintStock: (_root, args) => {
       try {
         return getSqlite().transaction(() => {

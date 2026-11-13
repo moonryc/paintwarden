@@ -1,0 +1,70 @@
+fragment MiniatureSchemeSummary on MiniatureScheme {
+  id
+  name
+  category
+  isSystem
+  sourceName
+  sourceLogoUrl
+  paintCount
+  availableCount
+  previewSwatches {
+    paintId
+    colorHex
+  }
+  previewSwatchesTruncated
+  imageUrl
+}
+query MiniatureSchemeDetails($id: ID!, $after: String) {
+  miniatureScheme(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    scheme {
+      ...MiniatureSchemeSummary
+    }
+    entries(first: 40, after: $after) {
+      nodes {
+        id
+        kind
+        sortOrder
+        paint {
+          ...DetailPaint
+        }
+        label
+        tone
+        role
+        imageUrl
+        thumbnailUrl
+        imageType
+        method
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+query SchemePickerOptions($search: String!, $category: String, $excludeIds: [ID!]!, $after: String) {
+  schemeOptions(first: 40, after: $after, search: $search, category: $category, excludeIds: $excludeIds) {
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      ...MiniatureSchemeSummary
+    }
+    categoryCounts {
+      key
+      label
+      count
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

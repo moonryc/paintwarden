@@ -381,16 +381,19 @@ test("all generated screen documents fit their declared bounded defaults", async
     if (!key.endsWith("Document")) continue;
     const operation = doc.definitions.find((d) => d.kind === "OperationDefinition");
     if (!operation || operation.kind !== "OperationDefinition") continue;
-    const variables =
-      operation.name?.value === "PaintPickerOptions"
-        ? { search: "", excludeIds: [], first: 30 }
-        : operation.name?.value === "SetPaintStock"
-          ? { paintId: "paint", state: "OWNED", quantity: 1 }
-          : ["VaultChanges", "VaultInvalidation"].includes(operation.name?.value ?? "")
-            ? { epoch: "epoch", since: "0" }
-            : operation.variableDefinitions?.some((v) => v.variable.name.value === "id")
-              ? { id: "paint" }
-              : {};
+    const variables = ["PaintPickerOptions", "SchemePickerOptions"].includes(operation.name?.value ?? "")
+      ? { search: "", excludeIds: [], first: 30 }
+      : operation.name?.value === "SetPaintStock"
+        ? { paintId: "paint", state: "OWNED", quantity: 1 }
+        : ["VaultChanges", "VaultInvalidation"].includes(operation.name?.value ?? "")
+          ? { epoch: "epoch", since: "0" }
+          : operation.variableDefinitions?.some((v) => v.variable.name.value === "id")
+            ? { id: "paint", input: { title: "Fixture", status: "OWNED" }, entries: [], schemeIds: [] }
+            : operation.name?.value === "CreateProjectMiniature"
+              ? { input: { title: "Fixture", status: "OWNED" } }
+              : operation.name?.value === "MiniatureList"
+                ? { workbench: true, first: 48 }
+                : {};
     assert.doesNotThrow(
       () => check(print(doc), variables, schema, operation.operation === "subscription"),
       key,
@@ -421,6 +424,31 @@ test("nested connection and picker argument budgets reject work before resolvers
     () =>
       check(
         '{paint(id:"p"){substitutions(first:30){nodes{ingredients(first:100){nodes{paint{id name brand range sourceUrl colorHex discontinued available}}}}}}}',
+      ),
+    /cost limit/,
+  );
+});
+
+test("miniature nested mutation inputs and preview expansion remain bounded", () => {
+  const recipe =
+    'mutation($entries:[MiniatureRecipeEntryInput!]!){setMiniatureRecipe(id:"m",entries:$entries){miniatureId}}';
+  budgetError(() => check(recipe, { entries: [{ paintId: "x".repeat(257) }] }), /paintId exceeds/);
+  budgetError(
+    () =>
+      check('mutation($ids:[ID!]!){setMiniatureSchemes(id:"m",schemeIds:$ids){miniatureId}}', {
+        ids: ["x".repeat(257)],
+      }),
+    /schemeIds exceeds/,
+  );
+  assert.doesNotThrow(() =>
+    check("mutation($input:MiniatureInput!){createMiniature(input:$input){miniatureId}}", {
+      input: { title: "A", notes: "n".repeat(1000) },
+    }),
+  );
+  budgetError(
+    () =>
+      check(
+        "{home(first:100){miniatures{nodes{previewSwatches{" + Array(13).fill("colorHex").join(" ") + "}}}}}",
       ),
     /cost limit/,
   );

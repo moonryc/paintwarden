@@ -50,6 +50,7 @@ type Snapshot = {
   data: SubstitutionData;
   search: ReturnType<typeof createFuzzyIndex<PaintRead>>;
   pickerSearch: ReturnType<typeof createFuzzyIndex<PaintRead>>;
+  navigation: { availablePaints: number; shoppingPaints: number };
 };
 export type SubstitutionRead = {
   id: string;
@@ -85,7 +86,7 @@ export function readRevision(): Revision {
 }
 // A single immutable paint-domain projection, never State or miniature/template/recipe snapshots.
 // Reuse only at the exact database generation; rebuild after every write (including REST).
-function snapshot(allowCache = true): Snapshot {
+export function readPaintProjection(allowCache = true): Snapshot {
   const sqlite = getSqlite();
   const revision = readRevision();
   if (allowCache && cached?.revision.epoch === revision.epoch && cached.revision.seq === revision.seq)
@@ -174,6 +175,13 @@ function snapshot(allowCache = true): Snapshot {
   const result: Snapshot = {
     revision,
     paints,
+    navigation: {
+      availablePaints: paints.filter((p) => p.available).length,
+      shoppingPaints: paints.filter(
+        (p) =>
+          p.inventory?.state === "WISHLIST" || (p.inventory?.state === "OWNED" && !physicallyOwned(p.id)),
+      ).length,
+    },
     byId: new Map(paints.map((p) => [p.id, p])),
     data,
     search: createFuzzyIndex(paints, (p) => `${p.isCustom ? "Custom " : ""}${p.brand} ${p.range} ${p.name}`),
@@ -270,7 +278,7 @@ export function readLibrary(args: LibraryArgs) {
     badInput("Invalid Library filter");
   const allowCache = !getSqlite().inTransaction;
   return getSqlite().transaction(() => {
-    const s = snapshot(allowCache),
+    const s = readPaintProjection(allowCache),
       q = args.search?.trim() ?? "",
       filter = q ? "ALL" : (args.filter ?? "ALL");
     const searched = searchFuzzyIndex(s.search, q).filter(
@@ -318,7 +326,7 @@ export function readPaintOptions(args: { first: number; search: string; excludeI
   args.excludeIds.forEach((id) => validateText(id, "exclude ID"));
   const allowCache = !getSqlite().inTransaction;
   return getSqlite().transaction(() => {
-    const s = snapshot(allowCache),
+    const s = readPaintProjection(allowCache),
       excluded = new Set(args.excludeIds);
     // Exclusions precede ranking: excluded literal matches must not suppress eligible typo matches.
     const candidates = s.paints.filter((p) => !excluded.has(p.id));
@@ -349,7 +357,7 @@ export function readPaint(id: string): PaintViewRead {
   validateText(id, "id");
   const allowCache = !getSqlite().inTransaction;
   return getSqlite().transaction(() => {
-    const s = snapshot(allowCache);
+    const s = readPaintProjection(allowCache);
     const usages = getSqlite()
       .prepare(
         `SELECT DISTINCT m.id,m.title FROM miniatures m WHERE
@@ -365,7 +373,7 @@ export function readSubstitution(id: string) {
   validateText(id, "id");
   const allowCache = !getSqlite().inTransaction;
   return getSqlite().transaction(() => {
-    const s = snapshot(allowCache);
+    const s = readPaintProjection(allowCache);
     return { revision: s.revision, substitution: substitutionRead(s, id) };
   })();
 }

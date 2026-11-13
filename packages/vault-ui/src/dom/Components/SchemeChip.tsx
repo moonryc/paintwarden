@@ -1,5 +1,6 @@
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
+import type { ReactNode } from "react";
 
 import { X } from "../icons";
 import { truncateSx } from "../utils/truncate";
@@ -7,15 +8,22 @@ import { truncateSx } from "../utils/truncate";
 import { SchemeSwatch } from "./SchemeSwatch";
 
 // Compact scheme label with its swatch, shared by paint steps and the scheme picker.
-export function SchemeChip({
+type SchemeChipProps = {
+  scheme: { id: string; name: string };
+  size?: "sm" | "md";
+  onRemove?: () => void;
+};
+
+export function SchemeChip(props: SchemeChipProps) {
+  return <SchemeChipView {...props} swatch={<SchemeSwatch schemeId={props.scheme.id} size="xs" />} />;
+}
+
+export function SchemeChipView({
   scheme,
   size = "sm",
   onRemove,
-}: {
-  scheme: { id: string; name: string };
-  size?: "sm" | "md";
-  onRemove?(): void;
-}) {
+  swatch,
+}: SchemeChipProps & { swatch: ReactNode }) {
   const md = size === "md";
   return (
     <Box
@@ -38,7 +46,7 @@ export function SchemeChip({
         overflow: "hidden",
       }}
     >
-      <SchemeSwatch schemeId={scheme.id} size="xs" />
+      {swatch}
       <Box component="span" sx={{ minWidth: 0, ...truncateSx }}>
         {scheme.name}
       </Box>

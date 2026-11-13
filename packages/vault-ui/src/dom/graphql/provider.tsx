@@ -24,13 +24,13 @@ export const VaultGraphQLContext = createContext<VaultGraphQLScope | null>(null)
 export const useVaultGraphQL = () => useContext(VaultGraphQLContext);
 
 const fields: Record<VaultFamily, readonly string[]> = {
-  LIBRARY: ["library"],
+  LIBRARY: ["library", "vaultNavigation"],
   PAINT: ["paint"],
   OPTIONS: ["paintOptions"],
   HOME: ["home"],
   MINIATURES: ["miniatures", "miniature"],
-  WISHLIST: ["wishlist"],
-  SCHEMES: ["schemes", "scheme"],
+  WISHLIST: ["wishlist", "vaultNavigation"],
+  SCHEMES: ["schemes", "scheme", "schemeOptions", "miniatureScheme"],
   TEMPLATES: ["templates", "template"],
   SOURCES: ["sources"],
 };

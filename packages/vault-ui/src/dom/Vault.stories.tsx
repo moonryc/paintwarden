@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 
-import { miniatures, paints } from "./storybook/fixtures";
+import { miniatures, paints, vault } from "./storybook/fixtures";
 import { mockApi } from "./storybook/mock-api";
 import Vault from "./Vault";
 
@@ -75,7 +75,11 @@ export const Project: Story = {
     const canvas = within(canvasElement);
     await openPage(canvas, "Miniatures");
     await userEvent.click(await canvas.findByRole("button", { name: new RegExp(miniatures.knight.title) }));
-    await expect(await within(document.body).findByRole("dialog")).toBeInTheDocument();
+    const dialog = await within(document.body).findByRole("dialog", { name: miniatures.knight.title });
+    await expect(
+      await within(dialog).findByRole("heading", { name: miniatures.knight.title }),
+    ).toBeInTheDocument();
+    await expect(within(dialog).queryByText("Loading project…")).not.toBeInTheDocument();
   },
 };
 
@@ -90,11 +94,12 @@ export const AddMiniature: Story = {
 
 const serverError = () => Response.json({ error: "Server error" }, { status: 500 });
 
-// With no vault to show, the error replaces the app instead of an empty collection.
+// Migrated Home starts without a snapshot; only entering a legacy screen requests it.
 export const VaultLoadFailure: Story = {
   decorators: [mockApi({ "/api/state": serverError })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await openPage(canvas, "Wishlist");
     await expect(
       await canvas.findByRole("heading", { name: /open your vault/ }, { timeout: 5000 }),
     ).toBeInTheDocument();
@@ -138,26 +143,23 @@ export const RefreshFailure: Story = {
 let changedElsewhere = false;
 const renamed = "Renamed on another device";
 
-// Returning to the window merges rows another client changed, without a reload.
+const changedVault = {
+  ...vault,
+  miniatures: vault.miniatures.map((mini) =>
+    mini.id === miniatures.knight.id ? { ...mini, title: renamed } : mini,
+  ),
+};
+
+// Focus catch-up invalidates and refetches Apollo projections without loading a snapshot.
 export const ChangesFromAnotherClient: Story = {
   decorators: [
-    mockApi({
-      "/api/changes": () =>
-        changedElsewhere
-          ? Response.json({
-              epoch: "story",
-              seq: 1,
-              reload: false,
-              changes: [
-                {
-                  table: "miniatures",
-                  key: { id: miniatures.knight.id },
-                  row: { ...miniatures.knight, title: renamed },
-                },
-              ],
-            })
-          : undefined,
-    }),
+    mockApi(
+      {},
+      {
+        data: () => (changedElsewhere ? changedVault : vault),
+        revision: () => (changedElsewhere ? 1 : 0),
+      },
+    ),
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

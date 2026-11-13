@@ -127,9 +127,12 @@ budget. Large/stress cold/warm measurements are separate from semantic correctne
 
 Apollo is the default Library path; there is no debug flag or debug panel. `#paints`
 opens Library directly in both HTTP and `paintvault://app`, without `/api/state`.
-The default entry remains Home; navigation is unchanged. The legacy snapshot loads
-lazily on first entering an unmigrated screen or opening its project workflow.
-Its format and size are intentionally unchanged until later migration phases.
+The default entry remains Home; navigation is unchanged. Since Phase 3, Home,
+Miniatures and the project drawer/editor also use bounded Apollo projections, so
+default entry and those workflows do not load `/api/state`. The legacy snapshot
+loads lazily only for unmigrated Wishlist, Schemes, Templates, Settings and paint
+tools, or source/scheme data overlays. Its format and size are intentionally
+unchanged until later migration phases. See `graphql-miniatures.md`.
 
 The typed invalidation controller maps trigger-log events to Library, paint detail,
 options, Home, miniatures, Wishlist, schemes, templates and sources. Source metadata

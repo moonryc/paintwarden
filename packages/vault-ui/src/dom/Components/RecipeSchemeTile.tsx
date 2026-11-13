@@ -3,11 +3,12 @@ import Box from "@mui/material/Box";
 
 import { X } from "../icons";
 import { useVault } from "../store/hooks";
+import type { Paint, SchemeOrderEntry } from "../types";
 import { schemeOrderEntries } from "../utils/scheme-order";
 import { truncateSx } from "../utils/truncate";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
 
-import { SchemeSwatch } from "./SchemeSwatch";
+import { SchemeSwatchView } from "./SchemeSwatch";
 
 // Edit mode keeps the tile's size and swatch so the layout doesn't jump. The sizing and
 // typography are explicit because the edit tile is a div, not a button, and would otherwise use
@@ -31,22 +32,42 @@ const tileSx = {
 
 // A color scheme attached to a project's recipe: its swatch, name and paint count. It opens the
 // scheme, or in edit mode carries a badge that removes it from the miniature.
-export function RecipeSchemeTile({
+type RecipeSchemeTileProps = {
+  scheme: { id: string; name: string };
+  editMode: boolean;
+  onOpen: () => void;
+  onRemove: () => void;
+};
+
+export function RecipeSchemeTile(props: RecipeSchemeTileProps) {
+  const data = useVault();
+  const entries = schemeOrderEntries(data, props.scheme.id);
+  return (
+    <RecipeSchemeTileView
+      {...props}
+      entries={entries}
+      paints={data.catalog}
+      paintCount={entries.filter((entry) => entry.type === "PAINT").length}
+    />
+  );
+}
+
+export function RecipeSchemeTileView({
   scheme,
   editMode,
   onOpen,
   onRemove,
-}: {
-  scheme: { id: string; name: string };
-  editMode: boolean;
-  onOpen(): void;
-  onRemove(): void;
+  paintCount,
+  entries,
+  paints,
+}: RecipeSchemeTileProps & {
+  paintCount: number;
+  entries: SchemeOrderEntry[];
+  paints: Paint[];
 }) {
-  const data = useVault();
-  const paintCount = schemeOrderEntries(data, scheme.id).filter((entry) => entry.type === "PAINT").length;
   const content = (
     <>
-      <SchemeSwatch schemeId={scheme.id} size="lg" />
+      <SchemeSwatchView entries={entries} paints={paints} size="lg" />
       <Box component="span" sx={{ width: "100%", minWidth: 0 }}>
         <Box
           component="span"

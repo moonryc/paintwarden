@@ -8,7 +8,7 @@ export function PaintGradientPlaceholder({
   paints,
   showIcon = true,
 }: {
-  paints: Paint[];
+  paints: Pick<Paint, "colorHex">[];
   showIcon?: boolean;
 }) {
   const colors = paints

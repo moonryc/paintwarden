@@ -1,0 +1,437 @@
+import { Alert, Button, Chip, Dialog, IconButton, SwipeableDrawer, useMediaQuery } from "@mui/material";
+import Box from "@mui/material/Box";
+import type { Theme } from "@mui/material/styles";
+import { useState } from "react";
+
+import { Modal } from "../Components/Modal";
+import { ProjectPaintSummaryView } from "../Components/ProjectPaintSummary";
+import { ProjectRecipeView } from "../Components/ProjectRecipe";
+import { StageStepper } from "../Components/StageStepper";
+import type { DetailPaintFragment } from "../graphql/generated/graphql";
+import { useMiniatureActions } from "../graphql/miniature-actions";
+import { useMiniatureDetail } from "../graphql/miniature-detail-hooks";
+import type { MiniatureDetailView } from "../graphql/miniature-detail-loader";
+import { paintModel, schemeEntryModels } from "../graphql/miniature-scheme-model";
+import { usePaintStock } from "../graphql/stock-actions";
+import { Pencil, X } from "../icons";
+import { useVaultStore } from "../store/hooks";
+import { up } from "../theme-tokens";
+import type { Miniature, Paint, PaintingStatus, PaintStatus, RecipeStep } from "../types";
+import { STAGES, STEPS, noop } from "../utils/constants";
+
+import { ApolloProjectSchemeDialog } from "./ApolloProjectSchemeDialog";
+import { ApolloSchemePickerDialog } from "./ApolloSchemePickerDialog";
+import { ImageViewer } from "./ImageViewer";
+import { MiniatureForm } from "./MiniatureForm";
+import { PaintDetailsOverlay } from "./PaintDetailsOverlay";
+import { ProjectHero } from "./ProjectHero";
+
+// This boundary never loads the legacy State snapshot, even when a project is
+// opened directly from a paint's Used by link.
+export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: string; onClose(): void }) {
+  const detail = useMiniatureDetail(miniatureId);
+  if (!detail.data?.miniature)
+    return (
+      <Modal title="Project" subtitle="Miniature details" onClose={onClose}>
+        {detail.error ? (
+          <Alert severity="error" action={<Button onClick={detail.refresh}>Retry</Button>}>
+            {detail.error.message}
+          </Alert>
+        ) : (
+          <Box role="status">
+            {detail.loading ? "Loading project…" : "This miniature is no longer available."}
+          </Box>
+        )}
+      </Modal>
+    );
+  return (
+    <ProjectContent
+      key={miniatureId}
+      data={detail.data}
+      loading={detail.loading}
+      error={detail.error}
+      refresh={detail.refresh}
+      onClose={onClose}
+    />
+  );
+}
+
+function recipeStep(value: string): RecipeStep {
+  const step = STEPS.find(([id]) => id === value)?.[0];
+  if (!step) throw new Error(`Unknown recipe step: ${value}`);
+  return step;
+}
+
+function ProjectContent({
+  data,
+  loading,
+  error,
+  refresh,
+  onClose,
+}: {
+  data: MiniatureDetailView;
+  loading: boolean;
+  error: Error | null;
+  refresh(): void;
+  onClose(): void;
+}) {
+  const miniature = data.miniature!;
+  const api = useVaultStore((s) => s.api);
+  const notify = useVaultStore((s) => s.notify);
+  const actions = useMiniatureActions();
+  const { setPaintState } = usePaintStock();
+  const [pending, setPending] = useState(0);
+  const run = async (task: Promise<void>) => {
+    setPending((old) => old + 1);
+    try {
+      await task;
+    } finally {
+      setPending((old) => old - 1);
+    }
+  };
+  const schemes = data.attachedSchemes.map((read) => ({
+    id: read.scheme!.id,
+    name: read.scheme!.name,
+    paintCount: read.scheme!.paintCount,
+    ...schemeEntryModels(read.entries.nodes),
+  }));
+  const projections = new Map<string, DetailPaintFragment>();
+  for (const row of data.recipe.nodes) projections.set(row.paint.id, row.paint);
+  for (const paint of data.required.nodes) projections.set(paint.id, paint);
+  for (const row of data.missing.nodes) projections.set(row.paint.id, row.paint);
+  for (const read of data.attachedSchemes)
+    for (const row of read.entries.nodes) if (row.paint) projections.set(row.paint.id, row.paint);
+  const catalog = [...projections.values()].map(paintModel);
+  const required = data.required.nodes.map(paintModel);
+  const missing = data.missing.nodes.map((row) => paintModel(row.paint));
+  const requirementRows = data.recipe.nodes.map((row) => ({
+    ...row,
+    miniatureId: miniature.id,
+    paintId: row.paint.id,
+    step: recipeStep(row.step),
+  }));
+  const issues = new Map(
+    data.missing.nodes.map((row) => [
+      row.paint.id,
+      new Set<"missingStock" | "brokenSubstitution">([
+        ...(row.missingStock ? ["missingStock" as const] : []),
+        ...(row.brokenSubstitution ? ["brokenSubstitution" as const] : []),
+      ]),
+    ]),
+  );
+  const paintStates: Record<string, PaintStatus> = {};
+  for (const paint of projections.values())
+    if (paint.inventory?.state === "OWNED" || paint.inventory?.state === "WISHLIST")
+      paintStates[paint.id] = paint.inventory.state;
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [openPaintId, setOpenPaintId] = useState<string | null>(null);
+  const [openSchemeId, setOpenSchemeId] = useState<string | null>(null);
+  const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"), { noSsr: true });
+  const saveMiniature = (patch: Partial<Miniature>) =>
+    run(actions.update(miniature.id, { ...miniature, ...patch }));
+  const setStage = (paintingStatus: PaintingStatus) => {
+    const previous = miniature.paintingStatus;
+    const label = STAGES.find(([stage]) => stage === paintingStatus)?.[1] ?? paintingStatus;
+    saveMiniature({ paintingStatus }).then(
+      () =>
+        notify(`${miniature.title} marked ${label.toLowerCase()}`, "ok", {
+          label: "Undo",
+          onClick: () => void saveMiniature({ paintingStatus: previous }).catch(noop),
+        }),
+      noop,
+    );
+  };
+  const addAllToWishlist = (paints: Paint[]) => {
+    for (const paint of paints) setPaintState(paint.id, "WISHLIST");
+    notify(`${paints.length} paint${paints.length === 1 ? "" : "s"} added to wishlist`, "ok", {
+      label: "Undo",
+      onClick: () => {
+        for (const paint of paints) {
+          const previous = projections.get(paint.id)?.inventory;
+          if (previous?.state === "OWNED")
+            setPaintState(
+              paint.id,
+              "OWNED",
+              previous.stockLevel === "LOW" ? "LOW" : "FULL",
+              previous.quantity,
+            );
+          else setPaintState(paint.id, previous?.state === "WISHLIST" ? "WISHLIST" : null);
+        }
+      },
+    });
+  };
+  const details = [miniature.manufacturer, miniature.faction, miniature.scale].filter(Boolean);
+
+  const content = (
+    <>
+      {/* Zero-height sticky rail keeps the close button reachable while scrolling. */}
+      <Box
+        component="div"
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
+          height: 0,
+        }}
+      >
+        <IconButton
+          color="overlay"
+          onClick={onClose}
+          aria-label="Close project"
+          sx={{
+            boxSizing: "border-box",
+            position: "absolute",
+            top: "0.75rem",
+            right: "0.75rem",
+            height: "2.5rem",
+            width: "2.5rem",
+            borderRadius: "calc(infinity * 1px)",
+            bgcolor: "color-mix(in oklab, var(--scrim) 45%, transparent)",
+            WebkitBackdropFilter: "blur(8px)",
+            backdropFilter: "blur(8px)",
+            // Keeps the dark backing on touch, where MUI's hover would clear it.
+            "&:hover": {
+              bgcolor: "color-mix(in oklab, var(--scrim) 45%, transparent)",
+              "@media (hover: hover)": {
+                bgcolor: "color-mix(in oklab, var(--scrim) 60%, transparent)",
+              },
+            },
+            [up.md]: {
+              top: "1rem",
+              right: "1rem",
+            },
+          }}
+        >
+          <X size={18} />
+        </IconButton>
+      </Box>
+      <ProjectHero miniature={miniature} paints={required} onOpenImage={() => setImageViewerOpen(true)} />
+
+      <Box
+        component="div"
+        sx={{
+          boxSizing: "border-box",
+          "& > :where(:not(:last-child))": { mb: 3 },
+          p: 2,
+          paddingBottom: "calc(2rem + env(safe-area-inset-bottom))",
+          [up.md]: {
+            "& > :where(:not(:last-child))": { mb: 3.5 },
+            p: 3.5,
+          },
+        }}
+      >
+        {error && (
+          <Alert severity="error" action={<Button onClick={refresh}>Retry</Button>}>
+            {error.message}
+          </Alert>
+        )}
+        <Box component="div" sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+          <Box component="div" sx={{ minWidth: 0, flex: 1 }}>
+            {details.length > 0 && (
+              <Box component="div" sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1 }}>
+                {details.map((value) => (
+                  <Chip
+                    key={value}
+                    label={value}
+                    size="small"
+                    sx={{ bgcolor: "var(--sunken)", color: "var(--ink-soft)" }}
+                  />
+                ))}
+              </Box>
+            )}
+            {miniature.notes ? (
+              <Box
+                component="p"
+                sx={{ m: 0, fontSize: 14, lineHeight: 1.6, color: "var(--ink-soft)", whiteSpace: "pre-line" }}
+              >
+                {miniature.notes}
+              </Box>
+            ) : (
+              <Button
+                size="small"
+                variant="text"
+                startIcon={<Pencil size={13} />}
+                onClick={() => setEditingDetails(true)}
+                sx={{ ml: -1, color: "var(--ink-faint)" }}
+              >
+                Add project notes
+              </Button>
+            )}
+          </Box>
+          <Box component="div" sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() =>
+                void api("/api/miniature-templates", {
+                  method: "POST",
+                  body: JSON.stringify({ sourceMiniatureId: miniature.id }),
+                })
+                  .then(() => notify(`Saved ${miniature.title} as a template`))
+                  .catch(noop)
+              }
+            >
+              Save as template
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Pencil size={14} />}
+              onClick={() => setEditingDetails(true)}
+            >
+              Edit
+            </Button>
+          </Box>
+        </Box>
+
+        <Box component="section" aria-labelledby="painting-stage-heading">
+          <Box
+            component="h3"
+            id="painting-stage-heading"
+            sx={{
+              m: 0,
+              mb: 0.7,
+              fontSize: "0.65rem",
+              fontWeight: 700,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: "var(--ink-faint)",
+            }}
+          >
+            Painting stage
+          </Box>
+          <StageStepper value={miniature.paintingStatus} onChange={setStage} />
+        </Box>
+
+        <ProjectPaintSummaryView
+          miniatureId={miniature.id}
+          required={required}
+          missing={missing}
+          onOpenPaint={setOpenPaintId}
+          onAddAllToWishlist={addAllToWishlist}
+          issues={issues}
+          paintStates={paintStates}
+          onSetPaintState={setPaintState}
+        />
+
+        <Box inert={pending > 0 || loading || Boolean(error)} aria-busy={pending > 0 || loading}>
+          <ProjectRecipeView
+            miniature={miniature}
+            required={required}
+            requirementRows={requirementRows}
+            catalog={catalog}
+            explicitSteps={data.recipeSteps.map(recipeStep)}
+            schemes={schemes}
+            onSetPaintState={setPaintState}
+            paintStatus={(id) => {
+              const paint = projections.get(id);
+              return {
+                available: paint?.available ?? false,
+                wished: paint?.inventory?.state === "WISHLIST",
+                activeSubstitution: paint?.activeSubstitution
+                  ? { name: paint.activeSubstitution.name, broken: paint.brokenSubstitution }
+                  : null,
+              };
+            }}
+            setRecipe={(id, entries) => void run(actions.setRecipe(id, entries)).catch(noop)}
+            setRecipeSteps={(id, steps) =>
+              void run(
+                actions.setRecipe(
+                  id,
+                  requirementRows.map(({ miniatureId: _miniatureId, paint: _paint, ...row }) => row),
+                  steps,
+                ),
+              ).catch(noop)
+            }
+            setAttached={(ids) => run(actions.setSchemes(miniature.id, ids))}
+            renderSchemePicker={(props) => <ApolloSchemePickerDialog {...props} />}
+            onOpenPaint={setOpenPaintId}
+            onOpenScheme={setOpenSchemeId}
+          />
+        </Box>
+      </Box>
+      {editingDetails && (
+        <MiniatureForm
+          initial={miniature}
+          onClose={() => setEditingDetails(false)}
+          onDelete={async () => {
+            try {
+              await run(actions.remove(miniature.id));
+              notify(`Deleted ${miniature.title}`);
+              onClose();
+            } catch (error) {
+              notify(error instanceof Error ? error.message : "Could not delete miniature", "error");
+              throw error;
+            }
+          }}
+          onSubmit={async (values) => {
+            await run(actions.update(miniature.id, values));
+            setEditingDetails(false);
+            notify("Miniature updated");
+          }}
+        />
+      )}
+      {imageViewerOpen && miniature.imageUrl && (
+        <ImageViewer
+          src={miniature.imageUrl}
+          alt={miniature.title}
+          onClose={() => setImageViewerOpen(false)}
+        />
+      )}
+      <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />
+      {openSchemeId && (
+        <ApolloProjectSchemeDialog
+          key={openSchemeId}
+          schemeId={openSchemeId}
+          onClose={() => setOpenSchemeId(null)}
+        />
+      )}
+    </>
+  );
+  return phone ? (
+    <Dialog
+      open
+      fullScreen
+      onClose={onClose}
+      slotProps={{
+        paper: {
+          "aria-label": miniature.title,
+          // Dialog otherwise points the paper at a title element this layout doesn't have.
+          "aria-labelledby": undefined,
+          sx: {
+            boxSizing: "border-box",
+            height: "100dvh",
+            maxHeight: "100dvh",
+            overflowY: "auto",
+            borderRadius: "0",
+            bgcolor: "var(--canvas)",
+          },
+        },
+      }}
+    >
+      {content}
+    </Dialog>
+  ) : (
+    <SwipeableDrawer
+      open
+      anchor="right"
+      onClose={onClose}
+      onOpen={noop}
+      disableSwipeToOpen
+      slotProps={{
+        paper: {
+          "aria-label": miniature.title,
+          sx: {
+            boxSizing: "border-box",
+            width: "100%",
+            maxWidth: "640px",
+            bgcolor: "var(--canvas)",
+          },
+        },
+      }}
+    >
+      {content}
+    </SwipeableDrawer>
+  );
+}

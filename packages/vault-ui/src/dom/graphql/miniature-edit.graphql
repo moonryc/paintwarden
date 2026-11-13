@@ -1,0 +1,39 @@
+fragment MiniatureEditResult on MiniatureMutationPayload {
+  revision {
+    epoch
+    seq
+  }
+  miniatureId
+  clientMutationId
+  invalidatedFamilies
+}
+mutation CreateProjectMiniature($input: MiniatureInput!, $clientMutationId: String) {
+  createMiniature(input: $input, clientMutationId: $clientMutationId) {
+    ...MiniatureEditResult
+  }
+}
+mutation UpdateProjectMiniature($id: ID!, $input: MiniatureInput!, $clientMutationId: String) {
+  updateMiniature(id: $id, input: $input, clientMutationId: $clientMutationId) {
+    ...MiniatureEditResult
+  }
+}
+mutation DeleteProjectMiniature($id: ID!, $clientMutationId: String) {
+  deleteMiniature(id: $id, clientMutationId: $clientMutationId) {
+    ...MiniatureEditResult
+  }
+}
+mutation SetProjectRecipe(
+  $id: ID!
+  $entries: [MiniatureRecipeEntryInput!]!
+  $steps: [String!]
+  $clientMutationId: String
+) {
+  setMiniatureRecipe(id: $id, entries: $entries, steps: $steps, clientMutationId: $clientMutationId) {
+    ...MiniatureEditResult
+  }
+}
+mutation SetProjectSchemes($id: ID!, $schemeIds: [ID!]!, $clientMutationId: String) {
+  setMiniatureSchemes(id: $id, schemeIds: $schemeIds, clientMutationId: $clientMutationId) {
+    ...MiniatureEditResult
+  }
+}

@@ -103,3 +103,16 @@ test("committed mutations invalidate filtered pages without advancing the stream
   controller.committed(revision("10"), ["LIBRARY"]);
   assert.equal(refreshed, 1);
 });
+
+test("late Home/list/detail envelopes cannot regress shared Miniature fields before SSE", () => {
+  const controller = new VaultInvalidationController();
+  const ticket = controller.capture();
+  assert.equal(controller.accepts(ticket, revision("10"), ["HOME"]), true);
+  assert.equal(controller.accepts(ticket, revision("9"), ["MINIATURES"]), false);
+  assert.equal(controller.accepts(ticket, revision("11"), ["MINIATURES", "PAINT"]), true);
+  assert.equal(controller.accepts(ticket, revision("10"), ["HOME"]), false);
+  assert.equal(controller.accepts(ticket, revision("10"), ["LIBRARY"]), false);
+  assert.deepEqual(controller.getCursor(), revision("10"));
+  controller.event({ ...revision("1", "new"), reset: true, families: [] });
+  assert.equal(controller.accepts(controller.capture(), revision("1", "new"), ["HOME"]), true);
+});

@@ -1,4 +1,4 @@
-import { Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
+import { Alert, Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import {
   COLOR_CATEGORIES,
@@ -9,20 +9,31 @@ import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "../Components/Modal";
-import { SchemeChip } from "../Components/SchemeChip";
-import { SchemeSwatch } from "../Components/SchemeSwatch";
+import { SchemeChipView } from "../Components/SchemeChip";
+import { SchemeSwatchPreview } from "../Components/SchemeSwatch";
 import { Check, Plus, Search } from "../icons";
 import { useVault } from "../store/hooks";
 import type { ColorScheme } from "../types";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
-import { schemePaintRows } from "../utils/scheme-order";
+import { schemeOrderEntries, schemePaintRows } from "../utils/scheme-order";
 import { truncateSx } from "../utils/truncate";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
-const schemeSearchText = (scheme: ColorScheme) =>
+const schemeSearchText = (scheme: SchemePickerOption) =>
   `${scheme.name} ${scheme.category ? COLOR_CATEGORY_LABELS[scheme.category] : ""}`;
 
-type Filter = "ALL" | "SELECTED" | ColorCategory;
+export type SchemePickerFilter = "ALL" | "SELECTED" | ColorCategory;
+export type SchemePickerOption = Pick<ColorScheme, "id" | "name" | "category"> & {
+  availableCount: number;
+  paintCount: number;
+  colors: string[];
+  imageUrl?: string | null;
+};
+export type SchemePickerDialogProps = {
+  attachedIds: string[];
+  onSave(schemeIds: string[]): Promise<unknown>;
+  onClose(): void;
+};
 
 // Each row is 56px tall with a 1px separator; only rows near the list viewport are rendered.
 const ROW_HEIGHT = 56;
@@ -32,64 +43,100 @@ const COLLAPSED_CHIPS = 3;
 
 // Picks are staged here and added together, so browsing the list never edits the miniature.
 // Schemes already on the miniature are hidden; remove those from their cards instead.
-export function SchemePickerDialog({
+export function SchemePickerDialog(props: SchemePickerDialogProps) {
+  const data = useVault();
+  const schemes = useMemo(
+    () =>
+      data.colorSchemes.map((scheme): SchemePickerOption => {
+        const entries = schemeOrderEntries(data, scheme.id);
+        const paintIds = new Set(schemePaintRows(data, scheme.id).map((row) => row.paintId));
+        const image = entries.filter((entry) => entry.type === "IMAGE").at(-1);
+        return {
+          ...scheme,
+          paintCount: paintIds.size,
+          availableCount: [...paintIds].filter((id) => isPaintAvailable(data, data.paintRecords, id)).length,
+          colors: [...paintIds]
+            .map((id) => data.catalog.find((paint) => paint.id === id)?.colorHex)
+            .filter((hex): hex is string => !!hex),
+          imageUrl: image?.thumbnailUrl || image?.imageUrl,
+        };
+      }),
+    [data],
+  );
+  return <SchemePickerDialogView {...props} schemes={schemes} />;
+}
+
+// A pure view shared by the snapshot adapter and the paginated Apollo adapter.
+export function SchemePickerDialogView({
+  schemes,
   attachedIds,
   onSave,
   onClose,
-}: {
-  attachedIds: string[];
-  onSave(schemeIds: string[]): Promise<unknown>;
-  onClose(): void;
+  search: remoteSearch,
+  onSearchChange,
+  onFilterChange,
+  categoryCounts,
+  totalCount,
+  loading = false,
+  error,
+  onRetry,
+  hasMore = false,
+  onLoadMore,
+}: SchemePickerDialogProps & {
+  schemes: SchemePickerOption[];
+  search?: string;
+  onSearchChange?(value: string): void;
+  onFilterChange?(value: SchemePickerFilter): void;
+  categoryCounts?: { category: ColorCategory; count: number }[];
+  totalCount?: number;
+  loading?: boolean;
+  error?: Error | null;
+  onRetry?(): void;
+  hasMore?: boolean;
+  onLoadMore?(): void;
 }) {
-  const data = useVault();
   const [selected, setSelected] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("ALL");
+  const [localSearch, setSearch] = useState("");
+  const search = remoteSearch ?? localSearch;
+  const [pickedSchemes, setPickedSchemes] = useState<SchemePickerOption[]>([]);
+  const [filter, setFilter] = useState<SchemePickerFilter>("ALL");
   const listRef = useRef<HTMLUListElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [listHeight, setListHeight] = useState(0);
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [chipsExpanded, setChipsExpanded] = useState(false);
-
-  const counts = useMemo(() => {
-    const result = new Map<string, { available: number; total: number }>();
-    for (const scheme of data.colorSchemes) {
-      const paintIds = new Set(schemePaintRows(data, scheme.id).map((row) => row.paintId));
-      let available = 0;
-      for (const paintId of paintIds) if (isPaintAvailable(data, data.paintRecords, paintId)) available += 1;
-      result.set(scheme.id, { available, total: paintIds.size });
-    }
-    return result;
-  }, [data]);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const available = useMemo(
-    () => data.colorSchemes.filter((scheme) => !attachedIds.includes(scheme.id)),
-    [attachedIds, data.colorSchemes],
+    () => schemes.filter((scheme) => !attachedIds.includes(scheme.id)),
+    [attachedIds, schemes],
   );
-  const categories = COLOR_CATEGORIES.map((category) => ({
-    category,
-    count: available.filter((scheme) => scheme.category === category).length,
-  })).filter((item) => item.count > 0);
+  const categories =
+    categoryCounts ??
+    COLOR_CATEGORIES.map((category) => ({
+      category,
+      count: available.filter((scheme) => scheme.category === category).length,
+    })).filter((item) => item.count > 0);
 
   const query = search.trim();
   const pool = useMemo(
     () =>
-      available.filter((scheme) =>
+      (filter === "SELECTED" ? pickedSchemes : available).filter((scheme) =>
         filter === "ALL"
           ? true
           : filter === "SELECTED"
             ? selected.includes(scheme.id)
             : scheme.category === filter,
       ),
-    [available, filter, selected],
+    [available, filter, selected, pickedSchemes],
   );
   const searchMatches = useFuzzySearch(pool, query, schemeSearchText);
   const alphabetical = useMemo(
     () => [...pool].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" })),
     [pool],
   );
-  const matches = query ? searchMatches : alphabetical;
+  const matches = onSearchChange && filter !== "SELECTED" ? pool : query ? searchMatches : alphabetical;
   useLayoutEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -137,19 +184,27 @@ export function SchemePickerDialog({
     setScrollTop(0);
   };
 
-  const picked = selected
-    .map((id) => data.colorSchemes.find((scheme) => scheme.id === id))
-    .filter((scheme) => scheme !== undefined);
+  const picked = pickedSchemes.filter((scheme) => !attachedIds.includes(scheme.id));
   const changed = picked.length > 0;
-  const toggle = (id: string) =>
+  const toggle = (id: string) => {
+    const scheme = schemes.find((item) => item.id === id) ?? pickedSchemes.find((item) => item.id === id);
     setSelected((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
+    if (scheme)
+      setPickedSchemes((current) =>
+        current.some((item) => item.id === id)
+          ? current.filter((item) => item.id !== id)
+          : [...current, scheme],
+      );
+  };
   const save = async () => {
     if (saving) return;
     setSaving(true);
+    setSaveError(null);
     try {
       await onSave([...attachedIds, ...picked.map((scheme) => scheme.id)]);
       onClose();
-    } catch {
+    } catch (cause) {
+      setSaveError(cause instanceof Error ? cause.message : "Could not add schemes. Try again.");
       setSaving(false);
     }
   };
@@ -184,6 +239,17 @@ export function SchemePickerDialog({
         </>
       }
     >
+      {saveError && <Alert severity="error">{saveError}</Alert>}
+      {error && (
+        <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
+          {error.message}
+        </Alert>
+      )}
+      {loading && schemes.length > 0 && (
+        <Box role="status" sx={{ fontSize: 13 }}>
+          Refreshing schemes…
+        </Box>
+      )}
       <TextField
         fullWidth
         size="small"
@@ -191,6 +257,7 @@ export function SchemePickerDialog({
         value={search}
         onChange={(e) => {
           setSearch(e.target.value);
+          onSearchChange?.(e.target.value);
           resetScroll();
         }}
         placeholder="Search schemes or colors…"
@@ -212,13 +279,19 @@ export function SchemePickerDialog({
         label="Filter schemes"
         value={filter}
         onChange={(event) => {
-          setFilter(event.target.value as Filter);
+          setFilter(event.target.value as SchemePickerFilter);
+          onFilterChange?.(event.target.value as SchemePickerFilter);
           resetScroll();
         }}
         sx={{ flexShrink: 0, mt: 1.5 }}
       >
-        <MenuItem value="ALL">All ({available.length})</MenuItem>
+        <MenuItem value="ALL">All ({totalCount ?? available.length})</MenuItem>
         <MenuItem value="SELECTED">Selected ({selected.length})</MenuItem>
+        {filter !== "ALL" &&
+          filter !== "SELECTED" &&
+          !categories.some((item) => item.category === filter) && (
+            <MenuItem value={filter}>{COLOR_CATEGORY_LABELS[filter]}</MenuItem>
+          )}
         {categories.map(({ category, count }) => (
           <MenuItem key={category} value={category}>
             {COLOR_CATEGORY_LABELS[category]} ({count})
@@ -251,7 +324,7 @@ export function SchemePickerDialog({
         {visible.length ? (
           visible.map((scheme, offset) => {
             const on = selected.includes(scheme.id);
-            const { available, total } = counts.get(scheme.id) ?? { available: 0, total: 0 };
+            const { availableCount: available, paintCount: total } = scheme;
             return (
               <Box
                 component="li"
@@ -288,7 +361,7 @@ export function SchemePickerDialog({
                     "&:hover": { bgcolor: on ? "var(--brand-soft)" : "var(--sunken)" },
                   }}
                 >
-                  <SchemeSwatch schemeId={scheme.id} />
+                  <SchemeSwatchPreview colors={scheme.colors} image={scheme.imageUrl} />
                   <Box component="span" sx={{ minWidth: 0, flex: 1 }}>
                     <Box
                       component="span"
@@ -333,13 +406,23 @@ export function SchemePickerDialog({
           })
         ) : (
           <Box component="li" sx={{ p: 4, textAlign: "center", fontSize: 14, color: "var(--ink-faint)" }}>
-            {!data.colorSchemes.length
-              ? "Create a color scheme on the Schemes page first."
-              : !available.length
-                ? "Every scheme is already on this miniature."
+            {loading
+              ? "Loading schemes…"
+              : error
+                ? "Schemes could not be loaded."
                 : query
                   ? `No schemes match “${query}”.`
-                  : "No schemes in this filter."}
+                  : onSearchChange && filter !== "ALL"
+                    ? "No schemes in this filter."
+                    : !schemes.length && !hasMore
+                      ? attachedIds.length
+                        ? "Every scheme is already on this miniature."
+                        : "Create a color scheme on the Schemes page first."
+                      : !available.length
+                        ? "Every scheme is already on this miniature."
+                        : query
+                          ? `No schemes match “${query}”.`
+                          : "No schemes in this filter."}
           </Box>
         )}
         {visible.length > 0 && listWindow.totalHeight > listWindow.topOffset + renderedHeight && (
@@ -350,6 +433,11 @@ export function SchemePickerDialog({
         )}
       </Box>
 
+      {hasMore && filter !== "SELECTED" && (
+        <Button onClick={onLoadMore} disabled={loading} sx={{ flexShrink: 0, mt: 1 }}>
+          {loading ? "Loading…" : "Load more schemes"}
+        </Button>
+      )}
       {picked.length > 0 && (
         <Box sx={{ flexShrink: 0, mt: 1.5 }}>
           <Box sx={{ mb: 0.75, fontSize: 12, fontWeight: 650, color: "var(--ink-faint)" }}>To add</Box>
@@ -360,7 +448,12 @@ export function SchemePickerDialog({
           >
             {(chipsExpanded ? picked : picked.slice(0, COLLAPSED_CHIPS)).map((scheme) => (
               <Box component="li" key={scheme.id} sx={{ display: "flex", minWidth: 0, maxWidth: "100%" }}>
-                <SchemeChip scheme={scheme} size="md" onRemove={() => toggle(scheme.id)} />
+                <SchemeChipView
+                  scheme={scheme}
+                  size="md"
+                  swatch={<SchemeSwatchPreview colors={scheme.colors} image={scheme.imageUrl} size="xs" />}
+                  onRemove={() => toggle(scheme.id)}
+                />
               </Box>
             ))}
             {picked.length > COLLAPSED_CHIPS && (

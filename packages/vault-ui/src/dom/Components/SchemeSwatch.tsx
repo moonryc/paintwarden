@@ -1,9 +1,9 @@
-import { imageUrl } from "../utils/image-cache";
 import Box from "@mui/material/Box";
 
 import { Layers } from "../icons";
 import { useVault } from "../store/hooks";
-import type { SchemeOrderEntry } from "../types";
+import type { Paint, SchemeOrderEntry } from "../types";
+import { imageUrl } from "../utils/image-cache";
 import { paintGradient } from "../utils/paint-gradient";
 import { schemeOrderEntries } from "../utils/scheme-order";
 
@@ -22,15 +22,39 @@ export function SchemeSwatch({
   size?: "xs" | "sm" | "md" | "lg";
 }) {
   const data = useVault();
-  const entries = schemeOrderEntries(data, schemeId);
+  return <SchemeSwatchView entries={schemeOrderEntries(data, schemeId)} paints={data.catalog} size={size} />;
+}
+
+export type SchemeSwatchViewProps = {
+  entries: readonly SchemeOrderEntry[];
+  paints: readonly Paint[];
+  size?: "xs" | "sm" | "md" | "lg";
+};
+
+// A projection boundary: unlike the legacy wrapper, this never reads the vault snapshot.
+export function SchemeSwatchView({ entries, paints, size }: SchemeSwatchViewProps) {
   const preview = entries
     .filter((entry): entry is Extract<SchemeOrderEntry, { type: "IMAGE" }> => entry.type === "IMAGE")
     .at(-1);
   const colors = entries
     .filter((entry): entry is Extract<SchemeOrderEntry, { type: "PAINT" }> => entry.type === "PAINT")
-    .map((entry) => data.catalog.find((paint) => paint.id === entry.paintId)?.colorHex)
-    .filter(Boolean) as string[];
-  const background = paintGradient(colors);
+    .map((entry) => paints.find((paint) => paint.id === entry.paintId)?.colorHex)
+    .filter((color): color is string => !!color);
+  return (
+    <SchemeSwatchPreview colors={colors} image={preview?.thumbnailUrl || preview?.imageUrl} size={size} />
+  );
+}
+
+export function SchemeSwatchPreview({
+  colors,
+  image,
+  size = "md",
+}: {
+  colors: readonly string[];
+  image?: string | null;
+  size?: "xs" | "sm" | "md" | "lg";
+}) {
+  const background = paintGradient([...colors]);
   return (
     <Box
       component="span"
@@ -44,13 +68,13 @@ export function SchemeSwatch({
         bgcolor: "var(--surface)",
         ...SWATCH_SIZES[size],
       }}
-      style={!preview ? { background } : undefined}
+      style={!image ? { background } : undefined}
       aria-hidden="true"
     >
-      {preview ? (
+      {image ? (
         <Box
           component="img"
-          src={imageUrl(preview.thumbnailUrl || preview.imageUrl)}
+          src={imageUrl(image)}
           alt=""
           draggable={false}
           sx={{

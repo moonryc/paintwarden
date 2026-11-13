@@ -21,7 +21,7 @@ import { useState, type ReactNode } from "react";
 import { Check, CircleDashed, Layers, Pencil, Plus } from "../icons";
 import { SchemePickerDialog } from "../Modals/SchemePickerDialog";
 import { useVault, useVaultStore } from "../store/hooks";
-import type { Miniature, Paint, RecipeStep, Requirement } from "../types";
+import type { Miniature, Paint, PaintStateSetter, RecipeStep, Requirement, SchemeOrderEntry } from "../types";
 import { createClientId } from "../utils/client-id";
 import { STEPS, noop } from "../utils/constants";
 import { mergeRecipePaints } from "../utils/recipe-merge";
@@ -30,8 +30,11 @@ import { attachedSchemes } from "../utils/vault-data";
 
 import { DashedAddButton } from "./DashedAddButton";
 import { PaintAutocomplete } from "./PaintAutocomplete";
-import { RecipeSchemeTile } from "./RecipeSchemeTile";
-import { RecipeStepCard } from "./RecipeStepCard";
+import { legacyRecipePaintStatus, type RecipePaintStatus } from "./PaintRow";
+import { RecipeSchemeTileView } from "./RecipeSchemeTile";
+import { RecipeStepCardView } from "./RecipeStepCard";
+import { SchemeChipView } from "./SchemeChip";
+import { SchemeSwatchView } from "./SchemeSwatch";
 
 type Entry = Omit<Requirement, "miniatureId">;
 type Adding = { kind: "paint"; step: RecipeStep } | { kind: "step"; step: RecipeStep } | null;
@@ -51,24 +54,96 @@ function orderEntries(entries: Entry[]): Entry[] {
     .map(({ entry }, sortOrder) => ({ ...entry, sortOrder }));
 }
 
-export function ProjectRecipe({
+export type ProjectRecipeProps = {
+  miniature: Miniature;
+  required: Paint[];
+  requirementRows: Requirement[];
+  onOpenPaint: (id: string) => void;
+  onOpenScheme: (id: string) => void;
+};
+
+export type ProjectRecipeScheme = {
+  id: string;
+  name: string;
+  paintCount: number;
+  paints: Paint[];
+  entries: SchemeOrderEntry[];
+};
+
+export type RecipeSchemePickerProps = {
+  attachedIds: string[];
+  onSave: (schemeIds: string[]) => Promise<unknown>;
+  onClose: () => void;
+};
+
+export type ProjectRecipeViewProps = ProjectRecipeProps & {
+  // Only paints needed by this detail projection; the picker fetches its own search window.
+  catalog: Paint[];
+  explicitSteps: RecipeStep[];
+  schemes: ProjectRecipeScheme[];
+  paintStatus: (id: string) => RecipePaintStatus;
+  onSetPaintState: PaintStateSetter;
+  setRecipe: (miniatureId: string, entries: Entry[]) => void;
+  setRecipeSteps: (miniatureId: string, steps: RecipeStep[]) => void;
+  setAttached: (schemeIds: string[]) => Promise<unknown>;
+  renderSchemePicker: (props: RecipeSchemePickerProps) => ReactNode;
+};
+
+export function ProjectRecipe(props: ProjectRecipeProps) {
+  const data = useVault();
+  const api = useVaultStore((s) => s.api);
+  const setRecipe = useVaultStore((s) => s.setRecipe);
+  const setRecipeSteps = useVaultStore((s) => s.setRecipeSteps);
+  const setPaintState = useVaultStore((s) => s.setPaintState);
+  const schemes = attachedSchemes(data, props.miniature.id).map((scheme) => {
+    const entries = schemeOrderEntries(data, scheme.id);
+    return {
+      ...scheme,
+      entries,
+      paints: data.catalog,
+      paintCount: entries.filter((entry) => entry.type === "PAINT").length,
+    };
+  });
+  return (
+    <ProjectRecipeView
+      {...props}
+      catalog={data.catalog}
+      explicitSteps={data.recipeSteps
+        .filter((row) => row.miniatureId === props.miniature.id)
+        .map((row) => row.step)}
+      schemes={schemes}
+      paintStatus={(id) => legacyRecipePaintStatus(data, props.miniature.id, id)}
+      onSetPaintState={setPaintState}
+      setRecipe={setRecipe}
+      setRecipeSteps={setRecipeSteps}
+      setAttached={(schemeIds) =>
+        api("/api/miniature-schemes", {
+          method: "PUT",
+          body: JSON.stringify({ miniatureId: props.miniature.id, schemeIds }),
+        })
+      }
+      renderSchemePicker={(pickerProps) => <SchemePickerDialog {...pickerProps} />}
+    />
+  );
+}
+
+export function ProjectRecipeView({
   miniature,
   required,
   requirementRows,
   onOpenPaint,
   onOpenScheme,
-}: {
-  miniature: Miniature;
-  required: Paint[];
-  requirementRows: Requirement[];
-  onOpenPaint(id: string): void;
-  onOpenScheme(id: string): void;
-}) {
-  const data = useVault();
-  const api = useVaultStore((s) => s.api);
+  catalog,
+  explicitSteps,
+  schemes,
+  paintStatus,
+  onSetPaintState,
+  setRecipe,
+  setRecipeSteps,
+  setAttached,
+  renderSchemePicker,
+}: ProjectRecipeViewProps) {
   const notify = useVaultStore((s) => s.notify);
-  const setRecipe = useVaultStore((s) => s.setRecipe);
-  const setRecipeSteps = useVaultStore((s) => s.setRecipeSteps);
   // Editing controls stay hidden until asked for, so a stray tap can't change the recipe.
   const [editMode, setEditMode] = useState(false);
   const [adding, setAdding] = useState<Adding>(null);
@@ -95,7 +170,6 @@ export function ProjectRecipe({
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
-  const { catalog } = data;
 
   const entries = orderEntries(
     requirementRows.map(({ id, paintId, notes, sortOrder, step }) => ({
@@ -151,13 +225,7 @@ export function ProjectRecipe({
     setRecipe(miniature.id, next);
   };
 
-  const schemes = attachedSchemes(data, miniature.id),
-    attachedIds = schemes.map((scheme) => scheme.id);
-  const setAttached = (schemeIds: string[]) =>
-    api("/api/miniature-schemes", {
-      method: "PUT",
-      body: JSON.stringify({ miniatureId: miniature.id, schemeIds }),
-    });
+  const attachedIds = schemes.map((scheme) => scheme.id);
   const undoSchemes = (previous: string[]) => ({
     label: "Undo",
     onClick: () => void setAttached(previous).catch(noop),
@@ -188,16 +256,13 @@ export function ProjectRecipe({
       ? schemes.map((scheme) => ({
           id: scheme.id,
           name: scheme.name,
-          entries: schemeOrderEntries(data, scheme.id),
+          entries: scheme.entries,
         }))
       : [],
   );
   const rows = merged
     .map((row) => ({ ...row, paint: catalog.find((paint) => paint.id === row.paintId) }))
     .filter((item): item is typeof item & { paint: Paint } => !!item.paint);
-  const explicitSteps = data.recipeSteps
-    .filter((row) => row.miniatureId === miniature.id)
-    .map((row) => row.step);
   const groups = STEPS.map(([step, label]) => ({
     step,
     label,
@@ -337,9 +402,12 @@ export function ProjectRecipe({
             }}
           >
             {schemes.map((scheme) => (
-              <RecipeSchemeTile
+              <RecipeSchemeTileView
                 key={scheme.id}
                 scheme={scheme}
+                entries={scheme.entries}
+                paints={scheme.paints}
+                paintCount={scheme.paintCount}
                 editMode={editMode}
                 onOpen={() => onOpenScheme(scheme.id)}
                 onRemove={() => removeScheme(scheme.id, scheme.name)}
@@ -388,13 +456,30 @@ export function ProjectRecipe({
               {groups.map((group, index) => {
                 const addingHere = adding?.kind === "paint" && adding.step === group.step;
                 return (
-                  <RecipeStepCard
+                  <RecipeStepCardView
                     key={group.step}
                     step={group.step}
                     label={group.label}
                     number={index + 1}
                     rows={group.rows}
                     miniatureId={miniature.id}
+                    paintStatus={paintStatus}
+                    onSetPaintState={onSetPaintState}
+                    renderSchemeChip={(source) => {
+                      const scheme = schemes.find((candidate) => candidate.id === source.id);
+                      return (
+                        <SchemeChipView
+                          scheme={source}
+                          swatch={
+                            <SchemeSwatchView
+                              entries={scheme?.entries ?? []}
+                              paints={scheme?.paints ?? []}
+                              size="xs"
+                            />
+                          }
+                        />
+                      );
+                    }}
                     editMode={editMode}
                     adding={addingHere}
                     addPanel={addingHere && paintPanel(group.step)}
@@ -514,13 +599,12 @@ export function ProjectRecipe({
           </Box>
         )}
       </Box>
-      {pickingSchemes && (
-        <SchemePickerDialog
-          attachedIds={attachedIds}
-          onSave={saveSchemes}
-          onClose={() => setPickingSchemes(false)}
-        />
-      )}
+      {pickingSchemes &&
+        renderSchemePicker({
+          attachedIds,
+          onSave: saveSchemes,
+          onClose: () => setPickingSchemes(false),
+        })}
     </section>
   );
 }

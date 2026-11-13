@@ -1,3 +1,4 @@
+import { useFragment } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Box from "@mui/material/Box";
@@ -6,9 +7,12 @@ import {
   resolvePaintChoice,
   selectedSubstitution,
 } from "@paint-vault/core/paint-substitutions";
+import { Fragment, type ReactNode } from "react";
 
+import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
+import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
 import { useVault, useVaultStore } from "../store/hooks";
-import type { Paint, Requirement } from "../types";
+import type { Paint, PaintStateSetter, Requirement, State } from "../types";
 
 import { DragHandle } from "./DragHandle";
 import { PaintRowActions } from "./PaintRowActions";
@@ -29,40 +33,96 @@ const HANDLE_GAP = 8;
 
 // A paint in a miniature's recipe, marked Packed, Wishlisted or Missing. In edit mode, paints added
 // by hand can be dragged between steps and removed; paints from a scheme stay put.
-export function PaintRow({
+export type RecipePaintStatus = {
+  available: boolean;
+  wished: boolean;
+  activeSubstitution: { name: string; broken: boolean } | null;
+};
+
+// The legacy wrappers alone adapt the snapshot. Projection views never invoke this adapter.
+export function legacyRecipePaintStatus(
+  data: State,
+  miniatureId: string,
+  paintId: string,
+): RecipePaintStatus {
+  const active = selectedSubstitution(data, miniatureId, paintId);
+  return {
+    available: isPaintAvailable(data, data.paintRecords, paintId),
+    wished: data.paintStates[paintId] === "WISHLIST",
+    activeSubstitution: active
+      ? { name: active.name, broken: resolvePaintChoice(data, miniatureId, paintId).broken }
+      : null,
+  };
+}
+
+export type PaintRowProps = {
+  paint: Paint;
+  requirement: Requirement;
+  miniatureId: string;
+  onOpenPaint: () => void;
+  editMode: boolean;
+  onRemove: () => void;
+  // Added to the miniature by hand rather than through a scheme.
+  manual?: boolean;
+  schemeSources?: { id: string; name: string }[];
+  // Must be unique in the surrounding SortableContext; defaults to the paint id.
+  sortableId?: string;
+};
+
+export function PaintRow(props: PaintRowProps) {
+  const data = useVault();
+  const setPaintState = useVaultStore((s) => s.setPaintState);
+  return (
+    <PaintRowView
+      {...props}
+      {...legacyRecipePaintStatus(data, props.miniatureId, props.paint.id)}
+      onSetPaintState={setPaintState}
+      renderSchemeChip={(scheme) => <SchemeChip scheme={scheme} />}
+    />
+  );
+}
+
+export type PaintRowViewProps = PaintRowProps &
+  RecipePaintStatus & {
+    onSetPaintState: PaintStateSetter;
+    renderSchemeChip(scheme: { id: string; name: string }): ReactNode;
+  };
+
+// Overlay only raw inventory while accepted server availability and substitution readiness stay stable.
+export function ProjectedPaintRow(props: PaintRowViewProps) {
+  const scope = useVaultGraphQL();
+  return scope ? <CachedPaintRow {...props} scope={scope} /> : <PaintRowView {...props} />;
+}
+
+function CachedPaintRow({ scope, ...props }: PaintRowViewProps & { scope: VaultGraphQLScope }) {
+  const { data, complete } = useFragment({
+    fragment: PaintStockFragmentDoc,
+    from: { __typename: "Paint", id: props.paint.id },
+    client: scope.client,
+    optimistic: true,
+  });
+  return <PaintRowView {...props} wished={complete ? data.inventory?.state === "WISHLIST" : props.wished} />;
+}
+
+export function PaintRowView({
   paint,
   requirement,
-  miniatureId,
   onOpenPaint,
   editMode,
   onRemove,
   manual = true,
   schemeSources = [],
   sortableId,
-}: {
-  paint: Paint;
-  requirement: Requirement;
-  miniatureId: string;
-  onOpenPaint(): void;
-  editMode: boolean;
-  onRemove(): void;
-  // Added to the miniature by hand rather than through a scheme.
-  manual?: boolean;
-  // The schemes that bring this paint into the recipe.
-  schemeSources?: { id: string; name: string }[];
-  // Must be unique in the surrounding SortableContext; defaults to the paint id.
-  sortableId?: string;
-}) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
+  available: owned,
+  wished,
+  activeSubstitution: active,
+  onSetPaintState,
+  renderSchemeChip,
+}: PaintRowViewProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: sortableId ?? paint.id,
     disabled: { draggable: !editMode || !manual, droppable: !editMode },
   });
-  const active = selectedSubstitution(data, miniatureId, paint.id);
-  const resolved = resolvePaintChoice(data, miniatureId, paint.id);
-  const owned = isPaintAvailable(data, data.paintRecords, paint.id);
-  const wished = data.paintStates[paint.id] === "WISHLIST";
   const draggable = editMode && manual;
   // Line the scheme-source line up with the paint name.
   const nameIndent =
@@ -119,7 +179,7 @@ export function PaintRow({
           editMode={editMode}
           owned={owned}
           notes={requirement.notes}
-          accessory={active && <PaintSubstitutionChip name={active.name} broken={resolved.broken} />}
+          accessory={active && <PaintSubstitutionChip name={active.name} broken={active.broken} />}
           status={
             <StatusChip
               tone={owned ? "ok" : wished ? "wishlist" : "muted"}
@@ -136,7 +196,7 @@ export function PaintRow({
                   active: wished,
                   label: wished ? `Remove ${paint.name} from wishlist` : `Add ${paint.name} to wishlist`,
                   title: wished ? "Remove from wishlist" : "Add to wishlist",
-                  onClick: () => setPaintState(paint.id, wished ? null : "WISHLIST"),
+                  onClick: () => onSetPaintState(paint.id, wished ? null : "WISHLIST"),
                 }
               : undefined
           }
@@ -168,7 +228,7 @@ export function PaintRow({
             {manual ? "Added to miniature" : "From scheme"}
           </Box>
           {schemeSources.map((source) => (
-            <SchemeChip key={source.id} scheme={source} />
+            <Fragment key={source.id}>{renderSchemeChip(source)}</Fragment>
           ))}
         </Box>
       )}

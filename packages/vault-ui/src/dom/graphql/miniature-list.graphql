@@ -1,0 +1,78 @@
+fragment MiniatureTile on Miniature {
+  id
+  title
+  status
+  imageUrl
+  readiness {
+    total
+    missing
+  }
+  previewSwatches {
+    colorHex
+  }
+}
+
+query MiniatureList(
+  $workbench: Boolean!
+  $first: Int!
+  $after: String
+  $ownership: Ownership
+  $stage: PaintingStatus
+  $search: String
+) {
+  home(first: $first, after: $after, stage: $stage, search: $search) @include(if: $workbench) {
+    revision {
+      epoch
+      seq
+    }
+    counts {
+      catalogCount
+      owned
+      ready
+      distinctMissingPaints
+      wishlistedMissingPaints
+      stages {
+        key
+        label
+        count
+      }
+    }
+    miniatures {
+      nodes {
+        ...MiniatureTile
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+  miniatures(first: $first, after: $after, ownership: $ownership, stage: $stage, search: $search)
+    @skip(if: $workbench) {
+    revision {
+      epoch
+      seq
+    }
+    ownershipCounts {
+      key
+      label
+      count
+    }
+    stageCounts {
+      key
+      label
+      count
+    }
+    miniatures {
+      nodes {
+        ...MiniatureTile
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

@@ -1,0 +1,87 @@
+query ProjectMiniatureDetails(
+  $id: ID!
+  $recipeAfter: String
+  $schemesAfter: String
+  $missingAfter: String
+  $requiredAfter: String
+) {
+  miniature(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    miniature {
+      id
+      title
+      status
+      paintingStatus
+      imageUrl
+      createdAt
+      notes
+      manufacturer
+      faction
+      scale
+    }
+    recipeSteps
+    recipe(first: 40, after: $recipeAfter) {
+      nodes {
+        id
+        paint {
+          ...DetailPaint
+        }
+        step
+        notes
+        sortOrder
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    schemes(first: 40, after: $schemesAfter) {
+      nodes {
+        id
+        sortOrder
+        scheme {
+          id
+          name
+          category
+          isSystem
+          sourceName
+          sourceLogoUrl
+        }
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    missing(first: 40, after: $missingAfter) {
+      nodes {
+        id
+        paint {
+          ...DetailPaint
+        }
+        missingStock
+        brokenSubstitution
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    required(first: 40, after: $requiredAfter) {
+      nodes {
+        ...DetailPaint
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}

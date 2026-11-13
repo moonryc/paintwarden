@@ -1,4 +1,3 @@
-import { imageUrl } from "../utils/image-cache";
 import { Card, CardActionArea, LinearProgress } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -6,20 +5,23 @@ import { memo } from "react";
 
 import { Check } from "../icons";
 import type { Miniature, Paint } from "../types";
+import { imageUrl } from "../utils/image-cache";
 
 import { PaintGradientPlaceholder } from "./PaintGradientPlaceholder";
 
 export const MiniatureTile = memo(function MiniatureTile({
   mini,
   paints,
+  swatches,
   total,
   missing,
   onClick,
   onOpen,
   sx,
 }: {
-  mini: Miniature;
-  paints: Paint[];
+  mini: Pick<Miniature, "id" | "title" | "status" | "imageUrl">;
+  paints?: Paint[];
+  swatches?: { colorHex: string | null }[];
   total: number;
   missing: number;
   sx?: SxProps<Theme>;
@@ -89,7 +91,7 @@ export const MiniatureTile = memo(function MiniatureTile({
               }}
             />
           ) : (
-            <PaintGradientPlaceholder paints={paints} />
+            <PaintGradientPlaceholder paints={swatches ?? paints ?? []} />
           )}
           <Box
             component="div"

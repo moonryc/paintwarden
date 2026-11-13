@@ -17,6 +17,8 @@ const config: CodegenConfig = {
         contextType: "../context#GraphQLContext",
         mappers: {
           PaintView: "../library#PaintViewRead",
+          MiniatureView: "../miniatures#MiniatureViewRead",
+          MiniatureSchemeView: "../miniature-schemes#MiniatureSchemeRead",
           Substitution: "../library#SubstitutionRead",
         },
         // Custom scalar internal representation, not its decimal-string wire format.
