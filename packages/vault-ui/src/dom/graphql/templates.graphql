@@ -1,0 +1,158 @@
+fragment TemplateSummaryFields on TemplateSummary {
+  id
+  name
+  manufacturer
+  faction
+  imageUrl
+  categories
+  kind
+  sourceId
+  sourceName
+  sourceLogoUrl
+  schemeCount
+  paintCount
+}
+query TemplateSummaries(
+  $id: ID
+  $first: Int! = 48
+  $after: String
+  $search: String
+  $category: String
+  $sourceId: ID
+  $noSource: Boolean = false
+) {
+  templates(
+    id: $id
+    first: $first
+    after: $after
+    search: $search
+    category: $category
+    sourceId: $sourceId
+    noSource: $noSource
+  ) {
+    revision {
+      epoch
+      seq
+    }
+    categoryCounts {
+      key
+      label
+      count
+    }
+    sourceCounts {
+      key
+      label
+      count
+    }
+    templates {
+      nodes {
+        ...TemplateSummaryFields
+      }
+      totalCount
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
+query SelectedTemplateRecipe($id: ID!, $paintAfter: String, $schemeAfter: String) {
+  templateRecipe(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    templateId
+    paints(first: 100, after: $paintAfter) {
+      nodes {
+        paintId
+        paintName
+        paintBrand
+        step
+        notes
+        sortOrder
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    schemes(first: 100, after: $schemeAfter) {
+      nodes {
+        schemeId
+        name
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}
+fragment TemplateCommandResult on TemplateMutationPayload {
+  revision {
+    epoch
+    seq
+  }
+  templateId
+  clientMutationId
+  invalidatedFamilies
+}
+mutation CreateReusableTemplate($input: TemplateInput!, $clientMutationId: String) {
+  createTemplate(input: $input, clientMutationId: $clientMutationId) {
+    ...TemplateCommandResult
+  }
+}
+mutation UpdateReusableTemplate($id: ID!, $input: TemplateInput!, $clientMutationId: String) {
+  updateTemplate(id: $id, input: $input, clientMutationId: $clientMutationId) {
+    ...TemplateCommandResult
+  }
+}
+mutation DeleteReusableTemplate($id: ID!, $clientMutationId: String) {
+  deleteTemplate(id: $id, clientMutationId: $clientMutationId) {
+    ...TemplateCommandResult
+  }
+}
+query TemplateSourceMiniature($id: ID!, $paintAfter: String, $schemeAfter: String) {
+  miniature(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    miniature {
+      id
+      title
+      manufacturer
+      faction
+      imageUrl
+    }
+    recipe(first: 100, after: $paintAfter) {
+      nodes {
+        paint {
+          id
+          name
+          brand
+        }
+        step
+        notes
+        sortOrder
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+    schemes(first: 100, after: $schemeAfter) {
+      nodes {
+        scheme {
+          id
+          name
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+      }
+    }
+  }
+}

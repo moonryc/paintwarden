@@ -10,7 +10,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Modal } from "../Components/Modal";
 import { Archive, Check, Heart, Save, Trash2 } from "../icons";
@@ -24,11 +24,8 @@ import type {
   PaintingStatus,
 } from "../types";
 import { STAGES } from "../utils/constants";
-import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
 import { MiniatureImageField } from "./MiniatureImageField";
-
-const templateSearchText = (template: MiniatureTemplate) => template.name;
 
 export function MiniatureForm({
   onClose,
@@ -43,9 +40,6 @@ export function MiniatureForm({
   initial?: Miniature;
   initialTemplateId?: string | null;
 }) {
-  const catalogQuery = useTemplateCatalog(!initial);
-  const templateCatalog = catalogQuery.data;
-  const templateError = catalogQuery.error?.message ?? "";
   const [busy, setBusy] = useState(false),
     [deleting, setDeleting] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
@@ -62,6 +56,14 @@ export function MiniatureForm({
     [templateSearch, setTemplateSearch] = useState(""),
     [selectedTemplate, setSelectedTemplate] = useState<MiniatureTemplate | null>(null),
     [templateImageUrl, setTemplateImageUrl] = useState("");
+  const catalogQuery = useTemplateCatalog(!initial, {
+    search: templateSearch,
+    category: templateCategory === "ALL" ? null : templateCategory,
+  });
+  // Opening Add from a distant card must not depend on the first summary page.
+  const selectedQuery = useTemplateCatalog(!initial && !!initialTemplateId, { id: initialTemplateId });
+  const templateCatalog = catalogQuery.data;
+  const templateError = catalogQuery.error?.message ?? selectedQuery.error?.message ?? "";
   useEffect(() => {
     if (!confirmDelete) return;
     const timer = setTimeout(() => setConfirmDelete(false), 3000);
@@ -69,9 +71,14 @@ export function MiniatureForm({
   }, [confirmDelete]);
   const appliedTemplateId = useRef<string | null>(null);
   useEffect(() => {
-    if (initial || !initialTemplateId || !templateCatalog || appliedTemplateId.current === initialTemplateId)
+    if (
+      initial ||
+      !initialTemplateId ||
+      !selectedQuery.data ||
+      appliedTemplateId.current === initialTemplateId
+    )
       return;
-    const match = templateCatalog.templates.find((template) => template.id === initialTemplateId);
+    const match = selectedQuery.data.templates.find((template) => template.id === initialTemplateId);
     if (match) {
       appliedTemplateId.current = initialTemplateId;
       setSelectedTemplate(match);
@@ -81,15 +88,8 @@ export function MiniatureForm({
       setFaction(match.faction);
       setTemplateImageUrl(match.imageUrl);
     }
-  }, [initial, initialTemplateId, templateCatalog]);
-  const templateOptions = useMemo(
-    () =>
-      (templateCatalog?.templates ?? []).filter(
-        (template) => templateCategory === "ALL" || template.categories.includes(templateCategory),
-      ),
-    [templateCatalog, templateCategory],
-  );
-  const templateMatches = useFuzzySearch(templateOptions, templateSearch, templateSearchText, 100);
+  }, [initial, initialTemplateId, selectedQuery.data]);
+  const templateMatches = templateCatalog?.templates ?? [];
   return (
     <Modal
       title={initial ? "Edit miniature" : "Add a miniature"}
@@ -210,7 +210,7 @@ export function MiniatureForm({
                 }}
               >
                 <MenuItem value="ALL">All categories</MenuItem>
-                {templateCatalog?.categories.map((category) => (
+                {catalogQuery.categories.map((category) => (
                   <MenuItem key={category} value={category}>
                     {category}
                   </MenuItem>
@@ -222,7 +222,7 @@ export function MiniatureForm({
                 value={selectedTemplate}
                 inputValue={templateSearch}
                 onInputChange={(_, value) => setTemplateSearch(value)}
-                loading={!templateCatalog && !templateError}
+                loading={catalogQuery.loading}
                 getOptionLabel={(option) => option.name}
                 getOptionKey={(option) => option.id}
                 isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -245,9 +245,24 @@ export function MiniatureForm({
                 )}
               />
             </Box>
+            {templateCatalog?.hasNextPage && (
+              <Button disabled={catalogQuery.loading} onClick={catalogQuery.loadMore}>
+                Load more models
+              </Button>
+            )}
             {templateError && (
               <Alert
                 severity="warning"
+                action={
+                  <Button
+                    onClick={() => {
+                      catalogQuery.refetch();
+                      selectedQuery.refetch();
+                    }}
+                  >
+                    Retry
+                  </Button>
+                }
                 sx={{
                   boxSizing: "border-box",
                   marginTop: "0.75rem",

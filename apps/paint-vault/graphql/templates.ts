@@ -26,6 +26,7 @@ import { paginateProjection } from "./miniatures.ts";
 type Revision = ReturnType<typeof readRevision>;
 type Page = { first: number; after?: string | null };
 export type TemplateListArgs = Page & {
+  id?: string | null;
   search?: string | null;
   category?: string | null;
   sourceId?: string | null;
@@ -107,7 +108,11 @@ function projection(revision: Revision, allowCache: boolean): Projection {
       sourceLogoUrl: r.sourceId ? sourceLogoUrl(r.sourceId, r.logoSvg) : null,
       ...(counts.get(r.id) ?? { schemeCount: 0, paintCount: 0 }),
     }))
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }) || compare(a.id, b.id));
+    .sort(
+      (a, b) =>
+        compare(a.name.normalize("NFKD").toLowerCase(), b.name.normalize("NFKD").toLowerCase()) ||
+        compare(a.id, b.id),
+    );
   const categories = new Map<string, number>([["My templates", 0]]),
     sources = new Map<string, Facet>();
   for (const node of nodes) {
@@ -133,6 +138,7 @@ function projection(revision: Revision, allowCache: boolean): Projection {
 }
 export function readTemplates(args: TemplateListArgs) {
   validatePage(args);
+  validateText(args.id, "id");
   validateText(args.search, "search", 128);
   validateText(args.category, "category");
   validateText(args.sourceId, "sourceId");
@@ -146,12 +152,13 @@ export function readTemplates(args: TemplateListArgs) {
     const scope =
       "templates:" +
       createHash("sha256")
-        .update(JSON.stringify([query, category, args.sourceId ?? null, !!args.noSource]))
+        .update(JSON.stringify([query, category, args.sourceId ?? null, !!args.noSource, args.id ?? null]))
         .digest("base64url");
     // Validate stale/filter-mismatched cursors before fuzzy ranking/cache lookup.
     if (args.after != null) paginateProjection(p.nodes, { first: 1, after: args.after }, revision, scope);
     let nodes = p.nodes.filter(
       (s) =>
+        (!args.id || s.id === args.id) &&
         (category === null || s.categories.includes(category)) &&
         (!args.sourceId || s.sourceId === args.sourceId) &&
         (!args.noSource || s.sourceId === null),
@@ -183,8 +190,8 @@ export function readTemplates(args: TemplateListArgs) {
     };
   })();
 }
-export type TemplateRecipeView = { revision: Revision; templateId: string };
-export function readTemplateRecipe(id: string): TemplateRecipeView {
+export type TemplateRecipeRead = { revision: Revision; templateId: string };
+export function readTemplateRecipe(id: string): TemplateRecipeRead {
   validateText(id, "id");
   return getSqlite().transaction(() => {
     if (!getSqlite().prepare("SELECT id FROM miniature_templates WHERE id=?").get(id))
@@ -193,7 +200,7 @@ export function readTemplateRecipe(id: string): TemplateRecipeView {
   })();
 }
 function recipePage<T extends { id: string }>(
-  v: TemplateRecipeView,
+  v: TemplateRecipeRead,
   args: Page,
   kind: string,
   load: () => T[],
@@ -208,7 +215,7 @@ function recipePage<T extends { id: string }>(
     return paginateProjection(load(), args, revision, `template-${kind}:${v.templateId}`);
   })();
 }
-export function templatePaints(v: TemplateRecipeView, args: Page) {
+export function templatePaints(v: TemplateRecipeRead, args: Page) {
   return recipePage(v, args, "paints", () =>
     (
       getSqlite()
@@ -229,7 +236,7 @@ export function templatePaints(v: TemplateRecipeView, args: Page) {
     ).map((r) => ({ ...r, id: JSON.stringify([r.step, r.paintId]) })),
   );
 }
-export function templateSchemes(v: TemplateRecipeView, args: Page) {
+export function templateSchemes(v: TemplateRecipeRead, args: Page) {
   return recipePage(v, args, "schemes", () =>
     (
       getSqlite()

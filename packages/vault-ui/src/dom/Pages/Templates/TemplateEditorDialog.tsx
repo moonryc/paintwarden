@@ -98,20 +98,31 @@ function TemplateEditorFields({
       (id) => recipe?.schemeOptions.find((scheme) => scheme.id === id) ?? { id, name: id },
     ),
   );
-  const [selectedPaints, setSelectedPaints] = useState<PaintChoice[]>(() =>
-    [...(recipe?.paints ?? [])]
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map(
-        ({ paintId: id }) =>
-          recipe?.paintOptions.find((paint) => paint.id === id) ?? { id, name: id, brand: "" },
-      ),
+  const [selectedPaints, setSelectedPaints] = useState<PaintChoice[]>(() => [
+    ...new Map(
+      (recipe?.paints ?? []).map(({ paintId: id }) => [
+        id,
+        recipe?.paintOptions.find((paint) => paint.id === id) ?? { id, name: id, brand: "" },
+      ]),
+    ).values(),
+  ]);
+  // Row identity is not paint identity: the same paint may occur in different
+  // steps, with separate notes and order. A picker controls membership only.
+  const [paintEntries, setPaintEntries] = useState<Array<{ paintId: string; step: string; notes: string }>>(
+    () =>
+      [...(recipe?.paints ?? [])]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map(({ paintId, step, notes }) => ({ paintId, step, notes })),
   );
-  const [paintSteps, setPaintSteps] = useState<Record<string, string>>(() =>
-    Object.fromEntries(recipe?.paints?.map((paint) => [paint.paintId, paint.step]) ?? []),
-  );
-  const [paintNotes, setPaintNotes] = useState<Record<string, string>>(() =>
-    Object.fromEntries(recipe?.paints?.map((paint) => [paint.paintId, paint.notes]) ?? []),
-  );
+  const choosePaints = (items: PaintChoice[]) => {
+    setSelectedPaints(items);
+    setPaintEntries((previous) => [
+      ...previous.filter((entry) => items.some((paint) => paint.id === entry.paintId)),
+      ...items
+        .filter((paint) => !previous.some((entry) => entry.paintId === paint.id))
+        .map((paint) => ({ paintId: paint.id, step: "OTHER", notes: "" })),
+    ]);
+  };
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState<Error | null>(null);
   const sourceReady =
@@ -129,12 +140,7 @@ function TemplateEditorFields({
         // The server copies the source's authoritative recipe, not this preview.
         sourceMiniatureId: sourceMiniatureId || undefined,
         schemeIds: selectedSchemes.map((scheme) => scheme.id),
-        paints: selectedPaints.map(({ id: paintId }, sortOrder) => ({
-          paintId,
-          step: paintSteps[paintId] ?? "OTHER",
-          notes: paintNotes[paintId] ?? "",
-          sortOrder,
-        })),
+        paints: paintEntries.map((entry, sortOrder) => ({ ...entry, sortOrder })),
       };
       if (template) await actions.update(template.id, input);
       else await actions.create(input);
@@ -208,15 +214,20 @@ function TemplateEditorFields({
         {!sourceMiniatureId && (
           <>
             <TemplateSchemePicker selected={selectedSchemes} onChange={setSelectedSchemes} />
-            <TemplatePaintPicker selected={selectedPaints} onChange={setSelectedPaints} />
-            {selectedPaints.map((paint) => (
-              <Box key={paint.id} sx={{ display: "grid", gap: 1, gridTemplateColumns: { sm: "1fr 130px" } }}>
+            <TemplatePaintPicker selected={selectedPaints} onChange={choosePaints} />
+            {paintEntries.map((entry, index) => (
+              <Box
+                key={`${entry.paintId}:${index}`}
+                sx={{ display: "grid", gap: 1, gridTemplateColumns: { sm: "1fr 130px" } }}
+              >
                 <TextField
                   size="small"
-                  label={paint.name}
-                  value={paintNotes[paint.id] ?? ""}
+                  label={selectedPaints.find((paint) => paint.id === entry.paintId)?.name ?? entry.paintId}
+                  value={entry.notes}
                   onChange={(event) =>
-                    setPaintNotes((notes) => ({ ...notes, [paint.id]: event.target.value }))
+                    setPaintEntries((entries) =>
+                      entries.map((row, i) => (i === index ? { ...row, notes: event.target.value } : row)),
+                    )
                   }
                   placeholder="Notes (optional)"
                 />
@@ -224,14 +235,22 @@ function TemplateEditorFields({
                   select
                   size="small"
                   label="Step"
-                  value={paintSteps[paint.id] ?? "OTHER"}
+                  value={entry.step}
                   onChange={(event) =>
-                    setPaintSteps((steps) => ({ ...steps, [paint.id]: event.target.value }))
+                    setPaintEntries((entries) =>
+                      entries.map((row, i) => (i === index ? { ...row, step: event.target.value } : row)),
+                    )
                   }
                 >
                   {["PRIMER", "BASECOAT", "SHADE", "LAYER", "HIGHLIGHT", "DETAIL", "BASING", "OTHER"].map(
                     (step) => (
-                      <MenuItem key={step} value={step}>
+                      <MenuItem
+                        key={step}
+                        value={step}
+                        disabled={paintEntries.some(
+                          (row, i) => i !== index && row.paintId === entry.paintId && row.step === step,
+                        )}
+                      >
                         {step[0] + step.slice(1).toLowerCase()}
                       </MenuItem>
                     ),

@@ -1,17 +1,15 @@
 import { Alert, Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { EmptyState } from "../../Components/EmptyState";
-import { FilterPluginSelect, useFilterPlugin } from "../../Components/FilterPlugin";
 import { FilterToolbar } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
 import { Plus, TemplateCopy } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
-import { useTemplateCatalog } from "../../store/template-hooks";
+import { useTemplateActions, useTemplateCatalog } from "../../store/template-hooks";
 import type { MiniatureTemplate } from "../../types";
 import { schemeGridWindow } from "../../utils/scheme-grid-window";
-import { useFuzzySearch } from "../../utils/use-fuzzy-search";
 
 import { TemplateCard } from "./TemplateCard";
 import { TemplateDetailsDialog } from "./TemplateDetailsDialog";
@@ -19,17 +17,36 @@ import { TemplateEditorDialog } from "./TemplateEditorDialog";
 
 // Cards are outlined (1px border) around a 4:5 image, so their height follows the column width.
 const CARD_BORDER = 1;
-const templateSearchText = (template: MiniatureTemplate) =>
-  [template.name, template.faction, template.manufacturer].join(" ");
 
 export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
-  const api = useVaultStore((s) => s.api);
+  const actions = useTemplateActions();
   const notify = useVaultStore((s) => s.notify);
-  const catalogQuery = useTemplateCatalog();
-  const catalog = catalogQuery.data;
-  const error = catalogQuery.error?.message;
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
+  const [plugin, setPlugin] = useState("ALL");
+  const catalogQuery = useTemplateCatalog(true, {
+    search,
+    category: category === "ALL" ? null : category,
+    sourceId: plugin === "ALL" || plugin === "NONE" ? null : plugin,
+    noSource: plugin === "NONE",
+  });
+  const catalog = catalogQuery.data;
+  const error = catalogQuery.error?.message;
+  const loadMore = catalogQuery.loadMore;
+  const loading = catalogQuery.loading;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !catalog?.hasNextPage || loading) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: "600px" },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [catalog?.hasNextPage, loading, loadMore]);
   const [editing, setEditing] = useState<MiniatureTemplate | null | undefined>();
   const [selected, setSelected] = useState<MiniatureTemplate | null>(null);
   // The template whose Delete was clicked once; a second click deletes it.
@@ -84,18 +101,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const gap = gridWidth >= 600 ? 16 : 12;
   const columnWidth = Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
   const rowHeight = Math.max(1, ((columnWidth - 2 * CARD_BORDER) * 5) / 4 + 2 * CARD_BORDER);
-  const templates = useMemo(() => catalog?.templates ?? [], [catalog]);
-  const pluginFilter = useFilterPlugin(templates);
-  const matchesPlugin = pluginFilter.matches;
-  const searchCandidates = useMemo(
-    () =>
-      templates.filter(
-        (template) =>
-          (category === "ALL" || template.categories.includes(category)) && matchesPlugin(template),
-      ),
-    [templates, category, matchesPlugin],
-  );
-  const matching = useFuzzySearch(searchCandidates, search, templateSearchText);
+  const matching = catalog?.templates ?? [];
   const gridWindow = schemeGridWindow({
     itemCount: matching.length,
     columns,
@@ -123,11 +129,11 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   };
   const remove = async (template: MiniatureTemplate) => {
     try {
-      await api("/api/miniature-templates", { method: "DELETE", body: JSON.stringify({ id: template.id }) });
+      await actions.remove(template.id);
       setSelected(null);
       notify("Template deleted");
     } catch {
-      /* api reports the error */
+      /* actions report the error */
     }
   };
   return (
@@ -162,13 +168,33 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           sx={{
             display: "grid",
             gap: 1,
+            "& .MuiInputLabel-root.Mui-focused": { color: "var(--ink-soft)" },
             gridTemplateColumns: {
               xs: "1fr",
-              sm: pluginFilter.plugins.length ? "repeat(2, minmax(0, 1fr))" : "1fr",
+              sm: catalogQuery.sourceCounts.length ? "repeat(2, minmax(0, 1fr))" : "1fr",
             },
           }}
         >
-          <FilterPluginSelect filter={pluginFilter} />
+          {!!catalogQuery.sourceCounts.length && (
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Plugin"
+              value={plugin}
+              onChange={(event) => setPlugin(event.target.value)}
+            >
+              <MenuItem value="ALL">All plugins</MenuItem>
+              {catalogQuery.sourceCounts
+                .filter((facet) => facet.key)
+                .map((facet) => (
+                  <MenuItem key={facet.key} value={facet.key}>
+                    {facet.label}
+                  </MenuItem>
+                ))}
+              <MenuItem value="NONE">Not from a plugin</MenuItem>
+            </TextField>
+          )}
           <TextField
             select
             fullWidth
@@ -180,7 +206,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
             }}
           >
             <MenuItem value="ALL">All categories</MenuItem>
-            {catalog?.categories.map((item) => (
+            {catalogQuery.categories.map((item) => (
               <MenuItem key={item} value={item}>
                 {item}
               </MenuItem>
@@ -188,7 +214,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           </TextField>
         </Box>
       </FilterToolbar>
-      {catalog && templates.length === 0 ? (
+      {catalog && catalog.totalCount === 0 && !search && category === "ALL" && plugin === "ALL" ? (
         <EmptyState
           icon={<TemplateCopy size={26} />}
           title="No templates yet"
@@ -206,7 +232,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
               color: "var(--ink-faint)",
             }}
           >
-            {matching.length.toLocaleString()} templates
+            {(catalog?.totalCount ?? 0).toLocaleString()} templates
           </Box>
           <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
             <Box
@@ -239,6 +265,14 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           </Box>
         </>
       )}
+      <Box ref={loadMoreRef} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+        {catalog?.hasNextPage && (
+          <Button onClick={catalogQuery.loadMore} disabled={catalogQuery.loading}>
+            Load more templates
+          </Button>
+        )}
+        {catalogQuery.loading && <Box role="status">Loading templates…</Box>}
+      </Box>
       {selected && (
         <TemplateDetailsDialog
           template={selected}

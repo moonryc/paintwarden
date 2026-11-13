@@ -1,76 +1,67 @@
+import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect } from "storybook/test";
+import { useState } from "react";
+import { expect, userEvent, within } from "storybook/test";
 
-import { emptyState } from "../utils/constants";
-import { TEMPLATES_QUERY, templateCatalogOptions, templateRecipeOptions } from "../utils/template-query";
-import { VAULT_QUERY, createVaultQueryClient } from "../utils/vault-query";
+import { vault } from "../storybook/fixtures";
+import { StoryGraphQL } from "../storybook/graphql";
+import { fixtureTemplateResponse, sampleTemplates } from "../storybook/template-api-fixtures";
 
-import { createVaultStore } from "./vault-store";
+import { useTemplateActions, useTemplateCatalog, useTemplateRecipe } from "./template-hooks";
 
-const meta = {
-  title: "Store/Template cache",
-  render: () => <p>Template catalog, recipes, and vault invalidation regression.</p>,
-} satisfies Meta;
+function Probe() {
+  const [id, setId] = useState<string | null>(null);
+  const catalog = useTemplateCatalog();
+  const recipe = useTemplateRecipe(id);
+  const actions = useTemplateActions();
+  return (
+    <>
+      <p role="status">{catalog.loading ? "Loading" : `${catalog.data?.totalCount ?? 0} templates`}</p>
+      <Button onClick={() => setId("user:one")}>Open selected recipe</Button>
+      <Button onClick={() => void actions.create({ name: "New template" })}>Create template</Button>
+      {recipe.data && <p>Loaded selected recipe</p>}
+    </>
+  );
+}
+function Harness() {
+  const [state] = useState(() => ({ sequence: 0 }));
+  return (
+    <StoryGraphQL
+      respond={(operation) => {
+        if (operation.operationName === "CreateReusableTemplate") state.sequence += 1;
+        const rows = state.sequence
+          ? [
+              ...sampleTemplates,
+              { ...sampleTemplates[0], id: "user:new", name: "New template", kind: "user" as const },
+            ]
+          : sampleTemplates;
+        return (
+          fixtureTemplateResponse(
+            vault,
+            operation.operationName,
+            operation.variables,
+            { epoch: "story", seq: String(state.sequence) },
+            rows,
+          ) ?? {}
+        );
+      }}
+    >
+      <Probe />
+    </StoryGraphQL>
+  );
+}
+const meta = { title: "Store/Template cache", render: () => <Harness /> } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
-
 export const Invalidation: Story = {
-  play: async () => {
-    const client = createVaultQueryClient();
-    const store = createVaultStore(client);
-    const headers = store.getState().authHeaders;
-    const catalogKey = templateCatalogOptions(headers).queryKey;
-    const recipeKey = templateRecipeOptions("user:one", headers).queryKey;
-    const seed = () => {
-      client.setQueryData(VAULT_QUERY, { ...emptyState, cursor: { epoch: "fixture", seq: 1 } });
-      client.setQueryData(catalogKey, { sourceVersion: null, categories: [], templates: [] });
-      client.setQueryData(recipeKey, { schemeIds: ["existing-scheme"], paints: [] });
-    };
-    const expectInvalidated = () => {
-      expect(client.getQueryState(catalogKey)?.isInvalidated).toBe(true);
-      expect(client.getQueryState(recipeKey)?.isInvalidated).toBe(true);
-    };
-    const originalFetch = window.fetch;
-    let reload = false;
-    window.fetch = async (input) => {
-      const url = input instanceof Request ? input.url : String(input);
-      if (url.startsWith("/api/changes")) {
-        return Response.json({ epoch: "fixture", seq: reload ? 2 : 1, reload, changes: [] });
-      }
-      return Response.json({ ok: true });
-    };
-    try {
-      // Ordinary paint/miniature saves do not invalidate the large template list.
-      seed();
-      await store.getState().api("/api/paint-state", { method: "PUT", body: "{}" });
-      expect(client.getQueryState(catalogKey)?.isInvalidated).toBe(false);
-
-      // Template and source writes are reported by the server as reload changes, including
-      // changes picked up from another client by the periodic sync.
-      for (const path of ["/api/miniature-templates", "/api/catalog-sources"]) {
-        seed();
-        reload = true;
-        await store.getState().api(path, { method: "PUT", body: "{}" });
-        expectInvalidated();
-      }
-      seed();
-      await store.getState().syncChanges();
-      expectInvalidated();
-
-      // Backup restore and source dialogs use refresh rather than the mutation helper.
-      seed();
-      await store.getState().refresh();
-      expectInvalidated();
-
-      seed();
-      store.getState().setToken("second-account");
-      expect(store.getState().authHeaders()).toEqual({ authorization: "Bearer second-account" });
-      expect(client.getQueryData(catalogKey)).toBeUndefined();
-      expect(client.getQueryData(recipeKey)).toBeUndefined();
-      expect(client.getQueryCache().findAll({ queryKey: TEMPLATES_QUERY })).toHaveLength(2);
-    } finally {
-      window.fetch = originalFetch;
-      client.clear();
-    }
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("1 templates")).toBeInTheDocument();
+    await expect(canvas.queryByText("Loaded selected recipe")).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Open selected recipe" }));
+    await expect(await canvas.findByText("Loaded selected recipe")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Create template" }));
+    await expect(await canvas.findByText("2 templates")).toBeInTheDocument();
+    await expect(await canvas.findByText("Loaded selected recipe")).toBeInTheDocument();
   },
 };

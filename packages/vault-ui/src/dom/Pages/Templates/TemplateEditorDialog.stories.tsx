@@ -26,6 +26,7 @@ const template: MiniatureTemplate = {
 const revision = { epoch: "editor-story", seq: "1" };
 const pageInfo = { hasNextPage: false, endCursor: null };
 type FixtureOptions = {
+  repeatPaint?: boolean;
   failRecipeOnce?: boolean;
   failRefreshOnce?: boolean;
   failSaveOnce?: boolean;
@@ -76,6 +77,18 @@ function editorResponse(options: FixtureOptions = {}) {
                 notes: "Preserved recipe notes",
                 sortOrder: 0,
               },
+              ...(options.repeatPaint
+                ? [
+                    {
+                      paintId: paints.crimson.id,
+                      paintName: paints.crimson.name,
+                      paintBrand: paints.crimson.brand,
+                      step: "HIGHLIGHT",
+                      notes: "Separate highlight notes",
+                      sortOrder: 1,
+                    },
+                  ]
+                : []),
             ],
             pageInfo,
           },
@@ -338,5 +351,34 @@ export const BackgroundRefreshKeepsUnsavedRecipe: Story = {
     );
     await expect(body.getByRole("textbox", { name: "Name" })).toHaveValue("Reusable knight unsaved");
     await expect(body.getByDisplayValue("Preserved recipe notes unsaved")).toBeVisible();
+  },
+};
+
+export const RepeatedPaintSteps: Story = {
+  parameters: { editorFixture: { repeatPaint: true, mutation: fn() } },
+  play: async ({ parameters, args }) => {
+    const body = within(document.body);
+    await body.findByDisplayValue("Separate highlight notes");
+    await expect(body.getByDisplayValue("Preserved recipe notes")).toBeInTheDocument();
+    await expect(body.getAllByRole("combobox", { name: "Step" })).toHaveLength(2);
+    await userEvent.click(body.getByRole("button", { name: "Save template" }));
+    await waitFor(() => expect(args.onSaved).toHaveBeenCalled());
+    const fixture = parameters.editorFixture as FixtureOptions;
+    await expect(fixture.mutation).toHaveBeenCalledWith(
+      "UpdateReusableTemplate",
+      expect.objectContaining({
+        input: expect.objectContaining({
+          paints: [
+            { paintId: paints.crimson.id, step: "BASECOAT", notes: "Preserved recipe notes", sortOrder: 0 },
+            {
+              paintId: paints.crimson.id,
+              step: "HIGHLIGHT",
+              notes: "Separate highlight notes",
+              sortOrder: 1,
+            },
+          ],
+        }),
+      }),
+    );
   },
 };
