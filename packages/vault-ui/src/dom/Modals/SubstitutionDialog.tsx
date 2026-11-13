@@ -1,24 +1,19 @@
 import { Alert, Autocomplete, Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { resolveSubstitution } from "@paint-vault/core/paint-substitutions";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { Modal } from "../Components/Modal";
 import { PaintBottle } from "../Components/PaintBottle";
 import { usePaintDetail, usePaintOptions } from "../graphql/detail-hooks";
 import type { DetailPaintFragment } from "../graphql/generated/graphql";
 import { usePaintCommands } from "../graphql/paint-actions";
-import { useVaultGraphQL } from "../graphql/provider";
 import { Plus, X } from "../icons";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import { noop } from "../utils/constants";
 import { truncateSx } from "../utils/truncate";
-import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
 import { SavedMixCard, type SavedMixProjection } from "./SavedMixCard";
-
-const paintSearchText = (paint: Paint) => `${paint.name} ${paint.brand} ${paint.range}`;
 
 const detailPaint = (paint: DetailPaintFragment): Paint => ({
   ...paint,
@@ -26,9 +21,7 @@ const detailPaint = (paint: DetailPaintFragment): Paint => ({
 });
 
 type DialogProps = { paint: Paint; onClose: () => void };
-type PickerSource = { catalog: Paint[] } | { graphql: true };
 type PickerProps = {
-  source: PickerSource;
   excludeIds: string[];
   choice: Paint | null;
   query: string;
@@ -37,11 +30,6 @@ type PickerProps = {
 };
 
 export function SubstitutionDialog(props: DialogProps) {
-  const graphql = useVaultGraphQL();
-  return graphql ? <ApolloSubstitutionDialog {...props} /> : <LegacySubstitutionDialog {...props} />;
-}
-
-function ApolloSubstitutionDialog(props: DialogProps) {
   const detail = usePaintDetail(props.paint.id);
   const recipes = (detail.data?.substitutions.nodes ?? []).map((mix) => ({
     mix,
@@ -55,7 +43,6 @@ function ApolloSubstitutionDialog(props: DialogProps) {
       {...props}
       recipes={recipes}
       defaultRecipe={detail.data?.paint?.activeSubstitution ?? undefined}
-      pickerSource={{ graphql: true }}
       loading={detail.loading}
       error={detail.error?.message}
       onRetry={() => void detail.refresh()}
@@ -65,44 +52,11 @@ function ApolloSubstitutionDialog(props: DialogProps) {
   );
 }
 
-function LegacySubstitutionDialog(props: DialogProps) {
-  const data = useVault();
-  const recipes = data.paintSubstitutions
-    .filter((row) => row.targetPaintId === props.paint.id)
-    .map((mix) => {
-      const resolved = resolveSubstitution(data, mix.id);
-      return {
-        mix,
-        ingredients: data.paintSubstitutionIngredients
-          .filter((row) => row.substitutionId === mix.id)
-          .sort((a, b) => a.sortOrder - b.sortOrder)
-          .flatMap((row) => {
-            const paint = data.catalog.find((item) => item.id === row.paintId);
-            return paint ? [{ paint, parts: row.parts, sortOrder: row.sortOrder }] : [];
-          }),
-        brokenReason: resolved?.broken
-          ? resolved.brokenReason === "empty"
-            ? ("EMPTY" as const)
-            : ("CYCLE" as const)
-          : null,
-      };
-    });
-  return (
-    <SubstitutionDialogView
-      {...props}
-      recipes={recipes}
-      defaultRecipe={recipes.find((row) => row.mix.isDefault)?.mix}
-      pickerSource={{ catalog: data.catalog }}
-    />
-  );
-}
-
 function SubstitutionDialogView({
   paint,
   onClose,
   recipes,
   defaultRecipe,
-  pickerSource,
   loading,
   error,
   onRetry,
@@ -111,7 +65,6 @@ function SubstitutionDialogView({
 }: DialogProps & {
   recipes: SavedMixProjection[];
   defaultRecipe?: { id: string };
-  pickerSource: PickerSource;
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
@@ -319,7 +272,6 @@ function SubstitutionDialogView({
         />
         <Box component="div" sx={{ display: "flex", gap: 1 }}>
           <IngredientPicker
-            source={pickerSource}
             excludeIds={[paint.id, ...ingredients.map((row) => row.paint.id)]}
             choice={choice}
             query={ingredientQuery}
@@ -420,14 +372,6 @@ function SubstitutionDialogView({
 }
 
 function IngredientPicker(props: PickerProps) {
-  return "graphql" in props.source ? (
-    <ApolloIngredientPicker {...props} />
-  ) : (
-    <LegacyIngredientPicker {...props} catalog={props.source.catalog} />
-  );
-}
-
-function ApolloIngredientPicker(props: PickerProps) {
   const { items, loading, error } = usePaintOptions(props.query, props.excludeIds);
   return (
     <IngredientPickerView
@@ -437,15 +381,6 @@ function ApolloIngredientPicker(props: PickerProps) {
       error={error?.message}
     />
   );
-}
-
-function LegacyIngredientPicker(props: PickerProps & { catalog: Paint[] }) {
-  const candidates = useMemo(
-    () => props.catalog.filter((paint) => !props.excludeIds.includes(paint.id)),
-    [props.catalog, props.excludeIds],
-  );
-  const options = useFuzzySearch(candidates, props.query, paintSearchText, 60);
-  return <IngredientPickerView {...props} options={options} />;
 }
 
 function IngredientPickerView({

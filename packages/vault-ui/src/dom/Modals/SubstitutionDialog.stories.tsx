@@ -22,32 +22,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 // Royal Blue has a saved mix in the sample vault.
-export const WithSavedMix: Story = {};
-
-export const NoMixes: Story = { args: { paint: paints.gold } };
-
-export const BuildSubstitution: Story = {
-  args: { paint: paints.gold },
-  play: async ({ userEvent }) => {
-    const save = screen.getByRole("button", { name: "Save substitution" });
-    await expect(save).toBeDisabled();
-    await userEvent.type(screen.getByRole("textbox", { name: "Recipe name" }), "New two-paint mix");
-    const picker = screen.getByRole("combobox", { name: "Ingredient paint" });
-    await userEvent.type(picker, paints.skyBlue.name);
-    await userEvent.click(
-      await screen.findByRole("option", { name: `${paints.skyBlue.name} · ${paints.skyBlue.brand}` }),
-    );
-    await userEvent.click(screen.getByRole("button", { name: "Add" }));
-    await expect(screen.getByRole("spinbutton", { name: "Parts" })).toHaveValue(1);
-    await expect(save).toBeEnabled();
-    await userEvent.clear(screen.getByRole("spinbutton", { name: "Parts" }));
-    await userEvent.type(screen.getByRole("spinbutton", { name: "Parts" }), "3");
-    await expect(screen.getByRole("spinbutton", { name: "Parts" })).toHaveValue(13);
-    await userEvent.click(screen.getByRole("button", { name: `Remove ${paints.skyBlue.name}` }));
-    await expect(save).toBeDisabled();
-  },
-};
-
 const serverPaint = {
   ...paints.skyBlue,
   id: "server-ingredient",

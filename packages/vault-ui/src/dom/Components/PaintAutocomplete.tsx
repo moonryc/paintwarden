@@ -1,11 +1,9 @@
 import { Autocomplete, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useMemo } from "react";
 
 import { usePaintOptions } from "../graphql/detail-hooks";
-import { useVaultGraphQL } from "../graphql/provider";
+import type { Paint } from "../types";
 import { truncateSx } from "../utils/truncate";
-import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
 import { PaintBottle } from "./PaintBottle";
 
@@ -17,42 +15,21 @@ export type PaintOption = {
   colorHex: string | null;
 };
 
-const paintSearchText = (paint: PaintOption) => `${paint.brand} ${paint.range} ${paint.name}`;
-
 type PickerProps<T extends PaintOption> = {
-  paints: T[];
   excludedIds: string[];
   query: string;
   onQueryChange: (value: string) => void;
   onChoose: (paint: T) => void;
 };
 
-export function PaintAutocomplete<T extends PaintOption>(props: PickerProps<T>) {
-  const graphql = useVaultGraphQL();
-  return graphql ? <ApolloPaintAutocomplete {...props} /> : <LegacyPaintAutocomplete {...props} />;
-}
-
-function ApolloPaintAutocomplete<T extends PaintOption>(props: PickerProps<T>) {
+export function PaintAutocomplete(props: PickerProps<Paint>) {
   const { items, loading, error } = usePaintOptions(props.query, props.excludedIds);
   // Server projections contain the complete picker paint, not caller snapshot pages.
-  // PaintOption's generic only preserves callers' paint shape on the legacy path.
   const options = items.map((paint) => ({
     ...paint,
     sourceName: paint.sourceName ?? undefined,
-  })) as unknown as T[];
+  }));
   return <PaintAutocompleteView {...props} matches={options} loading={loading} error={error} />;
-}
-
-function LegacyPaintAutocomplete<T extends PaintOption>(props: PickerProps<T>) {
-  const { paints, excludedIds, query } = props;
-  // Callers may derive the exclusions inline; use their contents, not the array identity.
-  const excludedKey = JSON.stringify(excludedIds);
-  const candidates = useMemo(() => {
-    const excluded = new Set<string>(JSON.parse(excludedKey) as string[]);
-    return paints.filter((paint) => !excluded.has(paint.id));
-  }, [paints, excludedKey]);
-  const matches = useFuzzySearch(candidates, query.trim(), paintSearchText, 30);
-  return <PaintAutocompleteView {...props} matches={matches} />;
 }
 
 function PaintAutocompleteView<T extends PaintOption>({

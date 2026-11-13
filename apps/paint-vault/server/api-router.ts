@@ -3,7 +3,6 @@ import * as catalogItem from "../app/api/catalog/[id]/route";
 import * as catalog from "../app/api/catalog/route";
 import * as catalogShare from "../app/api/catalog-share/route";
 import * as catalogSources from "../app/api/catalog-sources/route";
-import * as changes from "../app/api/changes/route";
 import * as colorSchemes from "../app/api/color-schemes/route";
 import * as imageImport from "../app/api/image-import/route";
 import * as miniatureSchemes from "../app/api/miniature-schemes/route";
@@ -15,7 +14,6 @@ import * as paintState from "../app/api/paint-state/route";
 import * as paintSubstitutions from "../app/api/paint-substitutions/route";
 import * as recipeSteps from "../app/api/recipe-steps/route";
 import * as requirements from "../app/api/requirements/route";
-import * as state from "../app/api/state/route";
 import { GRAPHQL_BODY_BYTES } from "../graphql/budgets";
 import { graphqlResponse } from "../graphql/server";
 import { APP_VERSION } from "../lib/app-version";
@@ -40,12 +38,10 @@ function staticHandler(path: string, method: string): Handler | undefined {
       PUT: catalogSources.PUT,
       DELETE: catalogSources.DELETE,
     },
-    changes: { GET: changes.GET },
     "color-schemes": { POST: colorSchemes.POST, PUT: colorSchemes.PUT, DELETE: colorSchemes.DELETE },
     "image-import": { POST: imageImport.POST },
     "miniature-schemes": { PUT: miniatureSchemes.PUT },
     "miniature-templates": {
-      GET: () => miniatureTemplates.GET(),
       POST: miniatureTemplates.POST,
       PUT: miniatureTemplates.PUT,
       DELETE: miniatureTemplates.DELETE,
@@ -64,7 +60,6 @@ function staticHandler(path: string, method: string): Handler | undefined {
       DELETE: requirements.DELETE,
     },
     "recipe-steps": { PUT: recipeSteps.PUT },
-    state: { GET: () => state.GET() },
   };
   return routes[path]?.[method];
 }
@@ -136,12 +131,6 @@ async function dispatch(request: Request, path: string, method: string): Promise
     return methodNotAllowed();
   }
   const imageMatch = path.match(/^miniatures\/([^/]+)\/image$/);
-  const templateRecipeMatch = path.match(/^miniature-templates\/([^/]+)\/recipe$/);
-  if (templateRecipeMatch) {
-    if (method === "GET")
-      return miniatureTemplates.recipeForTemplate(decodeURIComponent(templateRecipeMatch[1]));
-    return methodNotAllowed();
-  }
   const templateImageMatch = path.match(/^miniature-templates\/([^/]+)\/image$/);
   if (templateImageMatch && method === "GET")
     return miniatureTemplates.imageForTemplate(decodeURIComponent(templateImageMatch[1]), request);
@@ -165,7 +154,6 @@ async function dispatch(request: Request, path: string, method: string): Promise
       "catalog",
       "catalog-share",
       "catalog-sources",
-      "changes",
       "color-schemes",
       "image-import",
       "miniature-schemes",
@@ -175,7 +163,6 @@ async function dispatch(request: Request, path: string, method: string): Promise
       "paint-substitutions",
       "requirements",
       "recipe-steps",
-      "state",
     ].includes(path)
   )
     return methodNotAllowed();

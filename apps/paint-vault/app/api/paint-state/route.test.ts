@@ -12,8 +12,7 @@ const { getDb, getSqlite } = await import("../../../db");
 const { paintCatalog, paintInventory } = await import("../../../db/schema");
 const { testUserId } = await import("../../../lib/test-ids");
 const { PaintStockError, setPaintStock } = await import("../../../lib/paint-stock");
-const { currentChangeSeq } = await import("../../../db/change-log");
-const { vaultSnapshot, vaultChangesSince } = await import("../../../lib/vault-state");
+const { currentChangeSeq, changeLogEpoch, changedKeysSince } = await import("../../../db/change-log");
 
 const ids = Array.from({ length: 502 }, (_, i) => testUserId(`inventory-paint-${i}`));
 const call = (body: unknown) =>
@@ -135,7 +134,7 @@ void test("shared stock command preserves non-finite and nullable quantity defau
 
 void test("shared command is synchronous and its writes and change log join an outer transaction", () => {
   const sqlite = getSqlite();
-  const before = vaultSnapshot().cursor;
+  const before = { epoch: changeLogEpoch, seq: currentChangeSeq(sqlite) };
   const abort = new Error("Abort outer mutation");
   assert.throws(
     () =>
@@ -153,32 +152,22 @@ void test("shared command is synchronous and its writes and change log join an o
 
   const committed = sqlite.transaction(() => {
     const result = setPaintStock({ paintIds: ids.slice(0, 2), state: "OWNED", stockLevel: "LOW" });
-    const delta = vaultChangesSince(before.epoch, before.seq);
+    const delta = changedKeysSince(sqlite, before.epoch, before.seq);
     return { result, delta };
   })();
   assert.deepEqual(committed.result, { ok: true, updated: 2 });
   assert.equal(committed.delta.reload, false);
   assert.deepEqual(
-    committed.delta.changes.map(({ table, key, row }) => ({
-      table,
-      key,
-      row: row && {
-        paintId: row.paintId,
-        state: row.state,
-        stockLevel: row.stockLevel,
-        quantity: row.quantity,
-      },
-    })),
-    ids.slice(0, 2).map((paintId) => ({
-      table: "paintRecords",
-      key: { paintId },
-      row: { paintId, state: "OWNED", stockLevel: "LOW", quantity: 1 },
-    })),
+    !committed.delta.reload && committed.delta.keys,
+    ids.slice(0, 2).map((paintId) => ({ table: "paintRecords", key: { paintId } })),
   );
+  assert.deepEqual(inventory(), expected(ids.slice(0, 2), "OWNED", "LOW", 1));
   const cursor = committed.delta;
   setPaintStock({ paintId: ids[0], state: null });
-  const deletion = vaultChangesSince(cursor.epoch, cursor.seq);
-  assert.deepEqual(deletion.changes, [{ table: "paintRecords", key: { paintId: ids[0] }, row: null }]);
+  const deletion = changedKeysSince(sqlite, changeLogEpoch, cursor.seq);
+  assert.equal(deletion.reload, false);
+  assert.deepEqual(!deletion.reload && deletion.keys, [{ table: "paintRecords", key: { paintId: ids[0] } }]);
+  assert.deepEqual(inventory(), expected([ids[1]], "OWNED", "LOW", 1));
 });
 
 void test("shared command exposes typed errors and keeps clearing unknown IDs harmless", async () => {

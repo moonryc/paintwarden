@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-import { VAULT_TABLE_KEYS, type VaultKeyValue, type VaultTable } from "@paint-vault/core/vault-changes";
 import type Database from "better-sqlite3";
 import { getTableColumns, getTableName } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
@@ -26,10 +25,28 @@ import {
   paintSubstitutions,
 } from "./schema.ts";
 
-// Temporary triggers record the key of every row written to a vault table, including rows removed
-// by foreign-key cascades. Clients send the last position they saw and receive the current value
-// of each changed row, so a save never needs a full reload. The log lives in this connection's
-// temporary storage, so a restart starts a new epoch and clients reload once.
+// Trigger keys are server-only: GraphQL clients receive family invalidations, never rows.
+export const VAULT_TABLE_KEYS = {
+  miniatures: ["id"],
+  catalog: ["id"],
+  paintRecords: ["paintId"],
+  requirements: ["id"],
+  recipeSteps: ["miniatureId", "step"],
+  colorSchemes: ["id"],
+  colorSchemePaints: ["schemeId", "sortOrder"],
+  colorSchemeDividers: ["schemeId", "id"],
+  colorSchemeImages: ["schemeId", "id"],
+  miniatureColorSchemes: ["miniatureId", "schemeId"],
+  paintSubstitutions: ["id"],
+  paintSubstitutionIngredients: ["substitutionId", "paintId"],
+  miniaturePaintSubstitutions: ["miniatureId", "targetPaintId"],
+} as const;
+
+export type VaultTable = keyof typeof VAULT_TABLE_KEYS;
+export type VaultKeyValue = string | number;
+
+// Temporary triggers capture writes and foreign-key cascades for resumable invalidations.
+// A restart starts a new epoch, causing clients to discard their previous revision baseline.
 export const VAULT_TABLES: Record<VaultTable, SQLiteTable> = {
   miniatures,
   catalog: paintCatalog,
@@ -46,11 +63,10 @@ export const VAULT_TABLES: Record<VaultTable, SQLiteTable> = {
   miniaturePaintSubstitutions,
 };
 
-// Source names and logos are copied onto many paint and scheme rows, so changing them reloads
-// the whole vault. Bookkeeping separately invalidates only GraphQL source projections.
+// Source identity/display changes invalidate every projection. Bookkeeping only invalidates sources.
 const RELOAD_TABLE = "$reload";
 
-// Beyond this many changed rows (a catalog install, say), one full reload is cheaper.
+// Bound catchup work; a large write asks clients to refresh their loaded projections.
 const MAX_CHANGES = 2000;
 const KEEP_ENTRIES = 20_000;
 
@@ -89,7 +105,7 @@ export function installChangeLog(sqlite: Database.Database) {
     );
   }
   const reload = `INSERT INTO vault_changes (table_key, row_key) VALUES ('${RELOAD_TABLE}', '[]');`;
-  // Template metadata and recipes live in a separate client query, refreshed on reload.
+  // Template changes conservatively invalidate every projection.
   for (const table of [miniatureTemplates, miniatureTemplateSchemes, miniatureTemplatePaints]) {
     const name = getTableName(table);
     statements.push(
@@ -134,7 +150,7 @@ export type LoggedChanges =
       keys: { table: VaultTable; key: Record<string, VaultKeyValue> }[];
     };
 
-// Call inside a read transaction so the returned position matches the rows read afterwards.
+// Call inside a transaction so the returned position and invalidation keys are consistent.
 export function changedKeysSince(sqlite: Database.Database, epoch: string, since: number): LoggedChanges {
   const seq = currentChangeSeq(sqlite);
   if (epoch !== changeLogEpoch || since < (prunedThroughByDatabase.get(sqlite) ?? 0) || since > seq)

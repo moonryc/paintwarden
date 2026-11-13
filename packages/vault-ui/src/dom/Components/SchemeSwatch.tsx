@@ -1,11 +1,9 @@
 import Box from "@mui/material/Box";
 
 import { Layers } from "../icons";
-import { useVault } from "../store/hooks";
 import type { Paint, SchemeOrderEntry } from "../types";
 import { imageUrl } from "../utils/image-cache";
 import { paintGradient } from "../utils/paint-gradient";
-import { schemeOrderEntries } from "../utils/scheme-order";
 
 const SWATCH_SIZES = {
   xs: { width: 16, height: 16, borderRadius: "4px" },
@@ -14,24 +12,13 @@ const SWATCH_SIZES = {
   lg: { width: "3.5rem", height: "3.5rem", borderRadius: "16px" },
 };
 
-export function SchemeSwatch({
-  schemeId,
-  size = "md",
-}: {
-  schemeId: string;
-  size?: "xs" | "sm" | "md" | "lg";
-}) {
-  const data = useVault();
-  return <SchemeSwatchView entries={schemeOrderEntries(data, schemeId)} paints={data.catalog} size={size} />;
-}
-
 export type SchemeSwatchViewProps = {
   entries: readonly SchemeOrderEntry[];
   paints: readonly Paint[];
   size?: "xs" | "sm" | "md" | "lg";
 };
 
-// A projection boundary: unlike the legacy wrapper, this never reads the vault snapshot.
+// Render only the supplied scheme projection.
 export function SchemeSwatchView({ entries, paints, size }: SchemeSwatchViewProps) {
   const preview = entries
     .filter((entry): entry is Extract<SchemeOrderEntry, { type: "IMAGE" }> => entry.type === "IMAGE")

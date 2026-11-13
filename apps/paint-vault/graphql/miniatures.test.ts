@@ -850,7 +850,7 @@ void test("GraphQL HTTP exposes Home, Miniatures, detail connections and navigat
     );
   const response =
     await post(`query { home(first:1) { revision {epoch seq} counts {owned ready distinctMissingPaints}
-    miniatures {nodes {id readiness {total missing ready}} totalCount pageInfo {hasNextPage endCursor}} }
+    miniatures {nodes {id readiness {total missing}} totalCount pageInfo {hasNextPage endCursor}} }
     miniatures(first:1,ownership:OWNED,stage:PRIMED) {ownershipCounts {key count} miniatures {nodes {id}}}
     vaultNavigation {availablePaints shoppingPaints} }`);
   assert.equal(response.status, 200);

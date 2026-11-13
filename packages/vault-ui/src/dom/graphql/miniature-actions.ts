@@ -15,7 +15,7 @@ import {
   type MiniatureEditResultFragment,
   type MiniatureInput,
 } from "./generated/graphql";
-import type { ReadTicket } from "./invalidation";
+import type { CommandTicket } from "./invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 
 type Values = MiniatureInput | MiniatureFormValues;
@@ -57,22 +57,18 @@ function input(values: Values): MiniatureInput {
 
 // One queue per miniature prevents rapid recipe/stage edits from overtaking each other.
 // Derived readiness is never optimistic; accepted complete detail windows replace it.
-export function createMiniatureActions(
-  scope: VaultGraphQLScope,
-  api: Api,
-  notify: Notify,
-  syncLegacy: () => Promise<void>,
-): MiniatureActions {
+export function createMiniatureActions(scope: VaultGraphQLScope, api: Api, notify: Notify): MiniatureActions {
   const queues = new Map<string, Promise<unknown>>();
   let serial = 0;
-  const enqueue = <T>(key: string, work: (ticket: ReadTicket) => Promise<T>): Promise<T> => {
-    const ticket = scope.controller.capture();
+  const enqueue = <T>(key: string, work: (ticket: CommandTicket) => Promise<T>): Promise<T> => {
+    const ticket = scope.controller.captureCommand();
     const task = async () => {
-      if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+      if (!scope.controller.isCommandCurrent(ticket))
+        throw new Error("Vault connection changed. Please try again.");
       try {
         return await work(ticket);
       } catch (error) {
-        if (scope.controller.isCurrent(ticket))
+        if (scope.controller.isCommandCurrent(ticket))
           notify(error instanceof Error ? error.message : "Could not save miniature", "error");
         throw error;
       }
@@ -89,19 +85,22 @@ export function createMiniatureActions(
     );
     return result;
   };
-  const committed = async (payload: MiniatureEditResultFragment | null | undefined, ticket: ReadTicket) => {
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+  const committed = async (
+    payload: MiniatureEditResultFragment | null | undefined,
+    ticket: CommandTicket,
+  ) => {
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     if (!payload) throw new Error("Miniature save returned no result");
-    scope.controller.committed(payload.revision, payload.invalidatedFamilies);
-    await syncLegacy().catch(() => {
-      if (scope.controller.isCurrent(ticket))
-        notify("Miniature saved; another open screen could not refresh. Please retry its refresh.", "error");
-    });
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+    if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
+      throw new Error("Vault connection changed. Please try again.");
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     return payload.miniatureId;
   };
-  const saveImage = async (id: string, values: Values, ticket: ReadTicket) => {
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+  const saveImage = async (id: string, values: Values, ticket: CommandTicket) => {
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     if (!("image" in values)) return;
     if (values.removeImage)
       await api(`/api/miniatures/${encodeURIComponent(id)}/image`, { method: "DELETE" });
@@ -110,6 +109,8 @@ export function createMiniatureActions(
         method: "POST",
         body: await imageFormData(values.image),
       });
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
   };
   return {
     create: (values) =>
@@ -126,7 +127,7 @@ export function createMiniatureActions(
         try {
           await saveImage(id, values, ticket);
         } catch (error) {
-          if (!scope.controller.isCurrent(ticket)) throw error;
+          if (!scope.controller.isCommandCurrent(ticket)) throw error;
           // The record exists already. Do not invite a duplicate create on retry.
           notify(
             "Miniature created, but its image could not be saved. Reopen Edit to retry the image.",
@@ -203,14 +204,13 @@ export function useMiniatureActions(): MiniatureActions {
   const scope = useVaultGraphQL();
   const api = useVaultStore((store) => store.api);
   const notify = useVaultStore((store) => store.notify);
-  const syncLegacy = useVaultStore((store) => store.syncChanges);
   return useMemo(() => {
     if (!scope) throw new Error("Miniature actions require the GraphQL provider");
     let actions = scopes.get(scope);
     if (!actions) {
-      actions = createMiniatureActions(scope, api, notify, syncLegacy);
+      actions = createMiniatureActions(scope, api, notify);
       scopes.set(scope, actions);
     }
     return actions;
-  }, [scope, api, notify, syncLegacy]);
+  }, [scope, api, notify]);
 }

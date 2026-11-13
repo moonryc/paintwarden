@@ -111,13 +111,9 @@ function checkExpandedBudget(
         if (field) {
           const args = getArgumentValues(field, node, variables);
           if (args.first !== undefined) {
-            const max = [
-              "paintOptions",
-              "schemePaintOptions",
-              "ownedPaintOptions",
-              "substitutions",
-              "similar",
-            ].includes(node.name.value)
+            const max = ["paintOptions", "schemePaintOptions", "ownedPaintOptions", "substitutions"].includes(
+              node.name.value,
+            )
               ? 30
               : 100;
             if (

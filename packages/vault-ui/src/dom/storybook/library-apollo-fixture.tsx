@@ -4,11 +4,11 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { createVaultCache } from "../graphql/cache";
 import { VaultInvalidationController } from "../graphql/invalidation";
-import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, LibraryFixtureContext } from "../graphql/library-hooks";
+import { ALL_LIBRARY_SOURCES, LibraryFixtureContext, NO_LIBRARY_SOURCE } from "../graphql/library-hooks";
 import { VaultGraphQLContext } from "../graphql/provider";
-import { useVault } from "../store/hooks";
 
 import { fixtureLibraryView } from "./library-fixtures";
+import { useStoryFixtureState } from "./story-fixture";
 
 export function LibraryApolloFixture({
   children,
@@ -17,7 +17,7 @@ export function LibraryApolloFixture({
   children: ReactNode;
   pageDelay?: number;
 }) {
-  const data = useVault();
+  const data = useStoryFixtureState();
   const latest = useRef(data);
   latest.current = data;
   const [scope] = useState(() => {

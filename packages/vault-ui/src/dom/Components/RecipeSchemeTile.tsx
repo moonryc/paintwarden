@@ -2,9 +2,7 @@ import { ButtonBase, Card } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import { X } from "../icons";
-import { useVault } from "../store/hooks";
 import type { Paint, SchemeOrderEntry } from "../types";
-import { schemeOrderEntries } from "../utils/scheme-order";
 import { truncateSx } from "../utils/truncate";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
 
@@ -38,19 +36,6 @@ type RecipeSchemeTileProps = {
   onOpen: () => void;
   onRemove: () => void;
 };
-
-export function RecipeSchemeTile(props: RecipeSchemeTileProps) {
-  const data = useVault();
-  const entries = schemeOrderEntries(data, props.scheme.id);
-  return (
-    <RecipeSchemeTileView
-      {...props}
-      entries={entries}
-      paints={data.catalog}
-      paintCount={entries.filter((entry) => entry.type === "PAINT").length}
-    />
-  );
-}
 
 export function RecipeSchemeTileView({
   scheme,

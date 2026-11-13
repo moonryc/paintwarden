@@ -2,21 +2,21 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, screen, waitFor } from "storybook/test";
 
+import { VaultGraphQLProvider } from "../graphql/provider";
 import { column } from "../storybook/decorators";
-import { paintList, paints } from "../storybook/fixtures";
+import { paints } from "../storybook/fixtures";
 import { StoryGraphQL } from "../storybook/graphql";
+import { mockApi } from "../storybook/mock-api";
 import type { Paint } from "../types";
 
 import { PaintAutocomplete } from "./PaintAutocomplete";
 
 // Keeps the query and adds chosen paints to the excluded list, as the recipe editor does.
 function RecipePicker({
-  paints: options,
   excludedIds,
   query,
   onChoose,
 }: {
-  paints: Paint[];
   excludedIds: string[];
   query: string;
   onChoose: (paint: Paint) => void;
@@ -25,7 +25,6 @@ function RecipePicker({
   const [chosen, setChosen] = useState(excludedIds);
   return (
     <PaintAutocomplete
-      paints={options}
       excludedIds={chosen}
       query={text}
       onQueryChange={setText}
@@ -41,9 +40,16 @@ function RecipePicker({
 const meta = {
   title: "Components/PaintAutocomplete",
   component: RecipePicker,
-  args: { paints: paintList, excludedIds: [], query: "", onChoose: fn() },
-  argTypes: { paints: { control: false } },
-  decorators: [column(420)],
+  args: { excludedIds: [], query: "", onChoose: fn() },
+  decorators: [
+    column(420),
+    mockApi(),
+    (Story) => (
+      <VaultGraphQLProvider>
+        <Story />
+      </VaultGraphQLProvider>
+    ),
+  ],
 } satisfies Meta<typeof RecipePicker>;
 
 export default meta;
@@ -74,7 +80,6 @@ const serverOnlyPaint = {
   activeSubstitution: null,
 };
 export const ApolloServerOptions: Story = {
-  args: { paints: [] },
   decorators: [
     (Story) => (
       <StoryGraphQL

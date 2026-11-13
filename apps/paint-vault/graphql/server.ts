@@ -19,7 +19,6 @@ import {
   readPaintOptions,
   readRevision,
   readSubstitution,
-  similarPaints,
   substitutionIngredients,
 } from "./library.ts";
 import { miniatureMutations } from "./miniature-mutations.ts";
@@ -108,7 +107,6 @@ const resolvers: Resolvers<GraphQLContext> = {
   PaintView: {
     substitutions: (parent, args) => paintSubstitutions(parent, args),
     usedBy: (parent, args) => paintUsages(parent, args),
-    similar: (parent, args) => similarPaints(parent, args.first),
   },
   Substitution: { ingredients: (parent, args) => substitutionIngredients(parent, args) },
   Mutation: {

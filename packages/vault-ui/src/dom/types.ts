@@ -5,7 +5,6 @@ import type {
   PaintSubstitutionIngredient,
 } from "@paint-vault/core/paint-substitutions";
 import type { RecipeStep } from "@paint-vault/core/recipe-steps";
-import type { VaultCursor } from "@paint-vault/core/vault-changes";
 
 export type PaintingStatus = "NOT_STARTED" | "ASSEMBLED" | "PRIMED" | "IN_PROGRESS" | "COMPLETE";
 
@@ -153,8 +152,6 @@ export type MiniatureTemplateCatalog = {
 };
 
 export type State = {
-  // Change-log position of this snapshot; absent until the vault has loaded.
-  cursor?: VaultCursor;
   miniatures: Miniature[];
   catalog: Paint[];
   paintStates: Record<string, PaintStatus>;

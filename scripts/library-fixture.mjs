@@ -4,19 +4,19 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-// Reuse the Phase 0 generator unchanged: the original harness alone creates and seeds the database.
+// Reuse the exact Phase 0 seed rows, extracted from the retired snapshot benchmark.
 // Never accept a caller-provided DATA_DIR or DATABASE_PATH as fixture input.
 export async function createLibraryFixture(root, profile = "large") {
   assert.equal(process.version, "v22.22.2", "Use pinned Node 22.22.2");
   assert.ok(["large", "stress"].includes(profile));
   const evidence = await mkdtemp(path.join(tmpdir(), `paint-vault-library-${profile}-`));
-  const baselinePath = path.join(evidence, "snapshot.json");
+  const baselinePath = path.join(evidence, "fixture.json");
   const env = { ...process.env, BENCH_REPORT: baselinePath };
   delete env.DATABASE_PATH;
   delete env.DATA_DIR;
   const seeded = spawnSync(
     process.execPath,
-    ["--import", "tsx", "../../scripts/benchmark-startup.mts", profile],
+    ["--import", "tsx", "../../scripts/seed-benchmark-vault.mts", profile],
     {
       cwd: path.join(root, "apps/paint-vault"),
       env,

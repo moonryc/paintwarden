@@ -1,5 +1,5 @@
-// Storybook-only compatibility adapter. It projects complete sample vaults; the production
-// Library never imports this module or manufactures a partial legacy State.
+// Storybook-only sample-data projections. It projects complete sample vaults; the production
+// Library never imports this module or manufactures a partial State.
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
 import {
   defaultSubstitution,
@@ -16,8 +16,9 @@ import {
   type LibraryView,
 } from "../graphql/library-hooks";
 import type { LibraryPaintProjection } from "../graphql/library-model";
-import { useVault } from "../store/hooks";
 import type { State } from "../types";
+
+import { useStoryFixtureState } from "./story-fixture";
 
 export function fixtureLibraryView(data: State, filters: LibraryFilters): LibraryView {
   const all: LibraryPaintProjection[] = data.catalog.map((paint) => ({
@@ -73,7 +74,7 @@ export function fixtureLibraryView(data: State, filters: LibraryFilters): Librar
 }
 
 export function LibraryFixtureProvider({ children }: { children: ReactNode }) {
-  const data = useVault();
+  const data = useStoryFixtureState();
   const read = useMemo(() => (filters: LibraryFilters) => fixtureLibraryView(data, filters), [data]);
   return <LibraryFixtureContext.Provider value={read}>{children}</LibraryFixtureContext.Provider>;
 }

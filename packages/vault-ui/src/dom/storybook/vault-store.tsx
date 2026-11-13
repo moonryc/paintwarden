@@ -7,34 +7,25 @@ import { useMemo, useState, useSyncExternalStore } from "react";
 import { fn } from "storybook/test";
 
 import { PaintCommandsContext, type PaintCommands } from "../graphql/paint-actions";
+import { PaintStockFixtureContext } from "../graphql/stock-actions";
 import { WishlistFixtureContext } from "../graphql/wishlist-hooks";
 import { createVaultStore } from "../store/vault-store";
 import { VaultStoreProvider } from "../store/VaultStoreProvider";
 import type { State } from "../types";
 
-import {
-  createFixtureSnapshotClient,
-  FixtureSnapshotProvider,
-  type FixtureSnapshotClient,
-} from "./fixture-snapshot";
 import { vault } from "./fixtures";
+import { createStoryFixture, StoryFixtureProvider, type StoryFixture } from "./story-fixture";
 import { createWishlistFixture } from "./wishlist-fixture";
 
 // Isolate this subscription so snapshot edits do not render unrelated stories/controls.
-function WishlistFixtureProvider({
-  client,
-  children,
-}: {
-  client: FixtureSnapshotClient;
-  children: ReactNode;
-}) {
+function WishlistFixtureProvider({ client, children }: { client: StoryFixture; children: ReactNode }) {
   const data = useSyncExternalStore(client.subscribe, client.getSnapshot, client.getSnapshot);
   const fixture = useMemo(() => createWishlistFixture(() => data), [data]);
   return <WishlistFixtureContext.Provider value={fixture}>{children}</WishlistFixtureContext.Provider>;
 }
 
 function StoryVault({ data, children }: { data: State; children: ReactNode }) {
-  const [client] = useState(() => createFixtureSnapshotClient(data));
+  const [client] = useState(() => createStoryFixture(data));
   const [paintCommands] = useState<PaintCommands>(() => ({
     importPaints: fn<PaintCommands["importPaints"]>(async (paints) => ({
       imported: paints.length,
@@ -52,28 +43,29 @@ function StoryVault({ data, children }: { data: State; children: ReactNode }) {
       "deleteSubstitution",
     ),
   }));
+  const [stock] = useState(() => ({
+    setPaintState: fn().mockName("setPaintState"),
+    toggleOwned: fn().mockName("toggleOwned"),
+  }));
   const [store] = useState(() =>
-    createVaultStore(undefined, {
+    createVaultStore({
       api: fn(async () => ({})).mockName("api"),
       refresh: fn(async () => undefined).mockName("refresh"),
-      syncChanges: fn(async () => undefined).mockName("syncChanges"),
       notify: fn().mockName("notify"),
-      setPaintState: fn().mockName("setPaintState"),
-      toggleOwned: fn().mockName("toggleOwned"),
-      setRecipe: fn().mockName("setRecipe"),
-      setRecipeSteps: fn().mockName("setRecipeSteps"),
       openMini: fn().mockName("openMini"),
       openPlugins: fn().mockName("openPlugins"),
     }),
   );
   return (
-    <FixtureSnapshotProvider client={client}>
+    <StoryFixtureProvider fixture={client}>
       <VaultStoreProvider store={store}>
         <PaintCommandsContext.Provider value={paintCommands}>
-          <WishlistFixtureProvider client={client}>{children}</WishlistFixtureProvider>
+          <PaintStockFixtureContext.Provider value={stock}>
+            <WishlistFixtureProvider client={client}>{children}</WishlistFixtureProvider>
+          </PaintStockFixtureContext.Provider>
         </PaintCommandsContext.Provider>
       </VaultStoreProvider>
-    </FixtureSnapshotProvider>
+    </StoryFixtureProvider>
   );
 }
 

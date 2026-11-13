@@ -217,12 +217,16 @@ export async function runHomeMiniaturesScenario({
   while ((await count(shelf)) < (await count(shelf, "data-total-count"))) {
     assert.ok(pages++ < 80, "Fixture search unexpectedly exceeds 80 pages");
     const before = await count(shelf);
+    // Auto-prefetch can finish after the loop condition but before this observation.
+    if (before >= (await count(shelf, "data-total-count"))) break;
     try {
       await page.getByRole("button", { name: "Load more miniatures", exact: true }).click({ timeout: 5000 });
     } catch (error) {
       // Scrolling the control into view can itself finish viewport prefetch and
       // remove the last-page button. Accept only independently observed progress.
-      if ((await count(shelf)) <= before) throw error;
+      const loaded = await count(shelf);
+      if (loaded >= (await count(shelf, "data-total-count"))) break;
+      if (loaded <= before) throw error;
     }
     await page.waitForFunction(
       (before) =>

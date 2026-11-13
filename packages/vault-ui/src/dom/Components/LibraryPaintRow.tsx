@@ -1,18 +1,12 @@
 import { useFragment } from "@apollo/client/react";
 import Box from "@mui/material/Box";
-import {
-  defaultSubstitution,
-  isPaintAvailable,
-  resolvePaintChoice,
-} from "@paint-vault/core/paint-substitutions";
 import { memo, type KeyboardEvent } from "react";
-import { shallow } from "zustand/shallow";
 
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
 import { libraryInventoryRecord, type LibraryPaintProjection } from "../graphql/library-model";
 import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
 import { usePaintStock } from "../graphql/stock-actions";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import { owns } from "../utils/vault-data";
 
@@ -24,7 +18,7 @@ import { PaintSubstitutionChip } from "./PaintSubstitutionChip";
 // available can be marked owned or added to the wishlist.
 type LibraryPaintRowProps = {
   paint: Paint;
-  projection?: LibraryPaintProjection;
+  projection: LibraryPaintProjection;
   // Replaces the usual owned toggle, as in the project drawer's scheme previews.
   toggleOwned?(paint: Paint): void;
   onOpenPaint(id: string): void;
@@ -34,37 +28,9 @@ type LibraryPaintRowProps = {
 };
 
 export const LibraryPaintRow = memo(function LibraryPaintRow(props: LibraryPaintRowProps) {
-  return props.projection ? (
-    <ProjectedLibraryPaintRow {...props} projection={props.projection} />
-  ) : (
-    <LegacyLibraryPaintRow {...props} />
-  );
-});
-
-function LegacyLibraryPaintRow(props: LibraryPaintRowProps) {
-  const { paint } = props;
-  const { substitution, record, available, broken } = useVault(
-    (data) => ({
-      substitution: defaultSubstitution(data, paint.id),
-      broken: resolvePaintChoice(data, "", paint.id).broken,
-      record: data.paintRecords[paint.id],
-      // Includes inventory and recursive substitution ingredients, not only this paint's record.
-      available: isPaintAvailable(data, data.paintRecords, paint.id),
-    }),
-    shallow,
-  );
-  return (
-    <LibraryPaintRowView
-      {...props}
-      projection={{ paint, substitution: substitution ?? null, record, available, broken }}
-    />
-  );
-}
-
-function ProjectedLibraryPaintRow(props: LibraryPaintRowProps & { projection: LibraryPaintProjection }) {
   const scope = useVaultGraphQL();
   return scope ? <CachedLibraryPaintRow {...props} scope={scope} /> : <LibraryPaintRowView {...props} />;
-}
+});
 
 function CachedLibraryPaintRow({
   scope,

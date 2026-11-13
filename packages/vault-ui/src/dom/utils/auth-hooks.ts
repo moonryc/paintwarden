@@ -11,7 +11,7 @@ export async function readJson<T>(response: Response, message: string) {
   return (await response.json()) as T;
 }
 
-export function useVaultData() {
+export function useAuthStatus() {
   const auth = useVaultStore((store) => store.auth);
   const loading = useVaultStore((store) => store.authLoading);
   const loadError = useVaultStore((store) => store.authError);

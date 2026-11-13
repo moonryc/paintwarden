@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import { useVaultStore } from "../store/hooks";
 import type { Notify, Paint, PaintStateSetter, State } from "../types";
@@ -11,15 +11,12 @@ import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 
 type Record = State["paintRecords"][string];
 type Actions = { setPaintState: PaintStateSetter; toggleOwned(paint: Paint, record?: Record): void };
+export const PaintStockFixtureContext = createContext<Actions | null>(null);
 const actionsByScope = new WeakMap<VaultGraphQLScope, Actions>();
 
 // Each resource has a write queue. Optimistic layers are per edit, so an older failure
 // cannot roll back a newer edit; a new quantity is based on the visible optimistic value.
-export function createPaintStockActions(
-  scope: VaultGraphQLScope,
-  notify: Notify,
-  syncLegacy: () => Promise<void>,
-): Actions {
+export function createPaintStockActions(scope: VaultGraphQLScope, notify: Notify): Actions {
   const queues = new Map<string, Promise<void>>();
   let version = 0;
   const current = (id: string): Record | undefined => {
@@ -47,7 +44,8 @@ export function createPaintStockActions(
       : null;
     const id = scope.client.cache.identify({ __typename: "Paint", id: paintId });
     const layer = `stock:${++version}:${paintId}`;
-    const ticket = scope.controller.capture();
+    const ticket = scope.controller.captureCommand();
+    const readTicket = scope.controller.capture();
     buzz();
     const optimisticPaint = { __typename: "Paint" as const, id: paintId, inventory };
     scope.client.cache.recordOptimisticTransaction(
@@ -61,7 +59,7 @@ export function createPaintStockActions(
     );
     const task = async () => {
       try {
-        if (!scope.controller.isCurrent(ticket)) return;
+        if (!scope.controller.isCommandCurrent(ticket)) return;
         const result = await scope.client.mutate({
           mutation: SetPaintStockDocument,
           variables: { paintId, state: nextState, stockLevel: stock, quantity: qty, clientMutationId: layer },
@@ -69,20 +67,19 @@ export function createPaintStockActions(
         });
         const payload = result.data?.setPaintStock;
         if (!payload) throw new Error("Stock save returned no result");
-        if (!scope.controller.isCurrent(ticket)) return;
+        if (!scope.controller.isCommandCurrent(ticket)) return;
+        if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies)) return;
         // Write only while this envelope is fresh. Global counts/availability are never
         // guessed from a partial catalog; committed() refetches the loaded window.
-        if (payload.paint && scope.controller.accepts(ticket, payload.revision, ["PAINT", "LIBRARY"])) {
+        if (payload.paint && scope.controller.accepts(readTicket, payload.revision, ["PAINT", "LIBRARY"])) {
           scope.client.cache.writeFragment({
             id,
             fragment: PaintStockFragmentDoc,
             data: getFragmentData(PaintStockFragmentDoc, payload.paint),
           });
         }
-        scope.controller.committed(payload.revision, payload.invalidatedFamilies);
-        await syncLegacy();
       } catch (error) {
-        if (scope.controller.isCurrent(ticket)) {
+        if (scope.controller.isCommandCurrent(ticket)) {
           notify(error instanceof Error ? error.message : "Could not save stock", "error");
           const cursor = scope.controller.getCursor();
           if (cursor) scope.controller.committed(cursor, ["LIBRARY", "PAINT", "OPTIONS"]);
@@ -122,16 +119,17 @@ export function createPaintStockActions(
 export function usePaintStock(): Actions {
   const scope = useVaultGraphQL();
   const notify = useVaultStore((store) => store.notify);
-  const syncChanges = useVaultStore((store) => store.syncChanges);
-  const legacySet = useVaultStore((store) => store.setPaintState);
-  const legacyToggle = useVaultStore((store) => store.toggleOwned);
+  const fixture = useContext(PaintStockFixtureContext);
   return useMemo(() => {
-    if (!scope) return { setPaintState: legacySet, toggleOwned: legacyToggle };
+    if (!scope) {
+      if (fixture) return fixture;
+      throw new Error("Paint stock actions require a GraphQL scope");
+    }
     let actions = actionsByScope.get(scope);
     if (!actions) {
-      actions = createPaintStockActions(scope, notify, syncChanges);
+      actions = createPaintStockActions(scope, notify);
       actionsByScope.set(scope, actions);
     }
     return actions;
-  }, [scope, notify, syncChanges, legacySet, legacyToggle]);
+  }, [scope, notify, fixture]);
 }

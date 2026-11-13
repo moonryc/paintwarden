@@ -8,8 +8,9 @@ import {
 } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
 import { createHomeDerivations } from "../Pages/home.utils";
-import { useVault } from "../store/hooks";
 import type { State } from "../types";
+
+import { useStoryFixtureState } from "./story-fixture";
 
 const readers = new WeakMap<State, (filters: MiniatureListFilters) => MiniatureListView>();
 
@@ -65,7 +66,7 @@ export function fixtureMiniatureView(data: State, filters: MiniatureListFilters)
 }
 
 export function MiniatureFixtureProvider({ children }: { children: ReactNode }) {
-  const data = useVault();
+  const data = useStoryFixtureState();
   const read = useMemo(() => (filters: MiniatureListFilters) => fixtureMiniatureView(data, filters), [data]);
   return <MiniatureFixtureContext.Provider value={read}>{children}</MiniatureFixtureContext.Provider>;
 }

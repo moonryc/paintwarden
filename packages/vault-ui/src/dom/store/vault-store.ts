@@ -1,20 +1,8 @@
 // Zustand contains credentials, actions and screen state only. Apollo owns server data.
 import { createStore } from "zustand/vanilla";
 
-import type {
-  Api,
-  AuthHeaders,
-  AuthStatus,
-  Notify,
-  Paint,
-  PaintStateSetter,
-  RecipeStep,
-  Requirement,
-  State,
-  Tab,
-  Toast,
-} from "../types";
-import { readJson } from "../utils/vault-query";
+import type { Api, AuthHeaders, AuthStatus, Notify, Tab, Toast } from "../types";
+import { readJson } from "../utils/auth-hooks";
 
 export type MiniatureFilter = "ALL" | "OWNED" | "WISHLIST";
 export type PaintFilter = "ALL" | "OWNED" | "WISHLIST" | "UNTRACKED";
@@ -32,20 +20,10 @@ export type VaultStore = {
 
   // Rechecks credentials and invalidates mounted Apollo projections.
   refresh(): Promise<void>;
-  // Compatibility action: no snapshot/delta transport remains active.
-  syncChanges(): Promise<void>;
   // Checks sign-in status; Apollo independently checks its revision cursor.
   checkServer(): Promise<void>;
-  // Fixture compatibility only. Production writes use scoped GraphQL commands.
-  updateVault(update: (current: State) => State): void;
   // REST is reserved for source management, authentication and binary operations.
   api: Api;
-
-  setPaintState: PaintStateSetter;
-  // Marks a paint owned (or not) and offers a one-tap undo back to its previous record.
-  toggleOwned(paint: Paint): void;
-  setRecipe(miniatureId: string, entries: Omit<Requirement, "miniatureId">[]): void;
-  setRecipeSteps(miniatureId: string, steps: RecipeStep[]): void;
 
   toasts: Toast[];
   notify: Notify;
@@ -69,8 +47,7 @@ export type VaultStore = {
   closePlugins(): void;
 };
 
-// The unused first argument keeps old story adapters source-compatible during Phase 4.
-export function createVaultStore(_legacyClient?: unknown, overrides: Partial<VaultStore> = {}) {
+export function createVaultStore(overrides: Partial<VaultStore> = {}) {
   return createStore<VaultStore>()((set, get) => {
     let checking: Promise<void> | null = null;
     const checkAccess = () => {
@@ -109,9 +86,6 @@ export function createVaultStore(_legacyClient?: unknown, overrides: Partial<Vau
       });
       return checking;
     };
-    const fixtureOnly = () => {
-      throw new Error("Legacy snapshot actions are fixture-only; use scoped GraphQL commands");
-    };
     return {
       auth: null,
       authLoading: true,
@@ -137,9 +111,7 @@ export function createVaultStore(_legacyClient?: unknown, overrides: Partial<Vau
         await checkAccess();
         set({ refreshGeneration: get().refreshGeneration + 1 });
       },
-      syncChanges: async () => {},
       checkServer: checkAccess,
-      updateVault: fixtureOnly,
       api: async (path, options) => {
         const { authHeaders, notify, refresh } = get();
         try {
@@ -163,10 +135,6 @@ export function createVaultStore(_legacyClient?: unknown, overrides: Partial<Vau
           throw error;
         }
       },
-      setPaintState: fixtureOnly,
-      toggleOwned: fixtureOnly,
-      setRecipe: fixtureOnly,
-      setRecipeSteps: fixtureOnly,
       toasts: [],
       notify: (message, tone = "ok", action) => {
         const id = Date.now() + Math.random();

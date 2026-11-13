@@ -269,11 +269,11 @@ test("immutable image policies survive only scoped image GETs; APIs, unscoped im
   const cached = await proxy.request(`${image}&_pv_scope=${scope}`);
   assert.equal(cached.headers.get("cache-control"), "private, max-age=31536000, immutable");
   assert.equal(proxy.calls.at(-1).url, `https://server-a.invalid${image}`);
-  assert.equal((await proxy.request("/api/state")).headers.get("cache-control"), "no-store");
+  assert.equal((await proxy.request("/api/auth/status")).headers.get("cache-control"), "no-store");
   const headers = { "content-type": "image/webp", "cache-control": "private, max-age=31536000, immutable" };
   for (const [method, path, status, scoped] of [
     ["POST", image, 200, true],
-    ["GET", "/api/state", 200, true],
+    ["GET", "/api/auth/status", 200, true],
     ["GET", "/api/catalog-source-images/key.webp", 404, true],
     ["GET", image, 200, false],
   ])

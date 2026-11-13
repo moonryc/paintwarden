@@ -89,9 +89,7 @@ const rest = fn<Api>(async () => {
 type FixtureOptions = { readFailure?: boolean; system?: boolean; missing?: boolean };
 
 function Connection({ children, options = {} }: { children: ReactNode; options?: FixtureOptions }) {
-  const [store] = useState(() =>
-    createVaultStore(undefined, { api: rest, notify: fn(), syncChanges: async () => {} }),
-  );
+  const [store] = useState(() => createVaultStore({ api: rest, notify: fn() }));
   const [fixture] = useState(() => {
     const controller = new VaultInvalidationController();
     let seq = 1;

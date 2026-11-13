@@ -117,12 +117,10 @@ export type Miniature = {
   notes: Scalars["String"]["output"];
   paintingStatus: PaintingStatus;
   previewSwatches: Array<MiniatureSwatch>;
-  previewSwatchesTruncated: Scalars["Boolean"]["output"];
   readiness: Readiness;
   scale: Scalars["String"]["output"];
   status: Ownership;
   title: Scalars["String"]["output"];
-  updatedAt: Scalars["Float"]["output"];
 };
 
 export type MiniatureConnection = {
@@ -486,8 +484,6 @@ export type Paint = {
   missingStock: Scalars["Boolean"]["output"];
   name: Scalars["String"]["output"];
   range: Scalars["String"]["output"];
-  sourceId?: Maybe<Scalars["ID"]["output"]>;
-  sourceLabel?: Maybe<Scalars["String"]["output"]>;
   sourceLogoUrl?: Maybe<Scalars["String"]["output"]>;
   sourceName?: Maybe<Scalars["String"]["output"]>;
   sourceUrl?: Maybe<Scalars["String"]["output"]>;
@@ -574,13 +570,8 @@ export type PaintView = {
   __typename?: "PaintView";
   paint?: Maybe<Paint>;
   revision: VaultRevision;
-  similar: Array<Paint>;
   substitutions: SubstitutionConnection;
   usedBy: PaintUsageConnection;
-};
-
-export type PaintViewSimilarArgs = {
-  first?: Scalars["Int"]["input"];
 };
 
 export type PaintViewSubstitutionsArgs = {
@@ -767,10 +758,7 @@ export type RankedPaint = {
 
 export type Readiness = {
   __typename?: "Readiness";
-  brokenSubstitution: Scalars["Int"]["output"];
   missing: Scalars["Int"]["output"];
-  missingStock: Scalars["Int"]["output"];
-  ready: Scalars["Boolean"]["output"];
   total: Scalars["Int"]["output"];
 };
 
@@ -997,7 +985,6 @@ export type TemplatePaintConnection = {
   __typename?: "TemplatePaintConnection";
   nodes: Array<TemplatePaint>;
   pageInfo: PageInfo;
-  totalCount: Scalars["Int"]["output"];
 };
 
 export type TemplatePaintInput = {
@@ -1035,7 +1022,6 @@ export type TemplateSchemeConnection = {
   __typename?: "TemplateSchemeConnection";
   nodes: Array<TemplateScheme>;
   pageInfo: PageInfo;
-  totalCount: Scalars["Int"]["output"];
 };
 
 export type TemplateSummary = {
@@ -1557,12 +1543,10 @@ export type MiniatureResolvers<
   notes?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   paintingStatus?: Resolver<ResolversTypes["PaintingStatus"], ParentType, ContextType>;
   previewSwatches?: Resolver<Array<ResolversTypes["MiniatureSwatch"]>, ParentType, ContextType>;
-  previewSwatchesTruncated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   readiness?: Resolver<ResolversTypes["Readiness"], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   status?: Resolver<ResolversTypes["Ownership"], ParentType, ContextType>;
   title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  updatedAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
 };
 
 export type MiniatureConnectionResolvers<
@@ -1942,8 +1926,6 @@ export type PaintResolvers<
   missingStock?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   range?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
-  sourceLabel?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
@@ -2053,12 +2035,6 @@ export type PaintViewResolvers<
 > = {
   paint?: Resolver<Maybe<ResolversTypes["Paint"]>, ParentType, ContextType>;
   revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
-  similar?: Resolver<
-    Array<ResolversTypes["Paint"]>,
-    ParentType,
-    ContextType,
-    RequireFields<PaintViewSimilarArgs, "first">
-  >;
   substitutions?: Resolver<
     ResolversTypes["SubstitutionConnection"],
     ParentType,
@@ -2213,10 +2189,7 @@ export type ReadinessResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Readiness"] = ResolversParentTypes["Readiness"],
 > = {
-  brokenSubstitution?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   missing?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  missingStock?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
-  ready?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
@@ -2458,7 +2431,6 @@ export type TemplatePaintConnectionResolvers<
 > = {
   nodes?: Resolver<Array<ResolversTypes["TemplatePaint"]>, ParentType, ContextType>;
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
-  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
 export type TemplateRecipeViewResolvers<
@@ -2496,7 +2468,6 @@ export type TemplateSchemeConnectionResolvers<
 > = {
   nodes?: Resolver<Array<ResolversTypes["TemplateScheme"]>, ParentType, ContextType>;
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
-  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
 export type TemplateSummaryResolvers<

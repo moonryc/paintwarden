@@ -14,10 +14,12 @@ export type VaultFamily = (typeof VAULT_FAMILIES)[number];
 export type Revision = { epoch: string; seq: string };
 export type Invalidation = Revision & { reset: boolean; families: readonly VaultFamily[] };
 export type ReadTicket = { generation: number };
+export type CommandTicket = { commandGeneration: number };
 const sequence = (revision: Revision) => BigInt(revision.seq);
 
 export class VaultInvalidationController {
   private generation = 0;
+  private commandGeneration = 0;
   private cursor: Revision | null = null;
   private earliest: Revision | null = null;
   private dirty = new Map<VaultFamily, bigint>();
@@ -37,6 +39,25 @@ export class VaultInvalidationController {
   }
   isCurrent(ticket: ReadTicket) {
     return !this.stopped && ticket.generation === this.generation;
+  }
+  // Projection resets/REST refreshes can race a successfully committed command.
+  // Commands live for the vault identity, not a particular read/cache generation.
+  captureCommand(): CommandTicket {
+    return { commandGeneration: this.commandGeneration };
+  }
+  isCommandCurrent(ticket: CommandTicket): boolean {
+    return !this.stopped && ticket.commandGeneration === this.commandGeneration;
+  }
+  commitCommand(ticket: CommandTicket, revision: Revision, families: readonly VaultFamily[]): boolean {
+    if (!this.isCommandCurrent(ticket) || this.retiredEpochs.has(revision.epoch)) return false;
+    if (this.cursor && revision.epoch !== this.cursor.epoch) {
+      // A mutation may discover an actual database replacement before the stream.
+      // Retire every pending command, but never acknowledge it as this vault's write.
+      this.event({ ...revision, reset: true, families: VAULT_FAMILIES });
+      return false;
+    }
+    this.committed(revision, families);
+    return this.isCommandCurrent(ticket);
   }
   getCursor = (): Revision | null => this.cursor;
   // React subscribes to the stream baseline, not every acknowledged event. A
@@ -105,6 +126,8 @@ export class VaultInvalidationController {
     if (this.stopped || this.retiredEpochs.has(event.epoch)) return;
     const epochChanged = Boolean(this.cursor && event.epoch !== this.cursor.epoch);
     if (event.reset || epochChanged) {
+      // Without a baseline a first reset cannot prove continuity of identity.
+      if (epochChanged || !this.cursor) this.commandGeneration += 1;
       if (epochChanged && this.cursor) this.retiredEpochs.add(this.cursor.epoch);
       this.generation += 1;
       this.dirty.clear();
@@ -154,6 +177,7 @@ export class VaultInvalidationController {
   dispose() {
     this.stopped = true;
     this.generation += 1;
+    this.commandGeneration += 1;
     this.listeners.clear();
     this.cursorListeners.clear();
     this.cursor = null;

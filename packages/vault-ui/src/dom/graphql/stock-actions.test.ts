@@ -60,16 +60,9 @@ test("stock writes serialize per resource and failed older edits never undo newe
     transport.client.cache.readFragment({ id, fragment: PaintStockFragmentDoc, optimistic: true })?.inventory
       ?.quantity;
   const errors: string[] = [];
-  let syncs = 0;
-  const actions = createPaintStockActions(
-    scope,
-    (message, tone) => {
-      if (tone === "error") errors.push(message);
-    },
-    async () => {
-      syncs++;
-    },
-  );
+  const actions = createPaintStockActions(scope, (message, tone) => {
+    if (tone === "error") errors.push(message);
+  });
   actions.setPaintState("paint", "OWNED", "FULL", 2);
   actions.setPaintState("paint", "OWNED", "FULL", 3);
   assert.equal(quantity(), 3);
@@ -83,7 +76,6 @@ test("stock writes serialize per resource and failed older edits never undo newe
   await turn();
   await turn();
   assert.equal(quantity(), 3);
-  assert.equal(syncs, 1);
   assert.deepEqual(
     controller.getCursor(),
     { epoch: "vault", seq: "1" },
@@ -98,14 +90,7 @@ test("pending stock results cannot write after an identity scope is disposed", a
   const transport = createVaultGraphQLClient({ authHeaders: () => ({}), fetch: () => pending.promise });
   const controller = new VaultInvalidationController();
   const scope = { ...transport, controller };
-  let syncs = 0;
-  const actions = createPaintStockActions(
-    scope,
-    () => {},
-    async () => {
-      syncs++;
-    },
-  );
+  const actions = createPaintStockActions(scope, () => {});
   actions.setPaintState("paint", "OWNED", "FULL", 2);
   await turn();
   controller.dispose();
@@ -114,5 +99,96 @@ test("pending stock results cannot write after an identity scope is disposed", a
   await turn();
   await turn();
   assert.deepEqual(transport.client.cache.extract(), {});
-  assert.equal(syncs, 0);
 });
+
+for (const reset of ["same-epoch reset", "REST refresh"]) {
+  test(`stock queue survives ${reset} but old read tickets cannot normalize mutation payloads`, async () => {
+    const first = deferred<Response>();
+    let requests = 0;
+    const transport = createVaultGraphQLClient({
+      authHeaders: () => ({}),
+      fetch: async () => (++requests === 1 ? first.promise : response(3, "4")),
+    });
+    const controller = new VaultInvalidationController();
+    controller.observe({ epoch: "vault", seq: "1" });
+    const id = transport.client.cache.identify({ __typename: "Paint", id: "paint" });
+    const write = (quantity: number) => {
+      const data = {
+        __typename: "Paint",
+        id: "paint",
+        inventory: { __typename: "Inventory", state: "OWNED", stockLevel: "FULL", quantity },
+      };
+      return transport.client.cache.writeFragment({ id, fragment: PaintStockFragmentDoc, data });
+    };
+    write(1);
+    const errors: string[] = [];
+    const actions = createPaintStockActions({ ...transport, controller }, (message) => errors.push(message));
+    let commits = 0;
+    try {
+      actions.setPaintState("paint", "OWNED", "FULL", 2);
+      actions.setPaintState("paint", "OWNED", "FULL", 3);
+      await turn();
+      if (reset === "REST refresh") controller.refresh();
+      else controller.event({ epoch: "vault", seq: "3", reset: true, families: [] });
+      // Simulate a fresh projection accepted after reset. Neither pending command's
+      // older read generation may overwrite it, even though both writes succeed.
+      write(9);
+      controller.listen(["PAINT"], () => commits++);
+      first.resolve(response(2, "2"));
+      for (let index = 0; index < 5; index++) await turn();
+      assert.equal(requests, 2);
+      assert.equal(commits, 2);
+      assert.deepEqual(errors, []);
+      assert.equal(
+        transport.client.cache.readFragment({ id, fragment: PaintStockFragmentDoc })?.inventory?.quantity,
+        9,
+      );
+      assert.equal(
+        transport.client.cache.readFragment({ id, fragment: PaintStockFragmentDoc, optimistic: true })
+          ?.inventory?.quantity,
+        9,
+      );
+    } finally {
+      controller.dispose();
+      transport.dispose();
+    }
+  });
+}
+
+for (const retire of ["epoch", "dispose"]) {
+  test(`stock ${retire} retires queued writes and pending payloads`, async () => {
+    const pending = deferred<Response>();
+    let requests = 0;
+    const transport = createVaultGraphQLClient({
+      authHeaders: () => ({}),
+      fetch: () => {
+        requests++;
+        return pending.promise;
+      },
+    });
+    const controller = new VaultInvalidationController();
+    controller.observe({ epoch: "vault", seq: "1" });
+    const actions = createPaintStockActions({ ...transport, controller }, () =>
+      assert.fail("retired stock scope must not notify"),
+    );
+    try {
+      actions.setPaintState("paint", "OWNED", "FULL", 2);
+      actions.setPaintState("paint", "OWNED", "FULL", 3);
+      await turn();
+      if (retire === "dispose") controller.dispose();
+      else controller.event({ epoch: "next", seq: "1", reset: true, families: [] });
+      pending.resolve(response(2, "2"));
+      for (let index = 0; index < 5; index++) await turn();
+      assert.equal(requests, 1);
+      const inventory = transport.client.cache.readFragment({
+        id: transport.client.cache.identify({ __typename: "Paint", id: "paint" }),
+        fragment: PaintStockFragmentDoc,
+        optimistic: true,
+      })?.inventory;
+      assert.equal(inventory, undefined);
+    } finally {
+      controller.dispose();
+      transport.dispose();
+    }
+  });
+}

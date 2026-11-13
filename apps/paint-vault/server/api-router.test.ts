@@ -4,12 +4,17 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import { eq } from "drizzle-orm";
 import { strFromU8, unzipSync } from "fflate";
 
 const directory = mkdtempSync(path.join(tmpdir(), "paint-vault-nest-api-"));
 process.env.DATA_DIR = directory;
+delete process.env.DATABASE_PATH;
 process.env.HOST = "127.0.0.1";
 const { routeApi } = await import("./api-router");
+const { getDb, getSqlite } = await import("../db");
+const { paintCatalog, colorSchemes, miniatureColorSchemes, miniatureRequiredPaints, miniatureRecipeSteps } =
+  await import("../db/schema");
 const { APP_VERSION } = await import("../lib/app-version");
 const base = "http://127.0.0.1:3000";
 const request = (url: string, method = "GET", body?: object, headers?: HeadersInit) =>
@@ -20,6 +25,44 @@ const request = (url: string, method = "GET", body?: object, headers?: HeadersIn
       body: body ? JSON.stringify(body) : undefined,
     }),
   );
+
+// Query the supported bounded projections for read/auth contracts; inspect individual DB
+// tables for command side effects without recreating the removed production snapshot.
+async function gql<T = unknown>(
+  cookie: string,
+  query: string,
+  variables?: Record<string, unknown>,
+): Promise<T> {
+  const response = await request("/api/graphql", "POST", { query, variables }, { cookie });
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as { data: T; errors?: unknown };
+  assert.equal(payload.errors, undefined, JSON.stringify(payload));
+  return payload.data;
+}
+type TemplateSummary = { id: string; kind: string; schemeCount: number; paintCount: number };
+type TemplateListing = { nodes: TemplateSummary[]; pageInfo: { hasNextPage: boolean } };
+type TemplateRecipe = {
+  schemes: { nodes: { schemeId: string }[] };
+  paints: { nodes: { paintId: string; step: string; notes: string; sortOrder: number }[] };
+};
+const templateListing = async (cookie: string) =>
+  (
+    await gql<{ templates: { templates: TemplateListing } }>(
+      cookie,
+      "{templates(first:48){templates{nodes{id kind schemeCount paintCount} pageInfo{hasNextPage}}}}",
+    )
+  ).templates.templates;
+const templateRecipe = async (cookie: string, id: string) => {
+  const data = await gql<{ templateRecipe: TemplateRecipe }>(
+    cookie,
+    `query($id:ID!){templateRecipe(id:$id){schemes(first:100){nodes{schemeId}} paints(first:100){nodes{paintId step notes sortOrder}}}}`,
+    { id },
+  );
+  return {
+    schemeIds: data.templateRecipe.schemes.nodes.map((row: { schemeId: string }) => row.schemeId),
+    paints: data.templateRecipe.paints.nodes,
+  };
+};
 
 // Reads backup.json from an exported backup zip.
 const readBackup = async (cookie: string) => {
@@ -50,7 +93,10 @@ test("setup, authentication and data routes retain their API contract", async (t
     assert.deepEqual(await version.json(), { name: "paint-vault", version: APP_VERSION });
     const before = await request("/api/auth/status");
     assert.equal((await before.json()).setupRequired, true);
-    assert.equal((await request("/api/state")).status, 428);
+    assert.equal(
+      (await request("/api/graphql", "POST", { query: "{vaultRevision{epoch seq}}" })).status,
+      428,
+    );
 
     const setup = await request("/api/auth/setup", "POST", {
       username: "owner",
@@ -59,20 +105,37 @@ test("setup, authentication and data routes retain their API contract", async (t
     assert.equal(setup.status, 200);
     assert.match(setup.headers.get("set-cookie") ?? "", /pv_session=/);
     const cookie = setup.headers.get("set-cookie")!.split(";")[0];
-    const state = await request("/api/state", "GET", undefined, { cookie });
-    assert.equal(state.status, 200);
-    const payload = await state.json();
-    assert.ok(Array.isArray(payload.miniatures));
-    assert.ok(Array.isArray(payload.catalog));
+    const payload = await gql<{
+      miniatures: { miniatures: { nodes: { id: string }[] } };
+      library: { nodes: { id: string }[] };
+    }>(cookie, "{miniatures(first:1){miniatures{nodes{id}}} library(first:1){nodes{id}}}");
+    assert.deepEqual(payload.miniatures.miniatures.nodes, []);
+    assert.deepEqual(payload.library.nodes, []);
+    await t.test("deleted snapshot and row-delta endpoints are not mounted", async () => {
+      for (const endpoint of [
+        "/api/state",
+        "/api/state/",
+        "/api/changes?epoch=old&since=0",
+        "/api/miniature-templates/source%3Amissing/recipe",
+      ]) {
+        for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
+          const response = await request(endpoint, method, undefined, { cookie });
+          assert.equal(response.status, 404, `${method} ${endpoint}`);
+          assert.deepEqual(await response.json(), { error: "Not found" });
+        }
+      }
+      // Template commands still exist, but the unbounded listing no longer does.
+      assert.equal((await request("/api/miniature-templates", "GET", undefined, { cookie })).status, 405);
+    });
 
     await t.test("fresh vault has no bundled catalog", async () => {
-      const templates = await (
-        await request("/api/miniature-templates", "GET", undefined, { cookie })
-      ).json();
-      assert.deepEqual(templates.templates, []);
-      const state = await (await request("/api/state", "GET", undefined, { cookie })).json();
-      assert.deepEqual(state.catalog, []);
-      assert.deepEqual(state.colorSchemes, []);
+      assert.deepEqual((await templateListing(cookie)).nodes, []);
+      const data = await gql<{ library: { nodes: { id: string }[] }; schemes: { nodes: { id: string }[] } }>(
+        cookie,
+        "{library(first:1){nodes{id}} schemes(first:1){nodes{id}}}",
+      );
+      assert.deepEqual(data.library.nodes, []);
+      assert.deepEqual(data.schemes.nodes, []);
     });
     const imported = await request(
       "/api/catalog",
@@ -81,8 +144,7 @@ test("setup, authentication and data routes retain their API contract", async (t
       { cookie },
     );
     assert.equal(imported.status, 201);
-    const testPaintId = (await (await request("/api/state", "GET", undefined, { cookie })).json()).catalog[0]
-      .id as string;
+    const testPaintId = getDb().select().from(paintCatalog).get()!.id;
     assert.match(testPaintId, /^user:/);
     const createdScheme = await request(
       "/api/color-schemes",
@@ -127,9 +189,8 @@ test("setup, authentication and data routes retain their API contract", async (t
     const createdMiniature = await created.json();
     assert.ok(createdMiniature.id);
     await t.test("template summaries omit recipes and recipe reads are ordered and scoped", async () => {
-      const current = await (await request("/api/state", "GET", undefined, { cookie })).json();
-      const schemeId = current.colorSchemes[0].id as string;
-      const paintId = current.catalog[0].id as string;
+      const schemeId = getDb().select().from(colorSchemes).get()!.id;
+      const paintId = testPaintId;
       const secondScheme = await request(
         "/api/color-schemes",
         "POST",
@@ -164,36 +225,30 @@ test("setup, authentication and data routes retain their API contract", async (t
       const empty = await request("/api/miniature-templates", "POST", { name: "Empty recipe" }, { cookie });
       assert.equal(empty.status, 201);
       const emptyId = (await empty.json()).id as string;
-      const listing = (await (
-        await request("/api/miniature-templates", "GET", undefined, { cookie })
-      ).json()) as {
-        templates: { id: string; schemeCount: number; paintCount: number }[];
-      };
-      for (const summary of listing.templates) {
+      const listing = await templateListing(cookie);
+      assert.equal(listing.pageInfo.hasNextPage, false);
+      for (const summary of listing.nodes) {
         assert.equal(Object.hasOwn(summary, "schemeIds"), false);
         assert.equal(Object.hasOwn(summary, "paints"), false);
         assert.equal(summary.schemeCount, summary.id === populatedId ? 2 : 0);
         assert.equal(summary.paintCount, summary.id === populatedId ? 2 : 0);
       }
-      const recipePath = `/api/miniature-templates/${encodeURIComponent(populatedId)}/recipe`;
-      const recipe = await request(recipePath, "GET", undefined, { cookie });
-      assert.equal(recipe.status, 200);
-      assert.deepEqual(await recipe.json(), { schemeIds: [secondSchemeId, schemeId], paints });
-      assert.deepEqual(
-        await (
-          await request(`/api/miniature-templates/${emptyId}/recipe`, "GET", undefined, { cookie })
-        ).json(),
-        {
-          schemeIds: [],
-          paints: [],
-        },
-      );
-      const missing = await request("/api/miniature-templates/source%3Amissing/recipe", "GET", undefined, {
-        cookie,
+      assert.deepEqual(await templateRecipe(cookie, populatedId), {
+        schemeIds: [secondSchemeId, schemeId],
+        paints,
       });
-      assert.equal(missing.status, 404);
-      assert.deepEqual(await missing.json(), { error: "Template not found" });
-      assert.equal((await request(recipePath, "POST", {}, { cookie })).status, 405);
+      assert.deepEqual(await templateRecipe(cookie, emptyId), { schemeIds: [], paints: [] });
+      const missing = await request(
+        "/api/graphql",
+        "POST",
+        {
+          query: 'query{templateRecipe(id:"source:missing"){templateId}}',
+        },
+        { cookie },
+      );
+      const missingPayload = await missing.json();
+      assert.equal(missingPayload.errors[0].extensions.code, "NOT_FOUND");
+      assert.equal(missingPayload.errors[0].message, "Template not found");
       for (const id of [populatedId, emptyId])
         assert.equal((await request("/api/miniature-templates", "DELETE", { id }, { cookie })).status, 200);
       await request(`/api/color-schemes?id=${encodeURIComponent(secondSchemeId)}`, "DELETE", undefined, {
@@ -201,9 +256,8 @@ test("setup, authentication and data routes retain their API contract", async (t
       });
     });
     await t.test("user miniature templates are editable, reusable, protected, and backed up", async () => {
-      const current = await (await request("/api/state", "GET", undefined, { cookie })).json();
-      const schemeId = current.colorSchemes[0].id as string;
-      const paintId = current.catalog[0].id as string;
+      const schemeId = getDb().select().from(colorSchemes).get()!.id;
+      const paintId = testPaintId;
       const createdTemplate = await request(
         "/api/miniature-templates",
         "POST",
@@ -219,28 +273,38 @@ test("setup, authentication and data routes retain their API contract", async (t
       assert.equal(createdTemplate.status, 201);
       const userTemplate = (await createdTemplate.json()) as { id: string };
       assert.match(userTemplate.id, /^user:/);
-      const listed = await (await request("/api/miniature-templates", "GET", undefined, { cookie })).json();
-      assert.equal(listed.templates.length, 1);
-      assert.equal(listed.templates.find((item: { id: string }) => item.id === userTemplate.id).kind, "user");
+      const listed = await templateListing(cookie);
+      assert.equal(listed.nodes.length, 1);
+      assert.equal(listed.nodes.find((item: { id: string }) => item.id === userTemplate.id)!.kind, "user");
       const added = await request("/api/miniatures", "POST", { templateId: userTemplate.id }, { cookie });
       assert.equal(added.status, 201);
-      const miniature = await added.json();
+      const miniature = (await added.json()) as { id: string; title: string };
       assert.equal(miniature.title, "My reusable model");
-      const copied = await (await request("/api/state", "GET", undefined, { cookie })).json();
+
       assert.ok(
-        copied.miniatureColorSchemes.some(
-          (row: { miniatureId: string; schemeId: string }) =>
-            row.miniatureId === miniature.id && row.schemeId === schemeId,
-        ),
+        getDb()
+          .select()
+          .from(miniatureColorSchemes)
+          .where(eq(miniatureColorSchemes.miniatureId, miniature.id))
+          .all()
+          .some(
+            (row: { miniatureId: string; schemeId: string }) =>
+              row.miniatureId === miniature.id && row.schemeId === schemeId,
+          ),
       );
       assert.ok(
-        copied.requirements.some(
-          (row: { miniatureId: string; paintId: string; step: string; notes: string }) =>
-            row.miniatureId === miniature.id &&
-            row.paintId === paintId &&
-            row.step === "LAYER" &&
-            row.notes === "Thin coats",
-        ),
+        getDb()
+          .select()
+          .from(miniatureRequiredPaints)
+          .where(eq(miniatureRequiredPaints.miniatureId, miniature.id))
+          .all()
+          .some(
+            (row: { miniatureId: string; paintId: string; step: string; notes: string }) =>
+              row.miniatureId === miniature.id &&
+              row.paintId === paintId &&
+              row.step === "LAYER" &&
+              row.notes === "Thin coats",
+          ),
       );
       assert.equal(
         (await request("/api/miniature-templates", "PUT", { id: "source:unknown", name: "No" }, { cookie }))
@@ -320,9 +384,9 @@ test("setup, authentication and data routes retain their API contract", async (t
       assert.equal((await restoreBackup(backup.bytes, "merge", cookie)).status, 200);
       assert.equal((await restoreBackup(backup.bytes, "replace", cookie)).status, 200);
       // The owner stays signed in after replacing the vault.
-      assert.equal((await request("/api/state", "GET", undefined, { cookie })).status, 200);
-      const after = await (await request("/api/miniature-templates", "GET", undefined, { cookie })).json();
-      assert.equal(after.templates.filter((item: { id: string }) => item.id === userTemplate.id).length, 1);
+      await gql(cookie, "{vaultRevision{epoch seq}}");
+      const after = await templateListing(cookie);
+      assert.equal(after.nodes.filter((item: { id: string }) => item.id === userTemplate.id).length, 1);
       assert.equal(
         (await request("/api/miniature-templates", "DELETE", { id: userTemplate.id }, { cookie })).status,
         200,
@@ -339,10 +403,12 @@ test("setup, authentication and data routes retain their API contract", async (t
           .status,
         200,
       );
-      const state = await (await request("/api/state", "GET", undefined, { cookie })).json();
       assert.deepEqual(
-        state.recipeSteps
-          .filter((row: { miniatureId: string }) => row.miniatureId === miniatureId)
+        getDb()
+          .select()
+          .from(miniatureRecipeSteps)
+          .where(eq(miniatureRecipeSteps.miniatureId, miniatureId))
+          .all()
           .map((row: { step: string }) => row.step)
           .sort(),
         ["LAYER", "PRIMER"],
@@ -355,8 +421,7 @@ test("setup, authentication and data routes retain their API contract", async (t
       );
     });
     await t.test("scheme divider choices validate new labels and retain existing labels", async () => {
-      const current = await (await request("/api/state", "GET", undefined, { cookie })).json();
-      const paintId = current.catalog[0].id as string;
+      const paintId = testPaintId;
       const payload = (label: string, tone: "SECTION" | "MILESTONE") => ({
         name: "Validation scheme",
         category: "RED",
@@ -437,7 +502,14 @@ test("setup, authentication and data routes retain their API contract", async (t
     });
     assert.equal((await request("/api/not-a-route", "GET", undefined, { cookie })).status, 404);
     assert.equal(
-      (await request("/api/state", "GET", undefined, { origin: "https://outside.example", cookie })).status,
+      (
+        await request(
+          "/api/graphql",
+          "POST",
+          { query: "{vaultRevision{epoch seq}}" },
+          { origin: "https://outside.example", cookie },
+        )
+      ).status,
       403,
     );
 
@@ -478,8 +550,11 @@ test("setup, authentication and data routes retain their API contract", async (t
       );
       assert.equal(response.status, 201);
       assert.deepEqual(await response.json(), { imported: 4, skipped: 3 });
-      const data = await (await request("/api/state", "GET", undefined, { cookie })).json();
-      const paints = data.catalog.filter((paint: { brand: string }) => paint.brand === "Import tests") as {
+      const paints = getDb()
+        .select()
+        .from(paintCatalog)
+        .where(eq(paintCatalog.brand, "Import tests"))
+        .all() as {
         id: string;
         name: string;
         colorHex: string | null;
@@ -505,7 +580,7 @@ test("setup, authentication and data routes retain their API contract", async (t
           name: "Warm Red",
         };
         assert.equal((await request("/api/catalog", "POST", { paints: [paint] }, { cookie })).status, 201);
-        const before = (await (await request("/api/state", "GET", undefined, { cookie })).json()).catalog;
+        const before = getDb().select().from(paintCatalog).all();
         const response = await request(
           "/api/catalog",
           "POST",
@@ -516,10 +591,7 @@ test("setup, authentication and data routes retain their API contract", async (t
         );
         assert.equal(response.status, 200);
         assert.deepEqual(await response.json(), { imported: 0, skipped: 2 });
-        assert.deepEqual(
-          (await (await request("/api/state", "GET", undefined, { cookie })).json()).catalog,
-          before,
-        );
+        assert.deepEqual(getDb().select().from(paintCatalog).all(), before);
       },
     );
 
@@ -557,7 +629,7 @@ test("setup, authentication and data routes retain their API contract", async (t
       ).status,
       201,
     );
-    const catalog = (await (await request("/api/state", "GET", undefined, { cookie })).json()).catalog as {
+    const catalog = getDb().select().from(paintCatalog).all() as {
       id: string;
       name: string;
     }[];
@@ -577,22 +649,16 @@ test("setup, authentication and data routes retain their API contract", async (t
       step: string;
       sortOrder: number;
     };
-    const rowsFor = async (miniatureId: string) => {
-      const response = await request("/api/state", "GET", undefined, { cookie });
-      const data = (await response.json()) as { requirements: Requirement[] };
-      return data.requirements
-        .filter((row) => row.miniatureId === miniatureId)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map(({ id: _id, updatedAt: _updatedAt, ...row }: Requirement & { updatedAt?: number }) => row);
-    };
-    const idsFor = async (miniatureId: string) => {
-      const response = await request("/api/state", "GET", undefined, { cookie });
-      const data = (await response.json()) as { requirements: Requirement[] };
-      return data.requirements
-        .filter((row) => row.miniatureId === miniatureId)
-        .sort((a, b) => a.sortOrder - b.sortOrder)
-        .map((row) => row.id);
-    };
+    const requirementsFor = (miniatureId: string) =>
+      getDb()
+        .select()
+        .from(miniatureRequiredPaints)
+        .where(eq(miniatureRequiredPaints.miniatureId, miniatureId))
+        .orderBy(miniatureRequiredPaints.sortOrder)
+        .all();
+    const rowsFor = async (miniatureId: string) =>
+      requirementsFor(miniatureId).map(({ id: _id, updatedAt: _updatedAt, ...row }) => row);
+    const idsFor = async (miniatureId: string) => requirementsFor(miniatureId).map((row) => row.id);
     const putRecipe = (miniatureId: string, entries: Partial<Requirement>[]) =>
       request("/api/requirements", "PUT", { miniatureId, entries }, { cookie });
 
@@ -762,6 +828,7 @@ test("setup, authentication and data routes retain their API contract", async (t
       assert.deepEqual(await rowsFor(miniatureId), before);
     });
   } finally {
+    getSqlite().close();
     rmSync(directory, { recursive: true, force: true });
   }
 });

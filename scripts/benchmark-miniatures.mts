@@ -154,7 +154,7 @@ if (process.argv[2] !== "--worker") {
       "Actual production documents with Apollo addTypenameToDocument, GraphQL execute and JSON serialization. 11 independent fresh-process first operations per scenario; cold DERIVED caches, NOT cold disk or import/startup time. Warm uses one warmup plus 11 samples. launch is navigation then Home in one process (sum operation ms/SQL/bytes, maximum per-operation setImmediate block). SQL counts actual all/get/run/iterate statement calls, excluding transaction helper BEGIN/COMMIT and trigger internals. setImmediate probe measures synchronous operation blocking, NOT a production event-loop-delay histogram. Excludes HTTP/auth/TCP/browser/React/Electron and non-projection startup traffic. Gzip bytes are size only, not timed. Eleven-sample p95 is the largest observation. Stock rebuilds are separate from writes, 11 repeated revisions in the final home worker.",
     snapshotComparison: {
       phase0: phase0.snapshot,
-      currentSameFixture: fixture.baseline.snapshot,
+      currentSameFixture: null, // Snapshot removed; seed rows remain identical.
       phase0SnapshotPlusTemplateSummariesBytes: phase0.snapshotPlusTemplateSummariesBytes,
     },
     scenarios: reports,

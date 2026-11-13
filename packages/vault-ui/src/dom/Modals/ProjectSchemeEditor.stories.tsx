@@ -33,7 +33,7 @@ const deleteMutation = fn<(variables: MutationVariables) => Promise<unknown>>(as
 const notify = fn();
 
 function Actions({ children }: { children: ReactNode }) {
-  const [store] = useState(() => createVaultStore(undefined, { notify, syncChanges: async () => {} }));
+  const [store] = useState(() => createVaultStore({ notify }));
   const [scope] = useState(() => ({
     controller: new VaultInvalidationController(),
     client: new ApolloClient({

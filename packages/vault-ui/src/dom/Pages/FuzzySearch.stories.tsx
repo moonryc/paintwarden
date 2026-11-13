@@ -4,9 +4,9 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { PaintAutocomplete } from "../Components/PaintAutocomplete";
 import { VaultGraphQLProvider } from "../graphql/provider";
-import { SchemePickerDialog } from "../Modals/SchemePickerDialog";
+import { ApolloSchemePickerDialog } from "../Modals/ApolloSchemePickerDialog";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
-import { paintList, paints, schemes } from "../storybook/fixtures";
+import { paints, schemes } from "../storybook/fixtures";
 import { LibraryFixtureProvider } from "../storybook/library-fixtures";
 import { mockApi } from "../storybook/mock-api";
 
@@ -17,6 +17,14 @@ import { ColorSchemesPage } from "./Schemes/ColorSchemesPage";
 
 const meta = {
   title: "Pages/FuzzySearch",
+  decorators: [
+    mockApi(),
+    (Story) => (
+      <VaultGraphQLProvider>
+        <Story />
+      </VaultGraphQLProvider>
+    ),
+  ],
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -25,7 +33,6 @@ function ExcludedPaintPicker() {
   const [query, setQuery] = useState("");
   return (
     <PaintAutocomplete
-      paints={paintList}
       excludedIds={[paints.royalBlue.id]}
       query={query}
       onQueryChange={setQuery}
@@ -166,7 +173,9 @@ export const SubstitutionIngredientExclusion: Story = {
 };
 
 export const SchemePickerExcludesAttached: Story = {
-  render: () => <SchemePickerDialog attachedIds={[schemes.crimsonArmour.id]} onSave={fn()} onClose={fn()} />,
+  render: () => (
+    <ApolloSchemePickerDialog attachedIds={[schemes.crimsonArmour.id]} onSave={fn()} onClose={fn()} />
+  ),
   play: async () => {
     const body = within(document.body);
     const search = body.getByRole("textbox", { name: "Search color schemes" });

@@ -135,3 +135,33 @@ test("REST refresh retires old reads and refetches metadata even at the same rev
   assert.equal(evictions.length, 1);
   assert.deepEqual(controller.getCursor(), revision);
 });
+
+test("command tickets survive projection resets but retire on identity changes and unknown-baseline resets", () => {
+  const controller = new VaultInvalidationController();
+  controller.observe(revision("1"));
+  const command = controller.captureCommand();
+  const read = controller.capture();
+  controller.event({ ...revision("2"), reset: true, families: [] });
+  controller.refresh();
+  assert.equal(controller.isCommandCurrent(command), true);
+  assert.equal(controller.isCurrent(read), false);
+  assert.equal(controller.commitCommand(command, revision("3"), ["TEMPLATES"]), true);
+  assert.deepEqual(controller.getCursor(), revision("2"), "command acknowledgement does not advance SSE");
+  controller.event({ ...revision("1", "next"), reset: true, families: [] });
+  assert.equal(controller.isCommandCurrent(command), false);
+  assert.equal(controller.commitCommand(command, revision("99"), ["TEMPLATES"]), false);
+  const nextCommand = controller.captureCommand();
+  assert.equal(controller.commitCommand(nextCommand, revision("100"), ["TEMPLATES"]), false);
+  assert.equal(
+    controller.isCommandCurrent(nextCommand),
+    true,
+    "retired payload epoch cannot reset the next vault",
+  );
+  controller.dispose();
+  assert.equal(controller.isCommandCurrent(nextCommand), false);
+
+  const bootstrap = new VaultInvalidationController();
+  const unknownCommand = bootstrap.captureCommand();
+  bootstrap.event({ ...revision("1"), reset: true, families: [] });
+  assert.equal(bootstrap.isCommandCurrent(unknownCommand), false);
+});

@@ -3,11 +3,6 @@ import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Chip, CircularProgress, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isPaintOwned } from "@paint-vault/core/paint-state";
-import {
-  defaultSubstitution,
-  isPaintAvailable,
-  resolvePaintChoice,
-} from "@paint-vault/core/paint-substitutions";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -16,12 +11,9 @@ import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
 import { usePaintDetail } from "../graphql/detail-hooks";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
-import { useVaultGraphQL } from "../graphql/provider";
 import { usePaintStock } from "../graphql/stock-actions";
 import { Check, ExternalLink, Heart, Minus, Pencil } from "../icons";
-import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint, PaintStateSetter, PaintStatus, StockLevel } from "../types";
-import { usedByMiniatures } from "../utils/semantic-contract";
 
 import { SubstitutionDialog } from "./SubstitutionDialog";
 
@@ -33,11 +25,6 @@ type DetailProps = {
 };
 
 export function PaintDetailsModal(props: DetailProps) {
-  const graphql = useVaultGraphQL();
-  return graphql ? <ApolloPaintDetails {...props} /> : <LegacyPaintDetails {...props} />;
-}
-
-function ApolloPaintDetails(props: DetailProps) {
   const detail = usePaintDetail(props.paint.id);
   const { setPaintState } = usePaintStock();
   const stock = useFragment({
@@ -88,42 +75,6 @@ function ApolloPaintDetails(props: DetailProps) {
       refresh={detail.refresh}
       hasMoreUsedBy={detail.data?.usedBy.pageInfo.hasNextPage}
       loadMoreUsedBy={detail.loadMoreUsedBy}
-    />
-  );
-}
-
-function LegacyPaintDetails({
-  paint,
-  onClose,
-  openMini,
-  onEdit,
-}: {
-  paint: Paint;
-  onClose(): void;
-  openMini(id: string): void;
-  onEdit(paint: Paint): void;
-}) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  const rec = data.paintRecords[paint.id];
-  const activeSubstitution = defaultSubstitution(data, paint.id);
-  const resolved = resolvePaintChoice(data, "", paint.id);
-  const available = isPaintAvailable(data, data.paintRecords, paint.id);
-  const usedBy = usedByMiniatures(data, paint.id);
-  return (
-    <PaintDetailsView
-      paint={paint}
-      onClose={onClose}
-      openMini={openMini}
-      onEdit={onEdit}
-      rec={rec}
-      setPaintState={setPaintState}
-      activeSubstitution={activeSubstitution}
-      brokenReason={resolved.broken ? resolved.brokenReason : null}
-      blocked={resolved.unavailablePaintIds.length > 0}
-      available={available}
-      usedBy={usedBy}
-      substitutionCount={data.paintSubstitutions.filter((row) => row.targetPaintId === paint.id).length}
     />
   );
 }

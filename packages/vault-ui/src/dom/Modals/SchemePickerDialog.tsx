@@ -5,17 +5,14 @@ import {
   COLOR_CATEGORY_LABELS,
   type ColorCategory,
 } from "@paint-vault/core/color-categories";
-import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "../Components/Modal";
 import { SchemeChipView } from "../Components/SchemeChip";
 import { SchemeSwatchPreview } from "../Components/SchemeSwatch";
 import { Check, Plus, Search } from "../icons";
-import { useVault } from "../store/hooks";
 import type { ColorScheme } from "../types";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
-import { schemeOrderEntries, schemePaintRows } from "../utils/scheme-order";
 import { truncateSx } from "../utils/truncate";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
@@ -41,32 +38,6 @@ const ROW_GAP = 1;
 // Picked schemes beyond this collapse behind a "+N more" chip.
 const COLLAPSED_CHIPS = 3;
 
-// Picks are staged here and added together, so browsing the list never edits the miniature.
-// Schemes already on the miniature are hidden; remove those from their cards instead.
-export function SchemePickerDialog(props: SchemePickerDialogProps) {
-  const data = useVault();
-  const schemes = useMemo(
-    () =>
-      data.colorSchemes.map((scheme): SchemePickerOption => {
-        const entries = schemeOrderEntries(data, scheme.id);
-        const paintIds = new Set(schemePaintRows(data, scheme.id).map((row) => row.paintId));
-        const image = entries.filter((entry) => entry.type === "IMAGE").at(-1);
-        return {
-          ...scheme,
-          paintCount: paintIds.size,
-          availableCount: [...paintIds].filter((id) => isPaintAvailable(data, data.paintRecords, id)).length,
-          colors: [...paintIds]
-            .map((id) => data.catalog.find((paint) => paint.id === id)?.colorHex)
-            .filter((hex): hex is string => !!hex),
-          imageUrl: image?.thumbnailUrl || image?.imageUrl,
-        };
-      }),
-    [data],
-  );
-  return <SchemePickerDialogView {...props} schemes={schemes} />;
-}
-
-// A pure view shared by the snapshot adapter and the paginated Apollo adapter.
 export function SchemePickerDialogView({
   schemes,
   attachedIds,

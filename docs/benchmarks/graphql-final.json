@@ -1,0 +1,2199 @@
+{
+  "measuredAt": "2026-11-13",
+  "node": "v22.22.2",
+  "result": "PASS",
+  "seedLoopSha256": "68b74b3ba8addae069aad5d01466337f8540d8b3bf9d47d9ba987238c47b191b",
+  "canonicalPhase0": {
+    "large": {
+      "spec": {
+        "paints": 4500,
+        "miniatures": 1500,
+        "schemes": 300,
+        "templates": 500
+      },
+      "snapshot": {
+        "firstReadMs": 43.699250000000006,
+        "medianMs": 31.95337500000005,
+        "minMs": 30.954250000000002,
+        "maxMs": 35.702208999999925,
+        "preparedStatements": 19,
+        "sqlExecutions": 19,
+        "jsonBytes": 6518884,
+        "gzipBytes": 281145,
+        "parseMedianMs": 8.81533300000001
+      },
+      "templateSummaries": {
+        "firstReadMs": 12.993249999999989,
+        "medianMs": 3.3123339999999644,
+        "minMs": 2.799166000000014,
+        "maxMs": 3.924792000000025,
+        "preparedStatements": 5,
+        "sqlExecutions": 5,
+        "jsonBytes": 133456,
+        "gzipBytes": 3196,
+        "parseMedianMs": 0.1674160000000029
+      },
+      "snapshotPlusTemplateSummariesBytes": 6652340
+    },
+    "stress": {
+      "spec": {
+        "paints": 30000,
+        "miniatures": 10000,
+        "schemes": 3000,
+        "templates": 5000
+      },
+      "snapshot": {
+        "firstReadMs": 306.42145800000026,
+        "medianMs": 256.0059999999994,
+        "minMs": 236.27512500000012,
+        "maxMs": 318.60554200000024,
+        "preparedStatements": 19,
+        "sqlExecutions": 19,
+        "jsonBytes": 44954964,
+        "gzipBytes": 1883986,
+        "parseMedianMs": 72.67683299999953
+      },
+      "templateSummaries": {
+        "firstReadMs": 42.29808299999968,
+        "medianMs": 29.72387499999968,
+        "minMs": 27.357334000000264,
+        "maxMs": 37.525416999999834,
+        "preparedStatements": 5,
+        "sqlExecutions": 5,
+        "jsonBytes": 1338956,
+        "gzipBytes": 30251,
+        "parseMedianMs": 1.5958749999999782
+      },
+      "snapshotPlusTemplateSummariesBytes": 46293920
+    }
+  },
+  "reconstructedBefore": {
+    "large": {
+      "result": "PASS",
+      "evidence": "graphql-phase-5-evidence/metrics/before-large-final/large-before.json",
+      "startedAt": "2026-11-13T21:50:14.131Z",
+      "finishedAt": "2026-11-13T21:50:20.209Z",
+      "method": "Newly reconstructed pre-migration main@ea86dd1 private git archive, not the original Phase0 run. Locked clean install and clean web/server builds supplied explicitly. Exact unchanged synthetic Phase0 seed rows. Three new server+Chromium1440x1000 contexts, cold process derived state but not cold disk. Browser navigation-relative performance clock to first real miniature tile plus two animation frames (injected MutationObserver, independent of recorder body parsing). 800ms completed API capture window after visible tile. Bytes decoded JSON, excluding open streams/assets. Unlike the canonical Phase0 in-process timings, these browser observations can be compared to final browser launch with the same harness conditions. Does not isolate individual source changes or prove remote performance.",
+      "fixture": {
+        "paints": 4500,
+        "miniatures": 1500,
+        "schemes": 300,
+        "templates": 500
+      },
+      "home": [
+        {
+          "sample": 0,
+          "elapsedToVisibleDataMs": 297.2999999821186,
+          "completedApiBytes": 6519292,
+          "snapshotBytes": 6518880,
+          "rssAfterHome": 305430528,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 21.678750000000036
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 6518880,
+              "durationMs": 224.70079199999986
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 85.30916699999989
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 2.023584000000028
+            }
+          ]
+        },
+        {
+          "sample": 1,
+          "elapsedToVisibleDataMs": 247.90000000596046,
+          "completedApiBytes": 6519292,
+          "snapshotBytes": 6518880,
+          "rssAfterHome": 165330944,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 10.445083999999952
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 6518880,
+              "durationMs": 207.93049999999994
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 84.36879200000021
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 1.0489999999999782
+            }
+          ]
+        },
+        {
+          "sample": 2,
+          "elapsedToVisibleDataMs": 249.40000000596046,
+          "completedApiBytes": 6519292,
+          "snapshotBytes": 6518880,
+          "rssAfterHome": 169689088,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 10.746500000000196
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 6518880,
+              "durationMs": 205.53320799999983
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 78.05570799999987
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 0.6221670000004451
+            }
+          ]
+        }
+      ],
+      "homeMedianVisibleMs": 249.40000000596046,
+      "rssMedianAfterHome": 169689088,
+      "reconstructedRevision": "ea86dd132299321511deaa929a9624f63c800c4d"
+    },
+    "stress": {
+      "result": "PASS",
+      "evidence": "graphql-phase-5-evidence/metrics/before-stress-final/stress-before.json",
+      "startedAt": "2026-11-13T21:50:55.199Z",
+      "finishedAt": "2026-11-13T21:51:05.892Z",
+      "method": "Newly reconstructed pre-migration main@ea86dd1 private git archive, not the original Phase0 run. Locked clean install and clean web/server builds supplied explicitly. Exact unchanged synthetic Phase0 seed rows. Three new server+Chromium1440x1000 contexts, cold process derived state but not cold disk. Browser navigation-relative performance clock to first real miniature tile plus two animation frames (injected MutationObserver, independent of recorder body parsing). 800ms completed API capture window after visible tile. Bytes decoded JSON, excluding open streams/assets. Unlike the canonical Phase0 in-process timings, these browser observations can be compared to final browser launch with the same harness conditions. Does not isolate individual source changes or prove remote performance.",
+      "fixture": {
+        "paints": 30000,
+        "miniatures": 10000,
+        "schemes": 3000,
+        "templates": 5000
+      },
+      "home": [
+        {
+          "sample": 0,
+          "elapsedToVisibleDataMs": 693.7999999821186,
+          "completedApiBytes": 44955371,
+          "snapshotBytes": 44954959,
+          "rssAfterHome": 543850496,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 8.466374999999971
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 44954959
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 71.51137500000004
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 2.5999590000001263
+            }
+          ]
+        },
+        {
+          "sample": 1,
+          "elapsedToVisibleDataMs": 678.7000000178814,
+          "completedApiBytes": 44955371,
+          "snapshotBytes": 44954959,
+          "rssAfterHome": 406994944,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 9.84020800000053
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 44954959
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 60.601166999999805
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 3.3527079999994385
+            }
+          ]
+        },
+        {
+          "sample": 2,
+          "elapsedToVisibleDataMs": 676.7000000178814,
+          "completedApiBytes": 44955371,
+          "snapshotBytes": 44954959,
+          "rssAfterHome": 409993216,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 9.626792000000933
+            },
+            {
+              "path": "/api/state",
+              "status": 200,
+              "bytes": 44954959
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 76.19395799999984
+            },
+            {
+              "path": "/api/changes",
+              "status": 200,
+              "bytes": 84,
+              "durationMs": 2.98804200000086
+            }
+          ]
+        }
+      ],
+      "homeMedianVisibleMs": 678.7000000178814,
+      "rssMedianAfterHome": 409993216,
+      "reconstructedRevision": "ea86dd132299321511deaa929a9624f63c800c4d"
+    }
+  },
+  "final": {
+    "large": {
+      "result": "PASS",
+      "evidence": "graphql-phase-5-evidence/metrics/large-final/large-final.json",
+      "startedAt": "2026-11-13T21:50:25.405Z",
+      "finishedAt": "2026-11-13T21:50:49.935Z",
+      "method": "Exact unchanged Phase0 synthetic rows, no focused probes. Existing production build, Chromium1440x1000. Fresh server+browser context for each of 3 default Home observations (cold derived cache, not cold disk). Per-screen first navigation in a fresh browser context after Home; server warmed by Home and prior screens. Browser navigation-relative performance clock to first real miniature tile plus two animation frames (injected MutationObserver, independent of recorder body parsing), plus 800ms completed API capture window for viewport prefetch. Bytes are decoded JSON bodies (not compressed transfer); open SSE, images, JS/CSS/fonts excluded from API bytes and separately resource-inventoried. Phase0 has no equivalent browser time baseline. RSS from ps includes runtime/JIT/cache, not heap attribution.",
+      "fixture": {
+        "paints": 4500,
+        "miniatures": 1500,
+        "schemes": 300,
+        "templates": 500
+      },
+      "home": [
+        {
+          "sample": 0,
+          "elapsedToVisibleDataMs": 210.09999999403954,
+          "rssBeforeBrowser": 287277056,
+          "rssAfterHome": 310018048,
+          "completedApiBytes": 64243,
+          "graphqlBytes": 64119,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 33.91724999999997
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 76.79208299999982,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 203,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 74.02820800000018,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "8c934f3c-01cb-4f83-9923-780e733f93f3",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiOGM5MzRmM2MtMDFjYi00ZjgzLTk5MjMtNzgwZTczM2Y5M2YzIiwwLCIwMDAxOGM0MS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 15.611249999999927,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        },
+        {
+          "sample": 1,
+          "elapsedToVisibleDataMs": 297.10000002384186,
+          "rssBeforeBrowser": 142622720,
+          "rssAfterHome": 170868736,
+          "completedApiBytes": 64243,
+          "graphqlBytes": 64119,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 34.208250000000135
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 78.47037499999988,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 203,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 75.20687499999985,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "7e1706c1-0d53-4977-8036-969fad5f0459",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiN2UxNzA2YzEtMGQ1My00OTc3LTgwMzYtOTY5ZmFkNWYwNDU5IiwwLCIwMDAxOGM0MS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 9.28979199999958,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        },
+        {
+          "sample": 2,
+          "elapsedToVisibleDataMs": 211.60000002384186,
+          "rssBeforeBrowser": 137494528,
+          "rssAfterHome": 165232640,
+          "completedApiBytes": 64243,
+          "graphqlBytes": 64119,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 34.90912500000013
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 80.3109170000007,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 203,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 77.2661250000001,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "828eaf2c-6987-441b-a999-a71eb20a6ac7",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31958,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiODI4ZWFmMmMtNjk4Ny00NDFiLWE5OTktYTcxZWIyMGE2YWM3IiwwLCIwMDAxOGM0MS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 10.31420800000069,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        }
+      ],
+      "homeMedianVisibleMs": 211.60000002384186,
+      "rssMedianAfterHome": 170868736,
+      "screens": [
+        {
+          "name": "Miniatures",
+          "elapsedToHeadingAndFirstProjectionMs": 133.08816599999955,
+          "completedApiBytes": 64217,
+          "graphqlBytes": 64217,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 32107,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": false,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 18.660792000000583,
+              "roots": ["miniatures"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 32110,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": false,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwibWluaWF0dXJlczpmcnVnNTI2ckQ5aGt3eDhUeUFpTUU0UWhVMURLalRGLXdpV3ItZWliUTVBIiwiMDY2MDY3OTQtNDEzMi00ZWMwLTk1MDAtNzMzMjViM2I1Nzc2IiwwLCIwMDAxOGM0Yy0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 8.940500000000611,
+              "roots": ["miniatures"]
+            }
+          ],
+          "rss": 172310528
+        },
+        {
+          "name": "Paints",
+          "elapsedToHeadingAndFirstProjectionMs": 874.4327080000003,
+          "completedApiBytes": 25129,
+          "graphqlBytes": 25129,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 25129,
+              "operation": "LibraryPage",
+              "variables": {
+                "first": 48,
+                "search": "",
+                "filter": "OWNED",
+                "noSource": false,
+                "after": null
+              },
+              "durationMs": 12.165791999999783,
+              "roots": ["library"]
+            }
+          ],
+          "rss": 176750592
+        },
+        {
+          "name": "Wishlist",
+          "elapsedToHeadingAndFirstProjectionMs": 912.4059580000012,
+          "completedApiBytes": 101870,
+          "graphqlBytes": 101870,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 96465,
+              "operation": "WishlistPage",
+              "variables": {
+                "first": 48,
+                "missingFirst": 48,
+                "miniatureId": null,
+                "after": null,
+                "missingAfter": null
+              },
+              "durationMs": 29.175208999999086,
+              "roots": ["wishlist"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 5405,
+              "operation": "WishlistModelOptions",
+              "variables": {
+                "first": 40,
+                "after": null,
+                "search": ""
+              },
+              "durationMs": 29.12708300000122,
+              "roots": ["wishlistModelOptions"]
+            }
+          ],
+          "rss": 178618368
+        },
+        {
+          "name": "Schemes",
+          "elapsedToHeadingAndFirstProjectionMs": 447.458458000001,
+          "completedApiBytes": 90059,
+          "graphqlBytes": 90059,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 77807,
+              "operation": "SchemesPage",
+              "variables": {
+                "search": "",
+                "category": null,
+                "sourceId": null,
+                "noSource": false,
+                "readiness": null,
+                "usesPaintIds": [],
+                "after": null
+              },
+              "durationMs": 28.268458000000464,
+              "roots": ["schemes"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 12252,
+              "operation": "SchemeUsedPaintOptions",
+              "variables": {
+                "search": "",
+                "excludeIds": []
+              },
+              "durationMs": 43.29429100000016,
+              "roots": ["schemePaintOptions"]
+            }
+          ],
+          "rss": 151339008
+        },
+        {
+          "name": "Templates",
+          "elapsedToHeadingAndFirstProjectionMs": 504.93979200000103,
+          "completedApiBytes": 17434,
+          "graphqlBytes": 17434,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 17434,
+              "operation": "TemplateSummaries",
+              "variables": {
+                "first": 48,
+                "noSource": false,
+                "id": null,
+                "search": null,
+                "category": null,
+                "sourceId": null,
+                "after": null
+              },
+              "durationMs": 14.56787500000064,
+              "roots": ["templates"]
+            }
+          ],
+          "rss": 144457728
+        },
+        {
+          "name": "Paint Tools",
+          "elapsedToHeadingAndFirstProjectionMs": 882.1356670000023,
+          "completedApiBytes": 58349,
+          "graphqlBytes": 58349,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 45653,
+              "operation": "SchemePickerOptions",
+              "variables": {
+                "search": "",
+                "category": null,
+                "excludeIds": [],
+                "after": null
+              },
+              "durationMs": 15.667291000001569,
+              "roots": ["schemeOptions"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 336,
+              "operation": "MiniatureSchemeDetails",
+              "variables": {
+                "id": "",
+                "after": null
+              },
+              "durationMs": 11.31079200000022,
+              "roots": ["miniatureScheme"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 114,
+              "operation": "VaultRevision",
+              "variables": {},
+              "durationMs": 14.778542000000016,
+              "roots": ["vaultRevision"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 12246,
+              "operation": "PaintPickerOptions",
+              "variables": {
+                "search": "",
+                "excludeIds": [],
+                "first": 30
+              },
+              "durationMs": 3.894124999998894,
+              "roots": ["paintOptions"]
+            }
+          ],
+          "rss": 149487616
+        },
+        {
+          "name": "Data & settings",
+          "elapsedToHeadingAndFirstProjectionMs": 882.7356660000005,
+          "completedApiBytes": 40,
+          "graphqlBytes": 0,
+          "requests": [
+            {
+              "path": "/api/version",
+              "status": 200,
+              "bytes": 40,
+              "durationMs": 9.331042000001617
+            }
+          ],
+          "rss": 152338432
+        },
+        {
+          "name": "Plugins",
+          "elapsedToHeadingAndFirstProjectionMs": 1269.7738329999993,
+          "completedApiBytes": 3186,
+          "graphqlBytes": 2662,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 522,
+              "operation": "InstalledSources",
+              "variables": {},
+              "durationMs": 19.003334000000905,
+              "roots": ["sources"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 98,
+              "durationMs": 380.14141599999857
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 335,
+              "operation": "PluginVersions",
+              "variables": {},
+              "durationMs": 7.401000000001659,
+              "roots": ["sourceVersions"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 57.471832999999606
+            },
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 9.620791999997891
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 203,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 28.458333000002312,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 554,
+              "operation": "InstalledSources",
+              "variables": {},
+              "durationMs": 31.092540999998164,
+              "roots": ["sources"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 159,
+              "operation": "VaultInvalidation",
+              "variables": {
+                "epoch": "06606794-4132-4ec0-9500-73325b3b5776",
+                "since": "0"
+              },
+              "durationMs": 33.17204199999833,
+              "roots": ["vaultInvalidation"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 98,
+              "durationMs": 125.54591699999946
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 554,
+              "operation": "InstalledSources",
+              "variables": {},
+              "durationMs": 10.832958999999391,
+              "roots": ["sources"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 335,
+              "operation": "PluginVersions",
+              "variables": {},
+              "durationMs": 5.277416000000812,
+              "roots": ["sourceVersions"]
+            }
+          ],
+          "rss": 185614336
+        }
+      ],
+      "sourceManifestSha256": "56a3f9981729ee2adf286dbe5b1a21b14407bad4d992a49b047eaf11f0baed2f"
+    },
+    "stress": {
+      "result": "PASS",
+      "evidence": "graphql-phase-5-evidence/metrics/stress-measured-final/stress-final.json",
+      "startedAt": "2026-11-13T21:51:11.131Z",
+      "finishedAt": "2026-11-13T21:51:39.808Z",
+      "method": "Exact unchanged Phase0 synthetic rows, no focused probes. Existing production build, Chromium1440x1000. Fresh server+browser context for each of 3 default Home observations (cold derived cache, not cold disk). Per-screen first navigation in a fresh browser context after Home; server warmed by Home and prior screens. Browser navigation-relative performance clock to first real miniature tile plus two animation frames (injected MutationObserver, independent of recorder body parsing), plus 800ms completed API capture window for viewport prefetch. Bytes are decoded JSON bodies (not compressed transfer); open SSE, images, JS/CSS/fonts excluded from API bytes and separately resource-inventoried. Phase0 has no equivalent browser time baseline. RSS from ps includes runtime/JIT/cache, not heap attribution.",
+      "fixture": {
+        "paints": 30000,
+        "miniatures": 10000,
+        "schemes": 3000,
+        "templates": 5000
+      },
+      "home": [
+        {
+          "sample": 0,
+          "elapsedToVisibleDataMs": 457.19999998807907,
+          "rssBeforeBrowser": 299728896,
+          "rssAfterHome": 414973952,
+          "completedApiBytes": 64259,
+          "graphqlBytes": 64135,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 33.23887500000001
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 348.94124999999985,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 205,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 345.6060000000002,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "b2706f84-b0f5-4857-b66b-c115681a0dfc",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiYjI3MDZmODQtYjBmNS00ODU3LWI2NmItYzExNTY4MWEwZGZjIiwwLCIwMDAxYWQ3NS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 10.061916999999994,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        },
+        {
+          "sample": 1,
+          "elapsedToVisibleDataMs": 546.2000000178814,
+          "rssBeforeBrowser": 157466624,
+          "rssAfterHome": 282050560,
+          "completedApiBytes": 64259,
+          "graphqlBytes": 64135,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 33.19958300000053
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 355.808,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 205,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 351.88916700000027,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "33f27b2e-7e2c-4790-a00e-01f6c6d63823",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiMzNmMjdiMmUtN2UyYy00NzkwLWEwMGUtMDFmNmM2ZDYzODIzIiwwLCIwMDAxYWQ3NS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 9.4096669999999,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        },
+        {
+          "sample": 2,
+          "elapsedToVisibleDataMs": 491.09999999403954,
+          "rssBeforeBrowser": 154058752,
+          "rssAfterHome": 279773184,
+          "completedApiBytes": 64259,
+          "graphqlBytes": 64135,
+          "requests": [
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 33.158792000000176
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 376.2123330000004,
+              "roots": ["home"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 205,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 372.66470799999934,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql/stream",
+              "status": 200,
+              "operation": "VaultChanges",
+              "variables": {
+                "epoch": "5947348b-65dd-4425-a77e-3e7033aaed99",
+                "since": "0"
+              }
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 31965,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": true,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwiaG9tZTo5OUpmb1Y2RjhObkpCSzBnRE9TUUpoLXdCZnNSWDh5N3U2bmhHNDVBTUNJIiwiNTk0NzM0OGItNjVkZC00NDI1LWE3N2UtM2U3MDMzYWFlZDk5IiwwLCIwMDAxYWQ3NS0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 15.611916999998357,
+              "roots": ["home"]
+            }
+          ],
+          "loaded": "96",
+          "resources": [
+            {
+              "url": "/assets/index-CS_6N-8K.js",
+              "type": "script",
+              "transferSize": 867043,
+              "encodedBodySize": 866743,
+              "decodedBodySize": 866743
+            },
+            {
+              "url": "/assets/inter-latin-400-normal-C38fXH4l.woff2",
+              "type": "css",
+              "transferSize": 23964,
+              "encodedBodySize": 23664,
+              "decodedBodySize": 23664
+            },
+            {
+              "url": "/assets/inter-latin-600-normal-LgqL8muc.woff2",
+              "type": "css",
+              "transferSize": 24752,
+              "encodedBodySize": 24452,
+              "decodedBodySize": 24452
+            },
+            {
+              "url": "/assets/inter-latin-700-normal-Yt3aPRUw.woff2",
+              "type": "css",
+              "transferSize": 24656,
+              "encodedBodySize": 24356,
+              "decodedBodySize": 24356
+            },
+            {
+              "url": "/assets/fraunces-latin-wght-normal-ukD16Tqj.woff2",
+              "type": "css",
+              "transferSize": 36920,
+              "encodedBodySize": 36620,
+              "decodedBodySize": 36620
+            }
+          ]
+        }
+      ],
+      "homeMedianVisibleMs": 491.09999999403954,
+      "rssMedianAfterHome": 282050560,
+      "screens": [
+        {
+          "name": "Miniatures",
+          "elapsedToHeadingAndFirstProjectionMs": 111.1728750000002,
+          "completedApiBytes": 64235,
+          "graphqlBytes": 64235,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 32116,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": false,
+                "search": "",
+                "first": 48,
+                "after": null
+              },
+              "durationMs": 41.904999999998836,
+              "roots": ["miniatures"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 32119,
+              "operation": "MiniatureList",
+              "variables": {
+                "workbench": false,
+                "search": "",
+                "first": 48,
+                "after": "WyJtaW5pYXR1cmVzLXYxIiwibWluaWF0dXJlczpmcnVnNTI2ckQ5aGt3eDhUeUFpTUU0UWhVMURLalRGLXdpV3ItZWliUTVBIiwiNzkyMDIxZTItNzc3OC00NDQyLWFiZjctYzJiYjY3MjU1NjEwIiwwLCIwMDAxYWQ4MC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDAiXQ"
+              },
+              "durationMs": 7.714332999999897,
+              "roots": ["miniatures"]
+            }
+          ],
+          "rss": 280330240
+        },
+        {
+          "name": "Paints",
+          "elapsedToHeadingAndFirstProjectionMs": 842.5608329999995,
+          "completedApiBytes": 25152,
+          "graphqlBytes": 25152,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 25152,
+              "operation": "LibraryPage",
+              "variables": {
+                "first": 48,
+                "search": "",
+                "filter": "OWNED",
+                "noSource": false,
+                "after": null
+              },
+              "durationMs": 24.752082999999402,
+              "roots": ["library"]
+            }
+          ],
+          "rss": 285868032
+        },
+        {
+          "name": "Wishlist",
+          "elapsedToHeadingAndFirstProjectionMs": 828.6325829999987,
+          "completedApiBytes": 101800,
+          "graphqlBytes": 101800,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 96394,
+              "operation": "WishlistPage",
+              "variables": {
+                "first": 48,
+                "missingFirst": 48,
+                "miniatureId": null,
+                "after": null,
+                "missingAfter": null
+              },
+              "durationMs": 96.18279099999927,
+              "roots": ["wishlist"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 5406,
+              "operation": "WishlistModelOptions",
+              "variables": {
+                "first": 40,
+                "after": null,
+                "search": ""
+              },
+              "durationMs": 114.35262499999953,
+              "roots": ["wishlistModelOptions"]
+            }
+          ],
+          "rss": 299843584
+        },
+        {
+          "name": "Schemes",
+          "elapsedToHeadingAndFirstProjectionMs": 526.4800829999986,
+          "completedApiBytes": 90108,
+          "graphqlBytes": 90108,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 77856,
+              "operation": "SchemesPage",
+              "variables": {
+                "search": "",
+                "category": null,
+                "sourceId": null,
+                "noSource": false,
+                "readiness": null,
+                "usesPaintIds": [],
+                "after": null
+              },
+              "durationMs": 147.09975000000122,
+              "roots": ["schemes"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 12252,
+              "operation": "SchemeUsedPaintOptions",
+              "variables": {
+                "search": "",
+                "excludeIds": []
+              },
+              "durationMs": 162.3847080000014,
+              "roots": ["schemePaintOptions"]
+            }
+          ],
+          "rss": 313589760
+        },
+        {
+          "name": "Templates",
+          "elapsedToHeadingAndFirstProjectionMs": 854.5739170000015,
+          "completedApiBytes": 17480,
+          "graphqlBytes": 17480,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 17480,
+              "operation": "TemplateSummaries",
+              "variables": {
+                "first": 48,
+                "noSource": false,
+                "id": null,
+                "search": null,
+                "category": null,
+                "sourceId": null,
+                "after": null
+              },
+              "durationMs": 33.263749999998254,
+              "roots": ["templates"]
+            }
+          ],
+          "rss": 314015744
+        },
+        {
+          "name": "Paint Tools",
+          "elapsedToHeadingAndFirstProjectionMs": 891.7333749999998,
+          "completedApiBytes": 58392,
+          "graphqlBytes": 58392,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 45696,
+              "operation": "SchemePickerOptions",
+              "variables": {
+                "search": "",
+                "category": null,
+                "excludeIds": [],
+                "after": null
+              },
+              "durationMs": 9.340166999998473,
+              "roots": ["schemeOptions"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 336,
+              "operation": "MiniatureSchemeDetails",
+              "variables": {
+                "id": "",
+                "after": null
+              },
+              "durationMs": 6.044959000002564,
+              "roots": ["miniatureScheme"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 114,
+              "operation": "VaultRevision",
+              "variables": {},
+              "durationMs": 8.71875,
+              "roots": ["vaultRevision"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 12246,
+              "operation": "PaintPickerOptions",
+              "variables": {
+                "search": "",
+                "excludeIds": [],
+                "first": 30
+              },
+              "durationMs": 7.5697089999994205,
+              "roots": ["paintOptions"]
+            }
+          ],
+          "rss": 314556416
+        },
+        {
+          "name": "Data & settings",
+          "elapsedToHeadingAndFirstProjectionMs": 921.5580829999999,
+          "completedApiBytes": 40,
+          "graphqlBytes": 0,
+          "requests": [
+            {
+              "path": "/api/version",
+              "status": 200,
+              "bytes": 40,
+              "durationMs": 7.1287499999998545
+            }
+          ],
+          "rss": 314785792
+        },
+        {
+          "name": "Plugins",
+          "elapsedToHeadingAndFirstProjectionMs": 1291.7018339999995,
+          "completedApiBytes": 2640,
+          "graphqlBytes": 2116,
+          "requests": [
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 525,
+              "operation": "InstalledSources",
+              "variables": {},
+              "durationMs": 25.51941699999952,
+              "roots": ["sources"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 98,
+              "durationMs": 323.0596250000017
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 335,
+              "operation": "PluginVersions",
+              "variables": {},
+              "durationMs": 5.592415999999503,
+              "roots": ["sourceVersions"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 204,
+              "durationMs": 54.7899159999979
+            },
+            {
+              "path": "/api/auth/status",
+              "status": 200,
+              "bytes": 124,
+              "durationMs": 7.959750000001804
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 205,
+              "operation": "VaultNavigation",
+              "variables": {},
+              "durationMs": 153.59854199999972,
+              "roots": ["vaultNavigation"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 557,
+              "operation": "InstalledSources",
+              "variables": {},
+              "durationMs": 159.59166600000026,
+              "roots": ["sources"]
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 159,
+              "operation": "VaultInvalidation",
+              "variables": {
+                "epoch": "792021e2-7778-4442-abf7-c2bb67255610",
+                "since": "0"
+              },
+              "durationMs": 162.14170899999954,
+              "roots": ["vaultInvalidation"]
+            },
+            {
+              "path": "/api/catalog-sources",
+              "status": 200,
+              "bytes": 98,
+              "durationMs": 138.58975000000282
+            },
+            {
+              "path": "/api/graphql",
+              "status": 200,
+              "bytes": 335,
+              "operation": "PluginVersions",
+              "variables": {},
+              "durationMs": 4.364458000000013,
+              "roots": ["sourceVersions"]
+            }
+          ],
+          "rss": 365248512
+        }
+      ],
+      "sourceManifestSha256": "56a3f9981729ee2adf286dbe5b1a21b14407bad4d992a49b047eaf11f0baed2f"
+    }
+  },
+  "bundle": {
+    "measuredAt": "2026-11-13T21:51:44.961Z",
+    "node": "v22.22.2",
+    "method": "Emitted .js assets only, summed raw bytes and per-file gzipSync default level 6. Excludes CSS/maps/fonts; not startup transfer or parse time.",
+    "baseline": {
+      "directory": "/tmp/paint-vault-phase0-bundle-ErSPOC/apps/paint-vault-web/dist",
+      "jsBytes": 998224,
+      "sumGzipBytes": 334242,
+      "entry": {
+        "file": "index-CyP6OCQy.js",
+        "bytes": 599254,
+        "gzipBytes": 189309
+      },
+      "apolloDebugChunk": [],
+      "files": [
+        {
+          "file": "Autocomplete-DkifcQ-m.js",
+          "bytes": 27009,
+          "gzipBytes": 9488
+        },
+        {
+          "file": "Chip-Cm1KyNjB.js",
+          "bytes": 8153,
+          "gzipBytes": 2665
+        },
+        {
+          "file": "ColorSchemesDialog-B1O9NxIg.js",
+          "bytes": 17995,
+          "gzipBytes": 6339
+        },
+        {
+          "file": "ColorSchemesPage-BVX5e3G5.js",
+          "bytes": 11400,
+          "gzipBytes": 4514
+        },
+        {
+          "file": "FilterPlugin-BNSne_do.js",
+          "bytes": 914,
+          "gzipBytes": 553
+        },
+        {
+          "file": "LibraryPaintRow-pc9v7ooL.js",
+          "bytes": 2813,
+          "gzipBytes": 1381
+        },
+        {
+          "file": "MiniatureForm-DLySoD3Q.js",
+          "bytes": 10138,
+          "gzipBytes": 3901
+        },
+        {
+          "file": "MiniatureTemplatesPage-B0-d-qlZ.js",
+          "bytes": 10991,
+          "gzipBytes": 4396
+        },
+        {
+          "file": "PaintDetailsButton-CipvrgIF.js",
+          "bytes": 40341,
+          "gzipBytes": 15070
+        },
+        {
+          "file": "PaintForm-ts5awDyV.js",
+          "bytes": 3230,
+          "gzipBytes": 1583
+        },
+        {
+          "file": "PaintLibrary-CwfbB26l.js",
+          "bytes": 6410,
+          "gzipBytes": 2954
+        },
+        {
+          "file": "PaintRowLabel-BQHHB8Gu.js",
+          "bytes": 3313,
+          "gzipBytes": 1469
+        },
+        {
+          "file": "PaintToolsPage-CPQJaKOP.js",
+          "bytes": 18865,
+          "gzipBytes": 6656
+        },
+        {
+          "file": "PluginChip-BoK34nsk.js",
+          "bytes": 889,
+          "gzipBytes": 553
+        },
+        {
+          "file": "PluginsModal-CuEIDKzk.js",
+          "bytes": 27051,
+          "gzipBytes": 9413
+        },
+        {
+          "file": "Popper-DetlzZPG.js",
+          "bytes": 23197,
+          "gzipBytes": 8732
+        },
+        {
+          "file": "ProjectDrawer-Dv0MB9Ub.js",
+          "bytes": 57982,
+          "gzipBytes": 17990
+        },
+        {
+          "file": "SettingsScreen-CYRASqcc.js",
+          "bytes": 29826,
+          "gzipBytes": 11527
+        },
+        {
+          "file": "StatusChip-DrfPrG-k.js",
+          "bytes": 8218,
+          "gzipBytes": 3060
+        },
+        {
+          "file": "Switch-Eu8F4m9k.js",
+          "bytes": 8296,
+          "gzipBytes": 2670
+        },
+        {
+          "file": "SwitchBase-R4SUI4Nb.js",
+          "bytes": 2398,
+          "gzipBytes": 1170
+        },
+        {
+          "file": "ToggleButtonGroup-BABvm5w5.js",
+          "bytes": 6560,
+          "gzipBytes": 2215
+        },
+        {
+          "file": "Tooltip-CR4ZSYYF.js",
+          "bytes": 8103,
+          "gzipBytes": 3122
+        },
+        {
+          "file": "WishlistPage-gXniYVtZ.js",
+          "bytes": 13916,
+          "gzipBytes": 5675
+        },
+        {
+          "file": "fuzzy-search.worker-B2h_ORwE.js",
+          "bytes": 2940,
+          "gzipBytes": 1339
+        },
+        {
+          "file": "index-CyP6OCQy.js",
+          "bytes": 599254,
+          "gzipBytes": 189309
+        },
+        {
+          "file": "lift-card-YvGsyxFd.js",
+          "bytes": 418,
+          "gzipBytes": 271
+        },
+        {
+          "file": "scheme-order-QieZa1RV.js",
+          "bytes": 47357,
+          "gzipBytes": 16046
+        },
+        {
+          "file": "template-hooks-DGbXerEV.js",
+          "bytes": 247,
+          "gzipBytes": 181
+        }
+      ]
+    },
+    "candidate": {
+      "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paint-vault-web/dist",
+      "jsBytes": 1333550,
+      "sumGzipBytes": 410969,
+      "entry": {
+        "file": "index-CS_6N-8K.js",
+        "bytes": 866743,
+        "gzipBytes": 242003
+      },
+      "apolloDebugChunk": [],
+      "files": [
+        {
+          "file": "ApolloProjectDrawer-D7uZ3Pqx.js",
+          "bytes": 65117,
+          "gzipBytes": 21476
+        },
+        {
+          "file": "ApolloProjectSchemeDialog-Ch6A3wdP.js",
+          "bytes": 25192,
+          "gzipBytes": 8237
+        },
+        {
+          "file": "Autocomplete-DyS7pxao.js",
+          "bytes": 27008,
+          "gzipBytes": 9484
+        },
+        {
+          "file": "Chip-C-GGL-L6.js",
+          "bytes": 8153,
+          "gzipBytes": 2660
+        },
+        {
+          "file": "ColorSchemesDialog-OJyvarXD.js",
+          "bytes": 818,
+          "gzipBytes": 486
+        },
+        {
+          "file": "ColorSchemesPage-U1YSCugx.js",
+          "bytes": 13597,
+          "gzipBytes": 5392
+        },
+        {
+          "file": "LibraryPaintRow-BOrN61lr.js",
+          "bytes": 48092,
+          "gzipBytes": 16482
+        },
+        {
+          "file": "MiniatureForm-DQMJUWEH.js",
+          "bytes": 10317,
+          "gzipBytes": 3944
+        },
+        {
+          "file": "MiniatureTemplatesPage-JMmdY8la.js",
+          "bytes": 14984,
+          "gzipBytes": 5687
+        },
+        {
+          "file": "PaintDetailsButton-Cbw9vXrP.js",
+          "bytes": 47344,
+          "gzipBytes": 17469
+        },
+        {
+          "file": "PaintForm-DbWaTgYX.js",
+          "bytes": 3237,
+          "gzipBytes": 1584
+        },
+        {
+          "file": "PaintLibrary-CRIZnhCF.js",
+          "bytes": 9989,
+          "gzipBytes": 4377
+        },
+        {
+          "file": "PaintRowLabel-B5sS2yc2.js",
+          "bytes": 3311,
+          "gzipBytes": 1471
+        },
+        {
+          "file": "PaintToolsPage-rpVoSCBt.js",
+          "bytes": 23684,
+          "gzipBytes": 8211
+        },
+        {
+          "file": "PluginsModal-IJtyQBCQ.js",
+          "bytes": 28977,
+          "gzipBytes": 10201
+        },
+        {
+          "file": "Popper-BG4dVb0-.js",
+          "bytes": 23197,
+          "gzipBytes": 8731
+        },
+        {
+          "file": "SettingsScreen-BAIWLwzs.js",
+          "bytes": 29827,
+          "gzipBytes": 11526
+        },
+        {
+          "file": "StatusChip-Ww92ria3.js",
+          "bytes": 8215,
+          "gzipBytes": 3058
+        },
+        {
+          "file": "Switch-B-_LlHNQ.js",
+          "bytes": 8296,
+          "gzipBytes": 2669
+        },
+        {
+          "file": "SwitchBase-BLWGusBb.js",
+          "bytes": 2398,
+          "gzipBytes": 1171
+        },
+        {
+          "file": "ToggleButtonGroup-BlKudi30.js",
+          "bytes": 6560,
+          "gzipBytes": 2218
+        },
+        {
+          "file": "Tooltip-DmoCyoXF.js",
+          "bytes": 8103,
+          "gzipBytes": 3119
+        },
+        {
+          "file": "WishlistPage-B_M-pE3I.js",
+          "bytes": 25865,
+          "gzipBytes": 9484
+        },
+        {
+          "file": "detail-hooks-DIRI5g8k.js",
+          "bytes": 5603,
+          "gzipBytes": 2265
+        },
+        {
+          "file": "fuzzy-search.worker-B2h_ORwE.js",
+          "bytes": 2940,
+          "gzipBytes": 1339
+        },
+        {
+          "file": "index-CS_6N-8K.js",
+          "bytes": 866743,
+          "gzipBytes": 242003
+        },
+        {
+          "file": "lift-card-YvGsyxFd.js",
+          "bytes": 418,
+          "gzipBytes": 271
+        },
+        {
+          "file": "miniature-scheme-hooks-kwUzMJI7.js",
+          "bytes": 3578,
+          "gzipBytes": 1594
+        },
+        {
+          "file": "scheme-actions-xhCfC8iU.js",
+          "bytes": 3842,
+          "gzipBytes": 1695
+        },
+        {
+          "file": "template-hooks-FZz-GJRR.js",
+          "bytes": 8145,
+          "gzipBytes": 2665
+        }
+      ]
+    },
+    "candidateMinusBaseline": {
+      "jsBytes": 335326,
+      "sumGzipBytes": 76727,
+      "entryJsBytes": 267489,
+      "entryGzipBytes": 52694
+    },
+    "baselineArtifact": {
+      "sha256": "7057d770b8db860a7c1fc1d8070473485f7856c64e4405b58d9a7f9be2b8bc9d",
+      "files": [
+        {
+          "file": "Autocomplete-DkifcQ-m.js",
+          "sha256": "d558844899a20d8342f4f2f5117313aa0dc62bdd0db1e984a95777d6bd6cad76"
+        },
+        {
+          "file": "Chip-Cm1KyNjB.js",
+          "sha256": "138cafbe9e0372280d462f3e0ce742e846852d9c6ec56e069d4e5f052616720e"
+        },
+        {
+          "file": "ColorSchemesDialog-B1O9NxIg.js",
+          "sha256": "a608a1e780db1b235047b68ffe6c8de9705ccc64ce5e8842779f61acffeaf988"
+        },
+        {
+          "file": "ColorSchemesPage-BVX5e3G5.js",
+          "sha256": "d2d255e037e0d304820cea935c6123e5d5b83246964abe407a66c89811390405"
+        },
+        {
+          "file": "FilterPlugin-BNSne_do.js",
+          "sha256": "a8d95bfeceaeb2db7dcb6f3d8dba4fa9f7a996a73dbd9d0e87550202f260fbae"
+        },
+        {
+          "file": "LibraryPaintRow-pc9v7ooL.js",
+          "sha256": "73fcb547a8a0b97a990161cbdcf31dceb44aca35d0740d514e630f664953fa3e"
+        },
+        {
+          "file": "MiniatureForm-DLySoD3Q.js",
+          "sha256": "5aa46d8b0e11ca83df9191a4bc3d27c6d4cdf717e817cd743499bef6ca7353f7"
+        },
+        {
+          "file": "MiniatureTemplatesPage-B0-d-qlZ.js",
+          "sha256": "36d84eab0d59cef03d192dd482990941c4bf6b820005d5b1a3e83aa90c0b07ea"
+        },
+        {
+          "file": "PaintDetailsButton-CipvrgIF.js",
+          "sha256": "a471d59c50c2c64fcf8d3b335a390a4981938b807e88b3f3d4e5dd2abd55164a"
+        },
+        {
+          "file": "PaintForm-ts5awDyV.js",
+          "sha256": "575884eb035749ecfd27b6e5a175679672a5a2b7aac7c0e35b7a117bccb57e20"
+        },
+        {
+          "file": "PaintLibrary-CwfbB26l.js",
+          "sha256": "852718372f2bcc20f122325b2bdcf30569b861875b360a6f8dab6142bb0d6602"
+        },
+        {
+          "file": "PaintRowLabel-BQHHB8Gu.js",
+          "sha256": "5a11d4fa168fc74c95b6f6769a420cf28b595706c8eccc0c6b44d9f4f9b4af9a"
+        },
+        {
+          "file": "PaintToolsPage-CPQJaKOP.js",
+          "sha256": "b8e0ee8c4e8e1e8240bed6197f5c44bd88ace162842682cc847c6e1c76391a59"
+        },
+        {
+          "file": "PluginChip-BoK34nsk.js",
+          "sha256": "1c4e695ec28a224b2cb9bbb1ac603bff73dd0856981c98c357a0ad79ea4a6dfc"
+        },
+        {
+          "file": "PluginsModal-CuEIDKzk.js",
+          "sha256": "d34b34d54273d8a3782633f24fe23209308396b64a2a4239c7b94ce2472e3dfd"
+        },
+        {
+          "file": "Popper-DetlzZPG.js",
+          "sha256": "2e78322982d25f188b44af6416b44b366137a4aecb1bf68f6ee247522b49205e"
+        },
+        {
+          "file": "ProjectDrawer-Dv0MB9Ub.js",
+          "sha256": "ed836589da75162153c6c1db6f7a37f8d186a7e8859437705084b7dde72abecd"
+        },
+        {
+          "file": "SettingsScreen-CYRASqcc.js",
+          "sha256": "d2518283ed4f952cec184673185ac3173eb8550f015642cae42262bf74e7ae94"
+        },
+        {
+          "file": "StatusChip-DrfPrG-k.js",
+          "sha256": "c3c3d1606b304c3046e289b0a46eb8abc648635732603f45f5cd207177c45c8d"
+        },
+        {
+          "file": "Switch-Eu8F4m9k.js",
+          "sha256": "ccdc8adf926e749773c61881d662558d3c83c249b65e4f835b7d359eec91a1ce"
+        },
+        {
+          "file": "SwitchBase-R4SUI4Nb.js",
+          "sha256": "618a8a5397e7c178de8155c164901df9bf0798bfba964fa7f2444e03e39f4e7a"
+        },
+        {
+          "file": "ToggleButtonGroup-BABvm5w5.js",
+          "sha256": "24469456eccc78ac06362cf2b492b20329a6bda14e8cfe954fcb2e086a0a2022"
+        },
+        {
+          "file": "Tooltip-CR4ZSYYF.js",
+          "sha256": "aa6107d24a9ee51e2df2f53708699d8145075b52ff02bb85cb465fbff1cc2f0d"
+        },
+        {
+          "file": "WishlistPage-gXniYVtZ.js",
+          "sha256": "9128a5de640e9b29cf19becddac6881afb2ba25b6b691690e345415bcf0d6c3a"
+        },
+        {
+          "file": "fuzzy-search.worker-B2h_ORwE.js",
+          "sha256": "0dd6a8356fdb91f2ce964db90c51c601e6ffbdb6812dd1e6a29ce651606cd945"
+        },
+        {
+          "file": "index-CyP6OCQy.js",
+          "sha256": "186bfabf4c116eec92938470141f3a5168679fc1ef26574b8373e362fa58c01d"
+        },
+        {
+          "file": "lift-card-YvGsyxFd.js",
+          "sha256": "9070786541d23a5d0180222c533241b48b4e711b7234c196948aaf2bae1000ad"
+        },
+        {
+          "file": "scheme-order-QieZa1RV.js",
+          "sha256": "9a4a07447dc7c785268b022c141510e5802d704514f88c4c6a6c2a6cb01071d2"
+        },
+        {
+          "file": "template-hooks-DGbXerEV.js",
+          "sha256": "db82dc87e0ae29b989327a9b78572182e236dc9d2bc5b5337a50edaa2c88b840"
+        },
+        {
+          "file": "../index.html",
+          "sha256": "fe8f15043b7b22e9c19959501f6b6c70eab6d0cd8ed58ed9ab53aea520ca90c8"
+        }
+      ]
+    },
+    "candidateArtifact": {
+      "sha256": "f5c30e5e09b5704ee2cea75dd10a6af1aaba51bfd564e9bf19bbed2396173323",
+      "files": [
+        {
+          "file": "ApolloProjectDrawer-D7uZ3Pqx.js",
+          "sha256": "2fc2dd71e7930e487bcdeca6f0b01d938ad4bb6bdf1784090cb1da25c79cbccb"
+        },
+        {
+          "file": "ApolloProjectSchemeDialog-Ch6A3wdP.js",
+          "sha256": "7779082666bd6cce7cf79a58399e3c2c58c76ebba46239e8bf35ca1dbb12fc5b"
+        },
+        {
+          "file": "Autocomplete-DyS7pxao.js",
+          "sha256": "2c260c4a93b90de266d2ef6e33e50ea8ac5cab9d7b80bdabd3820918a41576f0"
+        },
+        {
+          "file": "Chip-C-GGL-L6.js",
+          "sha256": "9b6d25abf5f634c418e1be66a6486dcb14fcbda32093ea8f6c4be47ebbc9943f"
+        },
+        {
+          "file": "ColorSchemesDialog-OJyvarXD.js",
+          "sha256": "35b51997218bf489198e2ee582bf5929e1ea51410fd14173e28c2d2e0cbba663"
+        },
+        {
+          "file": "ColorSchemesPage-U1YSCugx.js",
+          "sha256": "41335a6fb624db7fb96c5967f4447015c42754e7a60c70cd26e38c4f9b0b0373"
+        },
+        {
+          "file": "LibraryPaintRow-BOrN61lr.js",
+          "sha256": "c262accd6eb4cd0cdecaf07053832c8c170eefe7c6412519069efa7f3fa27b48"
+        },
+        {
+          "file": "MiniatureForm-DQMJUWEH.js",
+          "sha256": "11b6fffba333963d98baed3685f8558abdbd7de75189446d0f0e40113aca8c66"
+        },
+        {
+          "file": "MiniatureTemplatesPage-JMmdY8la.js",
+          "sha256": "cb65adecc891ff34f82b43f57290b936fd9d72f26aee2defe718eb53d79e15fc"
+        },
+        {
+          "file": "PaintDetailsButton-Cbw9vXrP.js",
+          "sha256": "f5f781c3c81f40eae9e2724289224698493c78e09270ceef89869935b16a59a4"
+        },
+        {
+          "file": "PaintForm-DbWaTgYX.js",
+          "sha256": "6e1a822759e28a39334b175dfc80339696e350a60db47944429026ff09642d33"
+        },
+        {
+          "file": "PaintLibrary-CRIZnhCF.js",
+          "sha256": "1a0f4cde4d6ea5e58d71548a38157aac7614a378fc187096aebcb4d1f96ec4d1"
+        },
+        {
+          "file": "PaintRowLabel-B5sS2yc2.js",
+          "sha256": "526a4ac84cdb16d7dc65ff7529276760c0bf884f45d864736933c78287783d8a"
+        },
+        {
+          "file": "PaintToolsPage-rpVoSCBt.js",
+          "sha256": "54560312d644f64c17a62d5465c4e9dfd393526813c596711cc7d7998479585f"
+        },
+        {
+          "file": "PluginsModal-IJtyQBCQ.js",
+          "sha256": "7a99111e93a8e7a15b1c5c06ccfa41fec13244abf747f5ba1bd311766964eb29"
+        },
+        {
+          "file": "Popper-BG4dVb0-.js",
+          "sha256": "e073297872a5adb596709038c2955c326a57ac5806bfc15b5d7b2de32b0b77e2"
+        },
+        {
+          "file": "SettingsScreen-BAIWLwzs.js",
+          "sha256": "1e75697e64bc9b0d24e005319aa0e719faefc4519adb7059b8bafaff3fa24814"
+        },
+        {
+          "file": "StatusChip-Ww92ria3.js",
+          "sha256": "bf7d3113459c22c4224bf5f77becb130ac713902bf2c2db311ecf3843ba73a93"
+        },
+        {
+          "file": "Switch-B-_LlHNQ.js",
+          "sha256": "1bf962cfae217e3442b85c23a9a4b607b59f5378a8cb0a27efc017588237182d"
+        },
+        {
+          "file": "SwitchBase-BLWGusBb.js",
+          "sha256": "01971a403e1904ac9ce2f77669786151f8cb1bfb00b75916bb118ffb9b603fc0"
+        },
+        {
+          "file": "ToggleButtonGroup-BlKudi30.js",
+          "sha256": "929563dabd97832f521d476e4062f2194fcba8dd7d629ab055ecec6e18696254"
+        },
+        {
+          "file": "Tooltip-DmoCyoXF.js",
+          "sha256": "ab5b1d0a046900017a6a5743e19bc15c0901b34aa8c337241a1fa65c2a041df9"
+        },
+        {
+          "file": "WishlistPage-B_M-pE3I.js",
+          "sha256": "a52320df3c410bb49996627f2d55bf96dcf15a3c6d5d9ff474bf02a91c17b133"
+        },
+        {
+          "file": "detail-hooks-DIRI5g8k.js",
+          "sha256": "24cfe84497ce19a244739365df11c7dab1f66354009bc9240aab1325bc2df1b5"
+        },
+        {
+          "file": "fuzzy-search.worker-B2h_ORwE.js",
+          "sha256": "0dd6a8356fdb91f2ce964db90c51c601e6ffbdb6812dd1e6a29ce651606cd945"
+        },
+        {
+          "file": "index-CS_6N-8K.js",
+          "sha256": "3baf3e3dbe52deb2c87be8bda198038ce90ae339e8c70df16879269d11ed5b56"
+        },
+        {
+          "file": "lift-card-YvGsyxFd.js",
+          "sha256": "9070786541d23a5d0180222c533241b48b4e711b7234c196948aaf2bae1000ad"
+        },
+        {
+          "file": "miniature-scheme-hooks-kwUzMJI7.js",
+          "sha256": "98ba2dadca6aba66c182860b735e70933ea762fd9f4d9e359ea09233a9c14310"
+        },
+        {
+          "file": "scheme-actions-xhCfC8iU.js",
+          "sha256": "33952fb9e9c5a297b88aeb238f9d3573fc85004c671a35c522ad602157db8eb6"
+        },
+        {
+          "file": "template-hooks-FZz-GJRR.js",
+          "sha256": "9c8df863e941fb63e95bfcc006aab695baac56f7380280921a2b53782b76c914"
+        },
+        {
+          "file": "../index.html",
+          "sha256": "0b5df84ce87186d5e9d120a807fcea27e2faf21cf4269e16219718b850135eef"
+        }
+      ]
+    },
+    "baselineSource": "e1f345a",
+    "candidateSource": "27d73ab0220977bb362b0d478ba030d19caaf0bc",
+    "candidateWorkingTree": " M AGENTS.md\n M README.md\n M apps/paint-vault-electron/desktop-core.test.cjs\n M apps/paint-vault-electron/main-server.test.cjs\n D apps/paint-vault/app/api/changes/route.ts\n M apps/paint-vault/app/api/miniature-templates/route.ts\n M apps/paint-vault/app/api/paint-state/route.test.ts\n D apps/paint-vault/app/api/state/route.ts\n M apps/paint-vault/db/change-log.ts\n M apps/paint-vault/graphql/budgets.test.ts\n M apps/paint-vault/graphql/budgets.ts\n M apps/paint-vault/graphql/changes.test.ts\nM  apps/paint-vault/graphql/generated/resolvers.ts\n M apps/paint-vault/graphql/library.ts\n M apps/paint-vault/graphql/miniatures.test.ts\n M apps/paint-vault/graphql/schema.graphql\n M apps/paint-vault/graphql/server.test.ts\n M apps/paint-vault/graphql/server.ts\n M apps/paint-vault/lib/auth.test.ts\n M apps/paint-vault/lib/http-compression.test.ts\n D apps/paint-vault/lib/vault-state.test.ts\n D apps/paint-vault/lib/vault-state.ts\n M apps/paint-vault/package.json\n M apps/paint-vault/server/api-router.test.ts\n M apps/paint-vault/server/api-router.ts\n M docs/benchmarks/graphql-baseline.md\n M docs/graphql-foundation.md\n M docs/graphql-library.md\n M docs/graphql-miniatures.md\n M package-lock.json\n M packages/paint-core/package.json\n D packages/paint-core/vault-changes.test.ts\n D packages/paint-core/vault-changes.ts\n M packages/vault-ui/package.json\n D packages/vault-ui/src/dom/Components/LibraryPaintRow.stories.tsx\n M packages/vault-ui/src/dom/Components/LibraryPaintRow.tsx\n M packages/vault-ui/src/dom/Components/PaintAutocomplete.stories.tsx\n M packages/vault-ui/src/dom/Components/PaintAutocomplete.tsx\n M packages/vault-ui/src/dom/Components/PaintRow.stories.tsx\n M packages/vault-ui/src/dom/Components/PaintRow.tsx\n M packages/vault-ui/src/dom/Components/ProjectPaintSummary.stories.tsx\n M packages/vault-ui/src/dom/Components/ProjectPaintSummary.tsx\n M packages/vault-ui/src/dom/Components/ProjectRecipe.stories.tsx\n M packages/vault-ui/src/dom/Components/ProjectRecipe.tsx\n D packages/vault-ui/src/dom/Components/RecipeSchemeTile.stories.tsx\n M packages/vault-ui/src/dom/Components/RecipeSchemeTile.tsx\n D packages/vault-ui/src/dom/Components/RecipeStepCard.stories.tsx\n M packages/vault-ui/src/dom/Components/RecipeStepCard.tsx\n D packages/vault-ui/src/dom/Components/SchemeChip.stories.tsx\n M packages/vault-ui/src/dom/Components/SchemeChip.tsx\n D packages/vault-ui/src/dom/Components/SchemeSwatch.stories.tsx\n M packages/vault-ui/src/dom/Components/SchemeSwatch.tsx\n M packages/vault-ui/src/dom/Modals/AddSchemeItemDialog.stories.tsx\n M packages/vault-ui/src/dom/Modals/AddSchemeItemDialog.tsx\n M packages/vault-ui/src/dom/Modals/ColorSchemesDialog.stories.tsx\n M packages/vault-ui/src/dom/Modals/PaintDetailsModal.stories.tsx\n M packages/vault-ui/src/dom/Modals/PaintDetailsModal.tsx\n M packages/vault-ui/src/dom/Modals/PaintDetailsOverlay.tsx\n D packages/vault-ui/src/dom/Modals/ProjectDrawer.tsx\n M packages/vault-ui/src/dom/Modals/ProjectSchemeEditor.stories.tsx\n M packages/vault-ui/src/dom/Modals/SavedMixCard.stories.tsx\n M packages/vault-ui/src/dom/Modals/SavedMixCard.tsx\n M packages/vault-ui/src/dom/Modals/SchemePickerDialog.tsx\n M packages/vault-ui/src/dom/Modals/SubstitutionDialog.stories.tsx\n M packages/vault-ui/src/dom/Modals/SubstitutionDialog.tsx\n M packages/vault-ui/src/dom/Pages/FuzzySearch.stories.tsx\n M packages/vault-ui/src/dom/Pages/WishlistPage.stories.tsx\n M packages/vault-ui/src/dom/Vault.tsx\n D packages/vault-ui/src/dom/graphql/coexistence.test.ts\n M packages/vault-ui/src/dom/graphql/invalidation.test.ts\n M packages/vault-ui/src/dom/graphql/invalidation.ts\n M packages/vault-ui/src/dom/graphql/library-hooks.tsx\n M packages/vault-ui/src/dom/graphql/miniature-actions.test.ts\n M packages/vault-ui/src/dom/graphql/miniature-actions.ts\n M packages/vault-ui/src/dom/graphql/miniature-list-hooks.tsx\n M packages/vault-ui/src/dom/graphql/paint-actions.test.ts\n M packages/vault-ui/src/dom/graphql/paint-actions.ts\n M packages/vault-ui/src/dom/graphql/scheme-actions.test.ts\n M packages/vault-ui/src/dom/graphql/scheme-actions.ts\n M packages/vault-ui/src/dom/graphql/startup.test.ts\n M packages/vault-ui/src/dom/graphql/stock-actions.test.ts\n M packages/vault-ui/src/dom/graphql/stock-actions.ts\n D packages/vault-ui/src/dom/store/hooks.stories.tsx\n M packages/vault-ui/src/dom/store/hooks.ts\n D packages/vault-ui/src/dom/store/legacy-vault-store.ts\n M packages/vault-ui/src/dom/store/template-hooks.ts\n M packages/vault-ui/src/dom/store/vault-store.ts\n D packages/vault-ui/src/dom/storybook/fixture-snapshot.tsx\n M packages/vault-ui/src/dom/storybook/library-apollo-fixture.tsx\n M packages/vault-ui/src/dom/storybook/library-fixtures.tsx\n M packages/vault-ui/src/dom/storybook/miniature-fixtures.tsx\n M packages/vault-ui/src/dom/storybook/mock-api.tsx\n M packages/vault-ui/src/dom/storybook/vault-store.tsx\n M packages/vault-ui/src/dom/types.ts\n M packages/vault-ui/src/dom/utils/image-cache.test.mjs\n D packages/vault-ui/src/dom/utils/legacy-screen.ts\n D packages/vault-ui/src/dom/utils/legacy-vault-query.ts\n D packages/vault-ui/src/dom/utils/template-query.test.mjs\n D packages/vault-ui/src/dom/utils/template-query.ts\n D packages/vault-ui/src/dom/utils/vault-query.ts\n M scripts/benchmark-library.mts\n M scripts/benchmark-miniatures.mts\n D scripts/benchmark-startup.mts\n D scripts/benchmark-vault-delta.mts\n M scripts/home-miniatures-smoke-support.mjs\n M scripts/library-fixture.mjs\n M scripts/library-smoke-support.mjs\n?? apps/paint-vault/db/change-log.test.ts\n?? docs/architecture.md\n?? docs/data-loading.md\n?? docs/graphql-development.md\n?? packages/vault-ui/src/dom/graphql/command-lifetime.test.ts\n?? packages/vault-ui/src/dom/storybook/story-fixture.tsx\n?? packages/vault-ui/src/dom/utils/auth-hooks.ts\n?? scripts/benchmark-graphql-before.mjs\n?? scripts/benchmark-graphql-final.mjs\n?? scripts/graphql-phase5-README.md\n?? scripts/graphql-phase5-browser.mjs\n?? scripts/graphql-phase5-docker.mjs\n?? scripts/graphql-phase5-native.mjs\n?? scripts/graphql-phase5-runners.test.mjs\n?? scripts/graphql-phase5-runtime.mjs\n?? scripts/graphql-phase5-support.mjs\n?? scripts/seed-benchmark-vault.mts\n"
+  },
+  "notes": [
+    "Decoded JSON API bytes, not wire-compressed transfer. Assets and open SSE excluded. Home capture ends800ms after first visible tile and includes96 loaded miniature rows (48 initial page+prefetch48).",
+    "Browser timing uses navigation-relative performance.now() to first real miniature tile+two animation frames, injected MutationObserver independent of CDP body parsing. Three sequential fresh server/browser samples per profile, seeded disk not cold disk. No extra QA probe rows.",
+    "Canonical Phase0 times are synchronous SQLite read+serialization, NOT browser latency. Fresh pre-migration main@ea86dd1 browser reconstruction is separately labelled, built privately from historical locked source. Small response-size differences vs canonical are revision cursor metadata, not different seed rows.",
+    "RSS is process resident memory sampled after800ms, not JS heap/peak/cold memory or attribution to GraphQL. No canonical Phase0 RSS exists.",
+    "Bundle sums all emitted JS/per-file gzip; entry independent. Not all chunks transfer at startup. Canonical Phase1 bundle (999731B/334658gzip) differs from reconstructed Phase0 baseline (998224B/334242gzip).",
+    "Per-screen bytes are navigation windows from a fresh client after Home on one warm server and exclude Home. Plugins can include variable external availability metadata; checks deferred until Plugins opens."
+  ]
+}

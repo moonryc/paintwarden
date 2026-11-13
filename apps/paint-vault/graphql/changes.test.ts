@@ -10,7 +10,6 @@ delete process.env.DATABASE_PATH;
 const { getSqlite } = await import("../db/index.ts");
 const { changeLogEpoch, currentChangeSeq } = await import("../db/change-log.ts");
 const { ALL_FAMILIES, invalidationSince } = await import("./changes.ts");
-const { vaultChangesSince } = await import("../lib/vault-state.ts");
 const sqlite = getSqlite();
 const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const paint = `user:${uuid(1)}`,
@@ -96,7 +95,7 @@ void test("durable trigger invalidations use precise families and conservative c
     assert.ok(event.families.includes("WISHLIST"));
     assert.ok(event.families.includes("HOME"));
   });
-  await t.test("source bookkeeping only refreshes SOURCES and preserves legacy nonreload deltas", () => {
+  await t.test("source bookkeeping only refreshes SOURCES", () => {
     const c = cursor();
     sqlite
       .prepare("UPDATE catalog_sources SET last_error='Fixture error',updated_at=2 WHERE id=?")
@@ -105,10 +104,6 @@ void test("durable trigger invalidations use precise families and conservative c
     assert.equal(event.reset, false);
     assert.deepEqual(event.families, ["SOURCES"]);
     assert.ok(event.seq > c.since);
-    const legacy = vaultChangesSince(c.epoch, c.since);
-    assert.equal(legacy.reload, false);
-    assert.deepEqual(legacy.changes, []);
-    assert.equal(legacy.seq, event.seq);
     const same = cursor();
     sqlite.prepare("UPDATE catalog_sources SET last_error=last_error WHERE id=?").run(source);
     assert.deepEqual(invalidationSince(same).families, []);

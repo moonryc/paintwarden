@@ -4,14 +4,12 @@ import type { RecipeStep } from "@paint-vault/core/recipe-steps";
 import type { ReactNode } from "react";
 
 import { Plus, X } from "../icons";
-import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint, PaintStateSetter, Requirement } from "../types";
 import { listResetSx } from "../utils/element-resets";
 import type { RecipePaint } from "../utils/recipe-merge";
 
 import { DashedAddButton } from "./DashedAddButton";
-import { legacyRecipePaintStatus, ProjectedPaintRow, type RecipePaintStatus } from "./PaintRow";
-import { SchemeChip } from "./SchemeChip";
+import { ProjectedPaintRow, type RecipePaintStatus } from "./PaintRow";
 
 export type RecipeStepRow = RecipePaint<Omit<Requirement, "miniatureId">> & { paint: Paint };
 
@@ -34,19 +32,6 @@ export type RecipeStepCardProps = {
   onRemovePaint: (paint: Paint) => void;
   onOpenPaint: (id: string) => void;
 };
-
-export function RecipeStepCard(props: RecipeStepCardProps) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  return (
-    <RecipeStepCardView
-      {...props}
-      paintStatus={(id) => legacyRecipePaintStatus(data, props.miniatureId, id)}
-      onSetPaintState={setPaintState}
-      renderSchemeChip={(scheme) => <SchemeChip scheme={scheme} />}
-    />
-  );
-}
 
 export type RecipeStepCardViewProps = RecipeStepCardProps & {
   paintStatus: (id: string) => RecipePaintStatus;

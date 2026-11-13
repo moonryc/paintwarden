@@ -15,7 +15,7 @@ import {
   type TemplateCommandResultFragment,
   type TemplateInput,
 } from "../graphql/generated/graphql";
-import type { ReadTicket, Revision, VaultFamily } from "../graphql/invalidation";
+import type { CommandTicket, ReadTicket, Revision, VaultFamily } from "../graphql/invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
 import {
   readTemplateRecipe,
@@ -328,10 +328,11 @@ export function useTemplateSourceMiniature(id: string | null) {
 export function createTemplateActions(scope: VaultGraphQLScope) {
   let serial = 0;
   const queues = new Map<string, Promise<unknown>>();
-  const enqueue = <T>(id: string, work: (ticket: ReadTicket) => Promise<T>) => {
-    const ticket = scope.controller.capture();
+  const enqueue = <T>(id: string, work: (ticket: CommandTicket) => Promise<T>) => {
+    const ticket = scope.controller.captureCommand();
     const run = async () => {
-      if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+      if (!scope.controller.isCommandCurrent(ticket))
+        throw new Error("Vault connection changed. Please try again.");
       return work(ticket);
     };
     const result = (queues.get(id) ?? Promise.resolve()).then(run, run);
@@ -343,10 +344,12 @@ export function createTemplateActions(scope: VaultGraphQLScope) {
       .catch(() => {});
     return result;
   };
-  const committed = (payload: TemplateCommandResultFragment | null | undefined, ticket: ReadTicket) => {
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+  const committed = (payload: TemplateCommandResultFragment | null | undefined, ticket: CommandTicket) => {
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     if (!payload) throw new Error("Template save returned no result");
-    scope.controller.committed(payload.revision, payload.invalidatedFamilies);
+    if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
+      throw new Error("Vault connection changed. Please try again.");
     return payload.templateId;
   };
   return {
@@ -394,11 +397,11 @@ export function useTemplateActions() {
       actionScopes.set(scope, actions);
     }
     const report = async <T>(work: () => Promise<T>) => {
-      const ticket = scope.controller.capture();
+      const ticket = scope.controller.captureCommand();
       try {
         return await work();
       } catch (error) {
-        if (scope.controller.isCurrent(ticket))
+        if (scope.controller.isCommandCurrent(ticket))
           notify(error instanceof Error ? error.message : "Could not save template", "error");
         throw error;
       }

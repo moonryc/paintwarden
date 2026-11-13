@@ -148,50 +148,41 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       owner();
     });
 
-    await t.test(
-      "stable pages include inventory and same-transaction revision, snapshot unchanged",
-      async () => {
-        for (let i = 0; i < 7; i++) addPaint(paintId(i));
-        sqlite
-          .prepare(
-            "INSERT INTO paint_inventory(paint_id,state,stock_level,quantity) VALUES(?,'OWNED','FULL',2)",
-          )
-          .run(paintId(0));
-        const ids: string[] = [];
-        let after: string | null = null;
-        do {
-          const response = await post({ query, variables: { first: 2, after } });
-          assert.equal(response.status, 200);
-          assert.equal(response.headers.get("cache-control"), "no-store");
-          assert.equal(response.headers.get("access-control-allow-origin"), null);
-          const payload = (await response.json()) as { errors?: unknown; data: { library: LibraryPage } };
-          assert.equal(payload.errors, undefined, JSON.stringify(payload));
-          const page = payload.data.library;
-          assert.deepEqual(page.revision, { epoch: changeLogEpoch, seq: String(currentChangeSeq(sqlite)) });
-          assert.ok(page.nodes.length <= 2);
-          ids.push(...page.nodes.map((paint: { id: string }) => paint.id));
-          if (ids.length === 2)
-            assert.deepEqual(page.nodes[0].inventory, { state: "OWNED", stockLevel: "FULL", quantity: 2 });
-          after = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
-        } while (after);
-        assert.deepEqual(
-          ids,
-          Array.from({ length: 7 }, (_, i) => paintId(i)),
-        );
-        const invalid = await post({ query, variables: { after: "not-a-cursor" } });
-        const invalidBody = (await invalid.json()) as { errors: { message: string }[] };
-        assert.match(invalidBody.errors[0].message, /Invalid Library cursor/);
-        assert.doesNotMatch(JSON.stringify(invalidBody), /SELECT|sqlite|stack|password_hash/);
-        for (const first of [0, 101, -1])
-          assert.equal((await post({ query, variables: { first } })).status, 400);
-        const old = await routeApi(
-          new Request(base + "/api/state", { headers: { authorization: `Bearer ${token}` } }),
-        );
-        const state = await old.json();
-        assert.equal(state.catalog.length, 7);
-        assert.ok(Array.isArray(state.miniatures));
-      },
-    );
+    await t.test("stable pages include inventory and same-transaction revision", async () => {
+      for (let i = 0; i < 7; i++) addPaint(paintId(i));
+      sqlite
+        .prepare(
+          "INSERT INTO paint_inventory(paint_id,state,stock_level,quantity) VALUES(?,'OWNED','FULL',2)",
+        )
+        .run(paintId(0));
+      const ids: string[] = [];
+      let after: string | null = null;
+      do {
+        const response = await post({ query, variables: { first: 2, after } });
+        assert.equal(response.status, 200);
+        assert.equal(response.headers.get("cache-control"), "no-store");
+        assert.equal(response.headers.get("access-control-allow-origin"), null);
+        const payload = (await response.json()) as { errors?: unknown; data: { library: LibraryPage } };
+        assert.equal(payload.errors, undefined, JSON.stringify(payload));
+        const page = payload.data.library;
+        assert.deepEqual(page.revision, { epoch: changeLogEpoch, seq: String(currentChangeSeq(sqlite)) });
+        assert.ok(page.nodes.length <= 2);
+        ids.push(...page.nodes.map((paint: { id: string }) => paint.id));
+        if (ids.length === 2)
+          assert.deepEqual(page.nodes[0].inventory, { state: "OWNED", stockLevel: "FULL", quantity: 2 });
+        after = page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null;
+      } while (after);
+      assert.deepEqual(
+        ids,
+        Array.from({ length: 7 }, (_, i) => paintId(i)),
+      );
+      const invalid = await post({ query, variables: { after: "not-a-cursor" } });
+      const invalidBody = (await invalid.json()) as { errors: { message: string }[] };
+      assert.match(invalidBody.errors[0].message, /Invalid Library cursor/);
+      assert.doesNotMatch(JSON.stringify(invalidBody), /SELECT|sqlite|stack|password_hash/);
+      for (const first of [0, 101, -1])
+        assert.equal((await post({ query, variables: { first } })).status, 400);
+    });
 
     await t.test("stale Library cursors cannot mix collection generations", async () => {
       const page = (await (await post({ query, variables: { first: 2 } })).json()) as {
@@ -268,91 +259,92 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       }
     });
 
-    await t.test("GraphQL stock writes coexist with REST snapshots, row deltas and revisions", async () => {
-      const id = paintId(900);
-      addPaint(id, "Stock fixture");
-      const since = currentChangeSeq(sqlite);
-      const mutation = `mutation Stock($id:ID!,$state:Ownership,$quantity:Int){setPaintStock(paintId:$id,state:$state,quantity:$quantity,stockLevel:LOW,clientMutationId:"stock-1"){
+    await t.test(
+      "GraphQL stock writes and REST stock commands share revisions and invalidations",
+      async () => {
+        const id = paintId(900);
+        addPaint(id, "Stock fixture");
+        const since = currentChangeSeq(sqlite);
+        const mutation = `mutation Stock($id:ID!,$state:Ownership,$quantity:Int){setPaintStock(paintId:$id,state:$state,quantity:$quantity,stockLevel:LOW,clientMutationId:"stock-1"){
         revision{epoch seq} paint{id available inventory{state stockLevel quantity}} clientMutationId invalidatedFamilies
       }}`;
-      type Result = {
-        data: {
-          setPaintStock: {
-            revision: { epoch: string; seq: string };
-            paint: {
-              id: string;
-              available: boolean;
-              inventory: { state: string; stockLevel: string; quantity: number } | null;
+        type Result = {
+          data: {
+            setPaintStock: {
+              revision: { epoch: string; seq: string };
+              paint: {
+                id: string;
+                available: boolean;
+                inventory: { state: string; stockLevel: string; quantity: number } | null;
+              };
+              clientMutationId: string;
+              invalidatedFamilies: string[];
             };
-            clientMutationId: string;
-            invalidatedFamilies: string[];
           };
         };
-      };
-      const response = await post({ query: mutation, variables: { id, state: "OWNED", quantity: 4 } });
-      assert.equal(response.status, 200);
-      const payload = (await response.json()) as Result;
-      const result = payload.data.setPaintStock;
-      assert.equal(result.paint.id, id);
-      assert.equal(result.paint.available, true);
-      assert.deepEqual(result.paint.inventory, { state: "OWNED", stockLevel: "LOW", quantity: 4 });
-      assert.equal(result.clientMutationId, "stock-1");
-      assert.equal(result.revision.epoch, changeLogEpoch);
-      assert.equal(result.revision.seq, String(currentChangeSeq(sqlite)));
-      assert.ok(Number(result.revision.seq) > since);
-      assert.ok(result.invalidatedFamilies.includes("LIBRARY"));
-      assert.ok(result.invalidatedFamilies.includes("WISHLIST"));
-      const delta = await routeApi(
-        new Request(`${base}/api/changes?epoch=${changeLogEpoch}&since=${since}`, {
-          headers: { authorization: `Bearer ${token}` },
-        }),
-      );
-      const rows = (await delta.json()) as {
-        reload: boolean;
-        changes: { table: string; row: { paintId: string; quantity: number } | null }[];
-      };
-      assert.equal(rows.reload, false);
-      assert.ok(
-        rows.changes.some((r) => r.table === "paintRecords" && r.row?.paintId === id && r.row.quantity === 4),
-      );
-      const cleared = await post({ query: mutation, variables: { id, state: "OWNED", quantity: 0 } });
-      const clearResult = ((await cleared.json()) as Result).data.setPaintStock;
-      assert.equal(clearResult.paint.inventory, null);
-      assert.equal(clearResult.paint.available, false);
-      const unknown = await post({
-        query: mutation,
-        variables: { id: paintId(9999), state: "OWNED", quantity: 1 },
-      });
-      assert.equal(
-        ((await unknown.json()) as { errors: { extensions: { code: string } }[] }).errors[0].extensions.code,
-        "NOT_FOUND",
-      );
-      const rest = await routeApi(
-        new Request(base + "/api/paint-state", {
-          method: "PUT",
-          headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
-          body: JSON.stringify({ paintId: id, state: "WISHLIST", stockLevel: "EMPTY" }),
-        }),
-      );
-      assert.equal(rest.status, 200);
-      const reread = await post({
-        query: `{paint(id:"${id}"){revision{seq} paint{inventory{state stockLevel quantity}}}}`,
-      });
-      const view = (await reread.json()) as {
-        data: {
-          paint: {
-            revision: { seq: string };
-            paint: { inventory: { state: string; stockLevel: string; quantity: number } };
+        const response = await post({ query: mutation, variables: { id, state: "OWNED", quantity: 4 } });
+        assert.equal(response.status, 200);
+        const payload = (await response.json()) as Result;
+        const result = payload.data.setPaintStock;
+        assert.equal(result.paint.id, id);
+        assert.equal(result.paint.available, true);
+        assert.deepEqual(result.paint.inventory, { state: "OWNED", stockLevel: "LOW", quantity: 4 });
+        assert.equal(result.clientMutationId, "stock-1");
+        assert.equal(result.revision.epoch, changeLogEpoch);
+        assert.equal(result.revision.seq, String(currentChangeSeq(sqlite)));
+        assert.ok(Number(result.revision.seq) > since);
+        assert.ok(result.invalidatedFamilies.includes("LIBRARY"));
+        assert.ok(result.invalidatedFamilies.includes("WISHLIST"));
+        const event = invalidationSince({ epoch: changeLogEpoch, since });
+        assert.equal(event.reset, false);
+        assert.equal(event.seq, Number(result.revision.seq));
+        assert.ok(event.families.includes("LIBRARY"));
+        assert.deepEqual(
+          sqlite
+            .prepare("SELECT state,stock_level AS stockLevel,quantity FROM paint_inventory WHERE paint_id=?")
+            .get(id),
+          { state: "OWNED", stockLevel: "LOW", quantity: 4 },
+        );
+        const cleared = await post({ query: mutation, variables: { id, state: "OWNED", quantity: 0 } });
+        const clearResult = ((await cleared.json()) as Result).data.setPaintStock;
+        assert.equal(clearResult.paint.inventory, null);
+        assert.equal(clearResult.paint.available, false);
+        const unknown = await post({
+          query: mutation,
+          variables: { id: paintId(9999), state: "OWNED", quantity: 1 },
+        });
+        assert.equal(
+          ((await unknown.json()) as { errors: { extensions: { code: string } }[] }).errors[0].extensions
+            .code,
+          "NOT_FOUND",
+        );
+        const rest = await routeApi(
+          new Request(base + "/api/paint-state", {
+            method: "PUT",
+            headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+            body: JSON.stringify({ paintId: id, state: "WISHLIST", stockLevel: "EMPTY" }),
+          }),
+        );
+        assert.equal(rest.status, 200);
+        const reread = await post({
+          query: `{paint(id:"${id}"){revision{seq} paint{inventory{state stockLevel quantity}}}}`,
+        });
+        const view = (await reread.json()) as {
+          data: {
+            paint: {
+              revision: { seq: string };
+              paint: { inventory: { state: string; stockLevel: string; quantity: number } };
+            };
           };
         };
-      };
-      assert.deepEqual(view.data.paint.paint.inventory, {
-        state: "WISHLIST",
-        stockLevel: "EMPTY",
-        quantity: 0,
-      });
-      assert.equal(view.data.paint.revision.seq, String(currentChangeSeq(sqlite)));
-    });
+        assert.deepEqual(view.data.paint.paint.inventory, {
+          state: "WISHLIST",
+          stockLevel: "EMPTY",
+          quantity: 0,
+        });
+        assert.equal(view.data.paint.revision.seq, String(currentChangeSeq(sqlite)));
+      },
+    );
 
     await t.test("POST SSE initial catchup, cross-client write and reconnect", async () => {
       const since = currentChangeSeq(sqlite);

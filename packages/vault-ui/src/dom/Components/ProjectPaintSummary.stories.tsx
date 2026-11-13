@@ -4,7 +4,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { column } from "../storybook/decorators";
 import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
 
-import { ProjectPaintSummary, ProjectPaintSummaryView } from "./ProjectPaintSummary";
+import { ProjectPaintSummaryView } from "./ProjectPaintSummary";
 
 const required = [paints.black, paints.crimson, paints.scarlet, paints.gold, paints.blackWash];
 
@@ -98,5 +98,3 @@ export const WishlistAction: Story = {
     await expect(args.onAddAllToWishlist).toHaveBeenCalledWith([paints.gold, paints.blackWash]);
   },
 };
-
-export const LegacyWrapper: Story = { render: (args) => <ProjectPaintSummary {...args} /> };

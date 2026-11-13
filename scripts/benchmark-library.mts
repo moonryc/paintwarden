@@ -68,7 +68,7 @@ if (!worker) {
       phase0: JSON.parse(
         readFileSync(path.join(root, `docs/benchmarks/graphql-baseline-${profile}.json`), "utf8"),
       ).snapshot,
-      current: fixture.baseline.snapshot,
+      current: null, // Snapshot endpoint removed in Phase 5; historical bytes above.
     },
   };
   const output = process.argv[3] ?? path.join(fixture.evidence, "library.json");

@@ -4,25 +4,6 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 import { createVaultStore } from "../store/vault-store.ts";
-import { needsLegacySnapshot } from "../utils/legacy-screen.ts";
-
-const tabs = [
-  "dashboard",
-  "miniatures",
-  "paints",
-  "wishlist",
-  "schemes",
-  "templates",
-  "settings",
-  "paint-tools",
-] as const;
-test("every screen and overlay launches without the legacy snapshot", () => {
-  for (const tab of tabs)
-    for (const plugins of [false, true])
-      for (const schemeForm of [false, true])
-        assert.equal(needsLegacySnapshot(tab, { plugins, schemeForm }), false, tab);
-});
-
 test("shell, actions and provider cannot activate a legacy transport", async () => {
   const original = globalThis.fetch;
   const requests: string[] = [];
@@ -35,7 +16,6 @@ test("shell, actions and provider cannot activate a legacy transport", async () 
   try {
     const store = createVaultStore();
     await store.getState().checkServer();
-    await store.getState().syncChanges();
     await store.getState().refresh();
     store.getState().setToken("");
     await store.getState().checkServer();
@@ -50,14 +30,11 @@ test("shell, actions and provider cannot activate a legacy transport", async () 
     "../Vault.tsx",
     "../store/hooks.ts",
     "../store/vault-store.ts",
-    "../utils/vault-query.ts",
+    "../utils/auth-hooks.ts",
     "./provider.tsx",
   ]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
-    assert.doesNotMatch(
-      source,
-      /@tanstack|legacy-vault-query|legacy-vault-store|useVaultData\([^)]*legacyRequired/,
-    );
+    assert.doesNotMatch(source, /@tanstack|legacy-vault-query|legacy-vault-store/);
     assert.doesNotMatch(source, /fetch\(["'`]\/api\/(?:state|changes)/);
   }
 });
@@ -96,6 +73,8 @@ test("production import graph excludes TanStack and retained snapshot/row-delta 
     visited.add(file);
     const source = readFileSync(file, "utf8");
     assert.doesNotMatch(source, /["']@tanstack\//, file);
+    assert.doesNotMatch(source, /useVault\(|syncChanges|updateVault|LegacyVault/, file);
+    assert.doesNotMatch(source, /from ["'][^"']*storybook\//, file);
     assert.doesNotMatch(source, /from ["'][^"']*legacy-vault-(?:store|query)/, file);
     for (const match of source.matchAll(/(?:from\s*|import\s*\(\s*)["'](\.[^"']+)["']/g)) {
       const target = new URL(match[1], url);
@@ -110,4 +89,38 @@ test("production import graph excludes TanStack and retained snapshot/row-delta 
   };
   visit(new URL("../Vault.tsx", import.meta.url));
   assert.ok(visited.size > 100, "guard must traverse lazy screens and overlays");
+});
+
+void test("cutover removes snapshot modules and fixture scaffolding from production", () => {
+  for (const file of [
+    "../store/legacy-vault-store.ts",
+    "../utils/legacy-vault-query.ts",
+    "../utils/template-query.ts",
+    "../utils/legacy-screen.ts",
+    "../utils/vault-query.ts",
+    "./coexistence.test.ts",
+  ])
+    assert.equal(existsSync(new URL(file, import.meta.url)), false, file);
+  const hooks = readFileSync(new URL("../store/hooks.ts", import.meta.url), "utf8");
+  const store = readFileSync(new URL("../store/vault-store.ts", import.meta.url), "utf8");
+  assert.doesNotMatch(hooks, /useVault\b|State\b|Snapshot|Adapter/);
+  assert.doesNotMatch(store, /syncChanges|updateVault|fixtureOnly|_legacyClient/);
+  const manifest = JSON.parse(readFileSync(new URL("../../../package.json", import.meta.url), "utf8")) as {
+    dependencies: Record<string, string>;
+  };
+  assert.ok(!("@tanstack/react-query" in manifest.dependencies));
+});
+
+void test("direct #paints entry remains available without a snapshot", () => {
+  const previous = Object.getOwnPropertyDescriptor(globalThis, "window");
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    value: { location: { hash: "#paints" } },
+  });
+  try {
+    assert.equal(createVaultStore().getState().tab, "paints");
+  } finally {
+    if (previous) Object.defineProperty(globalThis, "window", previous);
+    else Reflect.deleteProperty(globalThis, "window");
+  }
 });

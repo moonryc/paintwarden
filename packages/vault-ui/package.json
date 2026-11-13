@@ -21,7 +21,6 @@
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.4.0",
     "@paint-vault/core": "*",
-    "@tanstack/react-query": "^5.107.1",
     "fflate": "^0.8.3",
     "graphql": "^17.1.0",
     "graphql-sse": "^2.6.3",

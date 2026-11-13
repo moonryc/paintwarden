@@ -2,8 +2,10 @@ import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
-import { useFixtureSnapshotClient, VAULT_QUERY } from "../storybook/fixture-snapshot";
+import { VaultGraphQLProvider } from "../graphql/provider";
 import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
+import { mockApi } from "../storybook/mock-api";
+import { useStoryFixture } from "../storybook/story-fixture";
 import type { State } from "../types";
 
 import { WishlistPage } from "./WishlistPage";
@@ -36,6 +38,17 @@ const largeVault: State = {
 
 const meta = {
   title: "Pages/WishlistPage",
+  decorators: [
+    (Story, context) => {
+      const fixture = useStoryFixture();
+      return mockApi({}, { data: () => structuredClone(fixture.getSnapshot()) })(Story, context);
+    },
+    (Story) => (
+      <VaultGraphQLProvider>
+        <Story />
+      </VaultGraphQLProvider>
+    ),
+  ],
   component: WishlistPage,
   args: { onBrowsePaints: fn() },
   parameters: { vault: largeVault },
@@ -63,22 +76,22 @@ export const LargeGroupedWishlist: Story = {
   },
 };
 
-// Simulate the inventory delta arriving after a purchase, without a server or persistent vault.
+// Publish the updated story inventory after a purchase, without a server or persistent vault.
 function PurchaseScenario() {
-  const client = useFixtureSnapshotClient();
+  const client = useStoryFixture();
   return (
     <>
       <WishlistPage />
       <Button
         onClick={() =>
-          client.setQueryData(VAULT_QUERY, (current) => ({
-            ...current!,
-            paintStates: { ...current!.paintStates, [finalPaint.id]: "OWNED" },
+          client.setState({
+            ...client.getSnapshot(),
+            paintStates: { ...client.getSnapshot().paintStates, [finalPaint.id]: "OWNED" },
             paintRecords: {
-              ...current!.paintRecords,
+              ...client.getSnapshot().paintRecords,
               [finalPaint.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
             },
-          }))
+          })
         }
       >
         Sync final paint as bought

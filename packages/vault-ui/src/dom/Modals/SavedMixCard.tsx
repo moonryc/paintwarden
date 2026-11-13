@@ -1,10 +1,8 @@
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Card, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
-import { resolveSubstitution } from "@paint-vault/core/paint-substitutions";
 
 import { Trash2 } from "../icons";
-import { useVault } from "../store/hooks";
 import type { Paint } from "../types";
 import { paintGradient } from "../utils/paint-gradient";
 import { truncateSx } from "../utils/truncate";
@@ -20,37 +18,8 @@ export type SavedMixProjection = {
 type Actions = { onToggleDefault: () => void; onDelete: () => void };
 
 // Production callers supply only the server projection, never a vault snapshot.
-export function SavedMixCard(props: Actions & ({ projection: SavedMixProjection } | { mix: Mix })) {
-  return "projection" in props ? (
-    <SavedMixCardView
-      {...props.projection}
-      onToggleDefault={props.onToggleDefault}
-      onDelete={props.onDelete}
-    />
-  ) : (
-    <LegacySavedMixCard {...props} />
-  );
-}
-
-// The snapshot adapter is used only by standalone legacy stories.
-function LegacySavedMixCard({ mix, ...actions }: Actions & { mix: Mix }) {
-  const data = useVault();
-  const resolved = resolveSubstitution(data, mix.id);
-  const ingredients = data.paintSubstitutionIngredients
-    .filter((row) => row.substitutionId === mix.id)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
-    .flatMap((row) => {
-      const paint = data.catalog.find((item) => item.id === row.paintId);
-      return paint ? [{ paint, parts: row.parts, sortOrder: row.sortOrder }] : [];
-    });
-  return (
-    <SavedMixCardView
-      mix={mix}
-      ingredients={ingredients}
-      brokenReason={resolved?.broken ? (resolved.brokenReason === "empty" ? "EMPTY" : "CYCLE") : null}
-      {...actions}
-    />
-  );
+export function SavedMixCard({ projection, ...actions }: { projection: SavedMixProjection } & Actions) {
+  return <SavedMixCardView {...projection} {...actions} />;
 }
 
 function SavedMixCardView({

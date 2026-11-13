@@ -37,22 +37,14 @@ function setup(fetch: typeof globalThis.fetch) {
   const controller = new VaultInvalidationController();
   controller.observe({ epoch: "vault", seq: "1" });
   const errors: string[] = [];
-  let syncs = 0;
-  const actions = createSchemeActions(
-    { ...transport, controller },
-    (message, tone) => {
-      if (tone === "error") errors.push(message);
-    },
-    async () => {
-      syncs++;
-    },
-  );
+  const actions = createSchemeActions({ ...transport, controller }, (message, tone) => {
+    if (tone === "error") errors.push(message);
+  });
   return {
     transport,
     controller,
     errors,
     actions,
-    syncs: () => syncs,
     dispose() {
       controller.dispose();
       transport.dispose();
@@ -84,7 +76,6 @@ void test("ordinary scheme create/update/delete use GraphQL and commit attachmen
   );
   assert.deepEqual(sent[0].variables.input, input);
   assert.equal(sent[1].variables.id, "scheme");
-  assert.equal(fixture.syncs(), 3);
   assert.equal(fixture.controller.isFresh({ epoch: "vault", seq: "1" }, ["SCHEMES", "MINIATURES"]), false);
   assert.deepEqual(fixture.controller.getCursor(), { epoch: "vault", seq: "1" });
   fixture.dispose();
@@ -105,10 +96,9 @@ void test("queued scheme saves do not overtake and a failed command does not poi
   await second;
   assert.equal(calls, 2);
   assert.deepEqual(fixture.errors, ["Scheme rejected"]);
-  assert.equal(fixture.syncs(), 1);
   fixture.dispose();
 });
-void test("a late scheme response from an old connection cannot commit or sync", async () => {
+void test("a late scheme response from an old connection cannot commit", async () => {
   let release!: (response: Response) => void;
   const reply = new Promise<Response>((resolve) => {
     release = resolve;
@@ -119,7 +109,6 @@ void test("a late scheme response from an old connection cannot commit or sync",
   fixture.controller.dispose();
   release(payload("updateScheme"));
   await assert.rejects(update, /connection changed/);
-  assert.equal(fixture.syncs(), 0);
   assert.deepEqual(fixture.errors, []);
   fixture.transport.dispose();
 });

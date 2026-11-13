@@ -32,9 +32,9 @@ import { createVaultStore } from "./store/vault-store";
 import { VaultStoreProvider } from "./store/VaultStoreProvider";
 import { theme } from "./theme";
 import { up } from "./theme-tokens";
+import { useAuthStatus, useServerChecks } from "./utils/auth-hooks";
 import { installBaseStyles } from "./utils/base-styles";
 import { truncateSx } from "./utils/truncate";
-import { useServerChecks, useVaultData } from "./utils/vault-query";
 
 // Keep the workbench eager; other screens and overlays load only when opened.
 const ColorSchemesDialog = lazy(() =>
@@ -111,7 +111,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 48 });
 
   const checkServer = useVaultStore((s) => s.checkServer);
-  const { auth, loading, loadError, loadFailed } = useVaultData();
+  const { auth, loading, loadError, loadFailed } = useAuthStatus();
   useServerChecks(checkServer);
   const displayName = auth?.username || FALLBACK_OWNER_NAME;
   const error = authError || loadError;

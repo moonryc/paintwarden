@@ -51,7 +51,11 @@ export const ErrorAndRetry: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(body.getByText("Could not load fixture plugins")).toBeVisible());
     await userEvent.click(body.getByRole("button", { name: "Retry" }));
-    await waitFor(() => expect(args.onOperation).toHaveBeenCalledTimes(2));
+    // Versions are a separate mount-time operation; count only the list retry.
+    const operations = args.onOperation as ReturnType<typeof fn>;
+    await waitFor(() =>
+      expect(operations.mock.calls.filter(([name]) => name === "InstalledSources")).toHaveLength(2),
+    );
   },
 };
 export const DeferredCreateChoices: Story = {

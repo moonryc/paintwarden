@@ -37,8 +37,7 @@ export type LibraryResult = LibraryView & {
   loadMore(): void;
   retry(): void;
 };
-// Only Storybook imports the snapshot adapter that supplies this context. Production never
-// synthesizes a partial State or subscribes to the legacy snapshot for a Library read.
+// Storybook may supply precomputed sample projections. Production uses the paginated Apollo reader.
 export const LibraryFixtureContext = createContext<((filters: LibraryFilters) => LibraryView) | null>(null);
 const emptyView: LibraryView = {
   rows: [],

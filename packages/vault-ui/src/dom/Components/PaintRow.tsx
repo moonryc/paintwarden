@@ -2,17 +2,11 @@ import { useFragment } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Box from "@mui/material/Box";
-import {
-  isPaintAvailable,
-  resolvePaintChoice,
-  selectedSubstitution,
-} from "@paint-vault/core/paint-substitutions";
 import { Fragment, type ReactNode } from "react";
 
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
 import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
-import { useVault, useVaultStore } from "../store/hooks";
-import type { Paint, PaintStateSetter, Requirement, State } from "../types";
+import type { Paint, PaintStateSetter, Requirement } from "../types";
 
 import { DragHandle } from "./DragHandle";
 import { PaintRowActions } from "./PaintRowActions";
@@ -23,7 +17,6 @@ import {
   paintRowHoverSx,
 } from "./PaintRowLabel";
 import { PaintSubstitutionChip } from "./PaintSubstitutionChip";
-import { SchemeChip } from "./SchemeChip";
 import { StatusChip } from "./StatusChip";
 
 // In edit mode the row is padded and its grip sits before the label, separated by a gap.
@@ -39,22 +32,6 @@ export type RecipePaintStatus = {
   activeSubstitution: { name: string; broken: boolean } | null;
 };
 
-// The legacy wrappers alone adapt the snapshot. Projection views never invoke this adapter.
-export function legacyRecipePaintStatus(
-  data: State,
-  miniatureId: string,
-  paintId: string,
-): RecipePaintStatus {
-  const active = selectedSubstitution(data, miniatureId, paintId);
-  return {
-    available: isPaintAvailable(data, data.paintRecords, paintId),
-    wished: data.paintStates[paintId] === "WISHLIST",
-    activeSubstitution: active
-      ? { name: active.name, broken: resolvePaintChoice(data, miniatureId, paintId).broken }
-      : null,
-  };
-}
-
 export type PaintRowProps = {
   paint: Paint;
   requirement: Requirement;
@@ -68,19 +45,6 @@ export type PaintRowProps = {
   // Must be unique in the surrounding SortableContext; defaults to the paint id.
   sortableId?: string;
 };
-
-export function PaintRow(props: PaintRowProps) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  return (
-    <PaintRowView
-      {...props}
-      {...legacyRecipePaintStatus(data, props.miniatureId, props.paint.id)}
-      onSetPaintState={setPaintState}
-      renderSchemeChip={(scheme) => <SchemeChip scheme={scheme} />}
-    />
-  );
-}
 
 export type PaintRowViewProps = PaintRowProps &
   RecipePaintStatus & {

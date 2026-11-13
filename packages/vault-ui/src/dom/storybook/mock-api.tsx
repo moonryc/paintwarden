@@ -19,8 +19,8 @@ import { owns } from "../utils/vault-data";
 import { paints, vault } from "./fixtures";
 import { fixtureLibraryView } from "./library-fixtures";
 import { fixtureMiniatureResponse } from "./miniature-api-fixtures";
-import { fixtureTemplateResponse } from "./template-api-fixtures";
 import { fixturePaintToolsResponse } from "./paint-tools-api-fixtures";
+import { fixtureTemplateResponse } from "./template-api-fixtures";
 
 const auth: AuthStatus = {
   setupRequired: false,

@@ -15,7 +15,6 @@
     "./recipe-converter": "./recipe-converter.ts",
     "./recipe-steps": "./recipe-steps.ts",
     "./text-limits": "./text-limits.ts",
-    "./vault-changes": "./vault-changes.ts",
     "./vault-ids": "./vault-ids.ts",
     "./zip-reader": "./zip-reader.ts"
   },

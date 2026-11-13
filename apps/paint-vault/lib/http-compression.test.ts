@@ -10,7 +10,7 @@ import { compressJsonResponse, JSON_COMPRESSION_THRESHOLD } from "./http-compres
 
 const payload = JSON.stringify({ paints: "blue".repeat(2048) });
 const request = (acceptEncoding?: string, init: RequestInit = {}) =>
-  new Request("http://localhost/api/state", {
+  new Request("http://localhost/api/graphql", {
     ...init,
     headers: { ...(acceptEncoding ? { "accept-encoding": acceptEncoding } : {}), ...init.headers },
   });
@@ -200,12 +200,16 @@ void test("forwards compressed JSON over HTTP with no stale content length", asy
       headers: IncomingHttpHeaders;
       bytes: Buffer;
     }>((resolve, reject) => {
-      get(`http://127.0.0.1:${address.port}/api/state`, { headers: { "accept-encoding": "gzip" } }, (res) => {
-        const chunks: Buffer[] = [];
-        res.on("data", (chunk: Buffer) => chunks.push(chunk));
-        res.on("error", reject);
-        res.on("end", () => resolve({ headers: res.headers, bytes: Buffer.concat(chunks) }));
-      }).on("error", reject);
+      get(
+        `http://127.0.0.1:${address.port}/api/graphql`,
+        { headers: { "accept-encoding": "gzip" } },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on("data", (chunk: Buffer) => chunks.push(chunk));
+          res.on("error", reject);
+          res.on("end", () => resolve({ headers: res.headers, bytes: Buffer.concat(chunks) }));
+        },
+      ).on("error", reject);
     });
     assert.equal(headers["content-encoding"], "gzip");
     assert.equal(headers["content-length"], undefined);

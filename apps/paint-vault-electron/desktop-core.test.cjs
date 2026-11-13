@@ -96,7 +96,7 @@ test("only content-hashed shell code, styles and fonts receive immutable caching
     "/assets/photo-12345678.webp",
     "/assets/photo-12345678.png",
     "/favicon.svg",
-    "/api/state",
+    "/api/auth/status",
     "/api/auth/status",
     "/api/images/photo-12345678.webp",
     "/api/assets/index-12345678.js",

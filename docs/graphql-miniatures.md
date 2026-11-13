@@ -73,7 +73,7 @@ pages, filter propagation, final-item reachability, revision restarts, stale-cur
 retry bounds, missing-cursor failure and cache isolation. Storybook's
 `miniature-fixtures.tsx` is an explicit complete-vault adapter for existing stories;
 it is not imported by the production path. Apollo Home stories use the production
-document, loader and hook with an empty legacy snapshot, testing global counts,
+document, loader and hook with Apollo mocks, testing global counts,
 server search beyond the first page, pagination/final-item keyboard navigation,
 loading and recoverable errors. Server tests own readiness/filter/order/search
 semantics against real temporary SQLite fixtures.

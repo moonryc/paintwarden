@@ -20,7 +20,7 @@ const payload = (field: string, extra: object = {}) =>
     },
   });
 type Request = { operationName: string; variables: Record<string, unknown> };
-function setup(fetch: (request: Request) => Promise<Response>, sync?: () => Promise<void>) {
+function setup(fetch: (request: Request) => Promise<Response>) {
   const requests: Request[] = [];
   const transport = createVaultGraphQLClient({
     authHeaders: () => ({}),
@@ -34,23 +34,14 @@ function setup(fetch: (request: Request) => Promise<Response>, sync?: () => Prom
   const controller = new VaultInvalidationController();
   controller.observe({ epoch: "vault", seq: "1" });
   const errors: string[] = [];
-  let syncs = 0;
-  const commands = createPaintCommands(
-    { ...transport, controller },
-    (message, tone) => {
-      if (tone === "error") errors.push(message);
-    },
-    async () => {
-      syncs++;
-      await sync?.();
-    },
-  );
+  const commands = createPaintCommands({ ...transport, controller }, (message, tone) => {
+    if (tone === "error") errors.push(message);
+  });
   return {
     commands,
     controller,
     requests,
     errors,
-    syncs: () => syncs,
     dispose() {
       controller.dispose();
       transport.dispose();
@@ -76,7 +67,6 @@ void test("custom paint CRUD uses typed GraphQL inputs and invalidates projectio
   assert.deepEqual(fixture.requests[1].variables.input, paint);
   assert.equal(fixture.requests[2].variables.id, "user:paint");
   assert.equal(new Set(fixture.requests.map((request) => request.variables.clientMutationId)).size, 3);
-  assert.equal(fixture.syncs(), 3);
   assert.equal(invalidations.length, 3);
   assert.deepEqual(fixture.controller.getCursor(), { epoch: "vault", seq: "1" });
   fixture.dispose();
@@ -149,21 +139,7 @@ void test("disposed identity discards old command results and never sends queued
   await assert.rejects(first, /connection changed/);
   await assert.rejects(next, /connection changed/);
   assert.equal(fixture.requests.length, 1);
-  assert.equal(fixture.syncs(), 0);
   assert.deepEqual(fixture.errors, []);
-  fixture.dispose();
-});
-
-void test("refresh failure after successful import does not invite duplicate creates", async () => {
-  const fixture = setup(
-    async () => payload("importCustomPaints", { imported: 1, skipped: 0 }),
-    async () => {
-      throw new Error("refresh failed");
-    },
-  );
-  assert.deepEqual(await fixture.commands.importPaints([paint]), { imported: 1, skipped: 0 });
-  assert.equal(fixture.requests.length, 1);
-  assert.match(fixture.errors[0], /Saved; another open screen/);
   fixture.dispose();
 });
 
@@ -178,7 +154,6 @@ void test("failed creates report errors without automatically retrying", async (
     /Create rejected/,
   );
   assert.equal(fixture.requests.length, 1);
-  assert.equal(fixture.syncs(), 0);
   assert.deepEqual(fixture.errors, ["Create rejected"]);
   fixture.dispose();
 });

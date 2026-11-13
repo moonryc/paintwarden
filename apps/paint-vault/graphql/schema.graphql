@@ -140,11 +140,9 @@ type Paint {
   type: String
   discontinued: Boolean!
   isCustom: Boolean!
-  sourceId: ID
   sourceName: String
   sourceLogoUrl: String
   sourceUrl: String
-  sourceLabel: String
   inventory: Inventory
   available: Boolean!
   hasActiveSubstitution: Boolean!
@@ -167,7 +165,6 @@ type PaintView {
   paint: Paint
   substitutions(first: Int! = 30, after: String): SubstitutionConnection!
   usedBy(first: Int! = 30, after: String): PaintUsageConnection!
-  similar(first: Int! = 12): [Paint!]!
 }
 type PaintOptionsView {
   revision: VaultRevision!
@@ -238,9 +235,6 @@ type NavigationView {
 type Readiness {
   total: Int!
   missing: Int!
-  ready: Boolean!
-  missingStock: Int!
-  brokenSubstitution: Int!
 }
 type MiniatureSwatch {
   paintId: ID!
@@ -253,14 +247,12 @@ type Miniature {
   paintingStatus: PaintingStatus!
   imageUrl: String
   createdAt: Float!
-  updatedAt: Float!
   notes: String!
   manufacturer: String!
   faction: String!
   scale: String!
   readiness: Readiness!
   previewSwatches: [MiniatureSwatch!]!
-  previewSwatchesTruncated: Boolean!
 }
 type MiniatureConnection {
   nodes: [Miniature!]!
@@ -612,7 +604,6 @@ type TemplatePaint {
 }
 type TemplatePaintConnection {
   nodes: [TemplatePaint!]!
-  totalCount: Int!
   pageInfo: PageInfo!
 }
 type TemplateScheme {
@@ -621,7 +612,6 @@ type TemplateScheme {
 }
 type TemplateSchemeConnection {
   nodes: [TemplateScheme!]!
-  totalCount: Int!
   pageInfo: PageInfo!
 }
 input TemplatePaintInput {

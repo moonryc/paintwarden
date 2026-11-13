@@ -12,7 +12,7 @@ import {
   SetSubstitutionDefaultDocument,
   UpdateCustomPaintDocument,
 } from "./generated/graphql";
-import type { ReadTicket, Revision, VaultFamily } from "./invalidation";
+import type { CommandTicket, Revision, VaultFamily } from "./invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 
 type SubstitutionInput = {
@@ -32,21 +32,18 @@ type Envelope = { revision: Revision; invalidatedFamilies: readonly VaultFamily[
 
 // Commands only invalidate server-derived projections; never synthesize catalog/mix state.
 // A shared queue also orders default switches affecting different mixes of the same paint.
-export function createPaintCommands(
-  scope: VaultGraphQLScope,
-  notify: Notify,
-  syncLegacy: () => Promise<void>,
-): PaintCommands {
+export function createPaintCommands(scope: VaultGraphQLScope, notify: Notify): PaintCommands {
   let queue: Promise<unknown> = Promise.resolve();
   let serial = 0;
-  const run = <T>(work: (ticket: ReadTicket) => Promise<T>): Promise<T> => {
-    const ticket = scope.controller.capture();
+  const run = <T>(work: (ticket: CommandTicket) => Promise<T>): Promise<T> => {
+    const ticket = scope.controller.captureCommand();
     const result = queue.then(async () => {
-      if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+      if (!scope.controller.isCommandCurrent(ticket))
+        throw new Error("Vault connection changed. Please try again.");
       try {
         return await work(ticket);
       } catch (error) {
-        if (scope.controller.isCurrent(ticket))
+        if (scope.controller.isCommandCurrent(ticket))
           notify(error instanceof Error ? error.message : "Could not save paint", "error");
         throw error;
       }
@@ -54,15 +51,14 @@ export function createPaintCommands(
     queue = result.catch(() => {});
     return result;
   };
-  const committed = async <T extends Envelope>(payload: T | null | undefined, ticket: ReadTicket) => {
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+  const committed = async <T extends Envelope>(payload: T | null | undefined, ticket: CommandTicket) => {
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     if (!payload) throw new Error("Paint command returned no result");
-    scope.controller.committed(payload.revision, payload.invalidatedFamilies);
-    await syncLegacy().catch(() => {
-      if (scope.controller.isCurrent(ticket))
-        notify("Saved; another open screen could not refresh. Please retry its refresh.", "error");
-    });
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
+    if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
+      throw new Error("Vault connection changed. Please try again.");
+    if (!scope.controller.isCommandCurrent(ticket))
+      throw new Error("Vault connection changed. Please try again.");
     return payload;
   };
   const mutationId = () => `paint:${++serial}`;
@@ -149,7 +145,6 @@ export function usePaintCommands(): PaintCommands {
   const scope = useVaultGraphQL();
   const fixture = useContext(PaintCommandsContext);
   const notify = useVaultStore((store) => store.notify);
-  const syncLegacy = useVaultStore((store) => store.syncChanges);
   return useMemo(() => {
     if (!scope) {
       if (fixture) return fixture;
@@ -157,9 +152,9 @@ export function usePaintCommands(): PaintCommands {
     }
     let commands = scopes.get(scope);
     if (!commands) {
-      commands = createPaintCommands(scope, notify, syncLegacy);
+      commands = createPaintCommands(scope, notify);
       scopes.set(scope, commands);
     }
     return commands;
-  }, [scope, fixture, notify, syncLegacy]);
+  }, [scope, fixture, notify]);
 }

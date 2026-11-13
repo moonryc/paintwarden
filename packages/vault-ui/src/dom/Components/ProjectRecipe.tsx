@@ -19,18 +19,15 @@ import Box from "@mui/material/Box";
 import { useState, type ReactNode } from "react";
 
 import { Check, CircleDashed, Layers, Pencil, Plus } from "../icons";
-import { SchemePickerDialog } from "../Modals/SchemePickerDialog";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import type { Miniature, Paint, PaintStateSetter, RecipeStep, Requirement, SchemeOrderEntry } from "../types";
 import { createClientId } from "../utils/client-id";
-import { STEPS, noop } from "../utils/constants";
+import { noop, STEPS } from "../utils/constants";
 import { mergeRecipePaints } from "../utils/recipe-merge";
-import { schemeOrderEntries } from "../utils/scheme-order";
-import { attachedSchemes } from "../utils/vault-data";
 
 import { DashedAddButton } from "./DashedAddButton";
 import { PaintAutocomplete } from "./PaintAutocomplete";
-import { legacyRecipePaintStatus, type RecipePaintStatus } from "./PaintRow";
+import { type RecipePaintStatus } from "./PaintRow";
 import { RecipeSchemeTileView } from "./RecipeSchemeTile";
 import { RecipeStepCardView } from "./RecipeStepCard";
 import { SchemeChipView } from "./SchemeChip";
@@ -88,44 +85,6 @@ export type ProjectRecipeViewProps = ProjectRecipeProps & {
   setAttached: (schemeIds: string[]) => Promise<unknown>;
   renderSchemePicker: (props: RecipeSchemePickerProps) => ReactNode;
 };
-
-export function ProjectRecipe(props: ProjectRecipeProps) {
-  const data = useVault();
-  const api = useVaultStore((s) => s.api);
-  const setRecipe = useVaultStore((s) => s.setRecipe);
-  const setRecipeSteps = useVaultStore((s) => s.setRecipeSteps);
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  const schemes = attachedSchemes(data, props.miniature.id).map((scheme) => {
-    const entries = schemeOrderEntries(data, scheme.id);
-    return {
-      ...scheme,
-      entries,
-      paints: data.catalog,
-      paintCount: entries.filter((entry) => entry.type === "PAINT").length,
-    };
-  });
-  return (
-    <ProjectRecipeView
-      {...props}
-      catalog={data.catalog}
-      explicitSteps={data.recipeSteps
-        .filter((row) => row.miniatureId === props.miniature.id)
-        .map((row) => row.step)}
-      schemes={schemes}
-      paintStatus={(id) => legacyRecipePaintStatus(data, props.miniature.id, id)}
-      onSetPaintState={setPaintState}
-      setRecipe={setRecipe}
-      setRecipeSteps={setRecipeSteps}
-      setAttached={(schemeIds) =>
-        api("/api/miniature-schemes", {
-          method: "PUT",
-          body: JSON.stringify({ miniatureId: props.miniature.id, schemeIds }),
-        })
-      }
-      renderSchemePicker={(pickerProps) => <SchemePickerDialog {...pickerProps} />}
-    />
-  );
-}
 
 export function ProjectRecipeView({
   miniature,
@@ -309,7 +268,6 @@ export function ProjectRecipeView({
       }}
     >
       <PaintAutocomplete
-        paints={catalog}
         excludedIds={idsInStep(step)}
         query={search}
         onQueryChange={setSearch}

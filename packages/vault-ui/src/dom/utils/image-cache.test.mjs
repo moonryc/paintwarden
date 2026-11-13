@@ -17,7 +17,7 @@ test("desktop image namespaces change without mutating persisted URLs and web UR
       "https://example.com/a.webp",
       "data:image/png;base64,abc",
       "blob:preview",
-      "/api/state",
+      "/api/auth/status",
       "/api/miniatures/id/image/other",
       "//other.invalid/api/catalog-source-images/key.webp",
     ]) {

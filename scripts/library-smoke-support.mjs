@@ -233,12 +233,9 @@ export async function runLibraryScenario({
     elapsedMs: metrics.secondClientUpdateMs,
   });
 
-  const legacy = recorder.mark();
+  const home = recorder.mark();
   await page.getByRole("button", { name: "Workbench", exact: true }).first().click();
-  await recorder.waitFor(
-    (entries) => entries.some((entry) => entry.path === "/api/state" && entry.status === 200),
-    legacy,
-  );
+  await recorder.waitFor((entries) => entries.some((entry) => entry.data?.data?.home), home);
   await page.getByText("What can you paint?", { exact: true }).waitFor({ timeout: 30000 });
   await page
     .getByRole("button", { name: /^Paints(?:\s|$)/ })
@@ -250,7 +247,7 @@ export async function runLibraryScenario({
     ({ label }) => document.querySelector(`input[aria-label="${CSS.escape(label)}"]`)?.value === "7",
     { label: inputLabel },
   );
-  pass("Legacy snapshot navigation and return retain current stock", { paintId: paint.id, quantity: 7 });
+  pass("Apollo Home navigation and return retain current stock", { paintId: paint.id, quantity: 7 });
   assert.deepEqual(recorder.errors, [], "No unexpected renderer errors");
   pass("No renderer page errors", []);
   await page.screenshot({ path: path.join(evidenceDir, `${label}-library.png`) });

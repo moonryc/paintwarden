@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
-import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
 import { isPaintOwned, type PaintState, type StockLevel } from "@paint-vault/core/paint-state";
 import {
   createPaintChoiceResolver,
@@ -390,12 +389,6 @@ export function paintSubstitutions(view: PaintViewRead, args: { first: number; a
 }
 export function paintUsages(view: PaintViewRead, args: { first: number; after?: string | null }) {
   return paginate(view.usages, args, view.revision, fingerprint(["usedBy", view.paint?.id]));
-}
-export function similarPaints(view: PaintViewRead, first: number) {
-  validatePage({ first }, 30);
-  return view.paint
-    ? (rankPaintsByColor(view.paint, view.snapshot.paints) ?? []).slice(0, first).map((r) => r.paint)
-    : [];
 }
 export function substitutionIngredients(
   sub: SubstitutionRead,

@@ -11,8 +11,8 @@ import {
 import { isStaleLibraryCursor } from "./library-loader";
 import {
   appendMiniaturePage,
-  miniatureListEnvelope,
   MINIATURE_PAGE_SIZE,
+  miniatureListEnvelope,
   readMiniaturePage,
   readMiniatureWindow,
   sameMiniatureRevision,
@@ -54,7 +54,7 @@ export type MiniatureListResult = MiniatureListView & {
   loadMore(): void;
   retry(): void;
 };
-// Only Storybook supplies a complete-vault compatibility adapter. No production snapshot reads.
+// Storybook may supply precomputed sample projections. Production uses the paginated Apollo reader.
 export const MiniatureFixtureContext = createContext<
   ((filters: MiniatureListFilters) => MiniatureListView) | null
 >(null);

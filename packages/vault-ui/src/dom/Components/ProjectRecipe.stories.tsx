@@ -8,9 +8,15 @@ import type { Paint } from "../types";
 import { schemeOrderEntries } from "../utils/scheme-order";
 import { attachedSchemes, resolvedPaintIds } from "../utils/vault-data";
 
+import {
+  isPaintAvailable,
+  resolvePaintChoice,
+  selectedSubstitution,
+} from "@paint-vault/core/paint-substitutions";
+import { VaultGraphQLProvider } from "../graphql/provider";
+import { mockApi } from "../storybook/mock-api";
 import { Modal } from "./Modal";
-import { legacyRecipePaintStatus } from "./PaintRow";
-import { ProjectRecipe, ProjectRecipeView } from "./ProjectRecipe";
+import { ProjectRecipeView } from "./ProjectRecipe";
 
 const knight = miniatures.knight;
 const required = resolvedPaintIds(vault, knight.id)
@@ -39,7 +45,16 @@ const meta = {
     catalog: vault.catalog,
     explicitSteps: [],
     schemes,
-    paintStatus: (id) => legacyRecipePaintStatus(vault, knight.id, id),
+    paintStatus: (id) => ({
+      available: isPaintAvailable(vault, vault.paintRecords, id),
+      wished: vault.paintStates[id] === "WISHLIST",
+      activeSubstitution: selectedSubstitution(vault, knight.id, id)
+        ? {
+            name: selectedSubstitution(vault, knight.id, id)!.name,
+            broken: resolvePaintChoice(vault, knight.id, id).broken,
+          }
+        : null,
+    }),
     onSetPaintState: fn(),
     setRecipe: fn(),
     setRecipeSteps: fn(),
@@ -65,7 +80,15 @@ const meta = {
     required: { control: false },
     requirementRows: { control: false },
   },
-  decorators: [column(720)],
+  decorators: [
+    column(720),
+    mockApi(),
+    (Story) => (
+      <VaultGraphQLProvider>
+        <Story />
+      </VaultGraphQLProvider>
+    ),
+  ],
 } satisfies Meta<typeof ProjectRecipeView>;
 
 export default meta;
@@ -160,5 +183,3 @@ export const KeyboardReorder: Story = {
     );
   },
 };
-
-export const LegacyWrapper: Story = { render: (args) => <ProjectRecipe {...args} /> };

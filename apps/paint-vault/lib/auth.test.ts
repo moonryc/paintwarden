@@ -92,7 +92,7 @@ test("setup, access control, sign-in, and password changes", async () => {
     assert.equal(authorizeVault(new Request(url)), null);
     // While sign-in is off, a page that points its own domain at the server (DNS rebinding) is
     // refused: only addresses, localhost names and listed names reach the vault.
-    const at = (host: string) => new Request(`http://${host}:3000/api/state`);
+    const at = (host: string) => new Request(`http://${host}:3000/api/graphql`);
     assert.equal(hostRefused(at("192.168.1.5")), null);
     assert.equal(hostRefused(at("[fd00::5]")), null);
     assert.equal(hostRefused(at("paint.localhost")), null);

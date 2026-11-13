@@ -60,7 +60,7 @@ Saved non-default recipes are independently evaluated and never change availabil
 Parts remain ratios, not bottle consumption.
 
 `paint(id)` returns nullable paint plus revision, paged saved substitutions,
-paged `usedBy` miniatures, and optional bounded similar paints. `usedBy` means
+paged `usedBy` miniatures. Similar-paint tools use the separate `paintRanking` query. `usedBy` means
 original manual or attached-scheme target paints, deduplicated per miniature;
 it does **not** mean transitive substitution ingredients. Unknown IDs yield an
 empty detail envelope. `substitution(id)` supports independent ingredient paging.
@@ -75,11 +75,11 @@ cannot suppress eligible typo suggestions. Exclusion count has no new product ca
 the existing 128 KiB JSON body / 32 KiB operation-text budgets bound input work,
 and every individual ID is at most 256 characters. `first` is capped at 30. Paint/substitution IDs, search/filter strings and clientMutationId
 are capped at 256 UTF-16 code units; cursors at 8192; epochs at 128. Nested
-substitution pages cap at 30, ingredient/usage pages at 100 and similar paints at 30. Schema-aware expanded cost multiplies nested page bounds; combined requests
+substitution pages cap at 30 and ingredient/usage pages at 100. Schema-aware expanded cost multiplies nested page bounds; combined requests
 must still fit the 10,000 cost budget (the shipped detail document requests ten
 recipes × twenty ingredients, not thirty × one hundred).
 
-## Stock commands and coexistence
+## Stock commands and invalidation
 
 `setPaintStock(paintId, state, stockLevel, quantity, clientMutationId)` returns the
 post-write paint, same-transaction revision, echoed clientMutationId and affected
@@ -92,9 +92,9 @@ are rejected by coercion. Negative GraphQL quantities are rejected before SQL.
 The optional clientMutationId is an echo, not an idempotency or concurrency token.
 Last save wins; clients serialize rapid edits and use revision envelopes.
 
-Existing SQLite triggers remain the sole durable change source: GraphQL writes
-appear in legacy `/api/changes` row materialization and snapshots, while REST,
-source, restore and other committed writes invalidate GraphQL revisions. Unknown
+Existing SQLite triggers remain the sole durable change source: GraphQL, REST,
+source, restore and other committed writes invalidate GraphQL revisions.
+The row-materializing REST changes endpoint and snapshot are removed. Unknown
 write targets return typed `NOT_FOUND` (REST 404), improving the old FK 500; clears
 of unknown IDs retain the harmless no-op behavior. `vaultRevision` is a cheap focus
 check, and `vaultInvalidation(epoch,since)` shares the SSE family catch-up path.
@@ -119,7 +119,7 @@ Focused checks: `npm run test:graphql --workspace paint-vault`, shared stock rou
 tests, `npm run codegen:check`, and app typecheck. The Library domain suite covers
 counts/filter/search/source parity, substitutions including empty/cycle/direct-self,
 ID paging and cursor invalidation; HTTP tests verify stock writes, decimal-string
-revisions, REST row-log coexistence, route protection and pre-SQL budget rejection.
+revisions, durable trigger-log invalidation, route protection and pre-SQL budget rejection.
 Generated production operations themselves are checked against the operation
 budget. Large/stress cold/warm measurements are separate from semantic correctness.
 
@@ -127,12 +127,9 @@ budget. Large/stress cold/warm measurements are separate from semantic correctne
 
 Apollo is the default Library path; there is no debug flag or debug panel. `#paints`
 opens Library directly in both HTTP and `paintvault://app`, without `/api/state`.
-The default entry remains Home; navigation is unchanged. Since Phase 3, Home,
-Miniatures and the project drawer/editor also use bounded Apollo projections, so
-default entry and those workflows do not load `/api/state`. The legacy snapshot
-loads lazily only for unmigrated Wishlist, Schemes, Templates, Settings and paint
-tools, or source/scheme data overlays. Its format and size are intentionally
-unchanged until later migration phases. See `graphql-miniatures.md`.
+The default entry remains Home; navigation is unchanged. All screens and overlays
+now use bounded Apollo projections. The snapshot endpoint/cache/row merges and
+TanStack dependency are removed. See `data-loading.md` and `graphql-miniatures.md`.
 
 The typed invalidation controller maps trigger-log events to Library, paint detail,
 options, Home, miniatures, Wishlist, schemes, templates and sources. Source metadata
@@ -146,7 +143,7 @@ checks reject late results. Retired-epoch events cannot reset back to an old ser
 The SSE link catches up from its last delivered cursor on reconnect; visibility,
 focus, online and visible 30-second checks run the same catch-up read, with access
 checks, and restart an exhausted stream. Account/server scope changes dispose
-requests and both sensitive caches.
+requests and the sensitive Apollo cache.
 
 Library refreshes all loaded 48-row pages atomically after edits, preserving scroll
 geometry. It has no five-page cap. Pagination uses the immutable, revision-scoped
@@ -156,13 +153,10 @@ late handoff never steals focus after clicking away. Detail recipes, ingredient
 lists and used-by references likewise expose subsequent pages. Search uses the
 same core fuzzy index/scorer on the server, rather than transferring the full
 catalog and another worker copy. Picker exclusions apply before ranking, as before.
-The original worker remains for unmigrated screens only.
+Production catalog search does not transfer a second full-catalog worker copy.
 
 Stock edits are serialized per paint, with per-edit Apollo optimistic layers for
 raw inventory and guarded rollback. Last save wins; Undo is retained. Global counts
 and substitution availability always come from accepted server projections, not
 client guesses over loaded pages. GraphQL stock writes and REST edits feed the same
-SQLite trigger log. SSE also merges row deltas into a legacy snapshot **only if it
-already exists**; legacy saves cannot initialize a snapshot on a Library-only entry.
-Storybook's complete-vault adapters are isolated fixture code; actual Apollo stories
-also test empty legacy snapshots, pagination, loading/error and broken recipes.
+SQLite trigger log. SSE invalidates complete loaded windows; no row-delta client/cache remains.

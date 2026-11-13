@@ -1,8 +1,7 @@
 import { useState } from "react";
 
 import { usePaintCommands } from "../graphql/paint-actions";
-import { useVaultGraphQL } from "../graphql/provider";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import { noop } from "../utils/constants";
 
@@ -15,40 +14,23 @@ type OverlayProps = {
   openMini?(id: string): void;
 };
 
-export function PaintDetailsOverlay(props: OverlayProps) {
-  const graphql = useVaultGraphQL();
-  return graphql ? <PaintDetailsOverlayView {...props} apollo /> : <LegacyPaintDetailsOverlay {...props} />;
-}
-
-function LegacyPaintDetailsOverlay(props: OverlayProps) {
-  const paint = useVault((data) => data.catalog.find((item) => item.id === props.paintId) ?? null);
-  return <PaintDetailsOverlayView {...props} legacyPaint={paint} />;
-}
-
-function PaintDetailsOverlayView({
-  paintId,
-  onClose,
-  openMini: openMiniOverride,
-  apollo,
-  legacyPaint,
-}: OverlayProps & { apollo?: boolean; legacyPaint?: Paint | null }) {
+export function PaintDetailsOverlay({ paintId, onClose, openMini: openMiniOverride }: OverlayProps) {
   const commands = usePaintCommands();
   const notify = useVaultStore((s) => s.notify);
   const storeOpenMini = useVaultStore((s) => s.openMini);
   const openMini = openMiniOverride ?? storeOpenMini;
   const [editingPaint, setEditingPaint] = useState<Paint | null>(null);
-  const paint =
-    apollo && paintId
-      ? {
-          id: paintId,
-          name: "Paint details",
-          brand: "",
-          range: "",
-          colorHex: null,
-          sourceUrl: null,
-          isCustom: false,
-        }
-      : legacyPaint;
+  const paint = paintId
+    ? {
+        id: paintId,
+        name: "Paint details",
+        brand: "",
+        range: "",
+        colorHex: null,
+        sourceUrl: null,
+        isCustom: false,
+      }
+    : null;
   return (
     <>
       {paint && (

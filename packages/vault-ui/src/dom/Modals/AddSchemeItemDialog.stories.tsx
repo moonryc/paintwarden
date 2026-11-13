@@ -1,23 +1,31 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 
-import { paintList, paints } from "../storybook/fixtures";
+import { VaultGraphQLProvider } from "../graphql/provider";
+import { paints } from "../storybook/fixtures";
+import { mockApi } from "../storybook/mock-api";
 
 import { AddSchemeItemDialog } from "./AddSchemeItemDialog";
 
 const meta = {
   title: "Dialogs/AddSchemeItemDialog",
+  decorators: [
+    mockApi(),
+    (Story) => (
+      <VaultGraphQLProvider>
+        <Story />
+      </VaultGraphQLProvider>
+    ),
+  ],
   component: AddSchemeItemDialog,
   args: {
     kind: "STEP",
-    paints: paintList,
     excludedIds: [paints.crimson.id],
     onAddDivider: fn(),
     onAddImage: fn(),
     onAddPaint: fn(),
     onClose: fn(),
   },
-  argTypes: { paints: { control: false } },
   parameters: { docs: { story: { inline: false, iframeHeight: 420 } } },
 } satisfies Meta<typeof AddSchemeItemDialog>;
 

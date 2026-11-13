@@ -5,18 +5,12 @@ import type { ReactNode } from "react";
 import { X } from "../icons";
 import { truncateSx } from "../utils/truncate";
 
-import { SchemeSwatch } from "./SchemeSwatch";
-
 // Compact scheme label with its swatch, shared by paint steps and the scheme picker.
 type SchemeChipProps = {
   scheme: { id: string; name: string };
   size?: "sm" | "md";
   onRemove?: () => void;
 };
-
-export function SchemeChip(props: SchemeChipProps) {
-  return <SchemeChipView {...props} swatch={<SchemeSwatch schemeId={props.scheme.id} size="xs" />} />;
-}
 
 export function SchemeChipView({
   scheme,

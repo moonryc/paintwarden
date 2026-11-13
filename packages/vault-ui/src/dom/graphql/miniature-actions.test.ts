@@ -39,7 +39,6 @@ function setup(fetch: typeof globalThis.fetch) {
   controller.observe({ epoch: "vault", seq: "1" });
   const errors: string[] = [];
   const files: string[] = [];
-  let syncs = 0;
   const actions = createMiniatureActions(
     { ...transport, controller },
     async (path) => {
@@ -49,9 +48,6 @@ function setup(fetch: typeof globalThis.fetch) {
     (message, tone) => {
       if (tone === "error") errors.push(message);
     },
-    async () => {
-      syncs++;
-    },
   );
   return {
     transport,
@@ -59,7 +55,6 @@ function setup(fetch: typeof globalThis.fetch) {
     actions,
     errors,
     files,
-    syncs: () => syncs,
     dispose() {
       controller.dispose();
       transport.dispose();
@@ -127,7 +122,6 @@ void test("stage/full-detail updates preserve editable fields and omit output/im
   } as MiniatureFormValues);
   assert.deepEqual(sent?.input, editable);
   assert.equal(fixture.files.length, 0, "stage does not delete or upload existing photo");
-  assert.equal(fixture.syncs(), 1);
   fixture.dispose();
 });
 
@@ -146,7 +140,6 @@ void test("create returns committed id and does not duplicate a record when imag
     (message, tone) => {
       if (tone === "error") errors.push(message);
     },
-    async () => {},
   );
   const id = await actions.create({ ...values, removeImage: true });
   assert.equal(id, "created");
@@ -167,7 +160,6 @@ void test("disposed identity ignores old mutation result and cannot send image w
   release(payload("updateMiniature"));
   await assert.rejects(update, /connection changed/);
   assert.deepEqual(fixture.files, []);
-  assert.equal(fixture.syncs(), 0);
   assert.deepEqual(fixture.errors, []);
   fixture.transport.dispose();
 });
@@ -185,6 +177,5 @@ void test("failed save reports error and does not poison following queued save",
   await next;
   assert.equal(calls, 2);
   assert.deepEqual(fixture.errors, ["recipe rejected"]);
-  assert.equal(fixture.syncs(), 1);
   fixture.dispose();
 });

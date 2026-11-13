@@ -161,6 +161,8 @@ npm run build        # Build the app and product website through Nx
 npm run start        # Serve the built app frontend and API
 npm run db:generate  # Generate a migration after changing apps/paint-vault/db/schema.ts
 npm run storybook    # Browse the shared UI components at http://localhost:6006
+npm run codegen      # Regenerate typed GraphQL documents and resolver types
+npm run codegen:check # Reject stale generated output
 ```
 
 ### Storybook
@@ -294,9 +296,21 @@ bundles no catalog of its own.
 - `packages/vault-ui/` contains the shared React and MUI interface rendered on web and in Electron.
 - `packages/paint-core/` contains reusable paint rules and search logic.
 - React, TypeScript, MUI, and MUI icons provide the shared interface.
+- Apollo Client and generated typed documents load bounded screen projections from GraphQL Yoga.
+- Yoga runs inside the existing Nest router; subscriptions use SSE and the durable SQLite change log.
+- Zustand holds navigation/actions/credentials, not a second vault data cache.
 - Drizzle ORM and `better-sqlite3` provide local database access.
 - The Node.js filesystem stores uploaded images under the configured data path.
 - Docker Compose packages the app for a persistent, single-owner homelab setup.
+
+All screens use GraphQL; `/api/state` and row-delta `/api/changes` are removed.
+Auth, files, plugins and streamed backup/restore remain REST. Home remains the default;
+`#paints` opens Library directly. Local desktop remains offline-capable; remote mode
+does not provide an offline replica or queued writes.
+
+Developer references: [architecture](docs/architecture.md), [screen data loading](docs/data-loading.md),
+[adding queries/fragments and codegen](docs/graphql-development.md), and
+[final migration benchmarks](docs/benchmarks/graphql-final.md).
 
 ## Troubleshooting
 

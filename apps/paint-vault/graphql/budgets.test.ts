@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 
 import {
@@ -9,6 +9,11 @@ import {
   isInputObjectType,
   isListType,
   isNonNullType,
+  isObjectType,
+  parse,
+  TypeInfo,
+  visit,
+  visitWithTypeInfo,
   typeFromAST,
   type GraphQLType,
 } from "graphql";
@@ -419,11 +424,14 @@ test("all generated screen documents fit their declared bounded defaults", async
   }
 });
 
+test("removed migration-only similar field is rejected before resolvers", () => {
+  assert.throws(() => check('{paint(id:"p"){similar(first:1){id}}}'), /Cannot query field "similar"/);
+});
+
 test("nested connection and picker argument budgets reject work before resolvers", () => {
   for (const query of [
     '{paint(id:"p"){substitutions(first:31){nodes{id}}}}',
     '{paint(id:"p"){usedBy(first:101){nodes{id}}}}',
-    '{paint(id:"p"){similar(first:31){id}}}',
     '{substitution(id:"s"){substitution{ingredients(first:101){nodes{parts}}}}}',
     "{paintOptions(first:31){items{id}}}",
   ])
@@ -470,4 +478,31 @@ test("miniature nested mutation inputs and preview expansion remain bounded", ()
       ),
     /cost limit/,
   );
+});
+
+// A public field must have a real production operation, not just generated typings
+// or tests that keep a migration-only endpoint alive.
+test("every exposed projection field has a production screen document consumer", () => {
+  const directory = new URL("../../../packages/vault-ui/src/dom/graphql/", import.meta.url);
+  const documents = readdirSync(directory)
+    .filter((name) => name.endsWith(".graphql"))
+    .map((name) => readFileSync(new URL(name, directory), "utf8"))
+    .join("\n");
+  const info = new TypeInfo(schema);
+  const used = new Set<string>();
+  visit(
+    parse(documents),
+    visitWithTypeInfo(info, {
+      Field(node) {
+        used.add(`${info.getParentType()?.name}.${node.name.value}`);
+      },
+    }),
+  );
+  const unused: string[] = [];
+  for (const type of Object.values(schema.getTypeMap())) {
+    if (!isObjectType(type) || type.name.startsWith("__")) continue;
+    for (const field of Object.keys(type.getFields()))
+      if (!used.has(`${type.name}.${field}`)) unused.push(`${type.name}.${field}`);
+  }
+  assert.deepEqual(unused, []);
 });

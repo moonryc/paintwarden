@@ -24,7 +24,6 @@ const TITLES: Record<SchemeItemKind, string> = {
 export function AddSchemeItemDialog({
   kind,
   stepLabel,
-  paints = [],
   excludedIds,
   onAddDivider,
   onAddImage,
@@ -34,8 +33,6 @@ export function AddSchemeItemDialog({
   kind: SchemeItemKind;
   // The step a new paint goes into.
   stepLabel?: string;
-  // Legacy story adapter only; production paint options come from Apollo.
-  paints?: Paint[];
   // Paints already in the scheme.
   excludedIds: string[];
   onAddDivider(label: string, tone: DividerTone): void;
@@ -95,7 +92,6 @@ export function AddSchemeItemDialog({
       )}
       {kind === "PAINT" && (
         <PaintAutocomplete
-          paints={paints}
           excludedIds={excludedIds}
           query={search}
           onQueryChange={setSearch}

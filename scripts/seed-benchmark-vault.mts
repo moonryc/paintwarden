@@ -1,11 +1,11 @@
-// Run from apps/paint-vault: node --import tsx ../../scripts/benchmark-startup.mts
+// Run from apps/paint-vault: node --import tsx ../../scripts/seed-benchmark-vault.mts
+// Exact Phase 0 fixture rows; no legacy endpoint or snapshot implementation needed.
 // Always creates its own synthetic vault. Never opens DATA_DIR/DATABASE_PATH supplied by the caller.
 import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
-import { gzipSync } from "node:zlib";
 
 const profile = process.argv[2] ?? "large";
 assert(["large", "stress"].includes(profile), "Expected large or stress profile");
@@ -19,8 +19,6 @@ process.env.DATA_DIR = dataDir;
 delete process.env.DATABASE_PATH;
 process.env.NODE_ENV = "test";
 const { getSqlite } = await import("../apps/paint-vault/db/index.ts");
-const { vaultSnapshot } = await import("../apps/paint-vault/lib/vault-state.ts");
-const { GET: templateSummaries } = await import("../apps/paint-vault/app/api/miniature-templates/route.ts");
 const db = getSqlite();
 const id = (n: number) => `${n.toString(16).padStart(8, "0")}-0000-4000-8000-000000000000`;
 const paintId = (n: number) => (n % 25 === 0 ? `user:${id(n)}` : id(n));
@@ -108,59 +106,7 @@ db.transaction(() => {
   }
 })();
 const seedMs = performance.now() - seedStart;
-let sqlExecutions = 0;
-let prepares = 0;
-const prepare = db.prepare.bind(db);
-db.prepare = ((sql: string) => {
-  prepares++;
-  const statement = prepare(sql);
-  // Wrap the statement itself: Drizzle calls .raw(true).all(), so a Proxy that
-  // returns the underlying statement from .raw() would silently miss executions.
-  for (const method of ["get", "all", "run", "iterate"] as const) {
-    const execute = statement[method];
-    Object.defineProperty(statement, method, {
-      value: (...args: unknown[]) => {
-        sqlExecutions++;
-        return Reflect.apply(execute, statement, args);
-      },
-    });
-  }
-  return statement;
-}) as typeof db.prepare;
-const median = (values: number[]) => [...values].sort((a, b) => a - b)[Math.floor(values.length / 2)];
-async function measure(fn: () => Promise<string>) {
-  const once = async () => {
-    prepares = 0;
-    sqlExecutions = 0;
-    const start = performance.now();
-    const text = await fn();
-    return { ms: performance.now() - start, prepares, sqlExecutions, text };
-  };
-  const first = await once();
-  await once();
-  const samples = [];
-  for (let i = 0; i < 11; i++) samples.push(await once());
-  const parseMs = [];
-  for (let i = 0; i < 11; i++) {
-    const start = performance.now();
-    JSON.parse(first.text);
-    parseMs.push(performance.now() - start);
-  }
-  return {
-    firstReadMs: first.ms,
-    medianMs: median(samples.map((s) => s.ms)),
-    minMs: Math.min(...samples.map((s) => s.ms)),
-    maxMs: Math.max(...samples.map((s) => s.ms)),
-    preparedStatements: median(samples.map((s) => s.prepares)),
-    sqlExecutions: median(samples.map((s) => s.sqlExecutions)),
-    jsonBytes: Buffer.byteLength(first.text),
-    gzipBytes: gzipSync(first.text).length,
-    parseMedianMs: median(parseMs),
-  };
-}
 try {
-  const snapshot = await measure(async () => JSON.stringify(vaultSnapshot()));
-  const templates = await measure(async () => (await templateSummaries()).text());
   const report = {
     measuredAt: new Date().toISOString(),
     node: process.version,
@@ -169,13 +115,9 @@ try {
     dataDir,
     seedMs,
     method:
-      "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
-    snapshot,
-    templateSummaries: templates,
-    snapshotStartupDataBytes: snapshot.jsonBytes,
-    snapshotPlusTemplateSummariesBytes: snapshot.jsonBytes + templates.jsonBytes,
+      "Exact Phase 0 synthetic seed rows, extracted unchanged. Creates a new temporary vault; does not measure a removed snapshot endpoint. Historical Phase 0 sizes/times remain in docs/benchmarks/graphql-baseline-*.json.",
   };
-  const output = process.env.BENCH_REPORT ?? path.join(dataDir, "results.json");
+  const output = process.env.BENCH_REPORT ?? path.join(dataDir, "fixture.json");
   writeFileSync(output, JSON.stringify(report, null, 2) + "\n");
   console.log(JSON.stringify(report, null, 2));
 } finally {

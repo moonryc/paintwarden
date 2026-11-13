@@ -3,9 +3,7 @@ import { useState } from "react";
 
 import { Heart } from "../icons";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
-import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint, PaintStatus } from "../types";
-import { projectPaintIssues } from "../utils/vault-data";
 
 import { PaintChecklistItem } from "./PaintChecklistItem";
 import { PaintRowActions } from "./PaintRowActions";
@@ -25,20 +23,6 @@ export type ProjectPaintSummaryViewProps = ProjectPaintSummaryProps & {
   paintStates: Record<string, PaintStatus>;
   onSetPaintState: (id: string, state: PaintStatus | null) => void;
 };
-
-// Legacy snapshot adapter; migrated callers provide their projection to the view.
-export function ProjectPaintSummary(props: ProjectPaintSummaryProps) {
-  const data = useVault();
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  return (
-    <ProjectPaintSummaryView
-      {...props}
-      issues={props.miniatureId ? projectPaintIssues(data, props.miniatureId) : null}
-      paintStates={data.paintStates}
-      onSetPaintState={setPaintState}
-    />
-  );
-}
 
 // Keep the paint shortfall visible while the detailed list is collapsed.
 export function ProjectPaintSummaryView({
