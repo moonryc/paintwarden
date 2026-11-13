@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
@@ -178,3 +179,53 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
     }
   },
 };
+
+const longCatalog = catalog.map((paint) => ({
+  ...paint,
+  name: `${paint.name} — ${"LongUnbrokenColorName".repeat(8)}`,
+  brand: "A very long paint manufacturer name",
+  range: "A very long paint range name with many words",
+  sourceName: "A very long catalog plugin name",
+}));
+const longNameVault: State = { ...vault, catalog: longCatalog };
+
+function libraryAtWidth(width: number): Story {
+  return {
+    parameters: { vault: longNameVault },
+    render: (args) => (
+      <Box sx={{ width: `${width}px`, maxWidth: "100%" }}>
+        <LibraryApolloFixture>
+          <PaintLibrary {...args} />
+        </LibraryApolloFixture>
+      </Box>
+    ),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement);
+      const list = await canvas.findByRole("list", { name: "Paint library" });
+      const loaded = () => Number(list.getAttribute("data-loaded-count"));
+      const noOverflow = () => {
+        expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+        expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth);
+      };
+      try {
+        noOverflow();
+        while (loaded() < longCatalog.length) {
+          const before = loaded();
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          await waitFor(() => expect(loaded()).toBeGreaterThan(before));
+        }
+        window.scrollTo(0, document.documentElement.scrollHeight);
+        await expect(await canvas.findByText(longCatalog.at(-1)!.name)).toBeVisible();
+        expect(list.querySelectorAll("[data-paint-index]").length).toBeLessThan(longCatalog.length);
+        noOverflow();
+      } finally {
+        window.scrollTo(0, 0);
+      }
+    },
+  };
+}
+
+export const LongNamesDesktop: Story = libraryAtWidth(1440);
+export const LongNamesLaptop: Story = libraryAtWidth(1024);
+export const LongNamesTablet: Story = libraryAtWidth(768);
+export const LongNamesPhone: Story = libraryAtWidth(390);

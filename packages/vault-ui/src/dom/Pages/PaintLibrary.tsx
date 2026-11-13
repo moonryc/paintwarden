@@ -15,6 +15,7 @@ import { listResetSx } from "../utils/element-resets";
 import { buzz } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { libraryInventoryFilter } from "../utils/semantic-contract";
+import { visuallyHiddenSx } from "../utils/visually-hidden";
 
 export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
   const filter = useVaultStore((s) => s.paintFilter);
@@ -323,17 +324,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           </Button>
         </Box>
       )}
-      <Box
-        role="status"
-        sx={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          overflow: "hidden",
-          clipPath: "inset(50%)",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <Box role="status" sx={visuallyHiddenSx}>
         {refreshing ? "Updating paints…" : ""}
       </Box>
       {library.catalogCount > 0 && (

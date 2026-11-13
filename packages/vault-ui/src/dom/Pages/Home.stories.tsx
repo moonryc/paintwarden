@@ -269,3 +269,35 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
     }
   },
 };
+
+// Deliberately use the asynchronous Apollo path: the shelf is absent during loading,
+// but its item count is one (the add tile) both before and after the empty response.
+const emptyShelf: Story = {
+  parameters: { vault: emptyState },
+  render: (args) => (
+    <MiniatureApolloFixture data={emptyState} pageDelay={100}>
+      <Home {...args} />
+    </MiniatureApolloFixture>
+  ),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const shelf = await canvas.findByRole("list", { name: "Miniature shelf" });
+    const add = canvas.getByRole("button", { name: /Add miniature/ });
+    await waitFor(() => {
+      const width = shelf.clientWidth;
+      const columns = width >= 1100 ? 5 : width >= 840 ? 4 : width >= 600 ? 3 : 2;
+      const gap = width >= 600 ? 16 : 12;
+      const tileWidth = (width - (columns - 1) * gap) / columns;
+      expect(add.getBoundingClientRect().width).toBeCloseTo(tileWidth, 0);
+      expect(add.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
+      expect(shelf.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
+    });
+    await expect(shelf).toHaveAttribute("data-loaded-count", "0");
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await userEvent.click(add);
+    await expect(args.onAdd).toHaveBeenCalled();
+  },
+};
+
+export const EmptyWorkbench: Story = { ...emptyShelf };
+export const EmptyMiniatures: Story = { ...emptyShelf, args: { view: "miniatures" } };

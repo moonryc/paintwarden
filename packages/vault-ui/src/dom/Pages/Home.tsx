@@ -46,6 +46,9 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
   const pct = list.owned ? (ready / list.owned) * 100 : 0;
   const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
   const hasQuery = Boolean(q);
+  // The add tile is still one item while an empty vault loads. Track whether the
+  // shelf actually exists, not just its item count, so its first mount is measured.
+  const hasShelf = visibleProjects.length > 0 || (!q && !loading && !list.error);
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
     gridTop: 0,
@@ -102,7 +105,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, [shelfItems.length, hasQuery]);
+  }, [shelfItems.length, hasQuery, hasShelf]);
   const shelfColumns =
     shelfViewport.width >= 1100 ? 5 : shelfViewport.width >= 840 ? 4 : shelfViewport.width >= 600 ? 3 : 2;
   const shelfGap = shelfViewport.width >= 600 ? 16 : 12;
@@ -482,7 +485,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             {loading ? "Loading miniatures…" : "Updating miniatures…"}
           </Box>
         )}
-        {visibleProjects.length || (!q && !loading && !list.error) ? (
+        {hasShelf ? (
           <Box
             component="div"
             ref={shelfRef}
