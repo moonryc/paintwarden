@@ -1,12 +1,23 @@
 // A stand-in for the Paint Vault server, so the whole app can render in Storybook with the
 // sample vault. Reads return fixture data; writes succeed without changing anything.
+import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import {
+  defaultSubstitution,
+  isPaintAvailable,
+  resolvePaintChoice,
+  resolveSubstitution,
+} from "@paint-vault/core/paint-substitutions";
 import type { Decorator } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
-import type { AuthStatus, MiniatureTemplateCatalog } from "../types";
+import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, type LibraryFilters } from "../graphql/library-hooks";
+import type { AuthStatus, MiniatureTemplateCatalog, Paint, State, StockLevel } from "../types";
+import { usedByMiniatures } from "../utils/semantic-contract";
+import { owns } from "../utils/vault-data";
 
 import { paints, vault } from "./fixtures";
+import { fixtureLibraryView } from "./library-fixtures";
 
 const auth: AuthStatus = {
   setupRequired: false,
@@ -75,6 +86,150 @@ function respond(url: URL, method: string): unknown {
   }
 }
 
+type GraphQLRequest = { operationName?: string; variables?: Record<string, unknown> };
+
+function createGraphQLResponder() {
+  const data = structuredClone(vault);
+  let sequence = 0;
+  const revision = () => ({ epoch: "story", seq: String(sequence) });
+  const projectPaint = (paint: Paint) => {
+    const resolved = resolvePaintChoice(data, "", paint.id);
+    const active = defaultSubstitution(data, paint.id);
+    return {
+      __typename: "Paint",
+      ...paint,
+      sourceName: paint.sourceName ?? null,
+      sourceLogoUrl: paint.sourceLogoUrl ?? null,
+      sourceId: null,
+      sourceLabel: paint.sourceName ?? null,
+      type: null,
+      discontinued: false,
+      inventory: data.paintRecords[paint.id]
+        ? { __typename: "Inventory", ...data.paintRecords[paint.id] }
+        : null,
+      available: isPaintAvailable(data, data.paintRecords, paint.id),
+      hasActiveSubstitution: !!active,
+      activeSubstitution: active ? { id: active.id, name: active.name } : null,
+      brokenReason: resolved.broken ? (resolved.brokenReason === "empty" ? "EMPTY" : "CYCLE") : null,
+      brokenSubstitution: resolved.broken || resolved.unavailablePaintIds.length > 0,
+      missingStock: resolved.paintIds.some((id) => !owns(data.paintRecords[id])),
+    };
+  };
+  const paginate = <T,>(rows: T[], first: number, after: unknown) => {
+    const start = Number(after ?? 0);
+    const end = Math.min(start + first, rows.length);
+    return {
+      nodes: rows.slice(start, end),
+      totalCount: rows.length,
+      pageInfo: { hasNextPage: end < rows.length, endCursor: String(end) },
+    };
+  };
+  const substitution = (mix: State["paintSubstitutions"][number], after?: unknown) => {
+    const resolved = resolveSubstitution(data, mix.id);
+    return {
+      ...mix,
+      available: resolved?.paintIds.every((id) => isPaintAvailable(data, data.paintRecords, id)) ?? false,
+      brokenReason: resolved?.broken ? (resolved.brokenReason === "empty" ? "EMPTY" : "CYCLE") : null,
+      ingredients: paginate(
+        data.paintSubstitutionIngredients
+          .filter((row) => row.substitutionId === mix.id)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .flatMap((row) => {
+            const paint = data.catalog.find((candidate) => candidate.id === row.paintId);
+            return paint ? [{ paint: projectPaint(paint), parts: row.parts, sortOrder: row.sortOrder }] : [];
+          }),
+        after ? 100 : 20,
+        after,
+      ),
+    };
+  };
+  return ({ operationName, variables: vars = {} }: GraphQLRequest): Record<string, unknown> => {
+    if (operationName === "VaultInvalidation")
+      return { vaultInvalidation: { ...revision(), reset: false, families: [] } };
+    if (operationName === "SetPaintStock") {
+      const id = String(vars.paintId);
+      const paint = data.catalog.find((row) => row.id === id);
+      if (vars.state === "OWNED" || vars.state === "WISHLIST")
+        data.paintRecords[id] = {
+          state: vars.state,
+          stockLevel: (vars.stockLevel as StockLevel) ?? "FULL",
+          quantity: Number(vars.quantity ?? 0),
+        };
+      else delete data.paintRecords[id];
+      sequence += 1;
+      return {
+        setPaintStock: {
+          revision: revision(),
+          paint: paint ? projectPaint(paint) : null,
+          clientMutationId: vars.clientMutationId ?? null,
+          invalidatedFamilies: ["PAINT", "LIBRARY", "OPTIONS"],
+        },
+      };
+    }
+    if (operationName === "PaintPickerOptions") {
+      const excluded = new Set((vars.excludeIds ?? []) as string[]);
+      const candidates = data.catalog.filter((paint) => !excluded.has(paint.id));
+      const matches = searchFuzzyIndex(
+        createFuzzyIndex(candidates, (paint) => `${paint.brand} ${paint.range} ${paint.name}`),
+        typeof vars.search === "string" ? vars.search : "",
+        Number(vars.first ?? 30),
+      );
+      return { paintOptions: { revision: revision(), items: matches.map(projectPaint) } };
+    }
+    if (operationName === "PaintSubstitutionIngredients") {
+      const mix = data.paintSubstitutions.find((row) => row.id === vars.id);
+      return {
+        substitution: { revision: revision(), substitution: mix ? substitution(mix, vars.after) : null },
+      };
+    }
+    if (operationName === "PaintDetails") {
+      const paint = data.catalog.find((row) => row.id === vars.id);
+      return {
+        paint: {
+          revision: revision(),
+          paint: paint ? projectPaint(paint) : null,
+          substitutions: paginate(
+            data.paintSubstitutions
+              .filter((row) => row.targetPaintId === vars.id)
+              .map((row) => substitution(row)),
+            10,
+            vars.substitutionsAfter,
+          ),
+          usedBy: paginate(
+            usedByMiniatures(data, String(vars.id)).map(({ id, title }) => ({ id, title })),
+            30,
+            vars.usedByAfter,
+          ),
+        },
+      };
+    }
+    const view = fixtureLibraryView(data, {
+      search: typeof vars.search === "string" ? vars.search : "",
+      brand: typeof vars.brand === "string" ? vars.brand : "ALL",
+      plugin: vars.noSource
+        ? NO_LIBRARY_SOURCE
+        : typeof vars.sourceName === "string"
+          ? vars.sourceName
+          : ALL_LIBRARY_SOURCES,
+      inventory: (vars.filter ?? "ALL") as LibraryFilters["inventory"],
+    });
+    return {
+      library: {
+        ...paginate(
+          view.rows.map(({ paint }) => projectPaint(paint)),
+          Number(vars.first ?? 48),
+          vars.after,
+        ),
+        revision: revision(),
+        catalogCount: view.catalogCount,
+        availableCount: view.availableCount,
+        explicitWishlistCount: view.wishlistCount,
+        facets: { brands: view.brands, sources: view.sources, inventory: view.inventory },
+      },
+    };
+  };
+}
+
 // A story can replace a GET route's response; returning undefined keeps the normal one.
 type MockOverrides = Record<string, () => Response | undefined>;
 
@@ -82,10 +237,25 @@ function MockApi({ overrides, children }: { overrides: MockOverrides; children: 
   // Installed before the first render so the app's first requests reach the stand-in.
   const [original] = useState(() => {
     const realFetch = window.fetch;
-    window.fetch = (input, init) => {
+    const graphql = createGraphQLResponder();
+    window.fetch = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input), window.location.origin);
       if (!url.pathname.startsWith("/api/")) return realFetch(input, init);
       const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
+      if (url.pathname === "/api/graphql/stream")
+        return new Response(
+          'event: next\ndata: {"data":{"vaultChanges":{"epoch":"story","seq":"0","reset":false,"families":[]}}}\n\nevent: complete\ndata: null\n\n',
+          { headers: { "content-type": "text/event-stream" } },
+        );
+      if (url.pathname === "/api/graphql") {
+        const body =
+          typeof init?.body === "string"
+            ? init.body
+            : input instanceof Request
+              ? await input.clone().text()
+              : "{}";
+        return Response.json({ data: graphql(JSON.parse(body) as GraphQLRequest) });
+      }
       const override = method === "GET" ? overrides[url.pathname]?.() : undefined;
       return Promise.resolve(override ?? Response.json(respond(url, method)));
     };

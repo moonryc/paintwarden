@@ -75,7 +75,7 @@ const ingredientsPage = (complete: boolean) => ({
 });
 
 function ApolloFixture({ children, failFirst = false }: { children: ReactNode; failFirst?: boolean }) {
-  const [failure] = useState(() => ({ remaining: failFirst ? 2 : 0 }));
+  const [failure] = useState(() => ({ remaining: failFirst ? 1 : 0 }));
   const [scope] = useState(() => ({
     controller: new VaultInvalidationController(),
     client: new ApolloClient({

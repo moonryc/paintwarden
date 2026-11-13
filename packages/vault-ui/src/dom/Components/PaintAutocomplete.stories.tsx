@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { fn } from "storybook/test";
+import { expect, fn, screen, waitFor } from "storybook/test";
 
 import { column } from "../storybook/decorators";
 import { paintList, paints } from "../storybook/fixtures";
+import { StoryGraphQL } from "../storybook/graphql";
 import type { Paint } from "../types";
 
 import { PaintAutocomplete } from "./PaintAutocomplete";
@@ -57,3 +58,50 @@ export const SomeAlreadyInRecipe: Story = {
 };
 
 export const NoMatches: Story = { args: { query: "zzzz" } };
+
+const serverOnlyPaint = {
+  ...paints.skyBlue,
+  id: "server-only",
+  name: "Server-only paint",
+  sourceName: null,
+  sourceLogoUrl: null,
+  inventory: null,
+  available: false,
+  hasActiveSubstitution: false,
+  brokenReason: null,
+  missingStock: true,
+  brokenSubstitution: false,
+  activeSubstitution: null,
+};
+export const ApolloServerOptions: Story = {
+  args: { paints: [] },
+  decorators: [
+    (Story) => (
+      <StoryGraphQL
+        respond={(operation) => ({
+          paintOptions: {
+            revision: { epoch: "story", seq: "1" },
+            items: (operation.variables.excludeIds as string[]).includes(serverOnlyPaint.id)
+              ? []
+              : [serverOnlyPaint],
+          },
+        })}
+      >
+        <Story />
+      </StoryGraphQL>
+    ),
+  ],
+  play: async ({ userEvent, args }) => {
+    const picker = screen.getByRole("combobox", { name: "Add paint" });
+    await userEvent.type(picker, "srver");
+    const option = await screen.findByRole("option", { name: /Server-only paint/ });
+    await userEvent.click(option);
+    await expect(args.onChoose).toHaveBeenCalledWith(expect.objectContaining({ id: "server-only" }));
+    await expect(picker).toHaveValue("");
+    await userEvent.type(picker, "server");
+    await waitFor(() =>
+      expect(screen.queryByRole("option", { name: /Server-only paint/ })).not.toBeInTheDocument(),
+    );
+    await expect(await screen.findByText("No more paints match.")).toBeVisible();
+  },
+};

@@ -1,6 +1,8 @@
+import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Alert, Button, Chip, CircularProgress, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
+import { isPaintOwned } from "@paint-vault/core/paint-state";
 import {
   defaultSubstitution,
   isPaintAvailable,
@@ -12,15 +14,85 @@ import { useState } from "react";
 import { Modal } from "../Components/Modal";
 import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
+import { usePaintDetail } from "../graphql/detail-hooks";
+import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
+import { useVaultGraphQL } from "../graphql/provider";
+import { usePaintStock } from "../graphql/stock-actions";
 import { Check, ExternalLink, Heart, Minus, Pencil } from "../icons";
 import { useVault, useVaultStore } from "../store/hooks";
-import type { Paint, PaintStatus } from "../types";
+import type { Paint, PaintStateSetter, PaintStatus, StockLevel } from "../types";
 import { usedByMiniatures } from "../utils/semantic-contract";
-import { owns } from "../utils/vault-data";
 
 import { SubstitutionDialog } from "./SubstitutionDialog";
 
-export function PaintDetailsModal({
+type DetailProps = {
+  paint: Paint;
+  onClose(): void;
+  openMini(id: string): void;
+  onEdit(paint: Paint): void;
+};
+
+export function PaintDetailsModal(props: DetailProps) {
+  const graphql = useVaultGraphQL();
+  return graphql ? <ApolloPaintDetails {...props} /> : <LegacyPaintDetails {...props} />;
+}
+
+function ApolloPaintDetails(props: DetailProps) {
+  const detail = usePaintDetail(props.paint.id);
+  const { setPaintState } = usePaintStock();
+  const stock = useFragment({
+    fragment: PaintStockFragmentDoc,
+    from: { __typename: "Paint", id: props.paint.id },
+    optimistic: true,
+  });
+  const projected = detail.data?.paint;
+  const inventory = stock.complete ? stock.data.inventory : projected?.inventory;
+  if (!projected)
+    return (
+      <Modal title={props.paint.name} subtitle="Loading the selected paint" onClose={props.onClose}>
+        {detail.error ? (
+          <Alert severity="error" action={<Button onClick={detail.refresh}>Retry</Button>}>
+            {detail.error.message}
+          </Alert>
+        ) : detail.data ? (
+          <Alert severity="info">This paint is no longer available.</Alert>
+        ) : (
+          <CircularProgress aria-label="Loading paint details" />
+        )}
+      </Modal>
+    );
+  return (
+    <PaintDetailsView
+      {...props}
+      paint={{ ...projected, sourceName: projected.sourceName ?? undefined }}
+      rec={
+        inventory
+          ? {
+              ...inventory,
+              state: inventory.state as PaintStatus,
+              stockLevel: inventory.stockLevel as StockLevel,
+            }
+          : undefined
+      }
+      setPaintState={setPaintState}
+      activeSubstitution={projected.activeSubstitution}
+      brokenReason={
+        projected.brokenReason === "EMPTY" ? "empty" : projected.brokenReason === "CYCLE" ? "cycle" : null
+      }
+      blocked={projected.brokenSubstitution}
+      available={projected.available}
+      substitutionCount={detail.data?.substitutions.totalCount ?? 0}
+      usedBy={detail.data?.usedBy.nodes ?? []}
+      loading={detail.loading}
+      error={detail.error}
+      refresh={detail.refresh}
+      hasMoreUsedBy={detail.data?.usedBy.pageInfo.hasNextPage}
+      loadMoreUsedBy={detail.loadMoreUsedBy}
+    />
+  );
+}
+
+function LegacyPaintDetails({
   paint,
   onClose,
   openMini,
@@ -29,17 +101,72 @@ export function PaintDetailsModal({
   paint: Paint;
   onClose(): void;
   openMini(id: string): void;
-  onEdit(): void;
+  onEdit(paint: Paint): void;
 }) {
   const data = useVault();
   const setPaintState = useVaultStore((s) => s.setPaintState);
-  const [showSubstitutions, setShowSubstitutions] = useState(false);
-  const rec = data.paintRecords[paint.id],
-    state = owns(rec) ? "OWNED" : rec?.state === "WISHLIST" ? "WISHLIST" : null;
+  const rec = data.paintRecords[paint.id];
   const activeSubstitution = defaultSubstitution(data, paint.id);
   const resolved = resolvePaintChoice(data, "", paint.id);
   const available = isPaintAvailable(data, data.paintRecords, paint.id);
   const usedBy = usedByMiniatures(data, paint.id);
+  return (
+    <PaintDetailsView
+      paint={paint}
+      onClose={onClose}
+      openMini={openMini}
+      onEdit={onEdit}
+      rec={rec}
+      setPaintState={setPaintState}
+      activeSubstitution={activeSubstitution}
+      brokenReason={resolved.broken ? resolved.brokenReason : null}
+      blocked={resolved.unavailablePaintIds.length > 0}
+      available={available}
+      usedBy={usedBy}
+      substitutionCount={data.paintSubstitutions.filter((row) => row.targetPaintId === paint.id).length}
+    />
+  );
+}
+
+function PaintDetailsView({
+  paint,
+  onClose,
+  openMini,
+  onEdit,
+  rec,
+  setPaintState,
+  activeSubstitution,
+  brokenReason,
+  blocked,
+  available,
+  usedBy,
+  substitutionCount,
+  loading,
+  error,
+  refresh,
+  hasMoreUsedBy,
+  loadMoreUsedBy,
+}: DetailProps & {
+  rec?: { state: PaintStatus; stockLevel: StockLevel; quantity: number };
+  setPaintState: PaintStateSetter;
+  activeSubstitution?: { id: string; name: string } | null;
+  brokenReason?: string | null;
+  blocked: boolean;
+  available: boolean;
+  usedBy: { id: string; title: string }[];
+  substitutionCount: number;
+  loading?: boolean;
+  error?: Error | null;
+  refresh?(): void;
+  hasMoreUsedBy?: boolean;
+  loadMoreUsedBy?(): void;
+}) {
+  const [showSubstitutions, setShowSubstitutions] = useState(false);
+  const state = isPaintOwned(rec?.state ?? null, rec?.stockLevel ?? null, rec?.quantity ?? 0)
+    ? "OWNED"
+    : rec?.state === "WISHLIST"
+      ? "WISHLIST"
+      : null;
   const options: [
     PaintStatus | "UNTRACKED",
     string,
@@ -119,8 +246,14 @@ export function PaintDetailsModal({
             </Box>
           )}
         </Box>
+        {error && (
+          <Alert severity="error" action={<Button onClick={refresh}>Retry</Button>}>
+            {error.message}
+          </Alert>
+        )}
         <ToggleButtonGroup
           exclusive
+          disabled={loading}
           fullWidth
           value={state ?? "UNTRACKED"}
           onChange={(_, v: PaintStatus | "UNTRACKED" | null) => {
@@ -202,10 +335,10 @@ export function PaintDetailsModal({
           </Box>
         )}
         {activeSubstitution && (
-          <Alert severity={resolved.broken ? "error" : available ? "success" : "warning"} variant="outlined">
-            {resolved.broken
-              ? `Broken substitution: ${resolved.brokenReason === "empty" ? "empty recipe" : "circular recipe"}.`
-              : resolved.unavailablePaintIds.length
+          <Alert severity={brokenReason ? "error" : available ? "success" : "warning"} variant="outlined">
+            {brokenReason
+              ? `Broken substitution: ${brokenReason === "empty" ? "empty recipe" : "circular recipe"}.`
+              : blocked
                 ? "Unavailable: a substitution ingredient has a broken recipe."
                 : available
                   ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
@@ -226,8 +359,7 @@ export function PaintDetailsModal({
               width: "100%",
             }}
           >
-            Paint substitutions (
-            {data.paintSubstitutions.filter((row) => row.targetPaintId === paint.id).length})
+            Paint substitutions ({substitutionCount})
           </Button>
           {paint.sourceUrl && (
             <Button
@@ -247,7 +379,7 @@ export function PaintDetailsModal({
           {paint.isCustom && (
             <Button
               variant="outlined"
-              onClick={onEdit}
+              onClick={() => onEdit(paint)}
               startIcon={<Pencil size={15} />}
               sx={{
                 boxSizing: "border-box",
@@ -315,6 +447,11 @@ export function PaintDetailsModal({
             >
               Not part of any project recipe yet.
             </Box>
+          )}
+          {hasMoreUsedBy && (
+            <Button onClick={loadMoreUsedBy} disabled={loading}>
+              Load more projects
+            </Button>
           )}
         </Box>
       </Box>

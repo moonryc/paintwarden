@@ -1,28 +1,52 @@
 import { useState } from "react";
 
+import { useVaultGraphQL } from "../graphql/provider";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 
 import { PaintDetailsModal } from "./PaintDetailsModal";
 import { PaintForm } from "./PaintForm";
 
-export function PaintDetailsOverlay({
+type OverlayProps = {
+  paintId: string | null;
+  onClose(): void;
+  openMini?(id: string): void;
+};
+
+export function PaintDetailsOverlay(props: OverlayProps) {
+  const graphql = useVaultGraphQL();
+  return graphql ? <PaintDetailsOverlayView {...props} apollo /> : <LegacyPaintDetailsOverlay {...props} />;
+}
+
+function LegacyPaintDetailsOverlay(props: OverlayProps) {
+  const paint = useVault((data) => data.catalog.find((item) => item.id === props.paintId) ?? null);
+  return <PaintDetailsOverlayView {...props} legacyPaint={paint} />;
+}
+
+function PaintDetailsOverlayView({
   paintId,
   onClose,
   openMini: openMiniOverride,
-}: {
-  paintId: string | null;
-  onClose(): void;
-  // Opens a miniature after the overlay closes; defaults to opening it in the project drawer.
-  openMini?(id: string): void;
-}) {
-  const data = useVault();
+  apollo,
+  legacyPaint,
+}: OverlayProps & { apollo?: boolean; legacyPaint?: Paint | null }) {
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
   const storeOpenMini = useVaultStore((s) => s.openMini);
   const openMini = openMiniOverride ?? storeOpenMini;
   const [editingPaint, setEditingPaint] = useState<Paint | null>(null);
-  const paint = data.catalog.find((item) => item.id === paintId) ?? null;
+  const paint =
+    apollo && paintId
+      ? {
+          id: paintId,
+          name: "Paint details",
+          brand: "",
+          range: "",
+          colorHex: null,
+          sourceUrl: null,
+          isCustom: false,
+        }
+      : legacyPaint;
   return (
     <>
       {paint && (
@@ -33,9 +57,9 @@ export function PaintDetailsOverlay({
             onClose();
             openMini(id);
           }}
-          onEdit={() => {
+          onEdit={(currentPaint) => {
             onClose();
-            setEditingPaint(paint);
+            setEditingPaint(currentPaint);
           }}
         />
       )}

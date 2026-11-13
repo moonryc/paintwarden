@@ -1,0 +1,115 @@
+fragment DetailPaint on Paint {
+  id
+  brand
+  range
+  name
+  colorHex
+  sourceUrl
+  isCustom
+  sourceName
+  sourceLogoUrl
+  inventory {
+    state
+    stockLevel
+    quantity
+  }
+  available
+  hasActiveSubstitution
+  brokenReason
+  missingStock
+  brokenSubstitution
+  activeSubstitution {
+    id
+    name
+  }
+}
+fragment DetailSubstitution on Substitution {
+  id
+  targetPaintId
+  name
+  isDefault
+  available
+  brokenReason
+  ingredients(first: 20) {
+    nodes {
+      paint {
+        ...DetailPaint
+      }
+      parts
+      sortOrder
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+query PaintDetails($id: ID!, $substitutionsAfter: String, $usedByAfter: String) {
+  paint(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    paint {
+      ...DetailPaint
+    }
+    substitutions(first: 10, after: $substitutionsAfter) {
+      nodes {
+        ...DetailSubstitution
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    usedBy(first: 30, after: $usedByAfter) {
+      nodes {
+        id
+        title
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+}
+query PaintSubstitutionIngredients($id: ID!, $after: String) {
+  substitution(id: $id) {
+    revision {
+      epoch
+      seq
+    }
+    substitution {
+      id
+      ingredients(first: 100, after: $after) {
+        nodes {
+          paint {
+            ...DetailPaint
+          }
+          parts
+          sortOrder
+        }
+        totalCount
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+query PaintPickerOptions($search: String!, $excludeIds: [ID!]!, $first: Int!) {
+  paintOptions(search: $search, excludeIds: $excludeIds, first: $first) {
+    revision {
+      epoch
+      seq
+    }
+    items {
+      ...DetailPaint
+    }
+  }
+}
