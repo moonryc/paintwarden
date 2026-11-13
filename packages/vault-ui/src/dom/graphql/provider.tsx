@@ -43,7 +43,11 @@ function Scope({ children }: { children: ReactNode }) {
   const [scope] = useState(() => {
     const transport = createVaultGraphQLClient({
       authHeaders,
-      onError: (error) => setFailure((previous) => (previous?.accessDenied ? previous : error)),
+      onError: (error) => {
+        // Query/mutation hooks own recoverable errors, including STALE_CURSOR
+        // retries. Only authorization is a scope-wide transport failure.
+        if (error.accessDenied) setFailure(error);
+      },
     });
     const controller = new VaultInvalidationController((families, reset) => {
       if (reset) transport.client.cache.restore({});
