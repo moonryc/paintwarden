@@ -229,6 +229,26 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       }
     });
 
+    await t.test("unexpected SQLite errors are masked with a correlation ID", async () => {
+      const prepare = sqlite.prepare;
+      sqlite.prepare = function (sql: string) {
+        if (sql.includes("FROM paint_catalog p"))
+          throw new Error("SELECT private_note FROM /private/vault.sqlite");
+        return prepare.call(sqlite, sql);
+      } as typeof sqlite.prepare;
+      try {
+        const response = await post({ query });
+        const payload = (await response.json()) as {
+          errors: { message: string; extensions: { correlationId: string } }[];
+        };
+        assert.equal(payload.errors[0].message, "Unexpected server error");
+        assert.match(payload.errors[0].extensions.correlationId, /^[a-f0-9-]{36}$/);
+        assert.doesNotMatch(JSON.stringify(payload), /SELECT|private_note|vault.sqlite|stack/);
+      } finally {
+        sqlite.prepare = prepare;
+      }
+    });
+
     await t.test("POST SSE initial catchup, cross-client write and reconnect", async () => {
       const since = currentChangeSeq(sqlite);
       addPaint(paintId(100));
@@ -281,7 +301,7 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       const response = await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream");
       const reader = response.body!.getReader();
       assert.ok(nextData(await nextFrame(reader)).data.vaultChanges);
-      sqlite.prepare("DELETE FROM vault_sessions WHERE token_hash=?").run(tokenHash);
+      sqlite.prepare("UPDATE vault_sessions SET expires_at=0 WHERE token_hash=?").run(tokenHash);
       const frame = await nextFrame(reader);
       assert.match(frame, /UNAUTHENTICATED/);
       await reader.cancel();
