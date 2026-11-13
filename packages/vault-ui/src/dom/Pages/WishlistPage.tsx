@@ -258,6 +258,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       )}
       {projectsPaint && (
         <RelatedProjects
+          key={projectsPaint.id}
           paint={projectsPaint}
           read={list.relatedProjects}
           onClose={() => setProjectsPaint(null)}
