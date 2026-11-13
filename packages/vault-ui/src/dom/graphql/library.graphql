@@ -4,17 +4,98 @@ fragment LibraryPaint on Paint {
   range
   name
   colorHex
+  sourceUrl
+  isCustom
+  sourceName
+  sourceLogoUrl
   type
   discontinued
-  inventory { state stockLevel quantity }
+  inventory {
+    state
+    stockLevel
+    quantity
+  }
+  available
+  activeSubstitution {
+    id
+    name
+  }
+  brokenSubstitution
+  brokenReason
+  missingStock
 }
-query LibraryPage($first: Int! = 48, $after: String) {
-  library(first: $first, after: $after) {
-    nodes { ...LibraryPaint }
-    pageInfo { hasNextPage endCursor }
-    revision { epoch seq }
+query LibraryPage(
+  $first: Int! = 48
+  $after: String
+  $filter: LibraryFilter
+  $search: String
+  $brand: String
+  $sourceName: String
+  $noSource: Boolean
+) {
+  library(
+    first: $first
+    after: $after
+    filter: $filter
+    search: $search
+    brand: $brand
+    sourceName: $sourceName
+    noSource: $noSource
+  ) {
+    nodes {
+      ...LibraryPaint
+    }
+    totalCount
+    catalogCount
+    availableCount
+    explicitWishlistCount
+    facets {
+      brands {
+        key
+        label
+        count
+      }
+      sources {
+        key
+        label
+        count
+      }
+      inventory {
+        key
+        label
+        count
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    revision {
+      epoch
+      seq
+    }
   }
 }
 subscription VaultChanges($epoch: String!, $since: Sequence!) {
-  vaultChanges(epoch: $epoch, since: $since) { epoch seq reset }
+  vaultChanges(epoch: $epoch, since: $since) {
+    epoch
+    seq
+    reset
+    families
+  }
+}
+
+query VaultInvalidation($epoch: String!, $since: Sequence!) {
+  vaultInvalidation(epoch: $epoch, since: $since) {
+    epoch
+    seq
+    reset
+    families
+  }
+}
+query VaultRevision {
+  vaultRevision {
+    epoch
+    seq
+  }
 }

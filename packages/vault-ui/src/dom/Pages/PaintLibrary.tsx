@@ -1,65 +1,53 @@
-import { Button, Card, MenuItem, TextField } from "@mui/material";
+import { Alert, Button, Card, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { EmptyState } from "../Components/EmptyState";
-import { FilterPluginSelect, useFilterPlugin } from "../Components/FilterPlugin";
 import { FilterToolbar } from "../Components/FilterToolbar";
 import { LibraryPaintRow } from "../Components/LibraryPaintRow";
 import { PageHeader } from "../Components/PageHeader";
+import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, useLibraryPaints } from "../graphql/library-hooks";
 import { FlaskConical, Heart, PaintDrop, Plus, SearchX } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
-import { useVault, useVaultStore } from "../store/hooks";
+import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
-import type { Paint } from "../types";
 import { listResetSx } from "../utils/element-resets";
 import { buzz } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
-import { libraryInventoryFilter, matchesLibraryInventory } from "../utils/semantic-contract";
-import { useFuzzySearch } from "../utils/use-fuzzy-search";
-
-const paintSearchText = (paint: Paint) =>
-  `${paint.isCustom ? "Custom " : ""}${paint.brand} ${paint.range} ${paint.name}`;
+import { libraryInventoryFilter } from "../utils/semantic-contract";
 
 export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
-  const data = useVault();
   const filter = useVaultStore((s) => s.paintFilter);
   const setFilter = useVaultStore((s) => s.setPaintFilter);
   const search = useVaultStore((s) => s.paintSearch);
   const setSearch = useVaultStore((s) => s.setPaintSearch);
-  const [openPaintId, setOpenPaintId] = useState<string | null>(null),
-    [brand, setBrand] = useState("ALL"),
-    q = search.trim();
-  const filterBrand = (paint: Paint) => (paint.isCustom ? "Custom" : paint.brand);
-  const brands = useMemo(
-    () =>
-      [...new Set(data.catalog.map((paint) => (paint.isCustom ? "Custom" : paint.brand)))].sort((a, b) =>
-        a.localeCompare(b),
-      ),
-    [data.catalog],
-  );
-  useEffect(() => {
-    if (brand !== "ALL" && !brands.includes(brand)) setBrand("ALL");
-  }, [brand, brands]);
-  const pluginFilter = useFilterPlugin(data.catalog);
-  const availablePaintIds = useMemo(
-    () =>
-      new Set(
-        data.catalog
-          .filter((paint) => isPaintAvailable(data, data.paintRecords, paint.id))
-          .map((paint) => paint.id),
-      ),
-    [data],
-  );
+  const [openPaintId, setOpenPaintId] = useState<string | null>(null);
+  const [brand, setBrand] = useState("ALL");
+  const [plugin, setPlugin] = useState(ALL_LIBRARY_SOURCES);
+  const q = search.trim();
   const activeFilter = libraryInventoryFilter(q, filter);
-  const match = (paint: Paint, inventory: string) =>
-    matchesLibraryInventory(data, availablePaintIds, paint, inventory);
-  const searchResults = useFuzzySearch(data.catalog, q, paintSearchText);
-  const searched = searchResults.filter(
-    (paint) => (brand === "ALL" || filterBrand(paint) === brand) && pluginFilter.matches(paint),
-  );
-  const list = searched.filter((p) => match(p, activeFilter));
+  const library = useLibraryPaints({ search: q, brand, plugin, inventory: activeFilter });
+  const { rows: list, loadMore, loading, refreshing, hasNextPage } = library;
+  const brands = library.brands.map((facet) => facet.key);
+  const plugins = library.sources.filter((facet) => facet.key !== "");
+  const pluginDescription =
+    plugin === ALL_LIBRARY_SOURCES
+      ? null
+      : plugin === NO_LIBRARY_SOURCE
+        ? "not from a plugin"
+        : `from ${plugin}`;
+  useEffect(() => {
+    if (!loading && !library.error && brand !== "ALL" && !library.brands.some((facet) => facet.key === brand))
+      setBrand("ALL");
+    if (
+      !loading &&
+      !library.error &&
+      plugin !== ALL_LIBRARY_SOURCES &&
+      plugin !== NO_LIBRARY_SOURCE &&
+      !library.sources.some((facet) => facet.key === plugin)
+    )
+      setPlugin(ALL_LIBRARY_SOURCES);
+  }, [brand, plugin, library.brands, library.sources, loading, library.error]);
   const listRef = useRef<HTMLUListElement>(null);
   const [viewport, setViewport] = useState({ gridTop: 0, scrollY: 0, viewportHeight: 900 });
   const [pendingFocus, setPendingFocus] = useState<{ index: number; reverse: boolean } | null>(null);
@@ -130,8 +118,12 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
     setPendingFocus({ index, reverse });
   };
   const filters = ["ALL", "OWNED", "WISHLIST", "UNTRACKED"] as const;
-  const ownedCount = availablePaintIds.size;
-  const wishlistCount = data.catalog.filter((paint) => data.paintStates[paint.id] === "WISHLIST").length;
+  const ownedCount = library.availableCount;
+  const wishlistCount = library.wishlistCount;
+  useEffect(() => {
+    if (hasNextPage && !loading && !refreshing && !library.error && paintWindow.endIndex >= list.length - 12)
+      loadMore();
+  }, [hasNextPage, loading, refreshing, library.error, paintWindow.endIndex, list.length, loadMore]);
   return (
     <div>
       <PageHeader
@@ -139,7 +131,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
         title="Paints"
         body={
           ownedCount || wishlistCount
-            ? `${ownedCount.toLocaleString()} paint${ownedCount === 1 ? "" : "s"} available${wishlistCount ? ` · ${wishlistCount} on your wishlist` : ""} · ${data.catalog.length.toLocaleString()} in the library.`
+            ? `${ownedCount.toLocaleString()} paint${ownedCount === 1 ? "" : "s"} available${wishlistCount ? ` · ${wishlistCount} on your wishlist` : ""} · ${library.catalogCount.toLocaleString()} in the library.`
             : "Browse paints from your catalog sources or add your own colors."
         }
         action={
@@ -153,7 +145,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
         setSearch={setSearch}
         placeholder="Search brand, range, or paint…"
         // Three filters need the full row until the window is wide enough to sit beside the search.
-        singleLineFilters={pluginFilter.plugins.length > 0}
+        singleLineFilters={plugins.length > 0}
       >
         <Box
           component="div"
@@ -163,7 +155,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
               minWidth: 0,
               gap: 1,
             },
-            pluginFilter.plugins.length
+            plugins.length
               ? {
                   [up.sm]: {
                     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
@@ -176,7 +168,24 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
                 },
           ]}
         >
-          <FilterPluginSelect filter={pluginFilter} />
+          {plugins.length > 0 && (
+            <TextField
+              select
+              fullWidth
+              size="small"
+              label="Plugin"
+              value={plugin}
+              onChange={(event) => setPlugin(event.target.value)}
+            >
+              <MenuItem value={ALL_LIBRARY_SOURCES}>All plugins</MenuItem>
+              {plugins.map((source) => (
+                <MenuItem key={source.key} value={source.key}>
+                  {source.label}
+                </MenuItem>
+              ))}
+              <MenuItem value={NO_LIBRARY_SOURCE}>Not from a plugin</MenuItem>
+            </TextField>
+          )}
           <TextField
             select
             size="small"
@@ -204,15 +213,36 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
             {filters.map((item, index) => (
               <MenuItem key={item} value={item}>
                 {["All", "Owned", "Wishlist", "Not owned"][index]} (
-                {searched.filter((paint) => match(paint, item)).length})
+                {library.inventory.find((facet) => facet.key === item)?.count ?? 0})
               </MenuItem>
             ))}
           </TextField>
         </Box>
       </FilterToolbar>
+      {library.error && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" onClick={library.retry}>
+              Retry
+            </Button>
+          }
+        >
+          {library.error}
+        </Alert>
+      )}
+      {loading && (
+        <Box role="status" sx={{ py: 3 }}>
+          Loading paints…
+        </Box>
+      )}
       {list.length ? (
         <Card
           component="ul"
+          aria-label="Paint library"
+          aria-busy={refreshing}
+          data-loaded-count={list.length}
+          data-total-count={library.totalCount}
           ref={listRef}
           onKeyDownCapture={(event) => {
             if (event.key !== "Tab") return;
@@ -225,10 +255,11 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
             const reverse = event.shiftKey;
             if (event.target !== (reverse ? controls[0] : controls.at(-1))) return;
             const next = reverse ? index - 1 : index + 1;
-            if (next < 0 || next >= list.length) return;
+            if (next < 0 || next >= library.totalCount) return;
             if (next >= paintWindow.startIndex && next < paintWindow.endIndex) return;
             event.preventDefault();
             focusPaintAt(next, reverse);
+            if (next >= list.length) loadMore();
           }}
           sx={{
             ...listResetSx,
@@ -237,17 +268,23 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           }}
         >
           {paintWindow.topOffset > 0 && <li aria-hidden="true" style={{ height: paintWindow.topOffset }} />}
-          {list.slice(paintWindow.startIndex, paintWindow.endIndex).map((paint, visibleIndex) => {
+          {list.slice(paintWindow.startIndex, paintWindow.endIndex).map((projection, visibleIndex) => {
             const index = paintWindow.startIndex + visibleIndex;
             return (
-              <LibraryPaintRow key={paint.id} paint={paint} onOpenPaint={setOpenPaintId} index={index} />
+              <LibraryPaintRow
+                key={projection.paint.id}
+                paint={projection.paint}
+                projection={projection}
+                onOpenPaint={setOpenPaintId}
+                index={index}
+              />
             );
           })}
           {paintWindow.endIndex < list.length && (
             <li aria-hidden="true" style={{ height: (list.length - paintWindow.endIndex) * 66 }} />
           )}
         </Card>
-      ) : data.catalog.length === 0 ? (
+      ) : loading || library.error ? null : library.catalogCount === 0 ? (
         <EmptyState
           icon={<PaintDrop size={26} />}
           title="Your paint library is empty"
@@ -262,18 +299,30 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
         <PaintLibraryEmptyState
           search={q ? search : ""}
           brand={brand}
-          plugin={pluginFilter.description}
+          plugin={pluginDescription}
           filter={activeFilter}
           onBrowseAll={() => setFilter("ALL")}
           onClear={() => {
             setSearch("");
             setBrand("ALL");
-            pluginFilter.reset();
+            setPlugin(ALL_LIBRARY_SOURCES);
             setFilter("ALL");
           }}
         />
       )}
-      {data.catalog.length > 0 && (
+      {hasNextPage && (
+        <Box sx={{ textAlign: "center", mt: 1.5 }}>
+          <Button disabled={loading || refreshing} onClick={loadMore}>
+            Load more paints
+          </Button>
+        </Box>
+      )}
+      {refreshing && (
+        <Box role="status" sx={{ textAlign: "center", mt: 1 }}>
+          Updating paints…
+        </Box>
+      )}
+      {library.catalogCount > 0 && (
         <Box
           component="p"
           sx={{
@@ -288,7 +337,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
             },
           }}
         >
-          {list.length.toLocaleString()} matching paint{list.length === 1 ? "" : "s"}
+          {library.totalCount.toLocaleString()} matching paint{library.totalCount === 1 ? "" : "s"}
         </Box>
       )}
       <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />

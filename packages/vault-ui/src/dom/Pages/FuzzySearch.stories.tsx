@@ -6,6 +6,7 @@ import { PaintAutocomplete } from "../Components/PaintAutocomplete";
 import { SchemePickerDialog } from "../Modals/SchemePickerDialog";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { paintList, paints, schemes } from "../storybook/fixtures";
+import { LibraryFixtureProvider } from "../storybook/library-fixtures";
 
 import { PaintLibrary } from "./PaintLibrary";
 import { PaintComparison } from "./PaintTools/PaintComparison";
@@ -46,7 +47,11 @@ export const PaintPickerExcludesBeforeSearching: Story = {
 };
 
 export const LibrarySearch: Story = {
-  render: () => <PaintLibrary onAddPaint={fn()} />,
+  render: () => (
+    <LibraryFixtureProvider>
+      <PaintLibrary onAddPaint={fn()} />
+    </LibraryFixtureProvider>
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByRole("textbox", { name: "Search brand, range, or paint…" });

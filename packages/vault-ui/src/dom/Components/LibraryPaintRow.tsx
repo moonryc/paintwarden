@@ -1,3 +1,4 @@
+import { useFragment } from "@apollo/client/react";
 import Box from "@mui/material/Box";
 import {
   defaultSubstitution,
@@ -7,6 +8,10 @@ import {
 import { memo, type KeyboardEvent } from "react";
 import { shallow } from "zustand/shallow";
 
+import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
+import { libraryInventoryRecord, type LibraryPaintProjection } from "../graphql/library-model";
+import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
+import { usePaintStock } from "../graphql/stock-actions";
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint } from "../types";
 import { owns } from "../utils/vault-data";
@@ -17,23 +22,27 @@ import { PaintSubstitutionChip } from "./PaintSubstitutionChip";
 
 // A paint in the library or a scheme: owned paints show their quantity, and paints that aren't
 // available can be marked owned or added to the wishlist.
-export const LibraryPaintRow = memo(function LibraryPaintRow({
-  paint,
-  toggleOwned: toggleOwnedOverride,
-  onOpenPaint,
-  index,
-  border = "top",
-  onKeyDownCapture,
-}: {
+type LibraryPaintRowProps = {
   paint: Paint;
+  projection?: LibraryPaintProjection;
   // Replaces the usual owned toggle, as in the project drawer's scheme previews.
   toggleOwned?(paint: Paint): void;
   onOpenPaint(id: string): void;
-  // Position in a windowed list; the first row has no top border.
   index?: number;
   border?: "top" | "bottom" | "none";
   onKeyDownCapture?: (event: KeyboardEvent<HTMLLIElement>) => void;
-}) {
+};
+
+export const LibraryPaintRow = memo(function LibraryPaintRow(props: LibraryPaintRowProps) {
+  return props.projection ? (
+    <ProjectedLibraryPaintRow {...props} projection={props.projection} />
+  ) : (
+    <LegacyLibraryPaintRow {...props} />
+  );
+});
+
+function LegacyLibraryPaintRow(props: LibraryPaintRowProps) {
+  const { paint } = props;
   const { substitution, record, available, broken } = useVault(
     (data) => ({
       substitution: defaultSubstitution(data, paint.id),
@@ -44,10 +53,45 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
     }),
     shallow,
   );
+  return (
+    <LibraryPaintRowView
+      {...props}
+      projection={{ paint, substitution: substitution ?? null, record, available, broken }}
+    />
+  );
+}
+
+function ProjectedLibraryPaintRow(props: LibraryPaintRowProps & { projection: LibraryPaintProjection }) {
+  const scope = useVaultGraphQL();
+  return scope ? <CachedLibraryPaintRow {...props} scope={scope} /> : <LibraryPaintRowView {...props} />;
+}
+
+function CachedLibraryPaintRow({
+  scope,
+  ...props
+}: LibraryPaintRowProps & { projection: LibraryPaintProjection; scope: VaultGraphQLScope }) {
+  const { data, complete } = useFragment({
+    fragment: PaintStockFragmentDoc,
+    from: { __typename: "Paint", id: props.paint.id },
+    client: scope.client,
+    optimistic: true,
+  });
+  const record = complete ? libraryInventoryRecord(data.inventory) : props.projection.record;
+  return <LibraryPaintRowView {...props} projection={{ ...props.projection, record }} />;
+}
+
+function LibraryPaintRowView({
+  paint,
+  projection: { substitution, record, available, broken },
+  toggleOwned: toggleOwnedOverride,
+  onOpenPaint,
+  index,
+  border = "top",
+  onKeyDownCapture,
+}: LibraryPaintRowProps & { projection: LibraryPaintProjection }) {
   const notify = useVaultStore((s) => s.notify);
-  const setPaintState = useVaultStore((s) => s.setPaintState);
-  const storeToggleOwned = useVaultStore((s) => s.toggleOwned);
-  const toggleOwned = toggleOwnedOverride ?? storeToggleOwned;
+  const { setPaintState, toggleOwned: stockToggleOwned } = usePaintStock();
+  const toggleOwned = toggleOwnedOverride ?? ((item: Paint) => stockToggleOwned(item, record));
   const directlyOwned = owns(record);
   const wishlisted = record?.state === "WISHLIST";
   const stockLevel = record?.stockLevel === "EMPTY" ? "FULL" : record?.stockLevel;
@@ -136,4 +180,4 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
       />
     </Box>
   );
-});
+}

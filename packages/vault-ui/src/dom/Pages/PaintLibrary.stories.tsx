@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { paints } from "../storybook/fixtures";
+import { LibraryApolloFixture } from "../storybook/library-apollo-fixture";
+import { LibraryFixtureProvider } from "../storybook/library-fixtures";
 import type { State } from "../types";
 import { emptyState } from "../utils/constants";
 
 import { PaintLibrary } from "./PaintLibrary";
 
-const catalog = Array.from({ length: 120 }, (_, index) => ({
+const catalog = Array.from({ length: 360 }, (_, index) => ({
   ...paints.black,
   id: `fixture:paint-${index}`,
   name: `Fixture paint ${String(index).padStart(3, "0")}`,
@@ -25,6 +27,13 @@ const meta = {
   title: "Pages/PaintLibrary",
   component: PaintLibrary,
   args: { onAddPaint: fn() },
+  decorators: [
+    (Story) => (
+      <LibraryFixtureProvider>
+        <Story />
+      </LibraryFixtureProvider>
+    ),
+  ],
   parameters: { vault },
 } satisfies Meta<typeof PaintLibrary>;
 export default meta;
@@ -67,6 +76,73 @@ export const WindowedKeyboardHandoff: Story = {
       first.querySelector<HTMLButtonElement>("button")!.focus();
       await userEvent.tab({ shift: true });
       await waitFor(() => expect(activeIndex()).toBe(previous));
+    } finally {
+      window.scrollTo(0, 0);
+    }
+  },
+};
+
+// Exercises the actual paged hook, Apollo cache/fragment reads, virtualization, and the
+// uncapped tail. The legacy fixture decorator is explicitly disabled by this adapter.
+export const ApolloPagingReachesFinalPaint: Story = {
+  render: (args) => (
+    <LibraryApolloFixture>
+      <PaintLibrary {...args} />
+    </LibraryApolloFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = () => canvas.getByRole("list", { name: "Paint library" });
+    const loaded = () => Number(list().getAttribute("data-loaded-count"));
+    try {
+      await canvas.findByRole("list", { name: "Paint library" });
+      await expect(loaded()).toBe(48);
+      while (loaded() < catalog.length) {
+        const before = loaded();
+        window.scrollTo(0, document.body.scrollHeight);
+        await waitFor(() => expect(loaded()).toBeGreaterThan(before));
+      }
+      window.scrollTo(0, document.body.scrollHeight);
+      await waitFor(() => expect(canvas.getByText(catalog.at(-1)!.name)).toBeInTheDocument());
+      await expect(list().querySelectorAll("[data-paint-index]").length).toBeLessThan(catalog.length);
+      await expect(canvas.queryByRole("button", { name: "Load more paints" })).not.toBeInTheDocument();
+      await expect(canvas.getByText("360 matching paints")).toBeInTheDocument();
+    } finally {
+      window.scrollTo(0, 0);
+    }
+  },
+};
+
+export const ApolloKeyboardCrossesPageBoundary: Story = {
+  render: (args) => (
+    <LibraryApolloFixture pageDelay={300}>
+      <PaintLibrary {...args} />
+    </LibraryApolloFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    try {
+      const list = await canvas.findByRole("list", { name: "Paint library" });
+      await expect(list).toHaveAttribute("data-loaded-count", "48");
+      window.scrollTo(0, document.body.scrollHeight);
+      const last = await waitFor(() => {
+        const row = list.querySelector<HTMLElement>('[data-paint-index="47"]');
+        if (!row) throw new Error("Last row of the first page is not rendered");
+        return row;
+      });
+      // Start on a non-text action; the handoff must wait for the next network page,
+      // then land on its first button, never its quantity input.
+      within(last)
+        .getByRole("button", { name: `Set ${catalog[47].name} quantity to 0` })
+        .focus();
+      await userEvent.tab();
+      await waitFor(() =>
+        expect((document.activeElement as HTMLElement).closest("[data-paint-index]")).toHaveAttribute(
+          "data-paint-index",
+          "48",
+        ),
+      );
+      await expect(document.activeElement?.tagName).toBe("BUTTON");
     } finally {
       window.scrollTo(0, 0);
     }
