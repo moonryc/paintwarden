@@ -473,6 +473,22 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       assert.equal(again.status, 200);
       await again.body!.cancel();
     });
+    await t.test("picker preserves uncapped exclusions beyond 100 while keeping output bounded", async () => {
+      const ids = Array.from({ length: 102 }, (_, index) => paintId(1000 + index));
+      for (const [index, id] of ids.entries()) addPaint(id, `Large exclusions ${index}`);
+      const response = await post({
+        query:
+          'query Picker($exclude:[ID!]){paintOptions(first:30,search:"Large exclusions",excludeIds:$exclude){items{id} revision{seq}}}',
+        variables: { exclude: ids.slice(0, 101) },
+      });
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        data?: { paintOptions: { items: { id: string }[] } };
+        errors?: unknown;
+      };
+      assert.equal(payload.errors, undefined);
+      assert.deepEqual(payload.data?.paintOptions.items, [{ id: ids[101] }]);
+    });
   } finally {
     sqlite.close();
     rmSync(directory, { recursive: true, force: true });

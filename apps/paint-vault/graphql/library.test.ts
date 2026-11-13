@@ -423,9 +423,8 @@ void test("read validation rejects out-of-budget pages, invalid filters, text an
     () => readPaintOptions({ first: 1, search: "x".repeat(257), excludeIds: [] }),
     code("BAD_USER_INPUT"),
   );
-  assert.throws(
-    () => readPaintOptions({ first: 1, search: "", excludeIds: Array<string>(101).fill(uuid(1)) }),
-    code("BAD_USER_INPUT"),
+  assert.doesNotThrow(() =>
+    readPaintOptions({ first: 1, search: "", excludeIds: Array<string>(101).fill(uuid(1)) }),
   );
   assert.throws(
     () => readPaintOptions({ first: 1, search: "", excludeIds: ["x".repeat(257)] }),

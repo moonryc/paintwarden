@@ -71,8 +71,9 @@ ingredients by sortOrder/paint ID, used-by by title/ID. All pages remain reachab
 `paintOptions(search, excludeIds, first)` returns revision plus bounded `items`.
 Search text is brand, range, name (no Library-only Custom prefix), matching the
 existing picker. Exclusions are applied **before** ranking, so an excluded literal
-cannot suppress eligible typo suggestions. `excludeIds` is capped at 100 IDs;
-`first` at 30. Paint/substitution IDs, search/filter strings and clientMutationId
+cannot suppress eligible typo suggestions. Exclusion count has no new product cap;
+the existing 128 KiB JSON body / 32 KiB operation-text budgets bound input work,
+and every individual ID is at most 256 characters. `first` is capped at 30. Paint/substitution IDs, search/filter strings and clientMutationId
 are capped at 256 UTF-16 code units; cursors at 8192; epochs at 128. Nested
 substitution pages cap at 30, ingredient/usage pages at 100 and similar paints at 30. Schema-aware expanded cost multiplies nested page bounds; combined requests
 must still fit the 10,000 cost budget (the shipped detail document requests ten

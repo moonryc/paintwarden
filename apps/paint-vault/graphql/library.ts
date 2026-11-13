@@ -315,7 +315,6 @@ export function readLibrary(args: LibraryArgs) {
 export function readPaintOptions(args: { first: number; search: string; excludeIds: string[] }) {
   validatePage(args, 30);
   validateText(args.search, "search");
-  if (args.excludeIds.length > 100) badInput("excludeIds must contain at most 100 IDs");
   args.excludeIds.forEach((id) => validateText(id, "exclude ID"));
   const allowCache = !getSqlite().inTransaction;
   return getSqlite().transaction(() => {

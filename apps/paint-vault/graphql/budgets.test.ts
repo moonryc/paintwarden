@@ -407,10 +407,10 @@ test("nested connection and picker argument budgets reject work before resolvers
     "{paintOptions(first:31){items{id}}}",
   ])
     budgetError(() => check(query), /first must be between/);
-  budgetError(
-    () => check("{paintOptions(excludeIds:[" + Array(101).fill('"p"').join(",") + "]){items{id}}}"),
-    /excludeIds/,
+  assert.doesNotThrow(() =>
+    check("{paintOptions(excludeIds:[" + Array(101).fill('"p"').join(",") + "]){items{id}}}"),
   );
+  budgetError(() => check('{paintOptions(excludeIds:["' + "p".repeat(257) + '"]){items{id}}}'), /excludeIds/);
   budgetError(() => check('{library(search:"' + "x".repeat(257) + '"){nodes{id}}}'), /search exceeds/);
   budgetError(() => check('{paint(id:"' + "x".repeat(257) + '"){paint{id}}}'), /id exceeds/);
   budgetError(

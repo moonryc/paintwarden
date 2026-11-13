@@ -120,10 +120,9 @@ function checkExpandedBudget(
             if (
               name === "excludeIds" &&
               (!Array.isArray(value) ||
-                value.length > 100 ||
                 value.some((id: unknown) => typeof id !== "string" || id.length > 256))
             )
-              reject("excludeIds must contain at most 100 bounded IDs");
+              reject("excludeIds must contain bounded IDs");
           }
           if (
             node.name.value === "setPaintStock" &&
