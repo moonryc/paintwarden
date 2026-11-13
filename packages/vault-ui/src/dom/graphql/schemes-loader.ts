@@ -21,6 +21,7 @@ function unpack(raw: SchemesPageQuery["schemes"]) {
       gradient: node.gradient,
       paintNames: node.paintNames,
       usageCount: node.usageCount,
+      previewMoreCount: node.previewMoreCount,
     })),
   };
 }

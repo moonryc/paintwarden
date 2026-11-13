@@ -52,7 +52,7 @@ void test("scheme loaded windows preserve all filters/facets/card summary and ne
   const transport = createVaultGraphQLClient({
     authHeaders: () => ({}),
     fetch: async (_url, init) => {
-      const { variables, operationName } = JSON.parse(String(init?.body)) as {
+      const { variables, operationName } = JSON.parse(typeof init?.body === "string" ? init.body : "{}") as {
         variables: { after: string | null };
         operationName: string;
       };
@@ -85,7 +85,9 @@ void test("revision changes restart loaded scheme window from page one without m
   const transport = createVaultGraphQLClient({
     authHeaders: () => ({}),
     fetch: async (_url, init) => {
-      const { variables } = JSON.parse(String(init?.body)) as { variables: { after: string | null } };
+      const { variables } = JSON.parse(typeof init?.body === "string" ? init.body : "{}") as {
+        variables: { after: string | null };
+      };
       calls++;
       return page(`${calls}`, calls === 1 ? "1" : "2", variables.after ? null : "next");
     },
@@ -126,7 +128,9 @@ void test("continuously changing scheme revisions fail explicitly after bounded 
   const transport = createVaultGraphQLClient({
     authHeaders: () => ({}),
     fetch: async (_url, init) => {
-      const { variables } = JSON.parse(String(init?.body)) as { variables: { after: string | null } };
+      const { variables } = JSON.parse(typeof init?.body === "string" ? init.body : "{}") as {
+        variables: { after: string | null };
+      };
       calls++;
       return page("unstable", String(calls), variables.after ? null : "next");
     },

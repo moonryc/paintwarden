@@ -3,6 +3,7 @@ import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } f
 import type { PaintViewRead, SubstitutionRead } from "../library";
 import type { MiniatureViewRead } from "../miniatures";
 import type { MiniatureSchemeRead } from "../miniature-schemes";
+import type { TemplateRecipeRead } from "../templates";
 import type { GraphQLContext } from "../context";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -26,6 +27,38 @@ export type ActiveSubstitution = {
 };
 
 export type BrokenReason = "CYCLE" | "EMPTY";
+
+export type CatalogSource = {
+  __typename?: "CatalogSource";
+  attribution?: Maybe<Scalars["String"]["output"]>;
+  counts: SourceItemCounts;
+  dependencies: Array<SourceDependency>;
+  id: Scalars["ID"]["output"];
+  lastError?: Maybe<Scalars["String"]["output"]>;
+  license?: Maybe<Scalars["String"]["output"]>;
+  logoUrl?: Maybe<Scalars["String"]["output"]>;
+  name: Scalars["String"]["output"];
+  repository: Scalars["String"]["output"];
+  url: Scalars["String"]["output"];
+  version: Scalars["String"]["output"];
+};
+
+export type CustomPaintImportInput = {
+  brand?: InputMaybe<Scalars["String"]["input"]>;
+  colorHex?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  range?: InputMaybe<Scalars["String"]["input"]>;
+  sourceUrl?: InputMaybe<Scalars["String"]["input"]>;
+  type?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type CustomPaintInput = {
+  brand: Scalars["String"]["input"];
+  colorHex?: InputMaybe<Scalars["String"]["input"]>;
+  name: Scalars["String"]["input"];
+  range?: InputMaybe<Scalars["String"]["input"]>;
+  sourceUrl?: InputMaybe<Scalars["String"]["input"]>;
+};
 
 export type FacetCount = {
   __typename?: "FacetCount";
@@ -169,15 +202,20 @@ export type MiniatureScheme = {
   __typename?: "MiniatureScheme";
   availableCount: Scalars["Int"]["output"];
   category?: Maybe<Scalars["String"]["output"]>;
+  gradient: Scalars["String"]["output"];
   id: Scalars["ID"]["output"];
   imageUrl?: Maybe<Scalars["String"]["output"]>;
   isSystem: Scalars["Boolean"]["output"];
   name: Scalars["String"]["output"];
   paintCount: Scalars["Int"]["output"];
+  paintNames: Scalars["String"]["output"];
+  previewMoreCount: Scalars["Int"]["output"];
   previewSwatches: Array<MiniatureSwatch>;
   previewSwatchesTruncated: Scalars["Boolean"]["output"];
+  sourceId?: Maybe<Scalars["ID"]["output"]>;
   sourceLogoUrl?: Maybe<Scalars["String"]["output"]>;
   sourceName?: Maybe<Scalars["String"]["output"]>;
+  usageCount: Scalars["Int"]["output"];
 };
 
 export type MiniatureSchemeConnection = {
@@ -287,11 +325,24 @@ export type MiniaturesView = {
 export type Mutation = {
   __typename?: "Mutation";
   createMiniature: MiniatureMutationPayload;
+  createScheme: SchemeMutationPayload;
+  createSubstitution: SubstitutionMutationPayload;
+  createTemplate: TemplateMutationPayload;
+  deleteCustomPaint: PaintCommandPayload;
   deleteMiniature: MiniatureMutationPayload;
+  deleteScheme: SchemeMutationPayload;
+  deleteSubstitution: SubstitutionMutationPayload;
+  deleteTemplate: TemplateMutationPayload;
+  importCustomPaints: PaintImportPayload;
+  selectPaintSubstitution: SubstitutionMutationPayload;
   setMiniatureRecipe: MiniatureMutationPayload;
   setMiniatureSchemes: MiniatureMutationPayload;
   setPaintStock: PaintMutationResult;
+  setSubstitutionDefault: SubstitutionMutationPayload;
+  updateCustomPaint: PaintCommandPayload;
   updateMiniature: MiniatureMutationPayload;
+  updateScheme: SchemeMutationPayload;
+  updateTemplate: TemplateMutationPayload;
 };
 
 export type MutationCreateMiniatureArgs = {
@@ -299,9 +350,57 @@ export type MutationCreateMiniatureArgs = {
   input: MiniatureInput;
 };
 
+export type MutationCreateSchemeArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  input: SchemeInput;
+};
+
+export type MutationCreateSubstitutionArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  input: SubstitutionInput;
+};
+
+export type MutationCreateTemplateArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  input: TemplateInput;
+};
+
+export type MutationDeleteCustomPaintArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+};
+
 export type MutationDeleteMiniatureArgs = {
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
+};
+
+export type MutationDeleteSchemeArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationDeleteSubstitutionArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationDeleteTemplateArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationImportCustomPaintsArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  paints: Array<CustomPaintImportInput>;
+};
+
+export type MutationSelectPaintSubstitutionArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  miniatureId: Scalars["ID"]["input"];
+  substitutionId?: InputMaybe<Scalars["ID"]["input"]>;
+  targetPaintId: Scalars["ID"]["input"];
+  useOriginal?: Scalars["Boolean"]["input"];
 };
 
 export type MutationSetMiniatureRecipeArgs = {
@@ -326,10 +425,34 @@ export type MutationSetPaintStockArgs = {
   stockLevel?: InputMaybe<StockLevel>;
 };
 
+export type MutationSetSubstitutionDefaultArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  enabled: Scalars["Boolean"]["input"];
+  id: Scalars["ID"]["input"];
+};
+
+export type MutationUpdateCustomPaintArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  input: CustomPaintInput;
+};
+
 export type MutationUpdateMiniatureArgs = {
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
   input: MiniatureInput;
+};
+
+export type MutationUpdateSchemeArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  input: SchemeInput;
+};
+
+export type MutationUpdateTemplateArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  input: TemplateInput;
 };
 
 export type NavigationView = {
@@ -371,6 +494,23 @@ export type Paint = {
   type?: Maybe<Scalars["String"]["output"]>;
 };
 
+export type PaintColorMatch = {
+  __typename?: "PaintColorMatch";
+  distance: Scalars["Float"]["output"];
+  hueDelta?: Maybe<Scalars["Float"]["output"]>;
+  intensityDelta: Scalars["Float"]["output"];
+  lightnessDelta: Scalars["Float"]["output"];
+  score: Scalars["Int"]["output"];
+};
+
+export type PaintCommandPayload = {
+  __typename?: "PaintCommandPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  invalidatedFamilies: Array<VaultFamily>;
+  paintId: Scalars["ID"]["output"];
+  revision: VaultRevision;
+};
+
 export type PaintConnection = {
   __typename?: "PaintConnection";
   availableCount: Scalars["Int"]["output"];
@@ -381,6 +521,15 @@ export type PaintConnection = {
   pageInfo: PageInfo;
   revision: VaultRevision;
   totalCount: Scalars["Int"]["output"];
+};
+
+export type PaintImportPayload = {
+  __typename?: "PaintImportPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  imported: Scalars["Int"]["output"];
+  invalidatedFamilies: Array<VaultFamily>;
+  revision: VaultRevision;
+  skipped: Scalars["Int"]["output"];
 };
 
 export type PaintMutationResult = {
@@ -395,6 +544,17 @@ export type PaintOptionsView = {
   __typename?: "PaintOptionsView";
   items: Array<Paint>;
   revision: VaultRevision;
+};
+
+export type PaintRankingView = {
+  __typename?: "PaintRankingView";
+  nodes: Array<RankedPaint>;
+  owned: Scalars["Boolean"]["output"];
+  pageInfo: PageInfo;
+  paint?: Maybe<Paint>;
+  revision: VaultRevision;
+  suggestedId?: Maybe<Scalars["ID"]["output"]>;
+  totalCount: Scalars["Int"]["output"];
 };
 
 export type PaintUsage = {
@@ -442,13 +602,28 @@ export type Query = {
   miniature: MiniatureView;
   miniatureScheme: MiniatureSchemeView;
   miniatures: MiniaturesView;
+  ownedPaintOptions: PaintOptionsView;
   paint: PaintView;
   paintOptions: PaintOptionsView;
+  paintRanking: PaintRankingView;
   schemeOptions: MiniatureSchemeOptionsView;
+  schemePaintOptions: PaintOptionsView;
+  schemes: SchemesView;
+  sourceRemoval: SourceRemovalView;
+  sourceShareable: SourceShareableView;
+  sourceVersions: SourceVersionsView;
+  sources: SourcesView;
   substitution: SubstitutionView;
+  templateRecipe: TemplateRecipeView;
+  templates: TemplatesView;
   vaultInvalidation: VaultInvalidation;
   vaultNavigation: NavigationView;
   vaultRevision: VaultRevision;
+  wishlist: WishlistView;
+  /** Complete filtered shopping text, independent of loaded pages. */
+  wishlistExport: WishlistExport;
+  wishlistModelOptions: WishlistModelOptionsView;
+  wishlistRelatedProjects: WishlistProjectConnection;
 };
 
 export type QueryHomeArgs = {
@@ -485,6 +660,11 @@ export type QueryMiniaturesArgs = {
   stage?: InputMaybe<PaintingStatus>;
 };
 
+export type QueryOwnedPaintOptionsArgs = {
+  first?: Scalars["Int"]["input"];
+  search?: Scalars["String"]["input"];
+};
+
 export type QueryPaintArgs = {
   id: Scalars["ID"]["input"];
 };
@@ -495,6 +675,13 @@ export type QueryPaintOptionsArgs = {
   search?: Scalars["String"]["input"];
 };
 
+export type QueryPaintRankingArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  id: Scalars["ID"]["input"];
+  ownedOnly?: Scalars["Boolean"]["input"];
+};
+
 export type QuerySchemeOptionsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   category?: InputMaybe<Scalars["String"]["input"]>;
@@ -503,13 +690,79 @@ export type QuerySchemeOptionsArgs = {
   search?: InputMaybe<Scalars["String"]["input"]>;
 };
 
+export type QuerySchemePaintOptionsArgs = {
+  excludeIds?: Array<Scalars["ID"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  search?: Scalars["String"]["input"];
+};
+
+export type QuerySchemesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  noSource?: Scalars["Boolean"]["input"];
+  readiness?: InputMaybe<SchemeReadiness>;
+  search?: InputMaybe<Scalars["String"]["input"]>;
+  sourceId?: InputMaybe<Scalars["ID"]["input"]>;
+  usesPaintIds?: Array<Scalars["ID"]["input"]>;
+};
+
+export type QuerySourceRemovalArgs = {
+  id: Scalars["ID"]["input"];
+};
+
 export type QuerySubstitutionArgs = {
   id: Scalars["ID"]["input"];
+};
+
+export type QueryTemplateRecipeArgs = {
+  id: Scalars["ID"]["input"];
+};
+
+export type QueryTemplatesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  noSource?: InputMaybe<Scalars["Boolean"]["input"]>;
+  search?: InputMaybe<Scalars["String"]["input"]>;
+  sourceId?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
 export type QueryVaultInvalidationArgs = {
   epoch: Scalars["String"]["input"];
   since: Scalars["Sequence"]["input"];
+};
+
+export type QueryWishlistArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  miniatureId?: InputMaybe<Scalars["ID"]["input"]>;
+  missingAfter?: InputMaybe<Scalars["String"]["input"]>;
+  missingFirst?: Scalars["Int"]["input"];
+};
+
+export type QueryWishlistExportArgs = {
+  miniatureId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type QueryWishlistModelOptionsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  search?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type QueryWishlistRelatedProjectsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  paintId: Scalars["ID"]["input"];
+};
+
+export type RankedPaint = {
+  __typename?: "RankedPaint";
+  match: PaintColorMatch;
+  paint: Paint;
+  sameType: Scalars["Boolean"]["output"];
 };
 
 export type Readiness = {
@@ -519,6 +772,120 @@ export type Readiness = {
   missingStock: Scalars["Int"]["output"];
   ready: Scalars["Boolean"]["output"];
   total: Scalars["Int"]["output"];
+};
+
+export type SchemeEntryInput = {
+  id?: InputMaybe<Scalars["ID"]["input"]>;
+  imageType?: InputMaybe<Scalars["String"]["input"]>;
+  imageUrl?: InputMaybe<Scalars["String"]["input"]>;
+  label?: InputMaybe<Scalars["String"]["input"]>;
+  method?: InputMaybe<Scalars["String"]["input"]>;
+  paintId?: InputMaybe<Scalars["ID"]["input"]>;
+  role?: InputMaybe<Scalars["String"]["input"]>;
+  thumbnailUrl?: InputMaybe<Scalars["String"]["input"]>;
+  tone?: InputMaybe<Scalars["String"]["input"]>;
+  type: MiniatureSchemeEntryKind;
+};
+
+export type SchemeFacets = {
+  __typename?: "SchemeFacets";
+  categories: Array<FacetCount>;
+  readiness: Array<FacetCount>;
+  sources: Array<FacetCount>;
+};
+
+export type SchemeInput = {
+  category: Scalars["String"]["input"];
+  entries: Array<SchemeEntryInput>;
+  name: Scalars["String"]["input"];
+};
+
+export type SchemeMutationPayload = {
+  __typename?: "SchemeMutationPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  invalidatedFamilies: Array<VaultFamily>;
+  revision: VaultRevision;
+  schemeId: Scalars["ID"]["output"];
+};
+
+export type SchemeReadiness = "MISSING" | "READY";
+
+export type SchemesView = {
+  __typename?: "SchemesView";
+  facets: SchemeFacets;
+  nodes: Array<MiniatureScheme>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type SourceDependency = {
+  __typename?: "SourceDependency";
+  minimumVersion?: Maybe<Scalars["String"]["output"]>;
+  repository: Scalars["String"]["output"];
+};
+
+export type SourceItemCounts = {
+  __typename?: "SourceItemCounts";
+  paints: Scalars["Int"]["output"];
+  schemes: Scalars["Int"]["output"];
+  templates: Scalars["Int"]["output"];
+};
+
+export type SourceRemovalBlocker = {
+  __typename?: "SourceRemovalBlocker";
+  count: Scalars["Int"]["output"];
+  label: Scalars["String"]["output"];
+};
+
+export type SourceRemovalIdentity = {
+  __typename?: "SourceRemovalIdentity";
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  version: Scalars["String"]["output"];
+};
+
+export type SourceRemovalView = {
+  __typename?: "SourceRemovalView";
+  blockers: Array<SourceRemovalBlocker>;
+  canRemove: Scalars["Boolean"]["output"];
+  removes: SourceItemCounts;
+  revision: VaultRevision;
+  source: SourceRemovalIdentity;
+};
+
+export type SourceShareItem = {
+  __typename?: "SourceShareItem";
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+};
+
+export type SourceShareableView = {
+  __typename?: "SourceShareableView";
+  paints: Array<SourceShareItem>;
+  revision: VaultRevision;
+  schemes: Array<SourceShareItem>;
+  templates: Array<SourceShareItem>;
+};
+
+export type SourceVersion = {
+  __typename?: "SourceVersion";
+  availableVersion?: Maybe<Scalars["String"]["output"]>;
+  error?: Maybe<Scalars["String"]["output"]>;
+  id: Scalars["ID"]["output"];
+  updateAvailable?: Maybe<Scalars["Boolean"]["output"]>;
+};
+
+export type SourceVersionsView = {
+  __typename?: "SourceVersionsView";
+  revision: VaultRevision;
+  versions: Array<SourceVersion>;
+};
+
+export type SourcesView = {
+  __typename?: "SourcesView";
+  revision: VaultRevision;
+  sources: Array<CatalogSource>;
 };
 
 export type StockLevel = "EMPTY" | "FULL" | "LOW";
@@ -564,10 +931,135 @@ export type SubstitutionIngredient = {
   sortOrder: Scalars["Int"]["output"];
 };
 
+export type SubstitutionIngredientInput = {
+  paintId: Scalars["ID"]["input"];
+  parts?: InputMaybe<Scalars["Int"]["input"]>;
+};
+
+export type SubstitutionInput = {
+  ingredients: Array<SubstitutionIngredientInput>;
+  name: Scalars["String"]["input"];
+  targetPaintId: Scalars["ID"]["input"];
+};
+
+export type SubstitutionMutationPayload = {
+  __typename?: "SubstitutionMutationPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  invalidatedFamilies: Array<VaultFamily>;
+  miniatureId?: Maybe<Scalars["ID"]["output"]>;
+  paintId?: Maybe<Scalars["ID"]["output"]>;
+  revision: VaultRevision;
+  substitutionId?: Maybe<Scalars["ID"]["output"]>;
+};
+
 export type SubstitutionView = {
   __typename?: "SubstitutionView";
   revision: VaultRevision;
   substitution?: Maybe<Substitution>;
+};
+
+export type TemplateConnection = {
+  __typename?: "TemplateConnection";
+  nodes: Array<TemplateSummary>;
+  pageInfo: PageInfo;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type TemplateInput = {
+  faction?: InputMaybe<Scalars["String"]["input"]>;
+  imageUrl?: InputMaybe<Scalars["String"]["input"]>;
+  manufacturer?: InputMaybe<Scalars["String"]["input"]>;
+  name?: InputMaybe<Scalars["String"]["input"]>;
+  paints?: InputMaybe<Array<TemplatePaintInput>>;
+  schemeIds?: InputMaybe<Array<Scalars["ID"]["input"]>>;
+  sourceMiniatureId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type TemplateMutationPayload = {
+  __typename?: "TemplateMutationPayload";
+  clientMutationId?: Maybe<Scalars["String"]["output"]>;
+  invalidatedFamilies: Array<VaultFamily>;
+  revision: VaultRevision;
+  templateId: Scalars["ID"]["output"];
+};
+
+export type TemplatePaint = {
+  __typename?: "TemplatePaint";
+  notes: Scalars["String"]["output"];
+  paintBrand: Scalars["String"]["output"];
+  paintId: Scalars["ID"]["output"];
+  paintName: Scalars["String"]["output"];
+  sortOrder: Scalars["Int"]["output"];
+  step: Scalars["String"]["output"];
+};
+
+export type TemplatePaintConnection = {
+  __typename?: "TemplatePaintConnection";
+  nodes: Array<TemplatePaint>;
+  pageInfo: PageInfo;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type TemplatePaintInput = {
+  notes?: Scalars["String"]["input"];
+  paintId: Scalars["ID"]["input"];
+  sortOrder?: Scalars["Int"]["input"];
+  step: Scalars["String"]["input"];
+};
+
+export type TemplateRecipeView = {
+  __typename?: "TemplateRecipeView";
+  paints: TemplatePaintConnection;
+  revision: VaultRevision;
+  schemes: TemplateSchemeConnection;
+  templateId: Scalars["ID"]["output"];
+};
+
+export type TemplateRecipeViewPaintsArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+};
+
+export type TemplateRecipeViewSchemesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+};
+
+export type TemplateScheme = {
+  __typename?: "TemplateScheme";
+  name: Scalars["String"]["output"];
+  schemeId: Scalars["ID"]["output"];
+};
+
+export type TemplateSchemeConnection = {
+  __typename?: "TemplateSchemeConnection";
+  nodes: Array<TemplateScheme>;
+  pageInfo: PageInfo;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type TemplateSummary = {
+  __typename?: "TemplateSummary";
+  categories: Array<Scalars["String"]["output"]>;
+  faction: Scalars["String"]["output"];
+  id: Scalars["ID"]["output"];
+  imageUrl: Scalars["String"]["output"];
+  kind: Scalars["String"]["output"];
+  manufacturer: Scalars["String"]["output"];
+  name: Scalars["String"]["output"];
+  paintCount: Scalars["Int"]["output"];
+  schemeCount: Scalars["Int"]["output"];
+  sourceId?: Maybe<Scalars["ID"]["output"]>;
+  sourceLogoUrl?: Maybe<Scalars["String"]["output"]>;
+  sourceName?: Maybe<Scalars["String"]["output"]>;
+};
+
+export type TemplatesView = {
+  __typename?: "TemplatesView";
+  categoryCounts: Array<FacetCount>;
+  revision: VaultRevision;
+  sourceCounts: Array<FacetCount>;
+  templates: TemplateConnection;
 };
 
 export type VaultFamily =
@@ -586,6 +1078,84 @@ export type VaultRevision = {
   __typename?: "VaultRevision";
   epoch: Scalars["String"]["output"];
   seq: Scalars["Sequence"]["output"];
+};
+
+export type WishlistConnection = {
+  __typename?: "WishlistConnection";
+  nodes: Array<WishlistRow>;
+  pageInfo: PageInfo;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type WishlistCounts = {
+  __typename?: "WishlistCounts";
+  brokenSubstitution: Scalars["Int"]["output"];
+  listedMissingStock: Scalars["Int"]["output"];
+  /** Distinct unlisted project paint issues, globally, independent of model filter. */
+  missingPaints: Scalars["Int"]["output"];
+  /** Unlisted paint issues with missing physical stock (may also be broken). */
+  missingStock: Scalars["Int"]["output"];
+  projectCount: Scalars["Int"]["output"];
+  restockPaints: Scalars["Int"]["output"];
+  shoppingPaints: Scalars["Int"]["output"];
+};
+
+export type WishlistExport = {
+  __typename?: "WishlistExport";
+  revision: VaultRevision;
+  text: Scalars["String"]["output"];
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type WishlistModelOption = {
+  __typename?: "WishlistModelOption";
+  id: Scalars["ID"]["output"];
+  /** Distinct shopping paints associated with this miniature. */
+  projectCount: Scalars["Int"]["output"];
+  title: Scalars["String"]["output"];
+};
+
+export type WishlistModelOptionsView = {
+  __typename?: "WishlistModelOptionsView";
+  nodes: Array<WishlistModelOption>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type WishlistProject = {
+  __typename?: "WishlistProject";
+  id: Scalars["ID"]["output"];
+  title: Scalars["String"]["output"];
+};
+
+export type WishlistProjectConnection = {
+  __typename?: "WishlistProjectConnection";
+  nodes: Array<WishlistProject>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type WishlistRow = {
+  __typename?: "WishlistRow";
+  brandGroup: Scalars["String"]["output"];
+  brokenSubstitution: Scalars["Boolean"]["output"];
+  id: Scalars["ID"]["output"];
+  missingStock: Scalars["Boolean"]["output"];
+  paint: Paint;
+  projectCount: Scalars["Int"]["output"];
+  relatedProjectsPreview: Array<WishlistProject>;
+  relatedProjectsTruncated: Scalars["Boolean"]["output"];
+  restock: Scalars["Boolean"]["output"];
+};
+
+export type WishlistView = {
+  __typename?: "WishlistView";
+  counts: WishlistCounts;
+  missing: WishlistConnection;
+  revision: VaultRevision;
+  shopping: WishlistConnection;
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -677,6 +1247,9 @@ export type ResolversTypes = {
   ActiveSubstitution: ResolverTypeWrapper<ActiveSubstitution>;
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
   BrokenReason: BrokenReason;
+  CatalogSource: ResolverTypeWrapper<CatalogSource>;
+  CustomPaintImportInput: CustomPaintImportInput;
+  CustomPaintInput: CustomPaintInput;
   FacetCount: ResolverTypeWrapper<FacetCount>;
   Float: ResolverTypeWrapper<Scalars["Float"]["output"]>;
   HomeCounts: ResolverTypeWrapper<HomeCounts>;
@@ -713,16 +1286,37 @@ export type ResolversTypes = {
   Ownership: Ownership;
   PageInfo: ResolverTypeWrapper<PageInfo>;
   Paint: ResolverTypeWrapper<Paint>;
+  PaintColorMatch: ResolverTypeWrapper<PaintColorMatch>;
+  PaintCommandPayload: ResolverTypeWrapper<PaintCommandPayload>;
   PaintConnection: ResolverTypeWrapper<PaintConnection>;
+  PaintImportPayload: ResolverTypeWrapper<PaintImportPayload>;
   PaintMutationResult: ResolverTypeWrapper<PaintMutationResult>;
   PaintOptionsView: ResolverTypeWrapper<PaintOptionsView>;
+  PaintRankingView: ResolverTypeWrapper<PaintRankingView>;
   PaintUsage: ResolverTypeWrapper<PaintUsage>;
   PaintUsageConnection: ResolverTypeWrapper<PaintUsageConnection>;
   PaintView: ResolverTypeWrapper<PaintViewRead>;
   PaintingStatus: PaintingStatus;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  RankedPaint: ResolverTypeWrapper<RankedPaint>;
   Readiness: ResolverTypeWrapper<Readiness>;
+  SchemeEntryInput: SchemeEntryInput;
+  SchemeFacets: ResolverTypeWrapper<SchemeFacets>;
+  SchemeInput: SchemeInput;
+  SchemeMutationPayload: ResolverTypeWrapper<SchemeMutationPayload>;
+  SchemeReadiness: SchemeReadiness;
+  SchemesView: ResolverTypeWrapper<SchemesView>;
   Sequence: ResolverTypeWrapper<Scalars["Sequence"]["output"]>;
+  SourceDependency: ResolverTypeWrapper<SourceDependency>;
+  SourceItemCounts: ResolverTypeWrapper<SourceItemCounts>;
+  SourceRemovalBlocker: ResolverTypeWrapper<SourceRemovalBlocker>;
+  SourceRemovalIdentity: ResolverTypeWrapper<SourceRemovalIdentity>;
+  SourceRemovalView: ResolverTypeWrapper<SourceRemovalView>;
+  SourceShareItem: ResolverTypeWrapper<SourceShareItem>;
+  SourceShareableView: ResolverTypeWrapper<SourceShareableView>;
+  SourceVersion: ResolverTypeWrapper<SourceVersion>;
+  SourceVersionsView: ResolverTypeWrapper<SourceVersionsView>;
+  SourcesView: ResolverTypeWrapper<SourcesView>;
   StockLevel: StockLevel;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   Subscription: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -731,18 +1325,44 @@ export type ResolversTypes = {
     Omit<SubstitutionConnection, "nodes"> & { nodes: Array<ResolversTypes["Substitution"]> }
   >;
   SubstitutionIngredient: ResolverTypeWrapper<SubstitutionIngredient>;
+  SubstitutionIngredientInput: SubstitutionIngredientInput;
+  SubstitutionInput: SubstitutionInput;
+  SubstitutionMutationPayload: ResolverTypeWrapper<SubstitutionMutationPayload>;
   SubstitutionView: ResolverTypeWrapper<
     Omit<SubstitutionView, "substitution"> & { substitution?: Maybe<ResolversTypes["Substitution"]> }
   >;
+  TemplateConnection: ResolverTypeWrapper<TemplateConnection>;
+  TemplateInput: TemplateInput;
+  TemplateMutationPayload: ResolverTypeWrapper<TemplateMutationPayload>;
+  TemplatePaint: ResolverTypeWrapper<TemplatePaint>;
+  TemplatePaintConnection: ResolverTypeWrapper<TemplatePaintConnection>;
+  TemplatePaintInput: TemplatePaintInput;
+  TemplateRecipeView: ResolverTypeWrapper<TemplateRecipeRead>;
+  TemplateScheme: ResolverTypeWrapper<TemplateScheme>;
+  TemplateSchemeConnection: ResolverTypeWrapper<TemplateSchemeConnection>;
+  TemplateSummary: ResolverTypeWrapper<TemplateSummary>;
+  TemplatesView: ResolverTypeWrapper<TemplatesView>;
   VaultFamily: VaultFamily;
   VaultInvalidation: ResolverTypeWrapper<VaultInvalidation>;
   VaultRevision: ResolverTypeWrapper<VaultRevision>;
+  WishlistConnection: ResolverTypeWrapper<WishlistConnection>;
+  WishlistCounts: ResolverTypeWrapper<WishlistCounts>;
+  WishlistExport: ResolverTypeWrapper<WishlistExport>;
+  WishlistModelOption: ResolverTypeWrapper<WishlistModelOption>;
+  WishlistModelOptionsView: ResolverTypeWrapper<WishlistModelOptionsView>;
+  WishlistProject: ResolverTypeWrapper<WishlistProject>;
+  WishlistProjectConnection: ResolverTypeWrapper<WishlistProjectConnection>;
+  WishlistRow: ResolverTypeWrapper<WishlistRow>;
+  WishlistView: ResolverTypeWrapper<WishlistView>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   ActiveSubstitution: ActiveSubstitution;
   Boolean: Scalars["Boolean"]["output"];
+  CatalogSource: CatalogSource;
+  CustomPaintImportInput: CustomPaintImportInput;
+  CustomPaintInput: CustomPaintInput;
   FacetCount: FacetCount;
   Float: Scalars["Float"]["output"];
   HomeCounts: HomeCounts;
@@ -776,15 +1396,35 @@ export type ResolversParentTypes = {
   NavigationView: NavigationView;
   PageInfo: PageInfo;
   Paint: Paint;
+  PaintColorMatch: PaintColorMatch;
+  PaintCommandPayload: PaintCommandPayload;
   PaintConnection: PaintConnection;
+  PaintImportPayload: PaintImportPayload;
   PaintMutationResult: PaintMutationResult;
   PaintOptionsView: PaintOptionsView;
+  PaintRankingView: PaintRankingView;
   PaintUsage: PaintUsage;
   PaintUsageConnection: PaintUsageConnection;
   PaintView: PaintViewRead;
   Query: Record<PropertyKey, never>;
+  RankedPaint: RankedPaint;
   Readiness: Readiness;
+  SchemeEntryInput: SchemeEntryInput;
+  SchemeFacets: SchemeFacets;
+  SchemeInput: SchemeInput;
+  SchemeMutationPayload: SchemeMutationPayload;
+  SchemesView: SchemesView;
   Sequence: Scalars["Sequence"]["output"];
+  SourceDependency: SourceDependency;
+  SourceItemCounts: SourceItemCounts;
+  SourceRemovalBlocker: SourceRemovalBlocker;
+  SourceRemovalIdentity: SourceRemovalIdentity;
+  SourceRemovalView: SourceRemovalView;
+  SourceShareItem: SourceShareItem;
+  SourceShareableView: SourceShareableView;
+  SourceVersion: SourceVersion;
+  SourceVersionsView: SourceVersionsView;
+  SourcesView: SourcesView;
   String: Scalars["String"]["output"];
   Subscription: Record<PropertyKey, never>;
   Substitution: SubstitutionRead;
@@ -792,11 +1432,34 @@ export type ResolversParentTypes = {
     nodes: Array<ResolversParentTypes["Substitution"]>;
   };
   SubstitutionIngredient: SubstitutionIngredient;
+  SubstitutionIngredientInput: SubstitutionIngredientInput;
+  SubstitutionInput: SubstitutionInput;
+  SubstitutionMutationPayload: SubstitutionMutationPayload;
   SubstitutionView: Omit<SubstitutionView, "substitution"> & {
     substitution?: Maybe<ResolversParentTypes["Substitution"]>;
   };
+  TemplateConnection: TemplateConnection;
+  TemplateInput: TemplateInput;
+  TemplateMutationPayload: TemplateMutationPayload;
+  TemplatePaint: TemplatePaint;
+  TemplatePaintConnection: TemplatePaintConnection;
+  TemplatePaintInput: TemplatePaintInput;
+  TemplateRecipeView: TemplateRecipeRead;
+  TemplateScheme: TemplateScheme;
+  TemplateSchemeConnection: TemplateSchemeConnection;
+  TemplateSummary: TemplateSummary;
+  TemplatesView: TemplatesView;
   VaultInvalidation: VaultInvalidation;
   VaultRevision: VaultRevision;
+  WishlistConnection: WishlistConnection;
+  WishlistCounts: WishlistCounts;
+  WishlistExport: WishlistExport;
+  WishlistModelOption: WishlistModelOption;
+  WishlistModelOptionsView: WishlistModelOptionsView;
+  WishlistProject: WishlistProject;
+  WishlistProjectConnection: WishlistProjectConnection;
+  WishlistRow: WishlistRow;
+  WishlistView: WishlistView;
 };
 
 export type ActiveSubstitutionResolvers<
@@ -805,6 +1468,23 @@ export type ActiveSubstitutionResolvers<
 > = {
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type CatalogSourceResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["CatalogSource"] = ResolversParentTypes["CatalogSource"],
+> = {
+  attribution?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  counts?: Resolver<ResolversTypes["SourceItemCounts"], ParentType, ContextType>;
+  dependencies?: Resolver<Array<ResolversTypes["SourceDependency"]>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  lastError?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  license?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  logoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  repository?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  version?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
 };
 
 export type FacetCountResolvers<
@@ -965,15 +1645,20 @@ export type MiniatureSchemeResolvers<
 > = {
   availableCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   category?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  gradient?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   imageUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   isSystem?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   paintCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  paintNames?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  previewMoreCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   previewSwatches?: Resolver<Array<ResolversTypes["MiniatureSwatch"]>, ParentType, ContextType>;
   previewSwatchesTruncated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
   sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  usageCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
 export type MiniatureSchemeConnectionResolvers<
@@ -1112,11 +1797,65 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationCreateMiniatureArgs, "input">
   >;
+  createScheme?: Resolver<
+    ResolversTypes["SchemeMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateSchemeArgs, "input">
+  >;
+  createSubstitution?: Resolver<
+    ResolversTypes["SubstitutionMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateSubstitutionArgs, "input">
+  >;
+  createTemplate?: Resolver<
+    ResolversTypes["TemplateMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateTemplateArgs, "input">
+  >;
+  deleteCustomPaint?: Resolver<
+    ResolversTypes["PaintCommandPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteCustomPaintArgs, "id">
+  >;
   deleteMiniature?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],
     ParentType,
     ContextType,
     RequireFields<MutationDeleteMiniatureArgs, "id">
+  >;
+  deleteScheme?: Resolver<
+    ResolversTypes["SchemeMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteSchemeArgs, "id">
+  >;
+  deleteSubstitution?: Resolver<
+    ResolversTypes["SubstitutionMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteSubstitutionArgs, "id">
+  >;
+  deleteTemplate?: Resolver<
+    ResolversTypes["TemplateMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteTemplateArgs, "id">
+  >;
+  importCustomPaints?: Resolver<
+    ResolversTypes["PaintImportPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationImportCustomPaintsArgs, "paints">
+  >;
+  selectPaintSubstitution?: Resolver<
+    ResolversTypes["SubstitutionMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSelectPaintSubstitutionArgs, "miniatureId" | "targetPaintId" | "useOriginal">
   >;
   setMiniatureRecipe?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],
@@ -1136,11 +1875,35 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationSetPaintStockArgs, "paintId">
   >;
+  setSubstitutionDefault?: Resolver<
+    ResolversTypes["SubstitutionMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationSetSubstitutionDefaultArgs, "enabled" | "id">
+  >;
+  updateCustomPaint?: Resolver<
+    ResolversTypes["PaintCommandPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateCustomPaintArgs, "id" | "input">
+  >;
   updateMiniature?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],
     ParentType,
     ContextType,
     RequireFields<MutationUpdateMiniatureArgs, "id" | "input">
+  >;
+  updateScheme?: Resolver<
+    ResolversTypes["SchemeMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateSchemeArgs, "id" | "input">
+  >;
+  updateTemplate?: Resolver<
+    ResolversTypes["TemplateMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationUpdateTemplateArgs, "id" | "input">
   >;
 };
 
@@ -1187,6 +1950,28 @@ export type PaintResolvers<
   type?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
 };
 
+export type PaintColorMatchResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PaintColorMatch"] = ResolversParentTypes["PaintColorMatch"],
+> = {
+  distance?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  hueDelta?: Resolver<Maybe<ResolversTypes["Float"]>, ParentType, ContextType>;
+  intensityDelta?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  lightnessDelta?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  score?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type PaintCommandPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PaintCommandPayload"] =
+    ResolversParentTypes["PaintCommandPayload"],
+> = {
+  clientMutationId?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  paintId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+};
+
 export type PaintConnectionResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["PaintConnection"] = ResolversParentTypes["PaintConnection"],
@@ -1199,6 +1984,17 @@ export type PaintConnectionResolvers<
   pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
   revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
   totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type PaintImportPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PaintImportPayload"] = ResolversParentTypes["PaintImportPayload"],
+> = {
+  clientMutationId?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  imported?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  skipped?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
 export type PaintMutationResultResolvers<
@@ -1218,6 +2014,19 @@ export type PaintOptionsViewResolvers<
 > = {
   items?: Resolver<Array<ResolversTypes["Paint"]>, ParentType, ContextType>;
   revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+};
+
+export type PaintRankingViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PaintRankingView"] = ResolversParentTypes["PaintRankingView"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["RankedPaint"]>, ParentType, ContextType>;
+  owned?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  paint?: Resolver<Maybe<ResolversTypes["Paint"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  suggestedId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
 export type PaintUsageResolvers<
@@ -1293,6 +2102,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryMiniaturesArgs, "first">
   >;
+  ownedPaintOptions?: Resolver<
+    ResolversTypes["PaintOptionsView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryOwnedPaintOptionsArgs, "first" | "search">
+  >;
   paint?: Resolver<ResolversTypes["PaintView"], ParentType, ContextType, RequireFields<QueryPaintArgs, "id">>;
   paintOptions?: Resolver<
     ResolversTypes["PaintOptionsView"],
@@ -1300,17 +2115,56 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryPaintOptionsArgs, "excludeIds" | "first" | "search">
   >;
+  paintRanking?: Resolver<
+    ResolversTypes["PaintRankingView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryPaintRankingArgs, "first" | "id" | "ownedOnly">
+  >;
   schemeOptions?: Resolver<
     ResolversTypes["MiniatureSchemeOptionsView"],
     ParentType,
     ContextType,
     RequireFields<QuerySchemeOptionsArgs, "excludeIds" | "first">
   >;
+  schemePaintOptions?: Resolver<
+    ResolversTypes["PaintOptionsView"],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySchemePaintOptionsArgs, "excludeIds" | "first" | "search">
+  >;
+  schemes?: Resolver<
+    ResolversTypes["SchemesView"],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySchemesArgs, "first" | "noSource" | "usesPaintIds">
+  >;
+  sourceRemoval?: Resolver<
+    ResolversTypes["SourceRemovalView"],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySourceRemovalArgs, "id">
+  >;
+  sourceShareable?: Resolver<ResolversTypes["SourceShareableView"], ParentType, ContextType>;
+  sourceVersions?: Resolver<ResolversTypes["SourceVersionsView"], ParentType, ContextType>;
+  sources?: Resolver<ResolversTypes["SourcesView"], ParentType, ContextType>;
   substitution?: Resolver<
     ResolversTypes["SubstitutionView"],
     ParentType,
     ContextType,
     RequireFields<QuerySubstitutionArgs, "id">
+  >;
+  templateRecipe?: Resolver<
+    ResolversTypes["TemplateRecipeView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryTemplateRecipeArgs, "id">
+  >;
+  templates?: Resolver<
+    ResolversTypes["TemplatesView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryTemplatesArgs, "first" | "noSource">
   >;
   vaultInvalidation?: Resolver<
     ResolversTypes["VaultInvalidation"],
@@ -1320,6 +2174,39 @@ export type QueryResolvers<
   >;
   vaultNavigation?: Resolver<ResolversTypes["NavigationView"], ParentType, ContextType>;
   vaultRevision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  wishlist?: Resolver<
+    ResolversTypes["WishlistView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryWishlistArgs, "first" | "missingFirst">
+  >;
+  wishlistExport?: Resolver<
+    ResolversTypes["WishlistExport"],
+    ParentType,
+    ContextType,
+    Partial<QueryWishlistExportArgs>
+  >;
+  wishlistModelOptions?: Resolver<
+    ResolversTypes["WishlistModelOptionsView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryWishlistModelOptionsArgs, "first">
+  >;
+  wishlistRelatedProjects?: Resolver<
+    ResolversTypes["WishlistProjectConnection"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryWishlistRelatedProjectsArgs, "first" | "paintId">
+  >;
+};
+
+export type RankedPaintResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["RankedPaint"] = ResolversParentTypes["RankedPaint"],
+> = {
+  match?: Resolver<ResolversTypes["PaintColorMatch"], ParentType, ContextType>;
+  paint?: Resolver<ResolversTypes["Paint"], ParentType, ContextType>;
+  sameType?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
 };
 
 export type ReadinessResolvers<
@@ -1333,9 +2220,132 @@ export type ReadinessResolvers<
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
+export type SchemeFacetsResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SchemeFacets"] = ResolversParentTypes["SchemeFacets"],
+> = {
+  categories?: Resolver<Array<ResolversTypes["FacetCount"]>, ParentType, ContextType>;
+  readiness?: Resolver<Array<ResolversTypes["FacetCount"]>, ParentType, ContextType>;
+  sources?: Resolver<Array<ResolversTypes["FacetCount"]>, ParentType, ContextType>;
+};
+
+export type SchemeMutationPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SchemeMutationPayload"] =
+    ResolversParentTypes["SchemeMutationPayload"],
+> = {
+  clientMutationId?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  schemeId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+};
+
+export type SchemesViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SchemesView"] = ResolversParentTypes["SchemesView"],
+> = {
+  facets?: Resolver<ResolversTypes["SchemeFacets"], ParentType, ContextType>;
+  nodes?: Resolver<Array<ResolversTypes["MiniatureScheme"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
 export interface SequenceScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes["Sequence"], any> {
   name: "Sequence";
 }
+
+export type SourceDependencyResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceDependency"] = ResolversParentTypes["SourceDependency"],
+> = {
+  minimumVersion?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  repository?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type SourceItemCountsResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceItemCounts"] = ResolversParentTypes["SourceItemCounts"],
+> = {
+  paints?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  schemes?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  templates?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type SourceRemovalBlockerResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceRemovalBlocker"] =
+    ResolversParentTypes["SourceRemovalBlocker"],
+> = {
+  count?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type SourceRemovalIdentityResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceRemovalIdentity"] =
+    ResolversParentTypes["SourceRemovalIdentity"],
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  version?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type SourceRemovalViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceRemovalView"] = ResolversParentTypes["SourceRemovalView"],
+> = {
+  blockers?: Resolver<Array<ResolversTypes["SourceRemovalBlocker"]>, ParentType, ContextType>;
+  canRemove?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  removes?: Resolver<ResolversTypes["SourceItemCounts"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  source?: Resolver<ResolversTypes["SourceRemovalIdentity"], ParentType, ContextType>;
+};
+
+export type SourceShareItemResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceShareItem"] = ResolversParentTypes["SourceShareItem"],
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type SourceShareableViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceShareableView"] =
+    ResolversParentTypes["SourceShareableView"],
+> = {
+  paints?: Resolver<Array<ResolversTypes["SourceShareItem"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  schemes?: Resolver<Array<ResolversTypes["SourceShareItem"]>, ParentType, ContextType>;
+  templates?: Resolver<Array<ResolversTypes["SourceShareItem"]>, ParentType, ContextType>;
+};
+
+export type SourceVersionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceVersion"] = ResolversParentTypes["SourceVersion"],
+> = {
+  availableVersion?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  updateAvailable?: Resolver<Maybe<ResolversTypes["Boolean"]>, ParentType, ContextType>;
+};
+
+export type SourceVersionsViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourceVersionsView"] = ResolversParentTypes["SourceVersionsView"],
+> = {
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  versions?: Resolver<Array<ResolversTypes["SourceVersion"]>, ParentType, ContextType>;
+};
+
+export type SourcesViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SourcesView"] = ResolversParentTypes["SourcesView"],
+> = {
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  sources?: Resolver<Array<ResolversTypes["CatalogSource"]>, ParentType, ContextType>;
+};
 
 export type SubscriptionResolvers<
   ContextType = GraphQLContext,
@@ -1388,12 +2398,133 @@ export type SubstitutionIngredientResolvers<
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
+export type SubstitutionMutationPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SubstitutionMutationPayload"] =
+    ResolversParentTypes["SubstitutionMutationPayload"],
+> = {
+  clientMutationId?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  miniatureId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+  paintId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  substitutionId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+};
+
 export type SubstitutionViewResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["SubstitutionView"] = ResolversParentTypes["SubstitutionView"],
 > = {
   revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
   substitution?: Resolver<Maybe<ResolversTypes["Substitution"]>, ParentType, ContextType>;
+};
+
+export type TemplateConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateConnection"] = ResolversParentTypes["TemplateConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["TemplateSummary"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type TemplateMutationPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateMutationPayload"] =
+    ResolversParentTypes["TemplateMutationPayload"],
+> = {
+  clientMutationId?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  templateId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+};
+
+export type TemplatePaintResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplatePaint"] = ResolversParentTypes["TemplatePaint"],
+> = {
+  notes?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  paintBrand?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  paintId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  paintName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  step?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type TemplatePaintConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplatePaintConnection"] =
+    ResolversParentTypes["TemplatePaintConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["TemplatePaint"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type TemplateRecipeViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateRecipeView"] = ResolversParentTypes["TemplateRecipeView"],
+> = {
+  paints?: Resolver<
+    ResolversTypes["TemplatePaintConnection"],
+    ParentType,
+    ContextType,
+    RequireFields<TemplateRecipeViewPaintsArgs, "first">
+  >;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  schemes?: Resolver<
+    ResolversTypes["TemplateSchemeConnection"],
+    ParentType,
+    ContextType,
+    RequireFields<TemplateRecipeViewSchemesArgs, "first">
+  >;
+  templateId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+};
+
+export type TemplateSchemeResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateScheme"] = ResolversParentTypes["TemplateScheme"],
+> = {
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  schemeId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+};
+
+export type TemplateSchemeConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateSchemeConnection"] =
+    ResolversParentTypes["TemplateSchemeConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["TemplateScheme"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type TemplateSummaryResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplateSummary"] = ResolversParentTypes["TemplateSummary"],
+> = {
+  categories?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
+  faction?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  imageUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  kind?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  manufacturer?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  paintCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  schemeCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+  sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+};
+
+export type TemplatesViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["TemplatesView"] = ResolversParentTypes["TemplatesView"],
+> = {
+  categoryCounts?: Resolver<Array<ResolversTypes["FacetCount"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  sourceCounts?: Resolver<Array<ResolversTypes["FacetCount"]>, ParentType, ContextType>;
+  templates?: Resolver<ResolversTypes["TemplateConnection"], ParentType, ContextType>;
 };
 
 export type VaultInvalidationResolvers<
@@ -1414,8 +2545,105 @@ export type VaultRevisionResolvers<
   seq?: Resolver<ResolversTypes["Sequence"], ParentType, ContextType>;
 };
 
+export type WishlistConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistConnection"] = ResolversParentTypes["WishlistConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["WishlistRow"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type WishlistCountsResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistCounts"] = ResolversParentTypes["WishlistCounts"],
+> = {
+  brokenSubstitution?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  listedMissingStock?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  missingPaints?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  missingStock?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  projectCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  restockPaints?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  shoppingPaints?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type WishlistExportResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistExport"] = ResolversParentTypes["WishlistExport"],
+> = {
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  text?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type WishlistModelOptionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistModelOption"] =
+    ResolversParentTypes["WishlistModelOption"],
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  projectCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type WishlistModelOptionsViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistModelOptionsView"] =
+    ResolversParentTypes["WishlistModelOptionsView"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["WishlistModelOption"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type WishlistProjectResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistProject"] = ResolversParentTypes["WishlistProject"],
+> = {
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type WishlistProjectConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistProjectConnection"] =
+    ResolversParentTypes["WishlistProjectConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["WishlistProject"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type WishlistRowResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistRow"] = ResolversParentTypes["WishlistRow"],
+> = {
+  brandGroup?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  brokenSubstitution?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  missingStock?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  paint?: Resolver<ResolversTypes["Paint"], ParentType, ContextType>;
+  projectCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  relatedProjectsPreview?: Resolver<Array<ResolversTypes["WishlistProject"]>, ParentType, ContextType>;
+  relatedProjectsTruncated?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  restock?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+};
+
+export type WishlistViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["WishlistView"] = ResolversParentTypes["WishlistView"],
+> = {
+  counts?: Resolver<ResolversTypes["WishlistCounts"], ParentType, ContextType>;
+  missing?: Resolver<ResolversTypes["WishlistConnection"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  shopping?: Resolver<ResolversTypes["WishlistConnection"], ParentType, ContextType>;
+};
+
 export type Resolvers<ContextType = GraphQLContext> = {
   ActiveSubstitution?: ActiveSubstitutionResolvers<ContextType>;
+  CatalogSource?: CatalogSourceResolvers<ContextType>;
   FacetCount?: FacetCountResolvers<ContextType>;
   HomeCounts?: HomeCountsResolvers<ContextType>;
   HomeView?: HomeViewResolvers<ContextType>;
@@ -1444,20 +2672,57 @@ export type Resolvers<ContextType = GraphQLContext> = {
   NavigationView?: NavigationViewResolvers<ContextType>;
   PageInfo?: PageInfoResolvers<ContextType>;
   Paint?: PaintResolvers<ContextType>;
+  PaintColorMatch?: PaintColorMatchResolvers<ContextType>;
+  PaintCommandPayload?: PaintCommandPayloadResolvers<ContextType>;
   PaintConnection?: PaintConnectionResolvers<ContextType>;
+  PaintImportPayload?: PaintImportPayloadResolvers<ContextType>;
   PaintMutationResult?: PaintMutationResultResolvers<ContextType>;
   PaintOptionsView?: PaintOptionsViewResolvers<ContextType>;
+  PaintRankingView?: PaintRankingViewResolvers<ContextType>;
   PaintUsage?: PaintUsageResolvers<ContextType>;
   PaintUsageConnection?: PaintUsageConnectionResolvers<ContextType>;
   PaintView?: PaintViewResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  RankedPaint?: RankedPaintResolvers<ContextType>;
   Readiness?: ReadinessResolvers<ContextType>;
+  SchemeFacets?: SchemeFacetsResolvers<ContextType>;
+  SchemeMutationPayload?: SchemeMutationPayloadResolvers<ContextType>;
+  SchemesView?: SchemesViewResolvers<ContextType>;
   Sequence?: GraphQLScalarType;
+  SourceDependency?: SourceDependencyResolvers<ContextType>;
+  SourceItemCounts?: SourceItemCountsResolvers<ContextType>;
+  SourceRemovalBlocker?: SourceRemovalBlockerResolvers<ContextType>;
+  SourceRemovalIdentity?: SourceRemovalIdentityResolvers<ContextType>;
+  SourceRemovalView?: SourceRemovalViewResolvers<ContextType>;
+  SourceShareItem?: SourceShareItemResolvers<ContextType>;
+  SourceShareableView?: SourceShareableViewResolvers<ContextType>;
+  SourceVersion?: SourceVersionResolvers<ContextType>;
+  SourceVersionsView?: SourceVersionsViewResolvers<ContextType>;
+  SourcesView?: SourcesViewResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   Substitution?: SubstitutionResolvers<ContextType>;
   SubstitutionConnection?: SubstitutionConnectionResolvers<ContextType>;
   SubstitutionIngredient?: SubstitutionIngredientResolvers<ContextType>;
+  SubstitutionMutationPayload?: SubstitutionMutationPayloadResolvers<ContextType>;
   SubstitutionView?: SubstitutionViewResolvers<ContextType>;
+  TemplateConnection?: TemplateConnectionResolvers<ContextType>;
+  TemplateMutationPayload?: TemplateMutationPayloadResolvers<ContextType>;
+  TemplatePaint?: TemplatePaintResolvers<ContextType>;
+  TemplatePaintConnection?: TemplatePaintConnectionResolvers<ContextType>;
+  TemplateRecipeView?: TemplateRecipeViewResolvers<ContextType>;
+  TemplateScheme?: TemplateSchemeResolvers<ContextType>;
+  TemplateSchemeConnection?: TemplateSchemeConnectionResolvers<ContextType>;
+  TemplateSummary?: TemplateSummaryResolvers<ContextType>;
+  TemplatesView?: TemplatesViewResolvers<ContextType>;
   VaultInvalidation?: VaultInvalidationResolvers<ContextType>;
   VaultRevision?: VaultRevisionResolvers<ContextType>;
+  WishlistConnection?: WishlistConnectionResolvers<ContextType>;
+  WishlistCounts?: WishlistCountsResolvers<ContextType>;
+  WishlistExport?: WishlistExportResolvers<ContextType>;
+  WishlistModelOption?: WishlistModelOptionResolvers<ContextType>;
+  WishlistModelOptionsView?: WishlistModelOptionsViewResolvers<ContextType>;
+  WishlistProject?: WishlistProjectResolvers<ContextType>;
+  WishlistProjectConnection?: WishlistProjectConnectionResolvers<ContextType>;
+  WishlistRow?: WishlistRowResolvers<ContextType>;
+  WishlistView?: WishlistViewResolvers<ContextType>;
 };

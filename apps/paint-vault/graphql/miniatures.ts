@@ -410,3 +410,8 @@ export const miniatureMissing = (v: MiniatureViewRead, a: Page) =>
   paginateProjection(v.missingRows, a, v.revision, `missing:${v.id}`);
 export const miniatureRequired = (v: MiniatureViewRead, a: Page) =>
   paginateProjection(v.requiredRows, a, v.revision, `required:${v.id}`);
+
+// Shared compact readiness/relationship projection; never a vault State snapshot.
+export function readMiniatureProjection(allowCache = true) {
+  return aggregate(allowCache);
+}

@@ -1,0 +1,9 @@
+# Schemes: Apollo-only reads and commands
+
+The list is a revision-bound, 48-card paged projection, not a partial vault `State`. A privately fetched complete loaded window publishes only after the invalidation controller accepts its revision. Category/source facets are global; readiness facets respect the non-search category/source/original-paint AND constraints. Fuzzy search controls membership; canonical category/name/ID ordering controls display. Readiness uses authoritative effective substitutions, not miniature overrides. Empty schemes are not ready.
+
+Cards select the last image by `sortOrder` (thumbnail preferred). Their server projection includes usage counts and bounded authored-order previews, retaining repeated paints. Product decision for Phase 4: at most 32 color stops and 512 characters of paint names. Any cut has `previewMoreCount` and an accessible **+N more** indicator; N counts paint entries not completely represented by at least one capped preview. Short schemes are unchanged. These are preview limits, never authoring limits. Detail/editor entries remain complete and page on demand.
+
+The shared scheme command service preserves REST/GraphQL parity, image sequencing, validation and atomic revision/family envelopes. Mutations do not call internal REST. Scheme attachment uses the existing miniature GraphQL command. Inventory, substitutions, model links and scheme changes invalidate the relevant list/readiness/usage projections through SSE. Scheme options, details and cards are evicted together.
+
+Regression coverage includes filter/facet/search semantics, full detail pagination, save/error/draft behavior, cursor scoping, stale-window rejection, 1,000-step bounded cards with untruncated authored detail, and focused Chromium/a11y stories (including explicit over-limit indication).

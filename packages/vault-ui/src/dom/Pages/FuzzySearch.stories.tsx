@@ -1,12 +1,14 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { PaintAutocomplete } from "../Components/PaintAutocomplete";
+import { VaultGraphQLProvider } from "../graphql/provider";
 import { SchemePickerDialog } from "../Modals/SchemePickerDialog";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
 import { paintList, paints, schemes } from "../storybook/fixtures";
 import { LibraryFixtureProvider } from "../storybook/library-fixtures";
+import { mockApi } from "../storybook/mock-api";
 
 import { PaintLibrary } from "./PaintLibrary";
 import { PaintComparison } from "./PaintTools/PaintComparison";
@@ -65,7 +67,17 @@ export const LibrarySearch: Story = {
   },
 };
 
+const apolloTools: Decorator[] = [
+  mockApi(),
+  (Story) => (
+    <VaultGraphQLProvider>
+      <Story />
+    </VaultGraphQLProvider>
+  ),
+];
+
 export const ComparisonLatestQueryWins: Story = {
+  decorators: apolloTools,
   render: () => <PaintComparison onOpenPaint={fn()} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -85,6 +97,7 @@ export const ComparisonLatestQueryWins: Story = {
 };
 
 export const ConverterSourceAndReplacement: Story = {
+  decorators: apolloTools,
   render: () => <RecipeConverter onOpenPaint={fn()} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -106,6 +119,7 @@ export const ConverterSourceAndReplacement: Story = {
 };
 
 export const SchemeSearchAndUsesPaints: Story = {
+  decorators: apolloTools,
   render: () => <ColorSchemesPage />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -47,6 +47,7 @@ const scheme = (index: number, seq: number) => ({
   imageUrl: null,
   gradient: "linear-gradient(135deg, #884422 0%, #aabbcc 100%)",
   paintNames: "Copper base · Bronze highlight",
+  previewMoreCount: 0,
   usageCount: 2,
 });
 function PageConnection({

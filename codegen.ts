@@ -20,6 +20,7 @@ const config: CodegenConfig = {
           MiniatureView: "../miniatures#MiniatureViewRead",
           MiniatureSchemeView: "../miniature-schemes#MiniatureSchemeRead",
           Substitution: "../library#SubstitutionRead",
+          TemplateRecipeView: "../templates#TemplateRecipeRead",
         },
         // Custom scalar internal representation, not its decimal-string wire format.
         scalars: { Sequence: "number" },

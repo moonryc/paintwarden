@@ -402,6 +402,250 @@ type MiniatureRequiredConnection {
   pageInfo: PageInfo!
 }
 
+# Plugin metadata is deferred until the Plugins dialog opens. No catalog rows/assets.
+type SourceItemCounts {
+  paints: Int!
+  schemes: Int!
+  templates: Int!
+}
+type SourceDependency {
+  repository: String!
+  minimumVersion: String
+}
+type CatalogSource {
+  id: ID!
+  repository: String!
+  url: String!
+  name: String!
+  version: String!
+  license: String
+  attribution: String
+  dependencies: [SourceDependency!]!
+  lastError: String
+  logoUrl: String
+  counts: SourceItemCounts!
+}
+type SourcesView {
+  revision: VaultRevision!
+  sources: [CatalogSource!]!
+}
+type SourceVersion {
+  id: ID!
+  availableVersion: String
+  updateAvailable: Boolean
+  error: String
+}
+type SourceVersionsView {
+  revision: VaultRevision!
+  versions: [SourceVersion!]!
+}
+type SourceRemovalIdentity {
+  id: ID!
+  name: String!
+  version: String!
+}
+type SourceRemovalBlocker {
+  label: String!
+  count: Int!
+}
+type SourceRemovalView {
+  revision: VaultRevision!
+  source: SourceRemovalIdentity!
+  removes: SourceItemCounts!
+  blockers: [SourceRemovalBlocker!]!
+  canRemove: Boolean!
+}
+type SourceShareItem {
+  id: ID!
+  name: String!
+}
+type SourceShareableView {
+  revision: VaultRevision!
+  paints: [SourceShareItem!]!
+  schemes: [SourceShareItem!]!
+  templates: [SourceShareItem!]!
+}
+extend type Query {
+  sources: SourcesView!
+  sourceVersions: SourceVersionsView!
+  sourceRemoval(id: ID!): SourceRemovalView!
+  sourceShareable: SourceShareableView!
+}
+
+extend type Query {
+  wishlist(
+    first: Int! = 48
+    after: String
+    miniatureId: ID
+    missingFirst: Int! = 48
+    missingAfter: String
+  ): WishlistView!
+  wishlistModelOptions(first: Int! = 40, after: String, search: String): WishlistModelOptionsView!
+  wishlistRelatedProjects(paintId: ID!, first: Int! = 30, after: String): WishlistProjectConnection!
+  """
+  Complete filtered shopping text, independent of loaded pages.
+  """
+  wishlistExport(miniatureId: ID): WishlistExport!
+}
+type WishlistCounts {
+  shoppingPaints: Int!
+  restockPaints: Int!
+  projectCount: Int!
+  """
+  Distinct unlisted project paint issues, globally, independent of model filter.
+  """
+  missingPaints: Int!
+  """
+  Unlisted paint issues with missing physical stock (may also be broken).
+  """
+  missingStock: Int!
+  brokenSubstitution: Int!
+  listedMissingStock: Int!
+}
+type WishlistProject {
+  id: ID!
+  title: String!
+}
+type WishlistRow {
+  id: ID!
+  paint: Paint!
+  brandGroup: String!
+  restock: Boolean!
+  missingStock: Boolean!
+  brokenSubstitution: Boolean!
+  projectCount: Int!
+  relatedProjectsPreview: [WishlistProject!]!
+  relatedProjectsTruncated: Boolean!
+}
+type WishlistConnection {
+  nodes: [WishlistRow!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type WishlistView {
+  revision: VaultRevision!
+  counts: WishlistCounts!
+  shopping: WishlistConnection!
+  missing: WishlistConnection!
+}
+type WishlistModelOption {
+  id: ID!
+  title: String!
+  """
+  Distinct shopping paints associated with this miniature.
+  """
+  projectCount: Int!
+}
+type WishlistModelOptionsView {
+  revision: VaultRevision!
+  nodes: [WishlistModelOption!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type WishlistProjectConnection {
+  revision: VaultRevision!
+  nodes: [WishlistProject!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type WishlistExport {
+  revision: VaultRevision!
+  text: String!
+  totalCount: Int!
+}
+
+extend type Query {
+  templates(
+    id: ID
+    first: Int! = 48
+    after: String
+    search: String
+    category: String
+    sourceId: ID
+    noSource: Boolean = false
+  ): TemplatesView!
+  templateRecipe(id: ID!): TemplateRecipeView!
+}
+extend type Mutation {
+  createTemplate(input: TemplateInput!, clientMutationId: String): TemplateMutationPayload!
+  updateTemplate(id: ID!, input: TemplateInput!, clientMutationId: String): TemplateMutationPayload!
+  deleteTemplate(id: ID!, clientMutationId: String): TemplateMutationPayload!
+}
+type TemplateSummary {
+  id: ID!
+  name: String!
+  manufacturer: String!
+  faction: String!
+  imageUrl: String!
+  categories: [String!]!
+  kind: String!
+  sourceId: ID
+  sourceName: String
+  sourceLogoUrl: String
+  schemeCount: Int!
+  paintCount: Int!
+}
+type TemplateConnection {
+  nodes: [TemplateSummary!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type TemplatesView {
+  revision: VaultRevision!
+  categoryCounts: [FacetCount!]!
+  sourceCounts: [FacetCount!]!
+  templates: TemplateConnection!
+}
+type TemplateRecipeView {
+  revision: VaultRevision!
+  templateId: ID!
+  paints(first: Int! = 100, after: String): TemplatePaintConnection!
+  schemes(first: Int! = 100, after: String): TemplateSchemeConnection!
+}
+type TemplatePaint {
+  paintId: ID!
+  paintName: String!
+  paintBrand: String!
+  step: String!
+  notes: String!
+  sortOrder: Int!
+}
+type TemplatePaintConnection {
+  nodes: [TemplatePaint!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type TemplateScheme {
+  schemeId: ID!
+  name: String!
+}
+type TemplateSchemeConnection {
+  nodes: [TemplateScheme!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+input TemplatePaintInput {
+  paintId: ID!
+  step: String!
+  notes: String! = ""
+  sortOrder: Int! = 0
+}
+input TemplateInput {
+  name: String
+  manufacturer: String
+  faction: String
+  imageUrl: String
+  sourceMiniatureId: ID
+  schemeIds: [ID!]
+  paints: [TemplatePaintInput!]
+}
+type TemplateMutationPayload {
+  revision: VaultRevision!
+  templateId: ID!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
+
 # Schemes browse and ordinary owner commands share the miniature scheme projection.
 extend type Query {
   schemes(
@@ -437,6 +681,7 @@ extend type MiniatureScheme {
   paintNames: String!
   usageCount: Int!
   gradient: String!
+  previewMoreCount: Int!
 }
 extend type Mutation {
   createScheme(input: SchemeInput!, clientMutationId: String): SchemeMutationPayload!
@@ -463,6 +708,94 @@ input SchemeEntryInput {
 type SchemeMutationPayload {
   revision: VaultRevision!
   schemeId: ID!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
+
+extend type Query {
+  paintRanking(id: ID!, first: Int! = 30, after: String, ownedOnly: Boolean! = false): PaintRankingView!
+  ownedPaintOptions(search: String! = "", first: Int! = 30): PaintOptionsView!
+}
+type PaintRankingView {
+  revision: VaultRevision!
+  paint: Paint
+  owned: Boolean!
+  suggestedId: ID
+  nodes: [RankedPaint!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type RankedPaint {
+  paint: Paint!
+  match: PaintColorMatch!
+  sameType: Boolean!
+}
+type PaintColorMatch {
+  score: Int!
+  distance: Float!
+  lightnessDelta: Float!
+  hueDelta: Float
+  intensityDelta: Float!
+}
+
+# Ordinary paint commands share synchronous validation/SQL with the legacy REST wrappers.
+extend type Mutation {
+  importCustomPaints(paints: [CustomPaintImportInput!]!, clientMutationId: String): PaintImportPayload!
+  updateCustomPaint(id: ID!, input: CustomPaintInput!, clientMutationId: String): PaintCommandPayload!
+  deleteCustomPaint(id: ID!, clientMutationId: String): PaintCommandPayload!
+  createSubstitution(input: SubstitutionInput!, clientMutationId: String): SubstitutionMutationPayload!
+  setSubstitutionDefault(id: ID!, enabled: Boolean!, clientMutationId: String): SubstitutionMutationPayload!
+  deleteSubstitution(id: ID!, clientMutationId: String): SubstitutionMutationPayload!
+  selectPaintSubstitution(
+    miniatureId: ID!
+    targetPaintId: ID!
+    substitutionId: ID
+    useOriginal: Boolean! = false
+    clientMutationId: String
+  ): SubstitutionMutationPayload!
+}
+input CustomPaintImportInput {
+  brand: String
+  range: String
+  type: String
+  name: String
+  colorHex: String
+  sourceUrl: String
+}
+input CustomPaintInput {
+  brand: String!
+  range: String
+  name: String!
+  colorHex: String
+  sourceUrl: String
+}
+input SubstitutionInput {
+  targetPaintId: ID!
+  name: String!
+  ingredients: [SubstitutionIngredientInput!]!
+}
+input SubstitutionIngredientInput {
+  paintId: ID!
+  parts: Int
+}
+type PaintImportPayload {
+  imported: Int!
+  skipped: Int!
+  revision: VaultRevision!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
+type PaintCommandPayload {
+  paintId: ID!
+  revision: VaultRevision!
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
+}
+type SubstitutionMutationPayload {
+  substitutionId: ID
+  miniatureId: ID
+  paintId: ID
+  revision: VaultRevision!
   clientMutationId: String
   invalidatedFamilies: [VaultFamily!]!
 }

@@ -27,6 +27,7 @@ query SchemesPage(
       paintNames
       usageCount
       gradient
+      previewMoreCount
     }
     totalCount
     pageInfo {

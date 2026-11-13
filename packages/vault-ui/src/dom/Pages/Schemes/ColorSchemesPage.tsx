@@ -152,25 +152,12 @@ export function ColorSchemesPage() {
     setSelectedPaints([]);
   };
   const usedCategories = (facets?.categories ?? []).filter((facet) => facet.count > 0);
+  const { hasNextPage, loading, error, loadMore } = result;
   useEffect(() => {
-    if (
-      result.hasNextPage &&
-      !result.loading &&
-      !result.error &&
-      gridWindow.endIndex >= schemes.length - columns * 3
-    )
-      result.loadMore();
-  }, [
-    result.hasNextPage,
-    result.loading,
-    result.error,
-    result.loadMore,
-    gridWindow.endIndex,
-    schemes.length,
-    columns,
-  ]);
+    if (hasNextPage && !loading && !error && gridWindow.endIndex >= schemes.length - columns * 3) loadMore();
+  }, [hasNextPage, loading, error, loadMore, gridWindow.endIndex, schemes.length, columns]);
   return (
-    <div>
+    <Box sx={{ "& .MuiFormLabel-root.Mui-focused": { color: "var(--ink)" } }}>
       <PageHeader
         eyebrow="Reusable palettes"
         title="Schemes"
@@ -365,6 +352,7 @@ export function ColorSchemesPage() {
                         previewUrl: scheme.imageUrl,
                         uses: scheme.usageCount,
                         paintNames: scheme.paintNames,
+                        previewMoreCount: scheme.previewMoreCount,
                       }}
                       index={index}
                       available={scheme.availableCount}
@@ -415,6 +403,6 @@ export function ColorSchemesPage() {
       {editing !== undefined && (
         <ColorSchemesDialog initialId={editing} onClose={() => setEditing(undefined)} />
       )}
-    </div>
+    </Box>
   );
 }

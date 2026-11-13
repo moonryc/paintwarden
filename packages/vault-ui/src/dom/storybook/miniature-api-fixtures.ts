@@ -3,6 +3,7 @@ import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-sear
 import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
 
 import type { Paint, PaintingStatus, State } from "../types";
+import { schemeCardSummary, sortedSchemes } from "../utils/semantic-contract";
 import { projectPaintIssues, resolvedPaintIds, wishlistPaintIds } from "../utils/vault-data";
 
 import { fixtureMiniatureView } from "./miniature-fixtures";
@@ -109,6 +110,87 @@ export function fixtureMiniatureResponse(
       imageUrl: images.at(-1)?.thumbnailUrl ?? images.at(-1)?.imageUrl ?? null,
     };
   };
+  if (operation === "SchemeUsedPaintOptions") {
+    const used = new Set(data.colorSchemePaints.map((row) => row.paintId));
+    const excluded = new Set((vars.excludeIds as string[]) ?? []);
+    const candidates = data.catalog.filter((paint) => used.has(paint.id) && !excluded.has(paint.id));
+    return {
+      schemePaintOptions: {
+        revision,
+        items: searchFuzzyIndex(
+          createFuzzyIndex(candidates, (paint) => `${paint.brand} ${paint.range} ${paint.name}`),
+          typeof vars.search === "string" ? vars.search : "",
+          30,
+        ).map(projectPaint),
+      },
+    };
+  }
+  if (operation === "SchemesPage") {
+    const all = sortedSchemes(data.colorSchemes).map((scheme) => {
+      const card = schemeCardSummary(data, scheme.id);
+      return {
+        ...schemeSummary(scheme),
+        sourceId: null,
+        gradient: card.gradient ?? "",
+        paintNames: card.paintNames,
+        usageCount: card.uses,
+        previewMoreCount: 0,
+      };
+    });
+    const ids = (vars.usesPaintIds as string[]) ?? [];
+    const candidates = all.filter(
+      (scheme) =>
+        (!vars.category || scheme.category === vars.category) &&
+        ids.every((id) =>
+          data.colorSchemePaints.some((row) => row.schemeId === scheme.id && row.paintId === id),
+        ),
+    );
+    const matches = new Set(
+      searchFuzzyIndex(
+        createFuzzyIndex(candidates, (scheme) => scheme.name),
+        typeof vars.search === "string" ? vars.search : "",
+      ).map((scheme) => scheme.id),
+    );
+    const nodes = candidates.filter(
+      (scheme) =>
+        matches.has(scheme.id) &&
+        (!vars.readiness ||
+          (vars.readiness === "READY") ===
+            (scheme.paintCount > 0 && scheme.availableCount === scheme.paintCount)),
+    );
+    const categories = Object.fromEntries(
+      all.map((scheme) => [
+        scheme.category ?? "",
+        all.filter((row) => row.category === scheme.category).length,
+      ]),
+    );
+    return {
+      schemes: {
+        revision,
+        ...page(nodes, 48, vars.after, "SchemesView"),
+        facets: {
+          categories: facets(categories),
+          sources: [{ key: "", label: "Not from a plugin", count: all.length }],
+          readiness: [
+            {
+              key: "READY",
+              label: "Ready to paint",
+              count: candidates.filter(
+                (scheme) => scheme.paintCount > 0 && scheme.availableCount === scheme.paintCount,
+              ).length,
+            },
+            {
+              key: "MISSING",
+              label: "Missing paints",
+              count: candidates.filter(
+                (scheme) => !scheme.paintCount || scheme.availableCount !== scheme.paintCount,
+              ).length,
+            },
+          ],
+        },
+      },
+    };
+  }
   if (operation === "ProjectMiniatureDetails") {
     const id = String(vars.id),
       miniature = data.miniatures.find((mini) => mini.id === id) ?? null;

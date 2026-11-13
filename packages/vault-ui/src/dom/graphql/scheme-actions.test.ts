@@ -63,7 +63,7 @@ const turn = () => new Promise<void>((resolve) => setImmediate(resolve));
 void test("ordinary scheme create/update/delete use GraphQL and commit attachment/usage invalidations", async () => {
   const sent: Array<{ operationName: string; variables: Record<string, unknown> }> = [];
   const fixture = setup(async (_url, init) => {
-    const request = JSON.parse(String(init?.body)) as (typeof sent)[number];
+    const request = JSON.parse(typeof init?.body === "string" ? init.body : "{}") as (typeof sent)[number];
     sent.push(request);
     return payload(
       (

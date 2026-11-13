@@ -34,6 +34,7 @@ export function useSchemes(filters: SchemesVariables) {
               gradient: node.gradient,
               paintNames: node.paintNames,
               usageCount: node.usageCount,
+              previewMoreCount: node.previewMoreCount,
             })),
           },
         },

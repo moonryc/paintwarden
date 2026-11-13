@@ -2,7 +2,16 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { buildSchema, GraphQLError } from "graphql";
+import {
+  buildSchema,
+  GraphQLError,
+  isEnumType,
+  isInputObjectType,
+  isListType,
+  isNonNullType,
+  typeFromAST,
+  type GraphQLType,
+} from "graphql";
 import { createSchema } from "graphql-yoga";
 
 import { checkOperation, GRAPHQL_BODY_BYTES, OPERATION_BYTES, QUERY_LIMITS } from "./budgets.ts";
@@ -377,23 +386,32 @@ test("stream revision cursors enforce epoch length and canonical safe decimal se
 test("all generated screen documents fit their declared bounded defaults", async () => {
   const { print } = await import("graphql");
   const documents = await import("../../../packages/vault-ui/src/dom/graphql/generated/graphql.ts");
+  const fixtureValue = (type: GraphQLType): unknown => {
+    if (isNonNullType(type)) return fixtureValue(type.ofType);
+    if (isListType(type)) return [];
+    if (isInputObjectType(type))
+      return Object.fromEntries(
+        Object.values(type.getFields())
+          .filter((field) => isNonNullType(field.type) && field.defaultValue === undefined)
+          .map((field) => [field.name, fixtureValue(field.type)]),
+      );
+    if (isEnumType(type)) return type.getValues()[0].name;
+    if (type.name === "Boolean") return true;
+    if (["Int", "Float"].includes(type.name)) return 1;
+    return type.name === "Sequence" ? "0" : "fixture";
+  };
   for (const [key, doc] of Object.entries(documents)) {
     if (!key.endsWith("Document")) continue;
     const operation = doc.definitions.find((d) => d.kind === "OperationDefinition");
     if (!operation || operation.kind !== "OperationDefinition") continue;
-    const variables = ["PaintPickerOptions", "SchemePickerOptions"].includes(operation.name?.value ?? "")
-      ? { search: "", excludeIds: [], first: 30 }
-      : operation.name?.value === "SetPaintStock"
-        ? { paintId: "paint", state: "OWNED", quantity: 1 }
-        : ["VaultChanges", "VaultInvalidation"].includes(operation.name?.value ?? "")
-          ? { epoch: "epoch", since: "0" }
-          : operation.variableDefinitions?.some((v) => v.variable.name.value === "id")
-            ? { id: "paint", input: { title: "Fixture", status: "OWNED" }, entries: [], schemeIds: [] }
-            : operation.name?.value === "CreateProjectMiniature"
-              ? { input: { title: "Fixture", status: "OWNED" } }
-              : operation.name?.value === "MiniatureList"
-                ? { workbench: true, first: 48 }
-                : {};
+    const variables = Object.fromEntries(
+      (operation.variableDefinitions ?? [])
+        .filter((definition) => definition.type.kind === "NonNullType" && !definition.defaultValue)
+        .map((definition) => [
+          definition.variable.name.value,
+          fixtureValue(typeFromAST(schema, definition.type)!),
+        ]),
+    );
     assert.doesNotThrow(
       () => check(print(doc), variables, schema, operation.operation === "subscription"),
       key,

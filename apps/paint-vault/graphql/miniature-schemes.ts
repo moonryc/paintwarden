@@ -9,6 +9,8 @@ import { sourceLogoUrl } from "../lib/catalog-source-assets.ts";
 
 import { readPaintProjection, readRevision, validatePage, validateText, type PaintRead } from "./library.ts";
 
+import { schemePreview } from "./scheme-preview.ts";
+
 type Revision = ReturnType<typeof readRevision>;
 type PageArgs = { first: number; after?: string | null };
 export type MiniatureSchemeSummary = {
@@ -22,6 +24,7 @@ export type MiniatureSchemeSummary = {
   paintNames: string;
   usageCount: number;
   gradient: string;
+  previewMoreCount: number;
   paintCount: number;
   availableCount: number;
   previewSwatches: { paintId: string; colorHex: string }[];
@@ -70,6 +73,7 @@ type SchemeStats = Pick<
   | "paintNames"
   | "usageCount"
   | "gradient"
+  | "previewMoreCount"
 >;
 function summary(row: SummaryRow, stats: SchemeStats): MiniatureSchemeSummary {
   return {
@@ -83,7 +87,7 @@ function summary(row: SummaryRow, stats: SchemeStats): MiniatureSchemeSummary {
     sourceLogoUrl: row.sourceId ? sourceLogoUrl(row.sourceId, row.logoSvg) : null,
   };
 }
-// Aggregate in SQL: compact full card names/gradient plus at most eight preview swatches.
+// Aggregate in SQL; card names/gradient are bounded with explicit omitted counts.
 // This never materializes full entry rows on the picker/attached-link path.
 function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<string, SchemeStats> {
   if (!rows.length) return new Map();
@@ -124,9 +128,8 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
     stats.map((row) => [
       row.id,
       {
-        paintNames: (JSON.parse(row.paintNames) as string[]).join(" · "),
+        ...schemePreview(JSON.parse(row.paintNames) as string[], JSON.parse(row.colors) as string[]),
         usageCount: row.usageCount,
-        gradient: paintGradient(JSON.parse(row.colors) as string[]),
         paintCount: row.paintCount,
         availableCount: row.availableCount,
         previewSwatches: JSON.parse(row.swatches) as MiniatureSchemeSummary["previewSwatches"],
@@ -135,11 +138,6 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
       },
     ]),
   );
-}
-// Match the authored card's complete ordered color sequence (including repeated paints).
-function paintGradient(colors: string[]): string {
-  if (colors.length < 2) return colors[0] ?? "";
-  return `linear-gradient(135deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(", ")})`;
 }
 const opaque = (parts: unknown[]) => Buffer.from(JSON.stringify(parts)).toString("base64url");
 const scopeFor = (parts: unknown[]) => createHash("sha256").update(JSON.stringify(parts)).digest("base64url");

@@ -29,7 +29,7 @@ function boundedInput(value: unknown, key: string, depth = 0) {
     for (const [name, item] of Object.entries(value)) boundedInput(item, name, depth + 1);
   } else if (
     typeof value === "string" &&
-    ["id", "paintId", "templateId", "schemeIds", "steps", "step"].includes(key) &&
+    (/(?:^id$|Ids?$)/.test(key) || ["steps", "step"].includes(key)) &&
     value.length > 256
   ) {
     reject(`${key} exceeds argument length limit`);
@@ -111,7 +111,15 @@ function checkExpandedBudget(
         if (field) {
           const args = getArgumentValues(field, node, variables);
           if (args.first !== undefined) {
-            const max = ["paintOptions", "substitutions", "similar"].includes(node.name.value) ? 30 : 100;
+            const max = [
+              "paintOptions",
+              "schemePaintOptions",
+              "ownedPaintOptions",
+              "substitutions",
+              "similar",
+            ].includes(node.name.value)
+              ? 30
+              : 100;
             if (
               typeof args.first !== "number" ||
               !Number.isInteger(args.first) ||
@@ -122,11 +130,26 @@ function checkExpandedBudget(
             childMultiplier *= args.first;
             cost += 100;
           }
+          // Wishlist has independently paged shopping and global-missing windows.
+          // Charge both through the largest bound, not their Cartesian product.
+          if (args.missingFirst !== undefined) {
+            if (
+              typeof args.missingFirst !== "number" ||
+              !Number.isInteger(args.missingFirst) ||
+              args.missingFirst < 1 ||
+              args.missingFirst > 100
+            )
+              reject("missingFirst must be between 1 and 100");
+            childMultiplier =
+              multiplier * Math.max(typeof args.first === "number" ? args.first : 1, args.missingFirst);
+            cost += 100;
+          }
           for (const [name, value] of Object.entries(args)) {
-            const max = name === "after" ? 8192 : name === "epoch" ? 128 : 256;
+            const isCursor = name === "after" || name === "missingAfter";
+            const max = isCursor ? 8192 : name === "epoch" ? 128 : 256;
             if (typeof value === "string" && value.length > max)
               reject(
-                name === "after"
+                isCursor
                   ? "Invalid Library cursor"
                   : name === "epoch"
                     ? "Invalid revision cursor"
@@ -159,6 +182,7 @@ function checkExpandedBudget(
             reject("Invalid revision cursor");
         }
         if (node.name.value === "previewSwatches") childMultiplier *= 8;
+        if (node.name.value === "relatedProjectsPreview") childMultiplier *= 3;
         if (node.name.value === "recipeSteps") cost += multiplier * 17;
         cost += multiplier;
         if (fields > QUERY_LIMITS.fields) reject("Expanded field limit exceeded");

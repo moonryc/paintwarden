@@ -21,7 +21,13 @@ export const SchemeCard = memo(function SchemeCard({
   onKeyDown,
 }: {
   scheme: SchemeSummaryModel;
-  summary: { gradient?: string | null; previewUrl?: string | null; uses: number; paintNames: string };
+  summary: {
+    gradient?: string | null;
+    previewUrl?: string | null;
+    uses: number;
+    paintNames: string;
+    previewMoreCount?: number;
+  };
   // Position in the whole filtered list, for keyboard paging through the windowed grid.
   index: number;
   available: number;
@@ -143,6 +149,14 @@ export const SchemeCard = memo(function SchemeCard({
           <Box component="span" sx={{ position: "absolute", top: 12, left: 12, zIndex: 1, display: "flex" }}>
             <SchemeProgressChip available={available} total={total} size="sm" />
           </Box>
+          {!!summary.previewMoreCount && (
+            <Chip
+              size="small"
+              label={`+${summary.previewMoreCount} more`}
+              aria-label={`+${summary.previewMoreCount} more paint entries in the full scheme`}
+              sx={{ position: "absolute", bottom: 12, right: 12, zIndex: 1, bgcolor: "background.paper" }}
+            />
+          )}
         </Box>
         <Box
           component="div"

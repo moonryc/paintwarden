@@ -61,9 +61,36 @@ export function createVaultCache(): InMemoryCache {
           miniature: { merge: false },
           schemeOptions: { keyArgs: paginationKeys, merge: false },
           miniatureScheme: { merge: false },
+          schemes: { keyArgs: paginationKeys, merge: false },
+          schemePaintOptions: { merge: false },
+          paintRanking: { keyArgs: paginationKeys, merge: false },
+          ownedPaintOptions: { merge: false },
+          templates: { keyArgs: paginationKeys, merge: false },
+          templateRecipe: { merge: false },
+          wishlist: {
+            keyArgs: (args) =>
+              Object.keys(args ?? {})
+                .filter((key) => !["first", "after", "missingFirst", "missingAfter"].includes(key))
+                .sort(),
+            merge: false,
+          },
+          wishlistModelOptions: { keyArgs: paginationKeys, merge: false },
+          wishlistRelatedProjects: { keyArgs: paginationKeys, merge: false },
+          wishlistExport: { merge: false },
+          sources: { merge: false },
+          sourceVersions: { merge: false },
+          sourceRemoval: { merge: false },
+          sourceShareable: { merge: false },
         },
       },
       Miniature: { keyFields: ["id"], fields: { readiness: { merge: false } } },
+      // These are revision-bound aggregate summaries, not optimistic entities.
+      // Embedding them keeps an unrelated older detail from regressing readiness.
+      MiniatureScheme: { keyFields: false },
+      TemplateSummary: { keyFields: false },
+      WishlistRow: { keyFields: false },
+      WishlistView: { keyFields: false },
+      WishlistConnection: { keyFields: false },
       MiniatureConnection: { keyFields: false },
       HomeView: { keyFields: false },
       MiniaturesView: { keyFields: false },

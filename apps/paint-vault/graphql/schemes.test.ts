@@ -325,7 +325,7 @@ void test("GraphQL owner commands return atomic trigger envelopes, preserve erro
   assert.equal(missing.errors?.[0].extensions.code, "NOT_FOUND");
 });
 
-void test("stress measurement retains full 1000-step card projection without authored-entry truncation", (t) => {
+void test("stress card preview is explicitly bounded while all authored entries remain available", (t) => {
   const s = scheme("Stress"),
     p = paint("A representative paint name");
   const insert = sqlite.prepare(
@@ -335,8 +335,10 @@ void test("stress measurement retains full 1000-step card projection without aut
     for (let i = 0; i < 1000; i++) insert.run(s, p, i);
   })();
   const row = readSchemes({ first: 1 }).nodes[0];
-  assert.equal(row.paintNames.split(" · ").length, 1000);
-  assert.equal(row.gradient.split("#123456").length - 1, 1000);
+  assert.ok(row.paintNames.length <= 512);
+  assert.equal(row.gradient.split("#123456").length - 1, 32);
+  assert.ok(row.previewMoreCount >= 968);
+  assert.equal(readMiniatureScheme(s).entries.length, 1000);
   t.diagnostic(
     `1000-step single-scheme compact summary JSON bytes=${Buffer.byteLength(JSON.stringify(row))}`,
   );

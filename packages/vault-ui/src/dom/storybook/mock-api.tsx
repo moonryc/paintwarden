@@ -19,6 +19,8 @@ import { owns } from "../utils/vault-data";
 import { paints, vault } from "./fixtures";
 import { fixtureLibraryView } from "./library-fixtures";
 import { fixtureMiniatureResponse } from "./miniature-api-fixtures";
+import { fixtureTemplateResponse } from "./template-api-fixtures";
+import { fixturePaintToolsResponse } from "./paint-tools-api-fixtures";
 
 const auth: AuthStatus = {
   setupRequired: false,
@@ -159,6 +161,38 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
               : [],
         },
       };
+    if (operationName === "InstalledSources") return { sources: { revision: revision(), sources: [source] } };
+    if (operationName === "PluginVersions")
+      return {
+        sourceVersions: { revision: revision(), versions: [{ id: source.id, updateAvailable: false }] },
+      };
+    if (operationName === "PluginRemoval")
+      return {
+        sourceRemoval: {
+          revision: revision(),
+          source: { id: source.id, name: source.name, version: source.version },
+          removes: source.counts,
+          blockers: [],
+          canRemove: true,
+        },
+      };
+    if (operationName === "PluginShareable")
+      return {
+        sourceShareable: {
+          revision: revision(),
+          paints: data.catalog
+            .filter((paint) => paint.isCustom)
+            .map((paint) => ({ id: paint.id, name: `${paint.brand} · ${paint.name}` })),
+          schemes: data.colorSchemes
+            .filter((scheme) => scheme.id.startsWith("user:"))
+            .map(({ id, name }) => ({ id, name })),
+          templates: [],
+        },
+      };
+    const paintTools = fixturePaintToolsResponse(data, operationName, vars, revision(), projectPaint);
+    if (paintTools) return paintTools;
+    const template = fixtureTemplateResponse(data, operationName, vars, revision());
+    if (template) return template;
     const miniature = fixtureMiniatureResponse(data, operationName, vars, revision(), projectPaint);
     if (miniature) return miniature;
     if (operationName === "SetPaintStock") {

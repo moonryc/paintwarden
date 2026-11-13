@@ -136,3 +136,19 @@ export const ProjectionUpdates: Story = {
     await expect(await readCommits()).toBeGreaterThan(afterRename);
   },
 };
+
+export const ExplicitlyBoundedPreview: Story = {
+  args: {
+    summary: {
+      ...schemeCardSummary(vault, vault.colorSchemes[0].id),
+      paintNames: "Long authored preview…",
+      previewMoreCount: 968,
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("+968 more")).toBeVisible();
+    await expect(canvas.getByRole("button")).toHaveAccessibleName(
+      expect.stringContaining("+968 more paint entries in the full scheme"),
+    );
+  },
+};

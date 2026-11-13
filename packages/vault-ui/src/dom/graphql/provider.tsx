@@ -34,7 +34,7 @@ const fields: Record<VaultFamily, readonly string[]> = {
     "wishlistExport",
     "vaultNavigation",
   ],
-  SCHEMES: ["schemes", "schemePaintOptions", "miniatureScheme"],
+  SCHEMES: ["schemes", "schemeOptions", "schemePaintOptions", "miniatureScheme"],
   TEMPLATES: ["templates", "templateRecipe"],
   SOURCES: ["sources", "sourceVersions", "sourceRemoval", "sourceShareable"],
 };

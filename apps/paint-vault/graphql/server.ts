@@ -38,12 +38,24 @@ import {
   miniatureMissing,
   miniatureRequired,
 } from "./miniatures.ts";
+import { paintMutations } from "./paint-mutations.ts";
+import { readOwnedPaintOptions, readPaintRanking } from "./paint-tools.ts";
 import { acquireOperation } from "./rate-limit.ts";
+import {
+  readWishlist,
+  readWishlistModelOptions,
+  readWishlistRelatedProjects,
+  readWishlistExport,
+} from "./wishlist.ts";
+import { readSchemes, readSchemePaintOptions, schemeMutations } from "./schemes.ts";
 import { Sequence } from "./sequence.ts";
+import { readSources, readSourceVersions, readSourceRemoval, readSourceShareable } from "./sources.ts";
+import { templateQueries, templateMutations, templateViewResolvers } from "./templates.ts";
 
 const resolvers: Resolvers<GraphQLContext> = {
   Sequence,
   Query: {
+    ...templateQueries,
     home: (_root, args, context) => {
       const view = readHome(args);
       if (context.metrics) context.metrics.rows += view.miniatures.nodes.length;
@@ -56,6 +68,18 @@ const resolvers: Resolvers<GraphQLContext> = {
     },
     miniature: (_root, args) => readMiniature(args.id),
     vaultNavigation: () => readVaultNavigation(),
+    wishlist: (_root, args) => readWishlist(args),
+    wishlistModelOptions: (_root, args) => readWishlistModelOptions(args),
+    wishlistRelatedProjects: (_root, args) => readWishlistRelatedProjects(args),
+    wishlistExport: (_root, args) => readWishlistExport(args),
+    paintRanking: (_root, args) => readPaintRanking(args),
+    ownedPaintOptions: (_root, args) => readOwnedPaintOptions(args),
+    schemes: (_root, args) => readSchemes(args),
+    schemePaintOptions: (_root, args) => readSchemePaintOptions(args),
+    sources: () => readSources(),
+    sourceVersions: () => readSourceVersions(),
+    sourceRemoval: (_root, args) => readSourceRemoval(args.id),
+    sourceShareable: () => readSourceShareable(),
     schemeOptions: (_root, args) => readMiniatureSchemeOptions(args),
     miniatureScheme: (_root, args) => readMiniatureScheme(args.id),
     library: (_root, args, context) => {
@@ -80,6 +104,7 @@ const resolvers: Resolvers<GraphQLContext> = {
     required: (parent, args) => miniatureRequired(parent, args),
   },
   MiniatureSchemeView: { entries: (parent, args) => miniatureSchemeEntries(parent, args) },
+  TemplateRecipeView: templateViewResolvers,
   PaintView: {
     substitutions: (parent, args) => paintSubstitutions(parent, args),
     usedBy: (parent, args) => paintUsages(parent, args),
@@ -88,6 +113,9 @@ const resolvers: Resolvers<GraphQLContext> = {
   Substitution: { ingredients: (parent, args) => substitutionIngredients(parent, args) },
   Mutation: {
     ...miniatureMutations,
+    ...paintMutations,
+    ...schemeMutations,
+    ...templateMutations,
     setPaintStock: (_root, args) => {
       try {
         return getSqlite().transaction(() => {
