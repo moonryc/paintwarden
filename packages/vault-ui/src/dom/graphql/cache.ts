@@ -4,7 +4,7 @@ type PaintConnection = {
   __typename?: string;
   nodes: readonly Reference[];
   pageInfo: { __typename?: string; endCursor: string | null; hasNextPage: boolean };
-  revision: { __typename?: string; epoch: string; seq: number };
+  revision: { __typename?: string; epoch: string; seq: string };
 };
 
 const libraryPolicy: FieldPolicy<PaintConnection | undefined, PaintConnection> = {

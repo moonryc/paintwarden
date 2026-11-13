@@ -14,7 +14,7 @@ function parseSequence(value: unknown): number {
   return sequence;
 }
 
-// GraphQL Int is signed 32-bit; SQLite's change-log routinely outlives that range.
+// GraphQL Int is signed 32-bit; do not narrow SQLite change-log revisions to that range.
 // Keep safe numbers in SQLite services, but use lossless decimal strings on the wire.
 export const Sequence = new GraphQLScalarType<number, string>({
   name: "Sequence",

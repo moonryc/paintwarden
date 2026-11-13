@@ -15,6 +15,6 @@ query LibraryPage($first: Int! = 48, $after: String) {
     revision { epoch seq }
   }
 }
-subscription VaultChanges($epoch: String!, $since: Int!) {
+subscription VaultChanges($epoch: String!, $since: Sequence!) {
   vaultChanges(epoch: $epoch, since: $since) { epoch seq reset }
 }

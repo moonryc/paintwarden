@@ -58,7 +58,11 @@ function writePage(
         __typename: "PaintConnection",
         nodes: ids.map((id) => paint(id)),
         pageInfo: { __typename: "PageInfo", endCursor, hasNextPage: options.hasNextPage ?? true },
-        revision: { __typename: "VaultRevision", epoch: options.epoch ?? "epoch", seq: options.seq ?? 1 },
+        revision: {
+          __typename: "VaultRevision",
+          epoch: options.epoch ?? "epoch",
+          seq: String(options.seq ?? 1),
+        },
       },
     },
   });
@@ -69,7 +73,7 @@ function read(cache: InMemoryCache, filter?: string, first = 2) {
     library: {
       nodes: ReturnType<typeof paint>[];
       pageInfo: { endCursor: string | null; hasNextPage: boolean };
-      revision: { epoch: string; seq: number };
+      revision: { epoch: string; seq: string };
     };
   }>({ query, variables: { first, filter } })?.library;
 }

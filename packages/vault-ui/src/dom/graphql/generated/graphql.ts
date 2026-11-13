@@ -25,16 +25,16 @@ export type LibraryPageQuery = {
   library: {
     nodes: Array<{ " $fragmentRefs"?: { LibraryPaintFragment: LibraryPaintFragment } }>;
     pageInfo: { hasNextPage: boolean; endCursor: string | null };
-    revision: { epoch: string; seq: number };
+    revision: { epoch: string; seq: string };
   };
 };
 
 export type VaultChangesSubscriptionVariables = Exact<{
   epoch: string;
-  since: number;
+  since: string;
 }>;
 
-export type VaultChangesSubscription = { vaultChanges: { epoch: string; seq: number; reset: boolean } };
+export type VaultChangesSubscription = { vaultChanges: { epoch: string; seq: string; reset: boolean } };
 
 export const LibraryPaintFragmentDoc = {
   kind: "Document",
@@ -194,7 +194,10 @@ export const VaultChangesDocument = {
         {
           kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "since" } },
-          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "Int" } } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "Sequence" } },
+          },
         },
       ],
       selectionSet: {

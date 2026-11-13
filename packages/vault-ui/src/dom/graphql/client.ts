@@ -9,7 +9,7 @@ import { Observable } from "rxjs";
 
 import { createVaultCache } from "./cache";
 
-type Revision = { epoch: string; seq: number };
+type Revision = { epoch: string; seq: string };
 export type VaultGraphQLError = { message: string; accessDenied: boolean };
 type Options = {
   authHeaders: () => Record<string, string>;
@@ -22,8 +22,10 @@ function revisionFromResult(data: unknown): Revision | null {
   if (!data || typeof data !== "object" || !("vaultChanges" in data)) return null;
   const event = data.vaultChanges;
   if (!event || typeof event !== "object" || !("epoch" in event) || !("seq" in event)) return null;
-  return typeof event.epoch === "string" && Number.isSafeInteger(event.seq)
-    ? { epoch: event.epoch, seq: event.seq as number }
+  return typeof event.epoch === "string" &&
+    typeof event.seq === "string" &&
+    /^(0|[1-9][0-9]*)$/.test(event.seq)
+    ? { epoch: event.epoch, seq: event.seq }
     : null;
 }
 
@@ -33,7 +35,7 @@ export function createVaultSSELink(options: Options) {
   return new ApolloLink(
     (operation) =>
       new Observable((observer) => {
-        let cursor = { epoch: operation.variables.epoch as string, seq: operation.variables.since as number };
+        let cursor = { epoch: operation.variables.epoch as string, seq: operation.variables.since as string };
         const request = {
           query: print(operation.query),
           operationName: operation.operationName,

@@ -1,5 +1,5 @@
 /* eslint-disable */
-import type { GraphQLResolveInfo } from "graphql";
+import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from "graphql";
 import type { GraphQLContext } from "../context";
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
@@ -11,6 +11,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean };
   Int: { input: number; output: number };
   Float: { input: number; output: number };
+  /** Nonnegative safe-integer revision, represented as a canonical decimal string. */
+  Sequence: { input: number; output: number };
 };
 
 export type Inventory = {
@@ -65,7 +67,7 @@ export type Subscription = {
 
 export type SubscriptionVaultChangesArgs = {
   epoch: Scalars["String"]["input"];
-  since: Scalars["Int"]["input"];
+  since: Scalars["Sequence"]["input"];
 };
 
 export type VaultInvalidation = {
@@ -73,13 +75,13 @@ export type VaultInvalidation = {
   epoch: Scalars["String"]["output"];
   /** Epoch/pruning/overflow/source reset: discard the previous revision baseline. */
   reset: Scalars["Boolean"]["output"];
-  seq: Scalars["Int"]["output"];
+  seq: Scalars["Sequence"]["output"];
 };
 
 export type VaultRevision = {
   __typename?: "VaultRevision";
   epoch: Scalars["String"]["output"];
-  seq: Scalars["Int"]["output"];
+  seq: Scalars["Sequence"]["output"];
 };
 
 export type ResolverTypeWrapper<T> = Promise<T> | T;
@@ -176,6 +178,7 @@ export type ResolversTypes = {
   Paint: ResolverTypeWrapper<Paint>;
   PaintConnection: ResolverTypeWrapper<PaintConnection>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  Sequence: ResolverTypeWrapper<Scalars["Sequence"]["output"]>;
   String: ResolverTypeWrapper<Scalars["String"]["output"]>;
   Subscription: ResolverTypeWrapper<Record<PropertyKey, never>>;
   VaultInvalidation: ResolverTypeWrapper<VaultInvalidation>;
@@ -192,6 +195,7 @@ export type ResolversParentTypes = {
   Paint: Paint;
   PaintConnection: PaintConnection;
   Query: Record<PropertyKey, never>;
+  Sequence: Scalars["Sequence"]["output"];
   String: Scalars["String"]["output"];
   Subscription: Record<PropertyKey, never>;
   VaultInvalidation: VaultInvalidation;
@@ -250,6 +254,10 @@ export type QueryResolvers<
   >;
 };
 
+export interface SequenceScalarConfig extends GraphQLScalarTypeConfig<ResolversTypes["Sequence"], any> {
+  name: "Sequence";
+}
+
 export type SubscriptionResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Subscription"] = ResolversParentTypes["Subscription"],
@@ -269,7 +277,7 @@ export type VaultInvalidationResolvers<
 > = {
   epoch?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   reset?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
-  seq?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  seq?: Resolver<ResolversTypes["Sequence"], ParentType, ContextType>;
 };
 
 export type VaultRevisionResolvers<
@@ -277,7 +285,7 @@ export type VaultRevisionResolvers<
   ParentType extends ResolversParentTypes["VaultRevision"] = ResolversParentTypes["VaultRevision"],
 > = {
   epoch?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
-  seq?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  seq?: Resolver<ResolversTypes["Sequence"], ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = GraphQLContext> = {
@@ -286,6 +294,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   Paint?: PaintResolvers<ContextType>;
   PaintConnection?: PaintConnectionResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  Sequence?: GraphQLScalarType;
   Subscription?: SubscriptionResolvers<ContextType>;
   VaultInvalidation?: VaultInvalidationResolvers<ContextType>;
   VaultRevision?: VaultRevisionResolvers<ContextType>;

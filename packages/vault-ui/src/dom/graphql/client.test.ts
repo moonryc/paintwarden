@@ -27,7 +27,7 @@ function page(name = "Paint", seq = 1, hasNextPage = false) {
         },
       ],
       pageInfo: { __typename: "PageInfo", hasNextPage, endCursor: `cursor-${name}-${seq}` },
-      revision: { __typename: "VaultRevision", epoch: "vault", seq },
+      revision: { __typename: "VaultRevision", epoch: "vault", seq: String(seq) },
     },
   };
 }
@@ -38,7 +38,7 @@ const json = (data: unknown) =>
 const body = (init?: RequestInit) =>
   JSON.parse(typeof init?.body === "string" ? init.body : "{}") as {
     operationName: string;
-    variables: { first?: number; after?: string | null; epoch?: string; since?: number };
+    variables: { first?: number; after?: string | null; epoch?: string; since?: string };
   };
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -143,7 +143,7 @@ void test("refresh uses bounded pages and restarts the entire window after STALE
   });
   const result = await readLibraryWindow(scope.client, 2);
   assert.equal(result.library.nodes.length, 2);
-  assert.equal(result.library.revision.seq, 2);
+  assert.equal(result.library.revision.seq, "2");
   assert.deepEqual(
     requests.map((entry) => entry.after),
     [null, "cursor-old-1", null, "cursor-head-2"],
@@ -178,7 +178,7 @@ void test("SSE uses POST and reconnects from the last delivered cursor; disposal
                 data: {
                   vaultChanges: {
                     epoch: "vault",
-                    seq: requests.length === 1 ? 8 : 10,
+                    seq: requests.length === 1 ? "2147483648" : "2147483650",
                     reset: false,
                   },
                 },
@@ -201,18 +201,18 @@ void test("SSE uses POST and reconnects from the last delivered cursor; disposal
     },
   });
   const subscription = scope.client
-    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: 3 } })
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: "2147483647" } })
     .subscribe({
       next(result) {
-        if (result.data?.vaultChanges.seq === 8) first.resolve();
-        if (result.data?.vaultChanges.seq === 10) second.resolve();
+        if (result.data?.vaultChanges.seq === "2147483648") first.resolve();
+        if (result.data?.vaultChanges.seq === "2147483650") second.resolve();
       },
     });
   await first.promise;
   controller.error(new Error("network disconnected"));
   await second.promise;
-  assert.equal(requests[0].variables.since, 3);
-  assert.equal(requests[1].variables.since, 8);
+  assert.equal(requests[0].variables.since, "2147483647");
+  assert.equal(requests[1].variables.since, "2147483648");
   scope.dispose();
   await aborted.promise;
   subscription.unsubscribe();
@@ -231,7 +231,7 @@ void test("SSE access denial is reported once without retrying permanent auth er
     },
   });
   const subscription = scope.client
-    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: 0 } })
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: "0" } })
     .subscribe({ error: () => {} });
   const error = await reported.promise;
   assert.equal(error.accessDenied, true);

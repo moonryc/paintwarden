@@ -52,7 +52,7 @@ function LibraryRows() {
   const revision = data?.library.revision;
   const { error: subscriptionError } = useSubscription(VaultChangesDocument, {
     skip: !revision,
-    variables: { epoch: revision?.epoch ?? "", since: revision?.seq ?? 0 },
+    variables: { epoch: revision?.epoch ?? "", since: revision?.seq ?? "0" },
     onData: ({ data: event }) => {
       const change = event.data?.vaultChanges;
       if (change && (change.reset || change.epoch !== revision?.epoch || change.seq !== revision?.seq))
