@@ -3,16 +3,88 @@ Nonnegative safe-integer revision, represented as a canonical decimal string.
 """
 scalar Sequence
 
-"""
-Phase 1 raw Library projection, not a full vault or availability model.
-"""
+enum LibraryFilter {
+  ALL
+  OWNED
+  WISHLIST
+  UNTRACKED
+}
+enum Ownership {
+  OWNED
+  WISHLIST
+}
+enum StockLevel {
+  FULL
+  LOW
+  EMPTY
+}
+enum BrokenReason {
+  EMPTY
+  CYCLE
+}
+enum VaultFamily {
+  LIBRARY
+  PAINT
+  OPTIONS
+  HOME
+  MINIATURES
+  WISHLIST
+  SCHEMES
+  TEMPLATES
+  SOURCES
+}
+
 type Query {
-  library(first: Int! = 48, after: String): PaintConnection!
+  library(
+    first: Int! = 48
+    after: String
+    filter: LibraryFilter! = ALL
+    search: String
+    brand: String
+    sourceId: ID
+    sourceName: String
+    noSource: Boolean! = false
+  ): PaintConnection!
+  paint(id: ID!): PaintView!
+  substitution(id: ID!): SubstitutionView!
+  paintOptions(search: String! = "", excludeIds: [ID!]! = [], first: Int! = 30): PaintOptionsView!
+  vaultRevision: VaultRevision!
+  vaultInvalidation(epoch: String!, since: Sequence!): VaultInvalidation!
+}
+type Mutation {
+  setPaintStock(
+    paintId: ID!
+    state: Ownership
+    stockLevel: StockLevel
+    quantity: Int
+    clientMutationId: String
+  ): PaintMutationResult!
+}
+type PaintMutationResult {
+  revision: VaultRevision!
+  paint: Paint
+  clientMutationId: String
+  invalidatedFamilies: [VaultFamily!]!
 }
 type PaintConnection {
   nodes: [Paint!]!
   pageInfo: PageInfo!
   revision: VaultRevision!
+  totalCount: Int!
+  catalogCount: Int!
+  availableCount: Int!
+  explicitWishlistCount: Int!
+  facets: LibraryFacets!
+}
+type LibraryFacets {
+  brands: [FacetCount!]!
+  sources: [FacetCount!]!
+  inventory: [FacetCount!]!
+}
+type FacetCount {
+  key: String!
+  label: String!
+  count: Int!
 }
 type PageInfo {
   hasNextPage: Boolean!
@@ -26,12 +98,76 @@ type Paint {
   colorHex: String
   type: String
   discontinued: Boolean!
+  isCustom: Boolean!
+  sourceId: ID
+  sourceName: String
+  sourceLogoUrl: String
+  sourceUrl: String
+  sourceLabel: String
   inventory: Inventory
+  available: Boolean!
+  hasActiveSubstitution: Boolean!
+  activeSubstitution: ActiveSubstitution
+  brokenReason: BrokenReason
+  missingStock: Boolean!
+  brokenSubstitution: Boolean!
+}
+type ActiveSubstitution {
+  id: ID!
+  name: String!
 }
 type Inventory {
   state: String!
   stockLevel: String!
   quantity: Int!
+}
+type PaintView {
+  revision: VaultRevision!
+  paint: Paint
+  substitutions(first: Int! = 30, after: String): SubstitutionConnection!
+  usedBy(first: Int! = 30, after: String): PaintUsageConnection!
+  similar(first: Int! = 12): [Paint!]!
+}
+type PaintOptionsView {
+  revision: VaultRevision!
+  items: [Paint!]!
+}
+type SubstitutionView {
+  revision: VaultRevision!
+  substitution: Substitution
+}
+type Substitution {
+  id: ID!
+  targetPaintId: ID!
+  name: String!
+  isDefault: Boolean!
+  available: Boolean!
+  brokenReason: BrokenReason
+  ingredients(first: Int! = 100, after: String): IngredientConnection!
+}
+type SubstitutionIngredient {
+  paint: Paint!
+  parts: Int!
+  sortOrder: Int!
+}
+type IngredientConnection {
+  nodes: [SubstitutionIngredient!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type SubstitutionConnection {
+  nodes: [Substitution!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
+}
+type PaintUsage {
+  id: ID!
+  title: String!
+}
+type PaintUsageConnection {
+  nodes: [PaintUsage!]!
+  totalCount: Int!
+  pageInfo: PageInfo!
 }
 type VaultRevision {
   epoch: String!
@@ -39,7 +175,7 @@ type VaultRevision {
 }
 type Subscription {
   """
-  Conservative all-family invalidation. Resume using the last received epoch/seq.
+  Resume family invalidations using the last received epoch/seq.
   """
   vaultChanges(epoch: String!, since: Sequence!): VaultInvalidation!
 }
@@ -50,4 +186,5 @@ type VaultInvalidation {
   Epoch/pruning/overflow/source reset: discard the previous revision baseline.
   """
   reset: Boolean!
+  families: [VaultFamily!]!
 }

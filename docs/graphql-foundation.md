@@ -1,5 +1,9 @@
 # GraphQL foundation (Phases 0–1)
 
+> Historical Phase 0–1 description. Phase 2 replaces the raw Library experiment
+> with full typed Library reads and stock mutations, and adds family-scoped
+> invalidation. See [the current Library server contract](graphql-library.md).
+
 This is infrastructure plus an **internal experiment**, not a screen migration. Existing Library, Schemes, Wishlist, miniatures and templates still use the existing snapshot and TanStack Query. Apollo Client is the GraphQL client; Yoga subscriptions use SSE. Local desktop remains self-contained; remote offline support is not added.
 
 ## Develop

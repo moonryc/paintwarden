@@ -13,7 +13,12 @@ const config: CodegenConfig = {
       plugins: [{ add: { content: "/* eslint-disable */" } }, "typescript", "typescript-resolvers"],
       config: {
         useTypeImports: true,
+        enumsAsTypes: true,
         contextType: "../context#GraphQLContext",
+        mappers: {
+          PaintView: "../library#PaintViewRead",
+          Substitution: "../library#SubstitutionRead",
+        },
         // Custom scalar internal representation, not its decimal-string wire format.
         scalars: { Sequence: "number" },
         strictScalars: true,

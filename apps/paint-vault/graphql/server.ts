@@ -4,11 +4,24 @@ import { readFileSync } from "node:fs";
 import { GraphQLError } from "graphql";
 import { createSchema, createYoga, maskError } from "graphql-yoga";
 
+import { getSqlite } from "../db/index.ts";
+import { PaintStockError, setPaintStock } from "../lib/paint-stock.ts";
+
 import { checkOperation, GRAPHQL_BODY_BYTES } from "./budgets.ts";
-import { subscribeChanges } from "./changes.ts";
+import { invalidationSince, subscribeChanges, type Family } from "./changes.ts";
 import type { GraphQLContext } from "./context.ts";
 import type { Resolvers } from "./generated/resolvers.ts";
-import { readLibrary } from "./library.ts";
+import {
+  paintSubstitutions,
+  paintUsages,
+  readLibrary,
+  readPaint,
+  readPaintOptions,
+  readRevision,
+  readSubstitution,
+  similarPaints,
+  substitutionIngredients,
+} from "./library.ts";
 import { acquireOperation } from "./rate-limit.ts";
 import { Sequence } from "./sequence.ts";
 
@@ -19,6 +32,51 @@ const resolvers: Resolvers<GraphQLContext> = {
       const page = readLibrary(args);
       if (context.metrics) context.metrics.rows += page.nodes.length;
       return page;
+    },
+    paint: (_root, args) => readPaint(args.id),
+    substitution: (_root, args) => readSubstitution(args.id),
+    paintOptions: (_root, args, context) => {
+      const view = readPaintOptions(args);
+      if (context.metrics) context.metrics.rows += view.items.length;
+      return view;
+    },
+    vaultRevision: () => getSqlite().transaction(readRevision)(),
+    vaultInvalidation: (_root, args) => invalidationSince(args),
+  },
+  PaintView: {
+    substitutions: (parent, args) => paintSubstitutions(parent, args),
+    usedBy: (parent, args) => paintUsages(parent, args),
+    similar: (parent, args) => similarPaints(parent, args.first),
+  },
+  Substitution: { ingredients: (parent, args) => substitutionIngredients(parent, args) },
+  Mutation: {
+    setPaintStock: (_root, args) => {
+      try {
+        return getSqlite().transaction(() => {
+          setPaintStock(args);
+          const view = readPaint(args.paintId);
+          return {
+            revision: view.revision,
+            paint: view.paint,
+            clientMutationId: args.clientMutationId,
+            invalidatedFamilies: [
+              "LIBRARY",
+              "PAINT",
+              "OPTIONS",
+              "HOME",
+              "MINIATURES",
+              "WISHLIST",
+              "SCHEMES",
+            ] as Family[],
+          };
+        })();
+      } catch (error) {
+        if (error instanceof PaintStockError)
+          throw new GraphQLError(error.message, {
+            extensions: { code: error.status === 404 ? "NOT_FOUND" : "BAD_USER_INPUT" },
+          });
+        throw error;
+      }
     },
   },
   Subscription: {

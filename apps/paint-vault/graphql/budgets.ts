@@ -2,12 +2,15 @@ import {
   GraphQLError,
   Kind,
   getArgumentValues,
+  getNamedType,
+  isObjectType,
   getOperationAST,
   getVariableValues,
   parse,
   validate,
   type DocumentNode,
   type GraphQLSchema,
+  type GraphQLObjectType,
   type SelectionSetNode,
 } from "graphql";
 
@@ -30,7 +33,10 @@ export function checkOperation(schema: GraphQLSchema, body: Record<string, unkno
   const errors = validate(schema, document, undefined, { maxErrors: 20 });
   if (errors.length) throw errors[0];
   const operation = getOperationAST(document, body.operationName);
-  if (!operation || operation.operation !== (stream ? "subscription" : "query"))
+  if (
+    !operation ||
+    (stream ? operation.operation !== "subscription" : !["query", "mutation"].includes(operation.operation))
+  )
     reject(stream ? "This endpoint accepts subscriptions only" : "This endpoint accepts queries only");
   const coerced = getVariableValues(
     schema,
@@ -39,7 +45,14 @@ export function checkOperation(schema: GraphQLSchema, body: Record<string, unkno
     { maxErrors: 10 },
   );
   if (coerced.errors) throw coerced.errors[0];
-  checkExpandedBudget(schema, document, operation.selectionSet, coerced.variableValues, stream);
+  checkExpandedBudget(
+    schema,
+    document,
+    operation.selectionSet,
+    coerced.variableValues,
+    stream,
+    operation.operation === "mutation",
+  );
 }
 
 // Expand fragments on every use, including aliases and skipped selections (conservative).
@@ -50,6 +63,7 @@ function checkExpandedBudget(
   selection: SelectionSetNode,
   variables: Parameters<typeof getArgumentValues>[2],
   stream: boolean,
+  mutation: boolean,
 ) {
   const fragments = new Map(
     document.definitions.flatMap((node) =>
@@ -60,13 +74,13 @@ function checkExpandedBudget(
     aliases = 0,
     roots = 0,
     cost = 0;
-  function walk(set: SelectionSetNode, depth: number, multiplier: number) {
+  function walk(set: SelectionSetNode, depth: number, multiplier: number, parent?: GraphQLObjectType | null) {
     if (depth > QUERY_LIMITS.depth) reject("Query depth limit exceeded");
     for (const node of set.selections) {
       if (node.kind === Kind.FRAGMENT_SPREAD) {
-        walk(fragments.get(node.name.value)!.selectionSet, depth, multiplier);
+        walk(fragments.get(node.name.value)!.selectionSet, depth, multiplier, parent);
       } else if (node.kind === Kind.INLINE_FRAGMENT) {
-        walk(node.selectionSet, depth, multiplier);
+        walk(node.selectionSet, depth, multiplier, parent);
       } else {
         fields++;
         aliases += node.alias ? 1 : 0;
@@ -78,43 +92,76 @@ function checkExpandedBudget(
         )
           reject("Introspection is available in development only");
         let childMultiplier = multiplier;
-        if (depth === 1) {
-          const root = stream ? schema.getSubscriptionType() : schema.getQueryType();
-          const field = root?.getFields()[node.name.value];
-          if (field) {
-            const args = getArgumentValues(field, node, variables);
-            if (node.name.value === "library") {
-              if (
-                typeof args.first !== "number" ||
-                !Number.isInteger(args.first) ||
-                args.first < 1 ||
-                args.first > 100
-              )
-                reject("first must be between 1 and 100");
-              if (args.after != null && (typeof args.after !== "string" || args.after.length > 8192))
-                reject("Invalid Library cursor");
-              childMultiplier *= args.first;
-              cost += 100;
-            }
+        const field = parent?.getFields()[node.name.value];
+        if (field) {
+          const args = getArgumentValues(field, node, variables);
+          if (args.first !== undefined) {
+            const max = ["paintOptions", "substitutions", "similar"].includes(node.name.value) ? 30 : 100;
             if (
-              node.name.value === "vaultChanges" &&
-              (typeof args.epoch !== "string" ||
-                args.epoch.length > 128 ||
-                typeof args.since !== "number" ||
-                !Number.isSafeInteger(args.since) ||
-                args.since < 0)
+              typeof args.first !== "number" ||
+              !Number.isInteger(args.first) ||
+              args.first < 1 ||
+              args.first > max
             )
-              reject("Invalid revision cursor");
+              reject(`first must be between 1 and ${max}`);
+            childMultiplier *= args.first;
+            cost += 100;
           }
+          for (const [name, value] of Object.entries(args)) {
+            const max = name === "after" ? 8192 : name === "epoch" ? 128 : 256;
+            if (typeof value === "string" && value.length > max)
+              reject(
+                name === "after"
+                  ? "Invalid Library cursor"
+                  : name === "epoch"
+                    ? "Invalid revision cursor"
+                    : `${name} exceeds argument length limit`,
+              );
+            if (
+              name === "excludeIds" &&
+              (!Array.isArray(value) ||
+                value.length > 100 ||
+                value.some((id: unknown) => typeof id !== "string" || id.length > 256))
+            )
+              reject("excludeIds must contain at most 100 bounded IDs");
+          }
+          if (
+            node.name.value === "setPaintStock" &&
+            args.quantity != null &&
+            (typeof args.quantity !== "number" || args.quantity < 0 || args.quantity > 2147483647)
+          )
+            reject("Invalid quantity");
+          if (
+            ["vaultChanges", "vaultInvalidation"].includes(node.name.value) &&
+            (typeof args.epoch !== "string" ||
+              args.epoch.length > 128 ||
+              typeof args.since !== "number" ||
+              !Number.isSafeInteger(args.since) ||
+              args.since < 0)
+          )
+            reject("Invalid revision cursor");
         }
         cost += multiplier;
         if (fields > QUERY_LIMITS.fields) reject("Expanded field limit exceeded");
         if (aliases > QUERY_LIMITS.aliases) reject("Alias limit exceeded");
         if (roots > QUERY_LIMITS.roots) reject("Root field limit exceeded");
         if (cost > QUERY_LIMITS.cost) reject("Query cost limit exceeded");
-        if (node.selectionSet) walk(node.selectionSet, depth + 1, childMultiplier);
+        if (node.selectionSet) {
+          const child = field && getNamedType(field.type);
+          walk(
+            node.selectionSet,
+            depth + 1,
+            childMultiplier,
+            child && isObjectType(child) ? child : undefined,
+          );
+        }
       }
     }
   }
-  walk(selection, 1, 1);
+  walk(
+    selection,
+    1,
+    1,
+    stream ? schema.getSubscriptionType() : mutation ? schema.getMutationType() : schema.getQueryType(),
+  );
 }

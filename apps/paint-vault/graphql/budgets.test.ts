@@ -283,8 +283,8 @@ test("rejects syntax errors, unknown fields and cyclic fragments", () => {
   );
 });
 
-test("the query endpoint rejects mutations and subscriptions", () => {
-  budgetError(() => check("mutation { update }", undefined, recursiveSchema), /accepts queries only/);
+test("the JSON endpoint accepts bounded mutations but rejects subscriptions", () => {
+  assert.doesNotThrow(() => check("mutation { update }", undefined, recursiveSchema));
   budgetError(() => check(streamQuery, { epoch: "epoch", since: "0" }), /accepts queries only/);
 });
 
@@ -372,4 +372,56 @@ test("stream revision cursors enforce epoch length and canonical safe decimal se
         ),
       /Sequence/,
     );
+});
+
+test("all generated screen documents fit their declared bounded defaults", async () => {
+  const { print } = await import("graphql");
+  const documents = await import("../../../packages/vault-ui/src/dom/graphql/generated/graphql.ts");
+  for (const [key, doc] of Object.entries(documents)) {
+    if (!key.endsWith("Document")) continue;
+    const operation = doc.definitions.find((d) => d.kind === "OperationDefinition");
+    if (!operation || operation.kind !== "OperationDefinition") continue;
+    const variables =
+      operation.name?.value === "PaintPickerOptions"
+        ? { search: "", excludeIds: [], first: 30 }
+        : operation.name?.value === "SetPaintStock"
+          ? { paintId: "paint", state: "OWNED", quantity: 1 }
+          : ["VaultChanges", "VaultInvalidation"].includes(operation.name?.value ?? "")
+            ? { epoch: "epoch", since: "0" }
+            : operation.variableDefinitions?.some((v) => v.variable.name.value === "id")
+              ? { id: "paint" }
+              : {};
+    assert.doesNotThrow(
+      () => check(print(doc), variables, schema, operation.operation === "subscription"),
+      key,
+    );
+  }
+});
+
+test("nested connection and picker argument budgets reject work before resolvers", () => {
+  for (const query of [
+    '{paint(id:"p"){substitutions(first:31){nodes{id}}}}',
+    '{paint(id:"p"){usedBy(first:101){nodes{id}}}}',
+    '{paint(id:"p"){similar(first:31){id}}}',
+    '{substitution(id:"s"){substitution{ingredients(first:101){nodes{parts}}}}}',
+    "{paintOptions(first:31){items{id}}}",
+  ])
+    budgetError(() => check(query), /first must be between/);
+  budgetError(
+    () => check("{paintOptions(excludeIds:[" + Array(101).fill('"p"').join(",") + "]){items{id}}}"),
+    /excludeIds/,
+  );
+  budgetError(() => check('{library(search:"' + "x".repeat(257) + '"){nodes{id}}}'), /search exceeds/);
+  budgetError(() => check('{paint(id:"' + "x".repeat(257) + '"){paint{id}}}'), /id exceeds/);
+  budgetError(
+    () => check('mutation{setPaintStock(paintId:"p",quantity:-1){revision{seq}}}'),
+    /Invalid quantity/,
+  );
+  budgetError(
+    () =>
+      check(
+        '{paint(id:"p"){substitutions(first:30){nodes{ingredients(first:100){nodes{paint{id name brand range sourceUrl colorHex discontinued available}}}}}}}',
+      ),
+    /cost limit/,
+  );
 });
