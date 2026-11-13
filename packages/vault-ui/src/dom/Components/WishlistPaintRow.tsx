@@ -22,10 +22,14 @@ export function WishlistPaintRow({
   onOpenPaint,
   reasons,
   onFix,
+  projectCount,
+  onProjects,
 }: {
   paint: Paint;
   reasons?: PaintRequirementReason[];
   onFix?(): void;
+  projectCount?: number;
+  onProjects?(): void;
   // Position within the full brand list, even when only its viewport fragment is mounted.
   listPosition?: { index: number; size: number };
   // The paint is owned but running low, rather than never bought.
@@ -63,6 +67,16 @@ export function WishlistPaintRow({
         onClick={onOpenPaint}
         accessory={restock && <StatusChip tone="gold">Restock</StatusChip>}
       />
+      {Boolean(projectCount) && onProjects && (
+        <Button
+          size="small"
+          aria-label={`View all ${projectCount} ${projectCount === 1 ? "project" : "projects"} for ${paint.name}`}
+          onClick={onProjects}
+          sx={{ flexShrink: 0 }}
+        >
+          {projectCount} {projectCount === 1 ? "project" : "projects"}
+        </Button>
+      )}
       {reasons?.includes("brokenSubstitution") && (
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
           <StatusChip tone="rust">Broken substitution</StatusChip>

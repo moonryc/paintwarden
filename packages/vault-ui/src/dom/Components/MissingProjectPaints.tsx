@@ -21,19 +21,29 @@ export function MissingProjectPaints({
   onAdd,
   onAddAll,
   onFix,
+  totalCount,
+  missingStockCount,
+  brokenSubstitutionCount,
+  hasMore = false,
 }: {
   items: MissingPaint[];
+  totalCount?: number;
+  missingStockCount?: number;
+  brokenSubstitutionCount?: number;
+  hasMore?: boolean;
   listedCount: number;
   onAdd(paint: Paint): void;
   onAddAll(paints: Paint[]): void;
   onFix?(paint: Paint): void;
 }) {
-  if (!items.length) return null;
-  const count = items.length;
+  if (!(totalCount ?? items.length)) return null;
+  const count = totalCount ?? items.length;
   const stockItems = items.filter(({ reasons = ["missingStock"] }) => reasons.includes("missingStock"));
-  const brokenCount = items.filter(({ reasons }) => reasons?.includes("brokenSubstitution")).length;
+  const stockCount = missingStockCount ?? stockItems.length;
+  const brokenCount =
+    brokenSubstitutionCount ?? items.filter(({ reasons }) => reasons?.includes("brokenSubstitution")).length;
   const broken = brokenCount > 0;
-  const totalNeeded = listedCount + stockItems.length;
+  const totalNeeded = listedCount + stockCount;
   return (
     <ProgressSummaryCard
       title={
@@ -43,7 +53,7 @@ export function MissingProjectPaints({
       }
       subtitle={
         broken
-          ? `${stockItems.length} paint${stockItems.length === 1 ? "" : "s"} need stock; ${brokenCount} broken substitution${brokenCount === 1 ? "" : "s"} need fixing.`
+          ? `${stockCount} paint${stockCount === 1 ? "" : "s"} need stock; ${brokenCount} broken substitution${brokenCount === 1 ? "" : "s"} need fixing.`
           : "Only bottles marked Owned cross off a project checklist."
       }
       progress={totalNeeded ? (listedCount / totalNeeded) * 100 : 100}
@@ -65,7 +75,12 @@ export function MissingProjectPaints({
             onClick={() => onAddAll(stockItems.map(({ paint }) => paint))}
             startIcon={<Heart size={14} />}
           >
-            Add {stockItems.length === 1 ? "it" : `all ${stockItems.length}`}
+            Add{" "}
+            {hasMore
+              ? `loaded ${stockItems.length}`
+              : stockItems.length === 1
+                ? "it"
+                : `all ${stockItems.length}`}
           </Button>
         )
       }

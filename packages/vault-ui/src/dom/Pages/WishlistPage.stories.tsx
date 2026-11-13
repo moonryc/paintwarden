@@ -2,7 +2,7 @@ import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
-import { useVaultStore } from "../store/hooks";
+import { useFixtureSnapshotClient, VAULT_QUERY } from "../storybook/fixture-snapshot";
 import { miniatures, paints, requirements, vault } from "../storybook/fixtures";
 import type { State } from "../types";
 
@@ -65,17 +65,17 @@ export const LargeGroupedWishlist: Story = {
 
 // Simulate the inventory delta arriving after a purchase, without a server or persistent vault.
 function PurchaseScenario() {
-  const updateVault = useVaultStore((store) => store.updateVault);
+  const client = useFixtureSnapshotClient();
   return (
     <>
       <WishlistPage />
       <Button
         onClick={() =>
-          updateVault((current) => ({
-            ...current,
-            paintStates: { ...current.paintStates, [finalPaint.id]: "OWNED" },
+          client.setQueryData(VAULT_QUERY, (current) => ({
+            ...current!,
+            paintStates: { ...current!.paintStates, [finalPaint.id]: "OWNED" },
             paintRecords: {
-              ...current.paintRecords,
+              ...current!.paintRecords,
               [finalPaint.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
             },
           }))
@@ -92,8 +92,11 @@ export const ProjectFilterAndPurchaseRetention: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     window.scrollTo(0, 0);
-    await userEvent.click(canvas.getByRole("combobox", { name: "Miniature" }));
-    await userEvent.click(await within(document.body).findByRole("option", { name: "Final project (1)" }));
+    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    await userEvent.click(picker);
+    await userEvent.type(picker, "Final");
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    await expect(picker).toHaveValue("Final project");
     await expect(canvas.queryByRole("heading", { level: 3 })).toBeNull();
     await expect(canvas.getByRole("button", { name: `Mark ${finalPaint.name} as bought` })).toBeVisible();
     await expect(canvasElement.querySelectorAll("li")).toHaveLength(1);
@@ -105,6 +108,62 @@ export const ProjectFilterAndPurchaseRetention: Story = {
     await expect(canvas.getByRole("button", { name: "Share list" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: `Increase ${finalPaint.name} quantity` }));
     await expect(canvas.getByRole("textbox", { name: `${finalPaint.name} quantity` })).toHaveValue("2");
+  },
+};
+
+export const AssociatedProjects: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    window.scrollTo(0, 0);
+    const button = await canvas.findByRole("button", { name: `View all 1 project for ${catalog[0].name}` });
+    await userEvent.click(button);
+    const dialog = await within(document.body).findByRole("dialog", {
+      name: `Projects using ${catalog[0].name}`,
+    });
+    await waitFor(() => expect(within(dialog).getByText(miniatures.knight.title)).toBeVisible());
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await expect(button).toHaveFocus();
+  },
+};
+
+const issueVault: State = {
+  ...largeVault,
+  catalog: [...catalog, paints.black, paints.gunmetal],
+  paintRecords: {
+    ...largeVault.paintRecords,
+    [paints.black.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
+  },
+  requirements: [
+    ...largeVault.requirements,
+    { ...requirements.black, id: "issue-black", paintId: paints.black.id },
+    { ...requirements.black, id: "issue-gunmetal", paintId: paints.gunmetal.id },
+  ],
+  paintSubstitutions: [
+    { id: "empty-black", targetPaintId: paints.black.id, name: "Broken black mix", isDefault: true },
+  ],
+};
+
+export const GlobalPaintIssues: Story = {
+  parameters: { vault: issueVault },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    window.scrollTo(0, 0);
+    const picker = canvas.getByRole("combobox", { name: "Miniature" });
+    await userEvent.click(picker);
+    await userEvent.type(picker, "Final");
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    await expect(picker).toHaveValue("Final project");
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await expect(
+      await canvas.findByRole("button", { name: `Fix substitution for ${paints.black.name}` }),
+    ).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: `Add ${paints.black.name} to wishlist` })).toBeNull();
+    await expect(
+      canvas.getByRole("button", { name: `Add ${paints.gunmetal.name} to wishlist` }),
+    ).toBeVisible();
+    await expect(canvas.getByText("Broken substitution")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: `Mark ${finalPaint.name} as bought` })).toBeVisible();
   },
 };
 
