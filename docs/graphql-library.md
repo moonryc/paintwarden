@@ -121,3 +121,44 @@ ID paging and cursor invalidation; HTTP tests verify stock writes, decimal-strin
 revisions, REST row-log coexistence, route protection and pre-SQL budget rejection.
 Generated production operations themselves are checked against the operation
 budget. Large/stress cold/warm measurements are separate from semantic correctness.
+
+## Client integration (Phase 2)
+
+Apollo is the default Library path; there is no debug flag or debug panel. `#paints`
+opens Library directly in both HTTP and `paintvault://app`, without `/api/state`.
+The default entry remains Home; navigation is unchanged. The legacy snapshot loads
+lazily on first entering an unmigrated screen or opening its project workflow.
+Its format and size are intentionally unchanged until later migration phases.
+
+The typed invalidation controller maps trigger-log events to Library, paint detail,
+options, Home, miniatures, Wishlist, schemes, templates and sources. Source metadata
+has a separate sources-only trigger. Reset/epoch events clear the entire Apollo
+scope and invalidate all active projections. Inactive root queries are evicted;
+mounted windows retain authorized stale rows during refresh/error, never partial
+new pages. No-change events do not evict or rerender. Query/mutation revisions do
+not advance the subscription cursor. Parallel initial reads rewind the stream to
+the earliest same-epoch envelope, and family dirty watermarks plus generation
+checks reject late results. Retired-epoch events cannot reset back to an old server.
+The SSE link catches up from its last delivered cursor on reconnect; visibility,
+focus, online and visible 30-second checks run the same catch-up read, with access
+checks, and restart an exhausted stream. Account/server scope changes dispose
+requests and both sensitive caches.
+
+Library refreshes all loaded 48-row pages atomically after edits, preserving scroll
+geometry. It has no five-page cap. Pagination uses the immutable, revision-scoped
+server projection and stable ID ordering; an opaque cursor cannot be reused with a
+new revision/filter. Virtualized rendering and Tab handoff can fetch the next page;
+late handoff never steals focus after clicking away. Detail recipes, ingredient
+lists and used-by references likewise expose subsequent pages. Search uses the
+same core fuzzy index/scorer on the server, rather than transferring the full
+catalog and another worker copy. Picker exclusions apply before ranking, as before.
+The original worker remains for unmigrated screens only.
+
+Stock edits are serialized per paint, with per-edit Apollo optimistic layers for
+raw inventory and guarded rollback. Last save wins; Undo is retained. Global counts
+and substitution availability always come from accepted server projections, not
+client guesses over loaded pages. GraphQL stock writes and REST edits feed the same
+SQLite trigger log. SSE also merges row deltas into a legacy snapshot **only if it
+already exists**; legacy saves cannot initialize a snapshot on a Library-only entry.
+Storybook's complete-vault adapters are isolated fixture code; actual Apollo stories
+also test empty legacy snapshots, pagination, loading/error and broken recipes.

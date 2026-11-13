@@ -47,7 +47,7 @@ export const VAULT_TABLES: Record<VaultTable, SQLiteTable> = {
 };
 
 // Source names and logos are copied onto many paint and scheme rows, so changing them reloads
-// the whole vault. Other source bookkeeping, such as the last update check, is ignored.
+// the whole vault. Bookkeeping separately invalidates only GraphQL source projections.
 const RELOAD_TABLE = "$reload";
 
 // Beyond this many changed rows (a catalog install, say), one full reload is cheaper.
@@ -111,6 +111,9 @@ export function installChangeLog(sqlite: Database.Database) {
     `CREATE TEMP TRIGGER IF NOT EXISTS vault_log_${sources}_update AFTER UPDATE ON main."${sources}"
       WHEN OLD."${sourceName}" IS NOT NEW."${sourceName}" OR OLD."${sourceLogo}" IS NOT NEW."${sourceLogo}"
       BEGIN ${reload} END`,
+    `CREATE TEMP TRIGGER IF NOT EXISTS vault_log_${sources}_metadata_update AFTER UPDATE ON main."${sources}"
+      WHEN ${rowChanged(catalogSources)}
+      BEGIN INSERT INTO vault_changes (table_key, row_key) VALUES ('$sources', '[]'); END`,
     `CREATE TEMP TRIGGER IF NOT EXISTS vault_log_${getTableName(catalogSourceItems)}_update
       AFTER UPDATE ON main."${getTableName(catalogSourceItems)}"
       WHEN ${rowChanged(catalogSourceItems)} BEGIN ${reload} END`,
@@ -124,7 +127,12 @@ export function currentChangeSeq(sqlite: Database.Database) {
 
 export type LoggedChanges =
   | { reload: true; seq: number }
-  | { reload: false; seq: number; keys: { table: VaultTable; key: Record<string, VaultKeyValue> }[] };
+  | {
+      reload: false;
+      seq: number;
+      sourcesChanged?: boolean;
+      keys: { table: VaultTable; key: Record<string, VaultKeyValue> }[];
+    };
 
 // Call inside a read transaction so the returned position matches the rows read afterwards.
 export function changedKeysSince(sqlite: Database.Database, epoch: string, since: number): LoggedChanges {
@@ -142,14 +150,17 @@ export function changedKeysSince(sqlite: Database.Database, epoch: string, since
   return {
     reload: false,
     seq,
-    keys: rows.map(({ tableKey, rowKey }) => {
-      const table = tableKey as VaultTable;
-      const values = JSON.parse(rowKey) as VaultKeyValue[];
-      return {
-        table,
-        key: Object.fromEntries(VAULT_TABLE_KEYS[table].map((field, index) => [field, values[index]])),
-      };
-    }),
+    ...(rows.some((row) => row.tableKey === "$sources") ? { sourcesChanged: true } : {}),
+    keys: rows
+      .filter((row) => row.tableKey !== "$sources")
+      .map(({ tableKey, rowKey }) => {
+        const table = tableKey as VaultTable;
+        const values = JSON.parse(rowKey) as VaultKeyValue[];
+        return {
+          table,
+          key: Object.fromEntries(VAULT_TABLE_KEYS[table].map((field, index) => [field, values[index]])),
+        };
+      }),
   };
 }
 

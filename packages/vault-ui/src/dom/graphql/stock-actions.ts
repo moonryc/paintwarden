@@ -1,0 +1,137 @@
+import { useMemo } from "react";
+
+import { useVaultStore } from "../store/hooks";
+import type { Notify, Paint, PaintStateSetter, State } from "../types";
+import { buzz } from "../utils/misc";
+import { owns } from "../utils/vault-data";
+
+import { getFragmentData } from "./generated/fragment-masking";
+import { PaintStockFragmentDoc, SetPaintStockDocument } from "./generated/graphql";
+import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+
+type Record = State["paintRecords"][string];
+type Actions = { setPaintState: PaintStateSetter; toggleOwned(paint: Paint, record?: Record): void };
+const actionsByScope = new WeakMap<VaultGraphQLScope, Actions>();
+
+// Each resource has a write queue. Optimistic layers are per edit, so an older failure
+// cannot roll back a newer edit; a new quantity is based on the visible optimistic value.
+export function createPaintStockActions(
+  scope: VaultGraphQLScope,
+  notify: Notify,
+  syncLegacy: () => Promise<void>,
+): Actions {
+  const queues = new Map<string, Promise<void>>();
+  let version = 0;
+  const current = (id: string): Record | undefined => {
+    const row = scope.client.cache.readFragment({
+      fragment: PaintStockFragmentDoc,
+      id: scope.client.cache.identify({ __typename: "Paint", id }),
+      optimistic: true,
+    });
+    const inventory = row?.inventory;
+    return inventory ? (inventory as Record) : undefined;
+  };
+  const setPaintState: PaintStateSetter = (paintId, state, stockLevel = "FULL", quantity) => {
+    const previous = current(paintId);
+    const qty =
+      state === "OWNED"
+        ? Math.max(
+            0,
+            Math.min(999, Math.floor(quantity ?? (previous?.state === "OWNED" ? previous.quantity : 1))),
+          )
+        : 0;
+    const nextState = state === "OWNED" && qty === 0 ? null : state;
+    const stock = nextState === "OWNED" && stockLevel === "EMPTY" ? "FULL" : stockLevel;
+    const inventory = nextState
+      ? { __typename: "Inventory" as const, state: nextState, stockLevel: stock, quantity: qty }
+      : null;
+    const id = scope.client.cache.identify({ __typename: "Paint", id: paintId });
+    const layer = `stock:${++version}:${paintId}`;
+    const ticket = scope.controller.capture();
+    buzz();
+    const optimisticPaint = { __typename: "Paint" as const, id: paintId, inventory };
+    scope.client.cache.recordOptimisticTransaction(
+      (cache) =>
+        cache.writeFragment({
+          id,
+          fragment: PaintStockFragmentDoc,
+          data: optimisticPaint,
+        }),
+      layer,
+    );
+    const task = async () => {
+      try {
+        if (!scope.controller.isCurrent(ticket)) return;
+        const result = await scope.client.mutate({
+          mutation: SetPaintStockDocument,
+          variables: { paintId, state: nextState, stockLevel: stock, quantity: qty, clientMutationId: layer },
+          fetchPolicy: "no-cache",
+        });
+        const payload = result.data?.setPaintStock;
+        if (!payload) throw new Error("Stock save returned no result");
+        if (!scope.controller.isCurrent(ticket)) return;
+        // Write only while this envelope is fresh. Global counts/availability are never
+        // guessed from a partial catalog; committed() refetches the loaded window.
+        if (payload.paint && scope.controller.accepts(ticket, payload.revision, ["PAINT", "LIBRARY"])) {
+          scope.client.cache.writeFragment({
+            id,
+            fragment: PaintStockFragmentDoc,
+            data: getFragmentData(PaintStockFragmentDoc, payload.paint),
+          });
+        }
+        scope.controller.committed(payload.revision, payload.invalidatedFamilies);
+        await syncLegacy();
+      } catch (error) {
+        if (scope.controller.isCurrent(ticket)) {
+          notify(error instanceof Error ? error.message : "Could not save stock", "error");
+          const cursor = scope.controller.getCursor();
+          if (cursor) scope.controller.committed(cursor, ["LIBRARY", "PAINT", "OPTIONS"]);
+        }
+      } finally {
+        scope.client.cache.removeOptimistic(layer);
+      }
+    };
+    const queued = (queues.get(paintId) ?? Promise.resolve()).then(task, task);
+    queues.set(paintId, queued);
+    void queued.finally(() => {
+      if (queues.get(paintId) === queued) queues.delete(paintId);
+    });
+  };
+  return {
+    setPaintState,
+    toggleOwned(paint, record) {
+      const previous = current(paint.id) ?? record;
+      const owned = owns(previous);
+      setPaintState(
+        paint.id,
+        owned ? null : "OWNED",
+        "FULL",
+        owned ? undefined : Math.max(1, previous?.quantity ?? 0),
+      );
+      notify(owned ? `${paint.name} unmarked` : `${paint.name} marked as owned`, "ok", {
+        label: "Undo",
+        onClick: () =>
+          previous
+            ? setPaintState(paint.id, previous.state, previous.stockLevel, previous.quantity)
+            : setPaintState(paint.id, null),
+      });
+    },
+  };
+}
+
+export function usePaintStock(): Actions {
+  const scope = useVaultGraphQL();
+  const notify = useVaultStore((store) => store.notify);
+  const syncChanges = useVaultStore((store) => store.syncChanges);
+  const legacySet = useVaultStore((store) => store.setPaintState);
+  const legacyToggle = useVaultStore((store) => store.toggleOwned);
+  return useMemo(() => {
+    if (!scope) return { setPaintState: legacySet, toggleOwned: legacyToggle };
+    let actions = actionsByScope.get(scope);
+    if (!actions) {
+      actions = createPaintStockActions(scope, notify, syncChanges);
+      actionsByScope.set(scope, actions);
+    }
+    return actions;
+  }, [scope, notify, syncChanges, legacySet, legacyToggle]);
+}

@@ -5,16 +5,53 @@ import { getSqlite } from "../db/index.ts";
 import { authorizeVault, hostRefused, sameOrigin } from "../lib/auth.ts";
 
 type Cursor = { epoch: string; since: number };
-export type Invalidation = { epoch: string; seq: number; reset: boolean };
+export const ALL_FAMILIES = [
+  "LIBRARY",
+  "PAINT",
+  "OPTIONS",
+  "HOME",
+  "MINIATURES",
+  "WISHLIST",
+  "SCHEMES",
+  "TEMPLATES",
+  "SOURCES",
+] as const;
+export type Family = (typeof ALL_FAMILIES)[number];
+export type Invalidation = { epoch: string; seq: number; reset: boolean; families: Family[] };
 
-// Cursor recovery uses the durable-per-process SQLite trigger log, not lossy in-memory PubSub.
-// Phase 1 conservatively invalidates every GraphQL family on any logged domain change.
+const availability: Family[] = ["LIBRARY", "PAINT", "OPTIONS", "HOME", "MINIATURES", "WISHLIST", "SCHEMES"];
+const familyByTable: Record<string, readonly Family[]> = {
+  paintRecords: availability,
+  paintSubstitutions: availability,
+  paintSubstitutionIngredients: availability,
+  catalog: [...availability, "TEMPLATES"],
+  miniatures: ["MINIATURES", "HOME", "WISHLIST", "PAINT", "SCHEMES"],
+  requirements: ["MINIATURES", "HOME", "WISHLIST", "PAINT"],
+  recipeSteps: ["MINIATURES", "HOME", "WISHLIST", "PAINT"],
+  miniaturePaintSubstitutions: ["MINIATURES", "HOME", "WISHLIST", "PAINT"],
+  miniatureColorSchemes: ["MINIATURES", "HOME", "WISHLIST", "PAINT", "SCHEMES"],
+  colorSchemes: ["SCHEMES", "MINIATURES", "TEMPLATES"],
+  colorSchemePaints: ["SCHEMES", "MINIATURES", "HOME", "WISHLIST", "PAINT", "TEMPLATES"],
+  colorSchemeDividers: ["SCHEMES", "MINIATURES", "TEMPLATES"],
+  colorSchemeImages: ["SCHEMES", "MINIATURES", "TEMPLATES"],
+};
+
+// Cursor recovery reads durable trigger keys, including tombstones/cascades. Mapping
+// is family-level where a deleted parent cannot safely be reconstructed.
 export function invalidationSince(cursor: Cursor): Invalidation {
   const sqlite = getSqlite();
   return sqlite.transaction(() => {
     pruneChangeLog(sqlite);
     const changes = changedKeysSince(sqlite, cursor.epoch, cursor.since);
-    return { epoch: changeLogEpoch, seq: changes.seq, reset: changes.reload };
+    const families = changes.reload
+      ? [...ALL_FAMILIES]
+      : [
+          ...new Set<Family>([
+            ...(changes.sourcesChanged ? ["SOURCES" as const] : []),
+            ...changes.keys.flatMap(({ table }) => familyByTable[table] ?? ALL_FAMILIES),
+          ]),
+        ];
+    return { epoch: changeLogEpoch, seq: changes.seq, reset: changes.reload, families };
   })();
 }
 

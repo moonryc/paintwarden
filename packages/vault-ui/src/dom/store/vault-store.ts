@@ -83,6 +83,9 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
     // Syncs run one at a time so each starts from the position the previous one reached.
     let syncQueue: Promise<void> = Promise.resolve();
     const runSync = async () => {
+      // Migrated screens keep an independent Apollo cursor. Never start a legacy
+      // snapshot just because a GraphQL or REST write completed on such a screen.
+      if (!queryClient.getQueryData<State>(VAULT_QUERY)) return;
       // A full load that started before the save would overwrite it with older data.
       await queryClient.cancelQueries({ queryKey: VAULT_QUERY });
       for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -119,8 +122,7 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
 
     const runServerCheck = async () => {
       const hasVault = () => Boolean(queryClient.getQueryData(VAULT_QUERY));
-      // Without a vault, the user is signing in, seeing the load error, or waiting on the first load.
-      if (!hasVault()) return;
+      // Access checks also run when only a migrated screen is mounted.
       await queryClient.invalidateQueries({ queryKey: AUTH_QUERY });
       if (queryClient.getQueryState(AUTH_QUERY)?.status === "error" || !hasVault()) return;
       // A full load already in progress will bring the latest data, and a sync would cancel it.
@@ -143,6 +145,9 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
       setToken: (token) => {
         // Cookie-only sign-out can keep the token empty but must discard scoped caches.
         set({ authGeneration: get().authGeneration + 1 });
+        // Cancel/remove cached legacy data even for cookie-only account changes.
+        void queryClient.cancelQueries({ queryKey: VAULT_QUERY });
+        queryClient.removeQueries({ queryKey: VAULT_QUERY });
         if (get().token === token) return;
         set({ token });
         // Clear another account's data immediately, including inactive recipe queries. Reset
@@ -283,7 +288,9 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
       },
       dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((toast) => toast.id !== id) })),
 
-      tab: "dashboard",
+      // A small direct-entry link works in HTTP and paintvault://app alike.
+      // Navigation itself remains unchanged; no persisted screen preference.
+      tab: typeof window !== "undefined" && window.location.hash === "#paints" ? "paints" : "dashboard",
       go: (tab) => {
         set({ tab });
         window.scrollTo({ top: 0 });

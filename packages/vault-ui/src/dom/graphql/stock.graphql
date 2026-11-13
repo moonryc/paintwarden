@@ -1,0 +1,12 @@
+fragment PaintStock on Paint {
+  id
+  inventory { state stockLevel quantity }
+}
+mutation SetPaintStock($paintId: ID!, $state: Ownership, $stockLevel: StockLevel, $quantity: Int, $clientMutationId: String) {
+  setPaintStock(paintId: $paintId, state: $state, stockLevel: $stockLevel, quantity: $quantity, clientMutationId: $clientMutationId) {
+    revision { epoch seq }
+    paint { ...PaintStock }
+    clientMutationId
+    invalidatedFamilies
+  }
+}

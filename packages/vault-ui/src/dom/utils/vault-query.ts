@@ -42,7 +42,11 @@ export async function readJson<T>(response: Response, message: string) {
 
 // Loads sign-in status and the vault into the query cache. The vault store's `syncChanges` keeps
 // the cached vault current after saves.
-export function useVaultData(authHeaders: () => Record<string, string>, syncChanges: () => Promise<void>) {
+export function useVaultData(
+  authHeaders: () => Record<string, string>,
+  syncChanges: () => Promise<void>,
+  legacyRequired = true,
+) {
   const queryClient = useQueryClient();
   const authQuery = useQuery({
     queryKey: AUTH_QUERY,
@@ -56,7 +60,7 @@ export function useVaultData(authHeaders: () => Record<string, string>, syncChan
   const authorized = isAuthorized(auth);
   const vaultQuery = useQuery({
     queryKey: VAULT_QUERY,
-    enabled: authorized,
+    enabled: authorized && legacyRequired,
     // Merged changes already keep unchanged rows and tables intact; comparing the whole vault
     // after every write would cost more than it saves.
     structuralSharing: false,
@@ -90,10 +94,12 @@ export function useVaultData(authHeaders: () => Record<string, string>, syncChan
   return {
     auth,
     data: authorized ? (vaultQuery.data ?? emptyState) : emptyState,
-    loading: authQuery.isPending || (authorized && vaultQuery.isPending),
-    loadError: (authQuery.error ?? vaultQuery.error)?.message ?? "",
+    loading: authQuery.isPending || (authorized && legacyRequired && vaultQuery.isPending),
+    loadError: (authQuery.error ?? (legacyRequired ? vaultQuery.error : null))?.message ?? "",
     // True when there is no vault to show, as opposed to a failed refresh of one already loaded.
-    loadFailed: (authQuery.isError && !auth) || (authorized && vaultQuery.isError && !vaultQuery.data),
+    loadFailed:
+      (authQuery.isError && !auth) ||
+      (authorized && legacyRequired && vaultQuery.isError && !vaultQuery.data),
   };
 }
 
