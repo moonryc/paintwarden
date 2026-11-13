@@ -1,11 +1,14 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Box from "@mui/material/Box";
-import { resolvePaintChoice, selectedSubstitution } from "@paint-vault/core/paint-substitutions";
+import {
+  isPaintAvailable,
+  resolvePaintChoice,
+  selectedSubstitution,
+} from "@paint-vault/core/paint-substitutions";
 
 import { useVault, useVaultStore } from "../store/hooks";
 import type { Paint, Requirement } from "../types";
-import { owns } from "../utils/vault-data";
 
 import { DragHandle } from "./DragHandle";
 import { PaintRowActions } from "./PaintRowActions";
@@ -58,10 +61,7 @@ export function PaintRow({
   });
   const active = selectedSubstitution(data, miniatureId, paint.id);
   const resolved = resolvePaintChoice(data, miniatureId, paint.id);
-  const resolvedPaints = resolved.paintIds
-    .map((id) => data.catalog.find((item) => item.id === id))
-    .filter(Boolean) as Paint[];
-  const owned = resolvedPaints.every((item) => owns(data.paintRecords[item.id])) && !resolved.cycle;
+  const owned = isPaintAvailable(data, data.paintRecords, paint.id);
   const wished = data.paintStates[paint.id] === "WISHLIST";
   const draggable = editMode && manual;
   // Line the scheme-source line up with the paint name.
@@ -119,7 +119,7 @@ export function PaintRow({
           editMode={editMode}
           owned={owned}
           notes={requirement.notes}
-          accessory={active && <PaintSubstitutionChip name={active.name} />}
+          accessory={active && <PaintSubstitutionChip name={active.name} broken={resolved.broken} />}
           status={
             <StatusChip
               tone={owned ? "ok" : wished ? "wishlist" : "muted"}
@@ -131,7 +131,7 @@ export function PaintRow({
         />
         <PaintRowActions
           wishlist={
-            !owned && !active
+            !owned && (!active || resolved.broken)
               ? {
                   active: wished,
                   label: wished ? `Remove ${paint.name} from wishlist` : `Add ${paint.name} to wishlist`,

@@ -13,6 +13,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Broken: Story = { args: { broken: true } };
+
 // The chip truncates long names to leave room for the paint name beside it.
 export const LongName: Story = {
   args: { name: "Two parts Sky Blue with one part Toxic Green" },

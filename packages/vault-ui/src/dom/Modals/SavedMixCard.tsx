@@ -1,6 +1,7 @@
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Button, Card, IconButton } from "@mui/material";
+import { Alert, Button, Card, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
+import { resolveSubstitution } from "@paint-vault/core/paint-substitutions";
 
 import { Trash2 } from "../icons";
 import { useVault } from "../store/hooks";
@@ -22,6 +23,7 @@ export function SavedMixCard({
   onDelete(): void;
 }) {
   const data = useVault();
+  const broken = resolveSubstitution(data, mix.id)?.broken ?? false;
   const rows = data.paintSubstitutionIngredients
     .filter((row) => row.substitutionId === mix.id)
     .sort((a, b) => a.sortOrder - b.sortOrder);
@@ -87,6 +89,11 @@ export function SavedMixCard({
           <Trash2 size={15} />
         </IconButton>
       </Box>
+      {broken && (
+        <Alert severity="warning" variant="outlined" sx={{ mt: 1.5 }}>
+          Broken substitution. Check the recipe ingredients or circular references.
+        </Alert>
+      )}
     </Card>
   );
 }

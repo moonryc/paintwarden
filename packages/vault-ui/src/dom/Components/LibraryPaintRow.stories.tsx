@@ -4,7 +4,7 @@ import { Profiler, useRef, useState, type RefObject } from "react";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 
 import { list } from "../storybook/decorators";
-import { paints } from "../storybook/fixtures";
+import { paints, vault } from "../storybook/fixtures";
 import type { State } from "../types";
 import { VAULT_QUERY } from "../utils/vault-query";
 
@@ -154,5 +154,44 @@ export const SelectiveCacheSubscriptions: Story = {
     const afterIngredient = await readCommits();
     await expect(afterIngredient.mix).toBeGreaterThan(afterQuantity.mix);
     await expect(afterIngredient.direct).toBe(afterQuantity.direct);
+  },
+};
+
+// An empty saved recipe is broken, not simply out of stock: original-paint actions remain usable.
+export const BrokenSubstitution: Story = {
+  args: { paint: paints.royalBlue },
+  parameters: { vault: { ...vault, paintSubstitutionIngredients: [] } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: `Mark ${paints.royalBlue.name} as owned` }),
+    ).toBeEnabled();
+    await expect(
+      canvas.getByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
+    ).toBeEnabled();
+  },
+};
+
+// Closing the cycle falls back to Sky Blue, which is on hand; cycle is not an ownership guard.
+export const BrokenCycleAvailable: Story = {
+  args: { paint: paints.royalBlue },
+  parameters: {
+    vault: {
+      ...vault,
+      paintSubstitutions: [
+        ...vault.paintSubstitutions,
+        { id: "sky-cycle", targetPaintId: paints.skyBlue.id, name: "Blue cycle", isDefault: true },
+      ],
+      paintSubstitutionIngredients: [
+        { ...vault.paintSubstitutionIngredients[0], parts: 1 },
+        { substitutionId: "sky-cycle", paintId: paints.royalBlue.id, parts: 1, sortOrder: 0 },
+      ],
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: `Mark ${paints.royalBlue.name} as owned` }),
+    ).toBeEnabled();
   },
 };

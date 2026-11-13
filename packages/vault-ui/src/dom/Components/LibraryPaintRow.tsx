@@ -1,5 +1,9 @@
 import Box from "@mui/material/Box";
-import { defaultSubstitution, isPaintAvailable } from "@paint-vault/core/paint-substitutions";
+import {
+  defaultSubstitution,
+  isPaintAvailable,
+  resolvePaintChoice,
+} from "@paint-vault/core/paint-substitutions";
 import { memo, type KeyboardEvent } from "react";
 import { shallow } from "zustand/shallow";
 
@@ -30,9 +34,10 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
   border?: "top" | "bottom" | "none";
   onKeyDownCapture?: (event: KeyboardEvent<HTMLLIElement>) => void;
 }) {
-  const { substitution, record, available } = useVault(
+  const { substitution, record, available, broken } = useVault(
     (data) => ({
       substitution: defaultSubstitution(data, paint.id),
+      broken: resolvePaintChoice(data, "", paint.id).broken,
       record: data.paintRecords[paint.id],
       // Includes inventory and recursive substitution ingredients, not only this paint's record.
       available: isPaintAvailable(data, data.paintRecords, paint.id),
@@ -81,7 +86,7 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
       <PaintRowLabel
         paint={paint}
         onClick={() => onOpenPaint(paint.id)}
-        accessory={substitution && <PaintSubstitutionChip name={substitution.name} />}
+        accessory={substitution && <PaintSubstitutionChip name={substitution.name} broken={broken} />}
       />
       <PaintRowActions
         quantity={
@@ -108,13 +113,14 @@ export const LibraryPaintRow = memo(function LibraryPaintRow({
             : undefined
         }
         add={
-          !available
+          !available || (broken && !directlyOwned)
             ? {
-                label: substitution
-                  ? `${paint.name} is unavailable through ${substitution.name}`
-                  : `Mark ${paint.name} as owned`,
-                title: substitution ? `Unavailable through ${substitution.name}` : "Mark as owned",
-                disabled: Boolean(substitution),
+                label:
+                  substitution && !broken
+                    ? `${paint.name} is unavailable through ${substitution.name}`
+                    : `Mark ${paint.name} as owned`,
+                title: substitution && !broken ? `Unavailable through ${substitution.name}` : "Mark as owned",
+                disabled: Boolean(substitution) && !broken,
                 onClick: () => toggleOwned(paint),
               }
             : undefined

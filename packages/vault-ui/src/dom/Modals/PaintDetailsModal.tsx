@@ -1,7 +1,11 @@
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
-import { defaultSubstitution, isPaintAvailable } from "@paint-vault/core/paint-substitutions";
+import {
+  defaultSubstitution,
+  isPaintAvailable,
+  resolvePaintChoice,
+} from "@paint-vault/core/paint-substitutions";
 import type { ReactNode } from "react";
 import { useState } from "react";
 
@@ -33,6 +37,7 @@ export function PaintDetailsModal({
   const rec = data.paintRecords[paint.id],
     state = owns(rec) ? "OWNED" : rec?.state === "WISHLIST" ? "WISHLIST" : null;
   const activeSubstitution = defaultSubstitution(data, paint.id);
+  const broken = resolvePaintChoice(data, "", paint.id).broken;
   const available = isPaintAvailable(data, data.paintRecords, paint.id);
   const usedBy = usedByMiniatures(data, paint.id);
   const options: [
@@ -151,10 +156,12 @@ export function PaintDetailsModal({
           ))}
         </ToggleButtonGroup>
         {activeSubstitution && (
-          <Alert severity={available ? "success" : "warning"} variant="outlined">
-            {available
-              ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
-              : `${activeSubstitution.name} is active, but at least one substitution paint is missing.`}
+          <Alert severity={!broken && available ? "success" : "warning"} variant="outlined">
+            {broken
+              ? `Broken substitution: ${activeSubstitution.name}. Check the recipe ingredients or circular references.`
+              : available
+                ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
+                : `${activeSubstitution.name} is active, but at least one substitution paint is missing.`}
           </Alert>
         )}
         {state === "OWNED" && rec && (

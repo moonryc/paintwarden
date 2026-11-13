@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn } from "storybook/test";
 
 import { sortableList } from "../storybook/decorators";
-import { miniatures, paints, requirements, schemes } from "../storybook/fixtures";
+import { miniatures, paints, requirements, schemes, vault } from "../storybook/fixtures";
 
 import { PaintRow } from "./PaintRow";
 
@@ -49,3 +49,55 @@ export const Substituted: Story = {
 export const EditMode: Story = { args: { editMode: true, schemeSources: [schemes.crimsonArmour] } };
 
 export const FromScheme: Story = { args: { manual: false, schemeSources: [schemes.crimsonArmour] } };
+
+export const BrokenSubstitution: Story = {
+  ...Substituted,
+  parameters: { vault: { ...vault, paintSubstitutionIngredients: [] } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(canvas.getByText("Missing")).toBeVisible();
+    await expect(
+      canvas.getByRole("button", { name: `Add ${paints.royalBlue.name} to wishlist` }),
+    ).toBeEnabled();
+  },
+};
+
+export const BrokenSubstitutionOriginalOwned: Story = {
+  ...Substituted,
+  parameters: {
+    vault: {
+      ...vault,
+      paintSubstitutionIngredients: [],
+      paintRecords: {
+        ...vault.paintRecords,
+        [paints.royalBlue.id]: { state: "OWNED", stockLevel: "FULL", quantity: 1 },
+      },
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(canvas.getByText("Packed")).toBeVisible();
+  },
+};
+
+// Closing the cycle falls back to Sky Blue, which is on hand; cycle is not an ownership guard.
+export const BrokenCycleAvailable: Story = {
+  ...Substituted,
+  parameters: {
+    vault: {
+      ...vault,
+      paintSubstitutions: [
+        ...vault.paintSubstitutions,
+        { id: "sky-cycle", targetPaintId: paints.skyBlue.id, name: "Blue cycle", isDefault: true },
+      ],
+      paintSubstitutionIngredients: [
+        { ...vault.paintSubstitutionIngredients[0], parts: 1 },
+        { substitutionId: "sky-cycle", paintId: paints.royalBlue.id, parts: 1, sortOrder: 0 },
+      ],
+    },
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("Broken: Teal Mix")).toBeVisible();
+    await expect(canvas.getByText("Packed")).toBeVisible();
+  },
+};
