@@ -1,0 +1,237 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+
+import { QueryClient } from "@tanstack/react-query";
+
+import { createVaultStore } from "../store/vault-store";
+
+import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
+import { LibraryPageDocument, VaultChangesDocument } from "./generated/graphql";
+import { readLibraryWindow } from "./library-loader";
+
+function page(name = "Paint", seq = 1, hasNextPage = false) {
+  return {
+    library: {
+      __typename: "PaintConnection",
+      nodes: [
+        {
+          __typename: "Paint",
+          id: name,
+          brand: "Brand",
+          range: "Range",
+          name,
+          colorHex: "#ffffff",
+          type: "acrylic",
+          discontinued: false,
+          inventory: null,
+        },
+      ],
+      pageInfo: { __typename: "PageInfo", hasNextPage, endCursor: `cursor-${name}-${seq}` },
+      revision: { __typename: "VaultRevision", epoch: "vault", seq },
+    },
+  };
+}
+const json = (data: unknown) =>
+  new Response(JSON.stringify({ data }), {
+    headers: { "content-type": "application/json" },
+  });
+const body = (init?: RequestInit) =>
+  JSON.parse(typeof init?.body === "string" ? init.body : "{}") as {
+    operationName: string;
+    variables: { first?: number; after?: string | null; epoch?: string; since?: number };
+  };
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+void test("HTTP auth is evaluated per operation and each client starts with an isolated cache", async () => {
+  let token = "first";
+  const headers: Headers[] = [];
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({ authorization: token }),
+    fetch: async (url, init) => {
+      assert.equal(url, "/api/graphql");
+      assert.equal(init?.credentials, "same-origin");
+      headers.push(new Headers(init?.headers));
+      return json(page(token));
+    },
+  });
+  await scope.client.query({ query: LibraryPageDocument });
+  token = "second";
+  await scope.client.query({ query: LibraryPageDocument });
+  assert.deepEqual(
+    headers.map((entry) => entry.get("authorization")),
+    ["first", "second"],
+  );
+  const other = createVaultGraphQLClient({ authHeaders: () => ({}) });
+  assert.deepEqual(other.client.cache.extract(), {});
+  scope.dispose();
+  assert.deepEqual(scope.client.cache.extract(), {});
+  other.dispose();
+});
+
+void test("disposing a scope cancels old requests; a late server result cannot restore its cache", async () => {
+  const response = deferred<Response>();
+  const started = deferred<void>();
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: () => {
+      started.resolve();
+      return response.promise;
+    },
+  });
+  const pending = scope.client.query({ query: LibraryPageDocument }).catch(() => undefined);
+  await started.promise;
+  scope.dispose();
+  response.resolve(json(page("old-account")));
+  await pending;
+  assert.deepEqual(scope.client.cache.extract(), {});
+});
+
+void test("cookie-only logout advances the auth generation even with an already-empty bearer token", () => {
+  const queryClient = new QueryClient();
+  const store = createVaultStore(queryClient);
+  assert.equal(store.getState().token, "");
+  store.getState().setToken("");
+  assert.equal(store.getState().authGeneration, 1);
+  store.getState().setToken("new-account");
+  assert.equal(store.getState().authGeneration, 2);
+  queryClient.clear();
+});
+
+void test("HTTP access denial immediately clears cached account data", async () => {
+  let denied = false;
+  const errors: VaultGraphQLError[] = [];
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onError: (error) => errors.push(error),
+    fetch: async () =>
+      denied ? new Response('{"error":"sign in"}', { status: 401 }) : json(page("private")),
+  });
+  await scope.client.query({ query: LibraryPageDocument });
+  assert.notDeepEqual(scope.client.cache.extract(), {});
+  denied = true;
+  await scope.client.query({ query: LibraryPageDocument }).catch(() => undefined);
+  assert.equal(errors[0]?.accessDenied, true);
+  assert.deepEqual(scope.client.cache.extract(), {});
+});
+
+void test("refresh uses bounded pages and restarts the entire window after STALE_CURSOR", async () => {
+  const requests: ReturnType<typeof body>["variables"][] = [];
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: async (_url, init) => {
+      const request = body(init);
+      requests.push(request.variables);
+      if (requests.length === 1) return json(page("old", 1, true));
+      if (requests.length === 2)
+        return new Response(
+          JSON.stringify({ errors: [{ message: "changed", extensions: { code: "STALE_CURSOR" } }] }),
+          { headers: { "content-type": "application/json" } },
+        );
+      return json(page(request.variables.after ? "tail" : "head", 2, !request.variables.after));
+    },
+  });
+  const result = await readLibraryWindow(scope.client, 2);
+  assert.equal(result.library.nodes.length, 2);
+  assert.equal(result.library.revision.seq, 2);
+  assert.deepEqual(
+    requests.map((entry) => entry.after),
+    [null, "cursor-old-1", null, "cursor-head-2"],
+  );
+  assert.ok(requests.every((entry) => entry.first === 48));
+  assert.deepEqual(scope.client.cache.extract(), {}, "window reads do not partially overwrite visible cache");
+  scope.dispose();
+});
+
+void test("SSE uses POST and reconnects from the last delivered cursor; disposal aborts it", async () => {
+  const first = deferred<void>();
+  const second = deferred<void>();
+  const aborted = deferred<void>();
+  let controller!: ReadableStreamDefaultController<Uint8Array>;
+  const requests: ReturnType<typeof body>[] = [];
+  const encoder = new TextEncoder();
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({ authorization: "session" }),
+    sseRetry: async () => {},
+    fetch: async (url, init) => {
+      assert.equal(url, "/api/graphql/stream");
+      assert.equal(init?.method, "POST");
+      assert.equal(new Headers(init?.headers).get("authorization"), "session");
+      requests.push(body(init));
+      const connection = requests.length;
+      const stream = new ReadableStream<Uint8Array>({
+        start(current) {
+          controller = current;
+          current.enqueue(
+            encoder.encode(
+              `event: next\ndata: ${JSON.stringify({
+                data: {
+                  vaultChanges: {
+                    epoch: "vault",
+                    seq: requests.length === 1 ? 8 : 10,
+                    reset: false,
+                  },
+                },
+              })}\n\n`,
+            ),
+          );
+          init?.signal?.addEventListener(
+            "abort",
+            () => {
+              if (connection === 2) {
+                current.close();
+                aborted.resolve();
+              }
+            },
+            { once: true },
+          );
+        },
+      });
+      return new Response(stream, { headers: { "content-type": "text/event-stream" } });
+    },
+  });
+  const subscription = scope.client
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: 3 } })
+    .subscribe({
+      next(result) {
+        if (result.data?.vaultChanges.seq === 8) first.resolve();
+        if (result.data?.vaultChanges.seq === 10) second.resolve();
+      },
+    });
+  await first.promise;
+  controller.error(new Error("network disconnected"));
+  await second.promise;
+  assert.equal(requests[0].variables.since, 3);
+  assert.equal(requests[1].variables.since, 8);
+  scope.dispose();
+  await aborted.promise;
+  subscription.unsubscribe();
+});
+
+void test("SSE access denial is reported once without retrying permanent auth errors", async () => {
+  const reported = deferred<VaultGraphQLError>();
+  let requests = 0;
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onError: reported.resolve,
+    sseRetry: async () => {},
+    fetch: async () => {
+      requests += 1;
+      return new Response(null, { status: 401 });
+    },
+  });
+  const subscription = scope.client
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: 0 } })
+    .subscribe({ error: () => {} });
+  const error = await reported.promise;
+  assert.equal(error.accessDenied, true);
+  assert.equal(requests, 1);
+  assert.deepEqual(scope.client.cache.extract(), {});
+  subscription.unsubscribe();
+  scope.dispose();
+});

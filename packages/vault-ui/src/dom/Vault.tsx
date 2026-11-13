@@ -73,6 +73,11 @@ const WishlistPage = lazy(() =>
   import("./Pages/WishlistPage").then((module) => ({ default: module.WishlistPage })),
 );
 
+const LibraryDebugPanel =
+  (import.meta as ImportMeta & { env: Record<string, string> }).env.VITE_GRAPHQL_LIBRARY_DEBUG === "true"
+    ? lazy(() => import("./graphql/LibraryDebugPanel"))
+    : null;
+
 if (typeof document !== "undefined") installBaseStyles();
 
 export default function Vault(props: { onChangeServer?: () => void } = {}) {
@@ -368,6 +373,11 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
             },
           }}
         >
+          {LibraryDebugPanel && !loading && auth && (
+            <Suspense fallback={null}>
+              <LibraryDebugPanel />
+            </Suspense>
+          )}
           {/* Same bar at every size: the page title docks here once the large title scrolls away. */}
           <Box
             component="header"

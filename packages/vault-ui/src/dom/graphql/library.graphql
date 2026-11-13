@@ -1,0 +1,20 @@
+fragment LibraryPaint on Paint {
+  id
+  brand
+  range
+  name
+  colorHex
+  type
+  discontinued
+  inventory { state stockLevel quantity }
+}
+query LibraryPage($first: Int! = 48, $after: String) {
+  library(first: $first, after: $after) {
+    nodes { ...LibraryPaint }
+    pageInfo { hasNextPage endCursor }
+    revision { epoch seq }
+  }
+}
+subscription VaultChanges($epoch: String!, $since: Int!) {
+  vaultChanges(epoch: $epoch, since: $since) { epoch seq reset }
+}

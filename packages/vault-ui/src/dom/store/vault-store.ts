@@ -29,6 +29,7 @@ export type PaintFilter = "ALL" | "OWNED" | "WISHLIST" | "UNTRACKED";
 export type VaultStore = {
   // Sign-in token for servers that require sign-in. Kept in memory only.
   token: string;
+  authGeneration: number;
   setToken(token: string): void;
   authHeaders: AuthHeaders;
 
@@ -138,7 +139,10 @@ export function createVaultStore(queryClient: QueryClient, overrides: Partial<Va
 
     return {
       token: "",
+      authGeneration: 0,
       setToken: (token) => {
+        // Cookie-only sign-out can keep the token empty but must discard scoped caches.
+        set({ authGeneration: get().authGeneration + 1 });
         if (get().token === token) return;
         set({ token });
         // Clear another account's data immediately, including inactive recipe queries. Reset
