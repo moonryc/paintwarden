@@ -80,6 +80,9 @@ export async function runPhase4Screens({
     await page.getByRole("option", typeof option === "string" ? exact(option) : { name: option }).click();
   };
   const choose = async (scope, name, query, option = query) => {
+    // A repeated selection may already have the same input value; fill alone
+    // then emits no input event and does not reopen MUI's popup.
+    await scope.getByRole("combobox", exact(name)).click();
     await scope.getByRole("combobox", exact(name)).fill(query);
     await page
       .getByRole("option", { name: typeof option === "string" ? new RegExp(escapeRegex(option)) : option })
