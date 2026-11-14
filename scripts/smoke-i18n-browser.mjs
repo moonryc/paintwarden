@@ -119,6 +119,24 @@ try {
     if (["ja", "ko", "zh-Hans", "zh-Hant"].includes(language) && route === "dashboard") {
       result.platformFonts = await platformFonts(page, "h2");
       result.platformSansFonts = await platformFonts(page, "nav .MuiListItemText-primary");
+      if (process.platform === "darwin") {
+        const faces = {
+          ja: ["Hiragino Mincho ProN", "Hiragino Sans"],
+          ko: ["AppleMyungjo", "Apple SD Gothic Neo"],
+          "zh-Hans": ["Songti SC", "PingFang SC"],
+          "zh-Hant": ["Songti TC", "PingFang TC"],
+        }[language];
+        for (const [index, fonts] of [result.platformFonts, result.platformSansFonts].entries())
+          assert.ok(
+            fonts.some(
+              (font) =>
+                (font.familyName === faces[index] ||
+                  font.postScriptName.startsWith(faces[index].replaceAll(" ", ""))) &&
+                font.glyphCount > 0,
+            ),
+            `${language}: expected regional ${faces[index]}, got ${JSON.stringify(fonts)}`,
+          );
+      }
     }
   };
   for (const { code, name } of [...languages.slice(1), languages[0]]) {

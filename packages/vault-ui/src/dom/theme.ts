@@ -21,10 +21,11 @@ declare module "@mui/material/IconButton" {
   }
 }
 
-import { breakpoints, colors, down, themeVars } from "./theme-tokens";
+import { breakpoints, colors, down } from "./theme-tokens";
 
-const sans = themeVars["--font-sans"];
-const serif = themeVars["--font-serif"];
+// Follow LanguageProvider/site regional overrides, not a frozen initial stack.
+const sans = "var(--font-sans)";
+const serif = "var(--font-serif)";
 
 // MUI's palette, from the same tokens as the CSS variables that Vault installs.
 export const theme = createTheme({
