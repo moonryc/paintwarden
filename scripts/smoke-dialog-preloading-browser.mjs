@@ -282,14 +282,12 @@ try {
       assert.equal(await dialog.getByRole("status").count(), 1);
       assert.equal(await dialog.getByRole("status").getAttribute("aria-live"), "polite");
       assert.ok((await dialog.locator('[aria-busy="true"]').count()) > 0);
-      const animations = await dialog
-        .locator(".MuiSkeleton-root")
-        .evaluateAll((shapes) =>
-          shapes.map((shape) => ({
-            hidden: shape.getAttribute("aria-hidden"),
-            animation: getComputedStyle(shape).animationName,
-          })),
-        );
+      const animations = await dialog.locator(".MuiSkeleton-root").evaluateAll((shapes) =>
+        shapes.map((shape) => ({
+          hidden: shape.getAttribute("aria-hidden"),
+          animation: getComputedStyle(shape).animationName,
+        })),
+      );
       assert.ok(animations.length > 0);
       assert.ok(animations.every((shape) => shape.hidden === "true" && shape.animation === "none"));
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
