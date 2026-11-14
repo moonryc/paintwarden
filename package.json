@@ -37,7 +37,8 @@
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:check": "npm run codegen && git diff --exit-code -- apps/paint-vault/graphql/generated packages/vault-ui/src/dom/graphql/generated",
     "test:graphql": "npm run test:graphql --workspace paint-vault && node --import tsx --test packages/vault-ui/src/dom/graphql/*.test.ts",
-    "i18n:check": "node scripts/check-i18n.mjs"
+    "i18n:check": "node scripts/check-i18n.mjs",
+    "audit:production": "node scripts/check-production-audit.mjs"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^8.0.0",
@@ -60,5 +61,10 @@
     "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^7.3.7"
+  },
+  "overrides": {
+    "nx": {
+      "undici": "7.30.2"
+    }
   }
 }
