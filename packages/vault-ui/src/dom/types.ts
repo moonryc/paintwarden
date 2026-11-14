@@ -185,6 +185,7 @@ export type Toast = { id: number; message: string; tone: "ok" | "error"; action?
 export type Notify = (message: string, tone?: Toast["tone"], action?: ToastAction) => void;
 
 export type MiniatureFormValues = {
+  folderId?: string | null;
   title: string;
   status: string;
   notes: string;

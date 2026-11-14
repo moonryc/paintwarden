@@ -210,3 +210,28 @@ void test("transaction-local color projections never poison the reusable committ
   );
   assert.deepEqual(readColorIndex({ first: 100 }), initial);
 });
+
+void test("production GraphQL color index resolver remains wired alongside folders", async () => {
+  const id = paint("Color integration");
+  inventory(id);
+  const { graphqlResponse } = await import("./server.ts");
+  const response = await graphqlResponse(
+    new Request("http://localhost/api/graphql", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        query: "query { colorIndex(first: 1) { nodes { id name owned available } } }",
+      }),
+    }),
+    false,
+  );
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as {
+    errors?: unknown[];
+    data?: { colorIndex: { nodes: { id: string; name: string; owned: boolean; available: boolean }[] } };
+  };
+  assert.equal(body.errors, undefined);
+  assert.deepEqual(body.data?.colorIndex.nodes, [
+    { id, name: "Color integration", owned: true, available: true },
+  ]);
+});

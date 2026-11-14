@@ -24,12 +24,13 @@ function reject(message: string): never {
 function boundedInput(value: unknown, key: string, depth = 0) {
   if (depth > 8) reject("Input nesting limit exceeded");
   if (Array.isArray(value)) {
+    if (key === "ids" && value.length > 1000) reject("Move at most 1000 items per operation");
     for (const item of value) boundedInput(item, key, depth + 1);
   } else if (value && typeof value === "object") {
     for (const [name, item] of Object.entries(value)) boundedInput(item, name, depth + 1);
   } else if (
     typeof value === "string" &&
-    (/(?:^id$|Ids?$)/.test(key) || ["steps", "step"].includes(key)) &&
+    (/(?:^ids?$|Ids?$)/.test(key) || ["steps", "step"].includes(key)) &&
     value.length > 256
   ) {
     reject(`${key} exceeds argument length limit`);
@@ -93,9 +94,17 @@ function checkExpandedBudget(
     if (depth > QUERY_LIMITS.depth) reject("Query depth limit exceeded");
     for (const node of set.selections) {
       if (node.kind === Kind.FRAGMENT_SPREAD) {
-        walk(fragments.get(node.name.value)!.selectionSet, depth, multiplier, parent);
+        const fragment = fragments.get(node.name.value)!;
+        const condition = schema.getType(fragment.typeCondition.name.value);
+        walk(
+          fragment.selectionSet,
+          depth,
+          multiplier,
+          condition && isObjectType(condition) ? condition : parent,
+        );
       } else if (node.kind === Kind.INLINE_FRAGMENT) {
-        walk(node.selectionSet, depth, multiplier, parent);
+        const condition = node.typeCondition && schema.getType(node.typeCondition.name.value);
+        walk(node.selectionSet, depth, multiplier, condition && isObjectType(condition) ? condition : parent);
       } else {
         fields++;
         aliases += node.alias ? 1 : 0;

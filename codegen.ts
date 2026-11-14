@@ -16,6 +16,7 @@ const config: CodegenConfig = {
         enumsAsTypes: true,
         contextType: "../context#GraphQLContext",
         mappers: {
+          Folder: "../folders#FolderRead",
           PaintView: "../library#PaintViewRead",
           MiniatureView: "../miniatures#MiniatureViewRead",
           MiniatureSchemeView: "../miniature-schemes#MiniatureSchemeRead",

@@ -1,5 +1,6 @@
 /* eslint-disable */
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from "graphql";
+import type { FolderRead } from "../folders";
 import type { PaintViewRead, SubstitutionRead } from "../library";
 import type { MiniatureViewRead } from "../miniatures";
 import type { MiniatureSchemeRead } from "../miniature-schemes";
@@ -91,6 +92,49 @@ export type FacetCount = {
   label: Scalars["String"]["output"];
 };
 
+export type Folder = {
+  __typename?: "Folder";
+  coverThumbnailUrl?: Maybe<Scalars["String"]["output"]>;
+  directCount: Scalars["Int"]["output"];
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  parentId?: Maybe<Scalars["ID"]["output"]>;
+  recursiveCount: Scalars["Int"]["output"];
+};
+
+export type FolderBrowserPayload = {
+  __typename?: "FolderBrowserPayload";
+  folders: Array<Folder>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type FolderDeleteMode = "DELETE_CONTENTS" | "MOVE_UP";
+
+export type FolderKind = "MINIATURE" | "TEMPLATE";
+
+export type FolderMutationPayload = {
+  __typename?: "FolderMutationPayload";
+  invalidatedFamilies: Array<VaultFamily>;
+  revision: VaultRevision;
+};
+
+export type FolderSearchConnection = {
+  __typename?: "FolderSearchConnection";
+  nodes: Array<FolderSearchResult>;
+  pageInfo: PageInfo;
+  totalCount: Scalars["Int"]["output"];
+};
+
+export type FolderSearchResult = Folder | Miniature | TemplateSummary;
+
+export type FolderSearchView = {
+  __typename?: "FolderSearchView";
+  results: FolderSearchConnection;
+  revision: VaultRevision;
+};
+
 export type HomeCounts = {
   __typename?: "HomeCounts";
   catalogCount: Scalars["Int"]["output"];
@@ -135,6 +179,7 @@ export type Miniature = {
   __typename?: "Miniature";
   createdAt: Scalars["Float"]["output"];
   faction: Scalars["String"]["output"];
+  folderId?: Maybe<Scalars["ID"]["output"]>;
   id: Scalars["ID"]["output"];
   imageUrl?: Maybe<Scalars["String"]["output"]>;
   manufacturer: Scalars["String"]["output"];
@@ -157,6 +202,7 @@ export type MiniatureConnection = {
 
 export type MiniatureInput = {
   faction?: InputMaybe<Scalars["String"]["input"]>;
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
   includeTemplateImage?: InputMaybe<Scalars["Boolean"]["input"]>;
   manufacturer?: InputMaybe<Scalars["String"]["input"]>;
   notes?: InputMaybe<Scalars["String"]["input"]>;
@@ -348,16 +394,21 @@ export type MiniaturesView = {
 
 export type Mutation = {
   __typename?: "Mutation";
+  createFolder: FolderMutationPayload;
   createMiniature: MiniatureMutationPayload;
   createScheme: SchemeMutationPayload;
   createSubstitution: SubstitutionMutationPayload;
   createTemplate: TemplateMutationPayload;
   deleteCustomPaint: PaintCommandPayload;
+  deleteFolder: FolderMutationPayload;
   deleteMiniature: MiniatureMutationPayload;
   deleteScheme: SchemeMutationPayload;
   deleteSubstitution: SubstitutionMutationPayload;
   deleteTemplate: TemplateMutationPayload;
   importCustomPaints: PaintImportPayload;
+  moveFolder: FolderMutationPayload;
+  moveFolderItems: FolderMutationPayload;
+  renameFolder: FolderMutationPayload;
   selectPaintSubstitution: SubstitutionMutationPayload;
   setMiniatureRecipe: MiniatureMutationPayload;
   setMiniatureSchemes: MiniatureMutationPayload;
@@ -367,6 +418,13 @@ export type Mutation = {
   updateMiniature: MiniatureMutationPayload;
   updateScheme: SchemeMutationPayload;
   updateTemplate: TemplateMutationPayload;
+};
+
+export type MutationCreateFolderArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  kind: FolderKind;
+  name: Scalars["String"]["input"];
+  parentId?: InputMaybe<Scalars["ID"]["input"]>;
 };
 
 export type MutationCreateMiniatureArgs = {
@@ -394,6 +452,12 @@ export type MutationDeleteCustomPaintArgs = {
   id: Scalars["ID"]["input"];
 };
 
+export type MutationDeleteFolderArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  mode: FolderDeleteMode;
+};
+
 export type MutationDeleteMiniatureArgs = {
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
@@ -417,6 +481,25 @@ export type MutationDeleteTemplateArgs = {
 export type MutationImportCustomPaintsArgs = {
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   paints: Array<CustomPaintImportInput>;
+};
+
+export type MutationMoveFolderArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  parentId?: InputMaybe<Scalars["ID"]["input"]>;
+};
+
+export type MutationMoveFolderItemsArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
+  ids: Array<Scalars["ID"]["input"]>;
+  kind: FolderKind;
+};
+
+export type MutationRenameFolderArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  id: Scalars["ID"]["input"];
+  name: Scalars["String"]["input"];
 };
 
 export type MutationSelectPaintSubstitutionArgs = {
@@ -621,6 +704,8 @@ export type PublicError = {
 export type Query = {
   __typename?: "Query";
   colorIndex: ColorIndexView;
+  folderBrowser: FolderBrowserPayload;
+  folderSearch: FolderSearchView;
   home: HomeView;
   library: PaintConnection;
   miniature: MiniatureView;
@@ -655,9 +740,33 @@ export type QueryColorIndexArgs = {
   first?: Scalars["Int"]["input"];
 };
 
+export type QueryFolderBrowserArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  flat?: Scalars["Boolean"]["input"];
+  kind: FolderKind;
+  parentId?: InputMaybe<Scalars["ID"]["input"]>;
+  search?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type QueryFolderSearchArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  category?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
+  kind: FolderKind;
+  noSource?: Scalars["Boolean"]["input"];
+  ownership?: InputMaybe<Ownership>;
+  search: Scalars["String"]["input"];
+  sourceId?: InputMaybe<Scalars["ID"]["input"]>;
+  stage?: InputMaybe<PaintingStatus>;
+};
+
 export type QueryHomeArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   first?: Scalars["Int"]["input"];
+  flat?: Scalars["Boolean"]["input"];
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
   search?: InputMaybe<Scalars["String"]["input"]>;
   stage?: InputMaybe<PaintingStatus>;
 };
@@ -684,6 +793,8 @@ export type QueryMiniatureSchemeArgs = {
 export type QueryMiniaturesArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   first?: Scalars["Int"]["input"];
+  flat?: Scalars["Boolean"]["input"];
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
   ownership?: InputMaybe<Ownership>;
   search?: InputMaybe<Scalars["String"]["input"]>;
   stage?: InputMaybe<PaintingStatus>;
@@ -752,6 +863,8 @@ export type QueryTemplatesArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   category?: InputMaybe<Scalars["String"]["input"]>;
   first?: Scalars["Int"]["input"];
+  flat?: Scalars["Boolean"]["input"];
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
   id?: InputMaybe<Scalars["ID"]["input"]>;
   noSource?: InputMaybe<Scalars["Boolean"]["input"]>;
   search?: InputMaybe<Scalars["String"]["input"]>;
@@ -993,6 +1106,7 @@ export type TemplateConnection = {
 
 export type TemplateInput = {
   faction?: InputMaybe<Scalars["String"]["input"]>;
+  folderId?: InputMaybe<Scalars["ID"]["input"]>;
   imageUrl?: InputMaybe<Scalars["String"]["input"]>;
   manufacturer?: InputMaybe<Scalars["String"]["input"]>;
   name?: InputMaybe<Scalars["String"]["input"]>;
@@ -1066,6 +1180,7 @@ export type TemplateSummary = {
   __typename?: "TemplateSummary";
   categories: Array<Scalars["String"]["output"]>;
   faction: Scalars["String"]["output"];
+  folderId?: Maybe<Scalars["ID"]["output"]>;
   id: Scalars["ID"]["output"];
   imageUrl: Scalars["String"]["output"];
   kind: Scalars["String"]["output"];
@@ -1267,6 +1382,11 @@ export type DirectiveResolverFn<
   info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
 
+/** Mapping of union types */
+export type ResolversUnionTypes<_RefType extends Record<string, unknown>> = {
+  FolderSearchResult: FolderRead | Miniature | TemplateSummary;
+};
+
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   ActiveSubstitution: ResolverTypeWrapper<ActiveSubstitution>;
@@ -1280,6 +1400,20 @@ export type ResolversTypes = {
   ErrorParameter: ResolverTypeWrapper<ErrorParameter>;
   FacetCount: ResolverTypeWrapper<FacetCount>;
   Float: ResolverTypeWrapper<Scalars["Float"]["output"]>;
+  Folder: ResolverTypeWrapper<FolderRead>;
+  FolderBrowserPayload: ResolverTypeWrapper<
+    Omit<FolderBrowserPayload, "folders"> & { folders: Array<ResolversTypes["Folder"]> }
+  >;
+  FolderDeleteMode: FolderDeleteMode;
+  FolderKind: FolderKind;
+  FolderMutationPayload: ResolverTypeWrapper<FolderMutationPayload>;
+  FolderSearchConnection: ResolverTypeWrapper<
+    Omit<FolderSearchConnection, "nodes"> & { nodes: Array<ResolversTypes["FolderSearchResult"]> }
+  >;
+  FolderSearchResult: ResolverTypeWrapper<ResolversUnionTypes<ResolversTypes>["FolderSearchResult"]>;
+  FolderSearchView: ResolverTypeWrapper<
+    Omit<FolderSearchView, "results"> & { results: ResolversTypes["FolderSearchConnection"] }
+  >;
   HomeCounts: ResolverTypeWrapper<HomeCounts>;
   HomeView: ResolverTypeWrapper<HomeView>;
   ID: ResolverTypeWrapper<Scalars["ID"]["output"]>;
@@ -1397,6 +1531,18 @@ export type ResolversParentTypes = {
   ErrorParameter: ErrorParameter;
   FacetCount: FacetCount;
   Float: Scalars["Float"]["output"];
+  Folder: FolderRead;
+  FolderBrowserPayload: Omit<FolderBrowserPayload, "folders"> & {
+    folders: Array<ResolversParentTypes["Folder"]>;
+  };
+  FolderMutationPayload: FolderMutationPayload;
+  FolderSearchConnection: Omit<FolderSearchConnection, "nodes"> & {
+    nodes: Array<ResolversParentTypes["FolderSearchResult"]>;
+  };
+  FolderSearchResult: ResolversUnionTypes<ResolversParentTypes>["FolderSearchResult"];
+  FolderSearchView: Omit<FolderSearchView, "results"> & {
+    results: ResolversParentTypes["FolderSearchConnection"];
+  };
   HomeCounts: HomeCounts;
   HomeView: HomeView;
   ID: Scalars["ID"]["output"];
@@ -1559,6 +1705,64 @@ export type FacetCountResolvers<
   label?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
 };
 
+export type FolderResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["Folder"] = ResolversParentTypes["Folder"],
+> = {
+  coverThumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  directCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  parentId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
+  recursiveCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type FolderBrowserPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["FolderBrowserPayload"] =
+    ResolversParentTypes["FolderBrowserPayload"],
+> = {
+  folders?: Resolver<Array<ResolversTypes["Folder"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type FolderMutationPayloadResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["FolderMutationPayload"] =
+    ResolversParentTypes["FolderMutationPayload"],
+> = {
+  invalidatedFamilies?: Resolver<Array<ResolversTypes["VaultFamily"]>, ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+};
+
+export type FolderSearchConnectionResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["FolderSearchConnection"] =
+    ResolversParentTypes["FolderSearchConnection"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["FolderSearchResult"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  totalCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type FolderSearchResultResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["FolderSearchResult"] = ResolversParentTypes["FolderSearchResult"],
+> = {
+  __resolveType: TypeResolveFn<"Folder" | "Miniature" | "TemplateSummary", ParentType, ContextType>;
+};
+
+export type FolderSearchViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["FolderSearchView"] = ResolversParentTypes["FolderSearchView"],
+> = {
+  results?: Resolver<ResolversTypes["FolderSearchConnection"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
+};
+
 export type HomeCountsResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["HomeCounts"] = ResolversParentTypes["HomeCounts"],
@@ -1614,6 +1818,7 @@ export type MiniatureResolvers<
 > = {
   createdAt?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
   faction?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  folderId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   imageUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   manufacturer?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -1625,6 +1830,7 @@ export type MiniatureResolvers<
   status?: Resolver<ResolversTypes["Ownership"], ParentType, ContextType>;
   thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type MiniatureConnectionResolvers<
@@ -1854,6 +2060,12 @@ export type MutationResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Mutation"] = ResolversParentTypes["Mutation"],
 > = {
+  createFolder?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationCreateFolderArgs, "kind" | "name">
+  >;
   createMiniature?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],
     ParentType,
@@ -1884,6 +2096,12 @@ export type MutationResolvers<
     ContextType,
     RequireFields<MutationDeleteCustomPaintArgs, "id">
   >;
+  deleteFolder?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteFolderArgs, "id" | "mode">
+  >;
   deleteMiniature?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],
     ParentType,
@@ -1913,6 +2131,24 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationImportCustomPaintsArgs, "paints">
+  >;
+  moveFolder?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationMoveFolderArgs, "id">
+  >;
+  moveFolderItems?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationMoveFolderItemsArgs, "ids" | "kind">
+  >;
+  renameFolder?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationRenameFolderArgs, "id" | "name">
   >;
   selectPaintSubstitution?: Resolver<
     ResolversTypes["SubstitutionMutationPayload"],
@@ -2146,7 +2382,24 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryColorIndexArgs, "first">
   >;
-  home?: Resolver<ResolversTypes["HomeView"], ParentType, ContextType, RequireFields<QueryHomeArgs, "first">>;
+  folderBrowser?: Resolver<
+    ResolversTypes["FolderBrowserPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryFolderBrowserArgs, "first" | "flat" | "kind">
+  >;
+  folderSearch?: Resolver<
+    ResolversTypes["FolderSearchView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryFolderSearchArgs, "first" | "kind" | "noSource" | "search">
+  >;
+  home?: Resolver<
+    ResolversTypes["HomeView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryHomeArgs, "first" | "flat">
+  >;
   library?: Resolver<
     ResolversTypes["PaintConnection"],
     ParentType,
@@ -2169,7 +2422,7 @@ export type QueryResolvers<
     ResolversTypes["MiniaturesView"],
     ParentType,
     ContextType,
-    RequireFields<QueryMiniaturesArgs, "first">
+    RequireFields<QueryMiniaturesArgs, "first" | "flat">
   >;
   ownedPaintOptions?: Resolver<
     ResolversTypes["PaintOptionsView"],
@@ -2233,7 +2486,7 @@ export type QueryResolvers<
     ResolversTypes["TemplatesView"],
     ParentType,
     ContextType,
-    RequireFields<QueryTemplatesArgs, "first" | "noSource">
+    RequireFields<QueryTemplatesArgs, "first" | "flat" | "noSource">
   >;
   vaultInvalidation?: Resolver<
     ResolversTypes["VaultInvalidation"],
@@ -2569,6 +2822,7 @@ export type TemplateSummaryResolvers<
 > = {
   categories?: Resolver<Array<ResolversTypes["String"]>, ParentType, ContextType>;
   faction?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  folderId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   imageUrl?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   kind?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
@@ -2580,6 +2834,7 @@ export type TemplateSummaryResolvers<
   sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
 export type TemplatesViewResolvers<
@@ -2713,6 +2968,12 @@ export type Resolvers<ContextType = GraphQLContext> = {
   ColorIndexView?: ColorIndexViewResolvers<ContextType>;
   ErrorParameter?: ErrorParameterResolvers<ContextType>;
   FacetCount?: FacetCountResolvers<ContextType>;
+  Folder?: FolderResolvers<ContextType>;
+  FolderBrowserPayload?: FolderBrowserPayloadResolvers<ContextType>;
+  FolderMutationPayload?: FolderMutationPayloadResolvers<ContextType>;
+  FolderSearchConnection?: FolderSearchConnectionResolvers<ContextType>;
+  FolderSearchResult?: FolderSearchResultResolvers<ContextType>;
+  FolderSearchView?: FolderSearchViewResolvers<ContextType>;
   HomeCounts?: HomeCountsResolvers<ContextType>;
   HomeView?: HomeViewResolvers<ContextType>;
   IngredientConnection?: IngredientConnectionResolvers<ContextType>;

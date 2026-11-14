@@ -21,21 +21,25 @@ import { templateRecipeCounts } from "../lib/template-recipes.ts";
 
 import { invalidationSince } from "./changes.ts";
 import type { GraphQLContext } from "./context.ts";
+import { moveItems } from "./folders.ts";
 import { readRevision, validatePage, validateText } from "./library.ts";
-import { paginateProjection } from "./miniatures.ts";
+import { folderScopeIds, paginateProjection, type FolderScopeArgs } from "./miniatures.ts";
 
 type Revision = ReturnType<typeof readRevision>;
+type FolderTemplateInput = TemplateInput & { folderId?: string | null };
 type Page = { first: number; after?: string | null };
-export type TemplateListArgs = Page & {
-  id?: string | null;
-  search?: string | null;
-  category?: string | null;
-  sourceId?: string | null;
-  noSource?: boolean | null;
-};
+export type TemplateListArgs = Page &
+  FolderScopeArgs & {
+    id?: string | null;
+    search?: string | null;
+    category?: string | null;
+    sourceId?: string | null;
+    noSource?: boolean | null;
+  };
 export type TemplateSummary = {
   id: string;
   name: string;
+  folderId: string | null;
   manufacturer: string;
   faction: string;
   imageUrl: string;
@@ -50,7 +54,7 @@ export type TemplateSummary = {
 };
 type SummaryRow = Pick<
   TemplateSummary,
-  "id" | "name" | "manufacturer" | "faction" | "sourceId" | "sourceName"
+  "id" | "name" | "folderId" | "manufacturer" | "faction" | "sourceId" | "sourceName"
 > & {
   imageKey: string | null;
   imageUrl: string | null;
@@ -86,7 +90,7 @@ function projection(revision: Revision, allowCache: boolean): Projection {
   // projection, source manifests or scheme entries are materialized on the list path.
   const rows = getSqlite()
     .prepare(
-      `SELECT t.id,t.name,t.manufacturer,t.faction,t.categories,
+      `SELECT t.id,t.name,t.folder_id AS folderId,t.manufacturer,t.faction,t.categories,
     t.image_key AS imageKey,t.image_url AS imageUrl,c.id AS sourceId,c.name AS sourceName,c.logo_svg AS logoSvg
     FROM miniature_templates t LEFT JOIN catalog_sources c ON c.id=(
       SELECT i.source_id FROM catalog_source_items i WHERE i.kind='template' AND i.item_id=t.id
@@ -98,6 +102,7 @@ function projection(revision: Revision, allowCache: boolean): Projection {
     .map((r): TemplateSummary => ({
       id: r.id,
       name: r.name,
+      folderId: r.folderId,
       manufacturer: r.manufacturer,
       faction: r.faction,
       categories: isUserId(r.id) ? ["My templates"] : (JSON.parse(r.categories) as string[]),
@@ -145,12 +150,31 @@ function projection(revision: Revision, allowCache: boolean): Projection {
   if (allowCache) cached = value;
   return value;
 }
+export function templateFolderSearchCandidates(
+  args: Omit<TemplateListArgs, "first" | "after">,
+  allowCache = false,
+) {
+  validateText(args.folderId, "folderId");
+  validateText(args.category, "category");
+  validateText(args.sourceId, "sourceId");
+  const p = projection(readRevision(), allowCache),
+    folders = folderScopeIds("template", { ...args, flat: true });
+  const category = args.category === "ALL" ? null : (args.category ?? null);
+  return p.nodes.filter(
+    (s) =>
+      (!folders || folders.has(s.folderId)) &&
+      (category === null || s.categories.includes(category)) &&
+      (!args.sourceId || s.sourceId === args.sourceId) &&
+      (!args.noSource || s.sourceId === null),
+  );
+}
 export function readTemplates(args: TemplateListArgs) {
   validatePage(args);
   validateText(args.id, "id");
   validateText(args.search, "search", 128);
   validateText(args.category, "category");
   validateText(args.sourceId, "sourceId");
+  validateText(args.folderId, "folderId");
   const sqlite = getSqlite(),
     allowCache = !sqlite.inTransaction;
   return sqlite.transaction(() => {
@@ -161,12 +185,24 @@ export function readTemplates(args: TemplateListArgs) {
     const scope =
       "templates:" +
       createHash("sha256")
-        .update(JSON.stringify([query, category, args.sourceId ?? null, !!args.noSource, args.id ?? null]))
+        .update(
+          JSON.stringify([
+            query,
+            category,
+            args.sourceId ?? null,
+            !!args.noSource,
+            args.id ?? null,
+            args.folderId ?? null,
+            args.flat !== false,
+          ]),
+        )
         .digest("base64url");
     // Validate stale/filter-mismatched cursors before fuzzy ranking/cache lookup.
     if (args.after != null) paginateProjection(p.nodes, { first: 1, after: args.after }, revision, scope);
+    const folders = folderScopeIds("template", args);
     let nodes = p.nodes.filter(
       (s) =>
+        (!folders || folders.has(s.folderId)) &&
         (!args.id || s.id === args.id) &&
         (category === null || s.categories.includes(category)) &&
         (!args.sourceId || s.sourceId === args.sourceId) &&
@@ -292,12 +328,16 @@ export const templateViewResolvers = { paints: templatePaints, schemes: template
 export const templateMutations = {
   createTemplate: async (
     _root: unknown,
-    args: { input: TemplateInput; clientMutationId?: string | null },
+    args: { input: FolderTemplateInput; clientMutationId?: string | null },
   ) => {
     try {
       return await withImageMutation(() =>
         withPreparedTemplateImage(args.input, (key) =>
-          atomic(() => createTemplate(args.input, key).id, args.clientMutationId),
+          atomic(() => {
+            const id = createTemplate(args.input, key).id;
+            if (args.input.folderId !== undefined) moveItems("template", [id], args.input.folderId);
+            return id;
+          }, args.clientMutationId),
         ),
       );
     } catch (error) {
@@ -306,11 +346,12 @@ export const templateMutations = {
   },
   updateTemplate: (
     _root: unknown,
-    args: { id: string; input: TemplateInput; clientMutationId?: string | null },
+    args: { id: string; input: FolderTemplateInput; clientMutationId?: string | null },
   ) => {
     try {
       return atomic(() => {
         updateTemplate(args.id, args.input);
+        if (args.input.folderId !== undefined) moveItems("template", [args.id], args.input.folderId);
         return args.id;
       }, args.clientMutationId);
     } catch (error) {

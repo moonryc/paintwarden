@@ -7,6 +7,7 @@ import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import {
   catalogSourceItems,
   catalogSources,
+  folders,
   colorSchemeDividers,
   colorSchemeImages,
   colorSchemePaints,
@@ -105,8 +106,8 @@ export function installChangeLog(sqlite: Database.Database) {
     );
   }
   const reload = `INSERT INTO vault_changes (table_key, row_key) VALUES ('${RELOAD_TABLE}', '[]');`;
-  // Template changes conservatively invalidate every projection.
-  for (const table of [miniatureTemplates, miniatureTemplateSchemes, miniatureTemplatePaints]) {
+  // Folder and template changes conservatively invalidate every projection.
+  for (const table of [folders, miniatureTemplates, miniatureTemplateSchemes, miniatureTemplatePaints]) {
     const name = getTableName(table);
     statements.push(
       `CREATE TEMP TRIGGER IF NOT EXISTS vault_log_${name}_insert AFTER INSERT ON main."${name}" BEGIN ${reload} END`,

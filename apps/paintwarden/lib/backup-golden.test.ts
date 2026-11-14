@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { copyFileSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { unzipSync, zipSync } from "fflate";
 
-import type { BackupManifest, BackupTables } from "./backup-format.ts";
+import type { BackupManifest, BackupRow, BackupTables } from "./backup-format.ts";
 
 const app = fileURLToPath(new URL("../", import.meta.url));
 const fixtures = path.join(app, "test-fixtures/data-compatibility");
@@ -26,6 +26,12 @@ const { APP_VERSION } = await import("./app-version.ts");
 const { loadImage } = await import("./image-store.ts");
 const fixture = (name: string) => path.join(fixtures, name);
 const golden = JSON.parse(readFileSync(fixture("v1-tables.json"), "utf8")) as Required<BackupTables>;
+const upgradedGolden: Required<BackupTables> = {
+  ...golden,
+  folders: [],
+  miniatures: golden.miniatures.map((row) => ({ ...row, folderId: null })),
+  templates: golden.templates.map((row) => ({ ...row, folderId: null })),
+};
 const pixel = readFileSync(fixture("pixel.png"));
 const goldenKey = golden.templates[0].imageKey as string;
 const stamp = 1700000000000;
@@ -52,7 +58,10 @@ void test("frozen application data and backup compatibility", async (t) => {
       const provenance = JSON.parse(readFileSync(fixture("provenance.json"), "utf8")) as {
         files: Record<string, string>;
       };
-      for (const [name, hash] of Object.entries(provenance.files))
+      const folderProvenance = JSON.parse(readFileSync(fixture("provenance-v2-folders.json"), "utf8")) as {
+        files: Record<string, string>;
+      };
+      for (const [name, hash] of Object.entries({ ...provenance.files, ...folderProvenance.files }))
         assert.equal(
           createHash("sha256")
             .update(readFileSync(fixture(name)))
@@ -137,12 +146,12 @@ void test("frozen application data and backup compatibility", async (t) => {
         assert.deepEqual(oldManifest.tables, golden);
         for (const mode of ["replace", "merge", "replace"] as const) {
           await restoreBackup(fixture("zip-v1.zip"), mode);
-          assert.deepEqual(tables(), golden, mode);
+          assert.deepEqual(tables(), upgradedGolden, mode);
           assert.deepEqual(accountRows(), owner);
           const { files, manifest } = await exported();
-          assert.deepEqual(manifest.tables, golden);
+          assert.deepEqual(manifest.tables, upgradedGolden);
           assert.equal(manifest.format, "paintwarden-backup");
-          assert.equal(manifest.version, 1);
+          assert.equal(manifest.version, 2);
           assert.equal(manifest.appVersion, APP_VERSION);
           assert.ok(Number.isFinite(Date.parse(manifest.exportedAt)));
           assert.deepEqual(manifest.images, [goldenKey]);
@@ -155,6 +164,103 @@ void test("frozen application data and backup compatibility", async (t) => {
     );
 
     await t.test(
+      "ZIP2 round-trips nested folders and membership, independent of manifest order",
+      async () => {
+        const expected = JSON.parse(
+          readFileSync(fixture("v2-folders-tables.json"), "utf8"),
+        ) as Required<BackupTables>;
+        const owner = accountRows();
+        for (const mode of ["replace", "merge", "replace"] as const) {
+          await restoreBackup(fixture("zip-v2-folders.zip"), mode);
+          const normalize = (value: BackupTables) => ({
+            ...value,
+            folders: [...(value.folders ?? [])].sort((a, b) => String(a.id).localeCompare(String(b.id))),
+          });
+          assert.deepEqual(normalize(tables()), normalize(expected));
+          assert.deepEqual(normalize((await exported()).manifest.tables), normalize(expected));
+          assert.deepEqual(accountRows(), owner);
+          assert.deepEqual(getSqlite().pragma("foreign_key_check"), []);
+        }
+        const files = unzipSync(readFileSync(fixture("zip-v2-folders.zip")));
+        const manifest = JSON.parse(Buffer.from(files["backup.json"]).toString()) as BackupManifest;
+        const shuffled = path.join(directory, "shuffled-folders.zip");
+        writeFileSync(
+          shuffled,
+          zipSync({
+            ...files,
+            "backup.json": Buffer.from(
+              JSON.stringify({
+                ...manifest,
+                tables: { ...manifest.tables, folders: [...expected.folders].reverse() },
+              }),
+            ),
+          }),
+        );
+        await restoreBackup(shuffled, "replace");
+        const actual = tables();
+        assert.deepEqual(
+          actual.folders.sort((a, b) => String(a.id).localeCompare(String(b.id))),
+          [...expected.folders].sort((a, b) => String(a.id).localeCompare(String(b.id))),
+        );
+        assert.deepEqual(actual.miniatures, expected.miniatures);
+        assert.deepEqual(actual.templates, expected.templates);
+        for (const folders of [
+          [...expected.folders, expected.folders[0]],
+          expected.folders.map((row, index) =>
+            index === 0 ? { ...row, parentId: expected.folders[1].id } : row,
+          ),
+          expected.folders.map((row, index) =>
+            index === 1 ? { ...row, parentId: expected.folders[2].id } : row,
+          ),
+        ]) {
+          const before = tables();
+          writeFileSync(
+            shuffled,
+            zipSync({
+              ...files,
+              "backup.json": Buffer.from(
+                JSON.stringify({ ...manifest, tables: { ...manifest.tables, folders } }),
+              ),
+            }),
+          );
+          await assert.rejects(restoreBackup(shuffled, "replace"), /damaged|can't store/);
+          assert.deepEqual(tables(), before);
+          assert.deepEqual(accountRows(), owner);
+          assert.deepEqual((await loadImage(goldenKey))?.bytes, pixel);
+        }
+      },
+    );
+
+    await t.test("ZIP2 round-trips authored trees deeper than SQLite's cascade trigger limit", async () => {
+      await restoreBackup(fixture("zip-v2-folders.zip"), "replace");
+      const owner = accountRows();
+      getSqlite().transaction(() => {
+        const insert = getSqlite().prepare(
+          "INSERT INTO folders(id,kind,name,parent_id,created_at) VALUES(?, 'miniature', ?, ?, ?)",
+        );
+        let parent: string | null = null;
+        for (let index = 0; index < 1005; index++) {
+          const id = randomUUID();
+          insert.run(id, `Deep synthetic folder ${index}`, parent, stamp);
+          parent = id;
+        }
+      })();
+      const before = tables();
+      const file = path.join(directory, "deep-folders.zip");
+      writeFileSync(file, Buffer.from(await new Response(createBackup()).arrayBuffer()));
+      await restoreBackup(file, "replace");
+      const normalize = (rows: BackupRow[]) =>
+        [...rows].sort((a, b) => String(a.id).localeCompare(String(b.id)));
+      assert.deepEqual(normalize(tables().folders), normalize(before.folders));
+      assert.deepEqual(tables().miniatures, before.miniatures);
+      assert.deepEqual(accountRows(), owner);
+      assert.deepEqual(getSqlite().pragma("foreign_key_check"), []);
+      await restoreBackup(fixture("zip-v2-folders.zip"), "replace");
+      assert.equal(tables().folders.length, 4);
+      assert.deepEqual((await loadImage(goldenKey))?.bytes, pixel);
+    });
+
+    await t.test(
       "non-ZIP uploads and future/unknown formats reject without touching rows, owner or images",
       async () => {
         const before = tables();
@@ -163,7 +269,7 @@ void test("frozen application data and backup compatibility", async (t) => {
         const files = unzipSync(readFileSync(fixture("zip-v1.zip")));
         const original = JSON.parse(Buffer.from(files["backup.json"]).toString()) as BackupManifest;
         for (const change of [
-          { version: 2 },
+          { version: 3 },
           { format: "unknown-backup" },
           { format: "paintwarden_backup" },
           { format: "Paintwarden-backup" },

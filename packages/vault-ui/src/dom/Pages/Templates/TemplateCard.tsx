@@ -1,10 +1,10 @@
-import { Card, CardActionArea } from "@mui/material";
+import { Card, CardActionArea, Checkbox } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 
-import type { MiniatureTemplate } from "../../types";
 import { thumbnailImageProps } from "../../image-thumbnails";
+import type { MiniatureTemplate } from "../../types";
 import { liftCardSx } from "../../utils/lift-card";
 
 // One template in the templates grid: its picture, name, source and counts. It opens the
@@ -14,17 +14,36 @@ export function TemplateCard({
   index,
   onOpen,
   onKeyDown,
+  checked,
+  onSelect,
 }: {
   template: MiniatureTemplate;
   // Position in the whole filtered list, for keyboard paging through the windowed grid.
   index: number;
   onOpen: () => void;
+  checked?: boolean;
+  onSelect?: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }) {
   const { t, i18n } = useTranslation("pages");
   const previewUrl = template.thumbnailUrl ?? template.imageUrl;
   return (
-    <Card sx={liftCardSx}>
+    <Card sx={{ ...liftCardSx, position: "relative" }}>
+      {onSelect && (
+        <Checkbox
+          checked={checked ?? false}
+          onChange={onSelect}
+          slotProps={{ input: { "aria-label": t("folders.selectItem", { name: template.name }) } }}
+          sx={{
+            position: "absolute",
+            top: 4,
+            right: 4,
+            zIndex: 1,
+            bgcolor: "var(--surface)",
+            borderRadius: 1,
+          }}
+        />
+      )}
       <CardActionArea
         onClick={onOpen}
         onKeyDown={onKeyDown}

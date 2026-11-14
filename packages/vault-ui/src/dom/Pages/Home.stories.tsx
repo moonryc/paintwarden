@@ -58,19 +58,21 @@ export const LargeShelfScroll: Story = {
   parameters: { vault: largeVault },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("button", { name: /Synthetic Miniature 0999/ })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0999/ }),
+    ).toBeInTheDocument();
     const readsBeforeScroll = miniatureReads;
     try {
       window.scrollTo(0, document.documentElement.scrollHeight);
       window.dispatchEvent(new Event("scroll"));
       await expect(
-        await canvas.findByRole("button", { name: /Synthetic Miniature 0000/ }),
+        await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0000/ }),
       ).toBeInTheDocument();
       await expect(miniatureReads).toBe(readsBeforeScroll);
       const search = canvas.getByRole("textbox", { name: /Search miniatures/ });
       await userEvent.type(search, "Synthetic Miniature 0999");
       await expect(
-        await canvas.findByRole("button", { name: /Synthetic Miniature 0999/ }),
+        await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0999/ }),
       ).toBeInTheDocument();
       await expect(miniatureReads).toBe(readsBeforeScroll);
     } finally {
@@ -116,12 +118,16 @@ export const ApolloSearchFindsUnloadedMiniature: Story = {
     const list = await canvas.findByRole("list", { name: "Miniature shelf" });
     await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
     // Ascending fixture index 0 is the last server result, outside the first page.
-    await expect(canvas.queryByRole("button", { name: /Synthetic Miniature 0000/ })).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0000/ }),
+    ).not.toBeInTheDocument();
     await userEvent.type(
       canvas.getByRole("textbox", { name: /Search miniatures/ }),
       "Synthetic Miniature 0000",
     );
-    await expect(await canvas.findByRole("button", { name: /Synthetic Miniature 0000/ })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0000/ }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -145,10 +151,14 @@ export const ApolloPagingReachesFinalMiniature: Story = {
         await waitFor(() => expect(loaded()).toBeGreaterThan(before));
       }
       window.scrollTo(0, document.documentElement.scrollHeight);
-      const final = await canvas.findByRole("button", { name: /Synthetic Miniature 0000/ });
+      const final = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0000/ });
       final.focus();
       await userEvent.tab({ shift: true });
+      await userEvent.tab({ shift: true });
+      await userEvent.tab({ shift: true });
       await expect(document.activeElement).toHaveAccessibleName(/Synthetic Miniature 0001/);
+      await userEvent.tab();
+      await userEvent.tab();
       await userEvent.tab();
       await expect(final).toHaveFocus();
       await expect(list.querySelectorAll("[data-mini-index]").length).toBeLessThan(120);
@@ -178,7 +188,9 @@ export const ApolloLoading: Story = {
     );
     await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
     await expect(canvas.queryByRole("textbox", { name: /Search miniatures/ })).not.toBeInTheDocument();
-    await expect(await canvas.findByRole("button", { name: /Synthetic Miniature 0119/ })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0119/ }),
+    ).toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
   },
 };
@@ -199,7 +211,9 @@ export const ApolloErrorRetry: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: "Retry" }));
-    await expect(await canvas.findByRole("button", { name: /Synthetic Miniature 0119/ })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0119/ }),
+    ).toBeInTheDocument();
     await expect(canvas.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
   },
 };
@@ -218,8 +232,10 @@ export const ApolloKeyboardCrossesPageBoundary: Story = {
       const list = await canvas.findByRole("list", { name: "Miniature shelf" });
       await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
       window.scrollTo(0, document.documentElement.scrollHeight);
-      const last = await canvas.findByRole("button", { name: /Synthetic Miniature 0072/ });
+      const last = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0072/ });
       last.focus();
+      await userEvent.tab();
+      await userEvent.tab();
       await userEvent.tab();
       await waitFor(() => expect(document.activeElement).toHaveAccessibleName(/Synthetic Miniature 0071/));
       await expect(document.activeElement?.tagName).toBe("BUTTON");
@@ -246,7 +262,7 @@ export const ApolloPageErrorRetainsRows: Story = {
       const retry = await canvas.findByRole("button", { name: "Retry" });
       await expect(list).toHaveAttribute("data-loaded-count", "48");
       await expect(
-        await canvas.findByRole("button", { name: /Synthetic Miniature 0072/ }),
+        await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0072/ }),
       ).toBeInTheDocument();
       await userEvent.click(retry);
       await waitFor(() => expect(canvas.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument());
@@ -272,8 +288,10 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
       const list = await canvas.findByRole("list", { name: "Miniature shelf" });
       await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
       window.scrollTo(0, document.documentElement.scrollHeight);
-      const last = await canvas.findByRole("button", { name: /Synthetic Miniature 0072/ });
+      const last = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0072/ });
       last.focus();
+      await userEvent.tab();
+      await userEvent.tab();
       await userEvent.tab();
       const search = canvas.getByRole("textbox", { name: /Search miniatures/ });
       await userEvent.click(search);
@@ -285,8 +303,7 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
   },
 };
 
-// Deliberately use the asynchronous Apollo path: the shelf is absent during loading,
-// but its item count is one (the add tile) both before and after the empty response.
+// Empty collections retain one Add entry point, with the same choice dialog as populated shelves.
 const emptyShelf: Story = {
   parameters: { vault: emptyState },
   render: (args) => (
@@ -296,23 +313,44 @@ const emptyShelf: Story = {
   ),
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const shelf = await canvas.findByRole("list", { name: "Miniature shelf" });
-    const add = canvas.getByRole("button", { name: /Add miniature/ });
-    await waitFor(() => {
-      const width = shelf.clientWidth;
-      const columns = width >= 1100 ? 5 : width >= 840 ? 4 : width >= 600 ? 3 : 2;
-      const gap = width >= 600 ? 16 : 12;
-      const tileWidth = (width - (columns - 1) * gap) / columns;
-      expect(add.getBoundingClientRect().width).toBeCloseTo(tileWidth, 0);
-      expect(add.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
-      expect(shelf.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
-    });
-    await expect(shelf).toHaveAttribute("data-loaded-count", "0");
+    const add = await canvas.findByRole("button", { name: /^Add$/ });
+    await expect(canvas.queryByRole("list", { name: "Miniature shelf" })).not.toBeInTheDocument();
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await userEvent.click(add);
-    await expect(args.onAdd).toHaveBeenCalled();
+    const dialog = await within(document.body).findByRole("dialog", { name: "Add" });
+    await userEvent.click(within(dialog).getByRole("button", { name: "Miniature" }));
+    await expect(args.onAdd).toHaveBeenCalledWith(null);
   },
 };
 
 export const EmptyWorkbench: Story = { ...emptyShelf };
 export const EmptyMiniatures: Story = { ...emptyShelf, args: { view: "miniatures" } };
+
+export const MixedFolderAndMiniatureSearch: Story = {
+  args: { view: "miniatures" },
+  parameters: apolloParameters,
+  render: (args) => (
+    <MiniatureApolloFixture
+      data={{ ...vault, miniatures: [{ ...miniatures.knight, title: "Knight" }] }}
+      folders={[{ id: "army", name: "Knight project", parentId: null, directCount: 1, recursiveCount: 1 }]}
+    >
+      <Home {...args} />
+    </MiniatureApolloFixture>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const search = await canvas.findByRole("textbox", { name: /Search miniatures/ });
+    try {
+      await userEvent.type(search, "Knight");
+      await expect(await canvas.findByTitle("Open Knight project")).toBeInTheDocument();
+      await expect(await canvas.findByRole("heading", { name: "Knight" })).toBeInTheDocument();
+      await userEvent.click(canvas.getByTitle("Open Knight project"));
+      await expect(search).toHaveValue("");
+      await expect(await canvas.findByRole("navigation", { name: "Folder navigation" })).toHaveTextContent(
+        "Knight project",
+      );
+    } finally {
+      localStorage.removeItem("paintwarden.folders.miniatures.flat");
+    }
+  },
+};

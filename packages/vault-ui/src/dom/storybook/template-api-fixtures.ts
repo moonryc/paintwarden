@@ -40,6 +40,8 @@ export function fixtureTemplateResponse(
     const all = templates.map((row) => ({
       __typename: "TemplateSummary",
       ...row,
+      folderId: null,
+      thumbnailUrl: row.thumbnailUrl ?? null,
       sourceId: row.sourceName ? row.sourceName : null,
       sourceName: row.sourceName ?? null,
       sourceLogoUrl: row.sourceLogoUrl ?? null,

@@ -15,6 +15,15 @@ const templates = Array.from({ length: 180 }, (_, index) => ({
   paintCount: index,
   schemeCount: 4,
 }));
+const matchingFolder = {
+  __typename: "Folder",
+  id: "story-dragon-folder",
+  name: "Distant dragon folder",
+  parentId: null,
+  directCount: 1,
+  recursiveCount: 1,
+  coverThumbnailUrl: null,
+};
 const meta = {
   title: "Templates/Page",
   component: MiniatureTemplatesPage,
@@ -24,6 +33,51 @@ const meta = {
       <StoryGraphQL
         delay={context.parameters.queryDelay ?? 0}
         respond={(operation) => {
+          if (operation.operationName === "BrowseFolders")
+            return {
+              folderBrowser: {
+                revision: { epoch: "story", seq: "1" },
+                folders: context.parameters.mixedFolder ? [matchingFolder] : [],
+                totalCount: context.parameters.mixedFolder ? 1 : 0,
+                pageInfo: { hasNextPage: false, endCursor: null },
+              },
+            };
+          if (operation.operationName === "SearchFolderContents") {
+            const response = fixtureTemplateResponse(
+              vault,
+              "TemplateSummaries",
+              operation.variables,
+              { epoch: "story", seq: "1" },
+              templates,
+            ) as {
+              templates: {
+                templates: {
+                  nodes: Array<{ imageUrl: string; [key: string]: unknown }>;
+                  pageInfo: { endCursor: string | null; hasNextPage: boolean };
+                  totalCount: number;
+                };
+              };
+            };
+            const results = {
+              ...response.templates.templates,
+              nodes: response.templates.templates.nodes.map(({ imageUrl, ...node }) => ({
+                ...node,
+                templateImageUrl: imageUrl,
+              })),
+            };
+            return {
+              folderSearch: {
+                revision: { epoch: "story", seq: "1" },
+                results: context.parameters.mixedFolder
+                  ? {
+                      ...results,
+                      nodes: [matchingFolder, ...results.nodes],
+                      totalCount: results.totalCount + 1,
+                    }
+                  : results,
+              },
+            };
+          }
           if (operation.operationName !== "TemplateSummaries")
             throw new Error("Browsing and summary details must not fetch a recipe");
           return (
@@ -49,7 +103,7 @@ export const GlobalSearchAndSummaryOnly: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
     await userEvent.type(canvas.getByRole("textbox", { name: "Search templates…" }), "Distant dragon");
-    await expect(await canvas.findByText("1 template")).toBeInTheDocument();
+    await expect(await canvas.findByText("1 result")).toBeInTheDocument();
     await userEvent.click(await canvas.findByRole("button", { name: /Distant dragon/ }));
     const dialog = within(await within(document.body).findByRole("dialog", { name: "Distant dragon" }));
     await expect(dialog.getByText("4 schemes · 179 paints")).toBeInTheDocument();
@@ -89,5 +143,33 @@ export const Loading: Story = {
         card.getBoundingClientRect().height * 2,
       );
     });
+  },
+};
+
+export const BulkSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("checkbox", { name: "Select Knight 000" }));
+    await userEvent.click(canvas.getByRole("checkbox", { name: "Select Knight 001" }));
+    await userEvent.click(canvas.getByRole("button", { name: /Move selected/ }));
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await expect(dialog.getByRole("button", { name: /Cancel/ })).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("button", { name: /Cancel/ }));
+    await userEvent.click(canvas.getByRole("button", { name: "Clear selection" }));
+    await expect(canvas.getByRole("checkbox", { name: "Select Knight 000" })).not.toBeChecked();
+  },
+};
+
+export const MixedFolderAndTemplateSearch: Story = {
+  parameters: { mixedFolder: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
+    const search = canvas.getByRole("textbox", { name: "Search templates…" });
+    await userEvent.type(search, "Distant dragon");
+    await expect(await canvas.findByText("2 results")).toBeInTheDocument();
+    await expect(canvas.getByRole("button", { name: /Distant dragon 4 schemes/ })).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: /Distant dragon folder 1 item/ }));
+    await expect(search).toHaveValue("");
   },
 };

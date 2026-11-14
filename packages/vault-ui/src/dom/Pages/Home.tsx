@@ -1,19 +1,33 @@
-import { Alert, Button, ButtonBase, Card, CircularProgress, MenuItem, TextField } from "@mui/material";
+import {
+  Alert,
+  Button,
+  ButtonBase,
+  Card,
+  Checkbox,
+  CircularProgress,
+  IconButton,
+  Menu,
+  MenuItem,
+  TextField,
+} from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AddMiniatureTile } from "../Components/AddMiniatureTile";
+import { FolderBrowser } from "../Components/FolderBrowser";
+import { FolderPicker } from "../Components/FolderPicker";
 import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { SectionHeader } from "../Components/SectionHeader";
-import { dialogPreloadHandlers } from "../dialog-preload";
+import { useFolderBrowser } from "../graphql/folder-hooks";
+import { useFolderSearch } from "../graphql/folder-search-hooks";
+import { useVaultGraphQL } from "../graphql/provider";
 import { useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
-import { Archive, Plus, SearchX } from "../icons";
+import { Archive, Ellipsis, SearchX } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { PaintingStatus } from "../types";
@@ -26,7 +40,13 @@ import { useInitialPageLoading } from "./useInitialPageLoading";
 
 const shelfTileSx = { width: "100%", height: "100%" };
 
-export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(): void }) {
+export function Home({
+  view,
+  onAdd,
+}: {
+  view: "dashboard" | "miniatures";
+  onAdd(folderId?: string | null): void;
+}) {
   const { t, i18n } = useTranslation("pages");
   const number = (value: number) =>
     new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language).format(value);
@@ -38,26 +58,62 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     q = search.trim();
   const [stageFilter, setStageFilter] = useState<PaintingStatus | "ALL">("ALL");
   const workbench = view === "dashboard";
-  const list = useMiniatureList({ workbench, ownership: filter, stage: stageFilter, search: q });
+  const folderState = useFolderBrowser(view, "MINIATURE", q);
+  const mixedSearch = useFolderSearch({
+    kind: "MINIATURE",
+    search: q,
+    folderId: folderState.flat ? null : folderState.folderId,
+    ownership: workbench ? "OWNED" : filter === "ALL" ? undefined : filter,
+    stage: workbench && stageFilter !== "ALL" ? stageFilter : undefined,
+  });
+  const hasMixedSearch = Boolean(useVaultGraphQL()) && Boolean(q);
+  const browser = {
+    ...folderState,
+    visibleFolders: hasMixedSearch ? mixedSearch.folders : folderState.visibleFolders,
+    navigate: (id: string | null) => {
+      folderState.navigate(id);
+      setSearch("");
+    },
+  };
+  const [selection, setSelection] = useState<string[]>([]);
+  const [movingItems, setMovingItems] = useState<string[] | null>(null);
+  const [itemMenu, setItemMenu] = useState<{ id: string; anchor: HTMLElement } | null>(null);
+  useEffect(() => {
+    setSelection([]);
+    setItemMenu(null);
+  }, [browser.folderId, browser.flat, view, q]);
+  const list = useMiniatureList({
+    workbench,
+    ownership: filter,
+    stage: stageFilter,
+    search: q,
+    folderId: browser.flat ? null : browser.folderId,
+    flat: browser.flat || Boolean(q),
+  });
   const {
-    rows: visibleProjects,
+    rows: listedProjects,
     statusCounts,
     stageCounts,
     ready,
     missingProjectPaints,
     wishlistedMissingPaints,
-    loading,
-    refreshing,
-    hasNextPage,
-    loadMore,
+    loading: listLoading,
+    refreshing: listRefreshing,
+    hasNextPage: listHasNextPage,
+    loadMore: listLoadMore,
   } = list;
-  const initialLoading = useInitialPageLoading(loading, Boolean(list.error));
+  const visibleProjects = hasMixedSearch ? mixedSearch.miniatures : listedProjects;
+  const loading = hasMixedSearch ? mixedSearch.loading : listLoading;
+  const refreshing = hasMixedSearch ? mixedSearch.refreshing : listRefreshing;
+  const hasNextPage = hasMixedSearch ? mixedSearch.hasNextPage : listHasNextPage;
+  const loadMore = hasMixedSearch ? mixedSearch.loadMore : listLoadMore;
+  const listError = hasMixedSearch ? mixedSearch.error : list.error;
+  const retry = hasMixedSearch ? mixedSearch.retry : list.retry;
+  const initialLoading = useInitialPageLoading(loading, Boolean(listError));
   const pct = list.owned ? (ready / list.owned) * 100 : 0;
-  const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
+  const shelfItems: MiniatureTileProjection[] = visibleProjects;
   const hasQuery = Boolean(q);
-  // The add tile is still one item while an empty vault loads. Track whether the
-  // shelf actually exists, not just its item count, so its first mount is measured.
-  const hasShelf = visibleProjects.length > 0 || (!q && !loading && !list.error);
+  const hasShelf = visibleProjects.length > 0;
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
     gridTop: 0,
@@ -151,7 +207,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
       hasNextPage &&
       !loading &&
       !refreshing &&
-      !list.error &&
+      !listError &&
       shelfWindow.endIndex >= shelfItems.length - shelfColumns * 2
     )
       loadMore();
@@ -159,7 +215,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
     hasNextPage,
     loading,
     refreshing,
-    list.error,
+    listError,
     shelfWindow.endIndex,
     shelfItems.length,
     shelfColumns,
@@ -190,7 +246,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
         title={workbench ? t("homeWorkbenchTitle") : t("homeMiniaturesTitle")}
         body={workbench ? t("homeWorkbenchBody") : t("homeMiniaturesBody")}
       />
-      {workbench && !loading && !list.error && list.catalogCount === 0 && (
+      {workbench && !loading && !listError && list.catalogCount === 0 && (
         // A new vault has no catalog until a plugin is installed, so point there first.
         <Alert severity="info">{t("homeEmptyLibrary")}</Alert>
       )}
@@ -476,16 +532,32 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 ]}
           </TextField>
         </FilterToolbar>
-        {list.error && (
+        <FolderBrowser
+          browser={browser}
+          kind="project"
+          onAddItem={() => onAdd(browser.flat ? null : browser.folderId)}
+        />
+        {selection.length > 0 && (
+          <Box
+            role="group"
+            aria-label={t("folders.selectItems")}
+            sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}
+          >
+            <Box sx={{ alignSelf: "center" }}>{t("folders.selected", { count: selection.length })}</Box>
+            <Button onClick={() => setMovingItems(selection)}>{t("folders.moveSelected")}</Button>
+            <Button onClick={() => setSelection([])}>{t("folders.clearSelection")}</Button>
+          </Box>
+        )}
+        {listError && (
           <Alert
             severity="error"
             action={
-              <Button color="inherit" onClick={list.retry}>
+              <Button color="inherit" onClick={retry}>
                 {t("homeRetry")}
               </Button>
             }
           >
-            {list.error}
+            {listError}
           </Alert>
         )}
         {(loading || refreshing) && (
@@ -501,7 +573,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             aria-label={t("homeMiniatureShelf")}
             aria-busy={loading || refreshing}
             data-loaded-count={visibleProjects.length}
-            data-total-count={list.totalCount}
+            data-total-count={hasMixedSearch ? mixedSearch.totalCount : list.totalCount}
             sx={{
               position: "relative",
               minWidth: 0,
@@ -526,6 +598,10 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 if (event.key !== "Tab") return;
                 const current = (event.target as HTMLElement).closest<HTMLElement>("[data-mini-index]");
                 if (!current) return;
+                const controls = Array.from(
+                  current.querySelectorAll<HTMLElement>("button, input:not([disabled])"),
+                );
+                if (event.target !== (event.shiftKey ? controls[0] : controls.at(-1))) return;
                 const index = Number(current.dataset.miniIndex) + (event.shiftKey ? -1 : 1);
                 if (index < 0) return;
                 if (index >= shelfItems.length) {
@@ -554,7 +630,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                       minWidth: 0,
                     }}
                   >
-                    {project ? (
+                    <Box sx={{ position: "relative", height: "100%" }}>
                       <MiniatureTile
                         mini={project.mini}
                         swatches={project.swatches}
@@ -563,19 +639,40 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                         onOpen={openMini}
                         sx={shelfTileSx}
                       />
-                    ) : (
-                      <AddMiniatureTile
-                        {...dialogPreloadHandlers("miniature")}
-                        onClick={onAdd}
-                        sx={shelfTileSx}
+                      <Checkbox
+                        checked={selection.includes(project.mini.id)}
+                        slotProps={{
+                          input: { "aria-label": t("folders.selectItem", { name: project.mini.title }) },
+                        }}
+                        onChange={(_, checked) =>
+                          setSelection((previous) =>
+                            checked
+                              ? [...previous, project.mini.id]
+                              : previous.filter((id) => id !== project.mini.id),
+                          )
+                        }
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          left: 4,
+                          bgcolor: "var(--surface)",
+                          borderRadius: 1,
+                        }}
                       />
-                    )}
+                      <IconButton
+                        aria-label={t("folders.actions", { name: project.mini.title })}
+                        onClick={(event) => setItemMenu({ id: project.mini.id, anchor: event.currentTarget })}
+                        sx={{ position: "absolute", top: 4, right: 4, bgcolor: "var(--surface)" }}
+                      >
+                        <Ellipsis size={18} />
+                      </IconButton>
+                    </Box>
                   </Box>
                 );
               })}
             </Box>
           </Box>
-        ) : loading || list.error ? null : list.collectionCount ? (
+        ) : loading || listError || browser.visibleFolders.length > 0 ? null : list.collectionCount ? (
           <EmptyState
             icon={<SearchX size={26} />}
             title={t("homeNoMatches")}
@@ -598,16 +695,6 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             icon={<Archive size={26} />}
             title={workbench ? t("homeEmptyWorkbench") : t("homeEmptyShelf")}
             body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
-            action={
-              <Button
-                variant="contained"
-                {...dialogPreloadHandlers("miniature")}
-                onClick={onAdd}
-                startIcon={<Plus size={16} />}
-              >
-                {t("homeAddMiniature")}
-              </Button>
-            }
           />
         )}
         {hasNextPage && (
@@ -616,6 +703,27 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
           </Button>
         )}
       </Box>
+      <Menu anchorEl={itemMenu?.anchor} open={Boolean(itemMenu)} onClose={() => setItemMenu(null)}>
+        <MenuItem
+          onClick={() => {
+            if (itemMenu) setMovingItems([itemMenu.id]);
+            setItemMenu(null);
+          }}
+        >
+          {t("folders.moveToFolder")}
+        </MenuItem>
+      </Menu>
+      {movingItems && (
+        <FolderPicker
+          folders={browser.folders}
+          onClose={() => setMovingItems(null)}
+          onMove={async (destination) => {
+            await browser.moveItems(movingItems, destination);
+            setMovingItems(null);
+            setSelection([]);
+          }}
+        />
+      )}
     </Box>
   );
 }

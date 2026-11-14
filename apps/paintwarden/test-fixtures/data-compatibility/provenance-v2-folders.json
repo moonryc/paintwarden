@@ -1,0 +1,13 @@
+{
+  "kind": "synthetic-folder-backup-v2",
+  "description": "Additive ZIP2 contract fixture, invented nested folders and frozen synthetic ZIP1 rows; not a historical release artifact",
+  "sources": {
+    "scripts/generate-folder-backup-fixtures.mjs": "964a59374b86c082819ba0234ac68d31f3c041e97bfbaec40020f19bba4275fa",
+    "apps/paintwarden/lib/backup-format.ts": "214d5b5d96353d1aeced797c93ec0a5781470adfafbd20c1a0cdd74783273a8b",
+    "apps/paintwarden/lib/zip-writer.ts": "3b50f7a05224dfc6cfb763456ef45ab572a7f9d50a2e43d7c1ff469d54bcd7ff"
+  },
+  "files": {
+    "zip-v2-folders.zip": "d271dd927d53ecb3992158ce03ab5f7ab5c23d42860aa278d15f5d3aa0c1d4d6",
+    "v2-folders-tables.json": "9c7a2159e5621ead26d068198221a274e24782736f977c3ded78c766ef3237c0"
+  }
+}

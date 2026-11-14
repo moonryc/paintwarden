@@ -1,6 +1,7 @@
 fragment MiniatureTile on Miniature {
   id
   title
+  folderId
   status
   imageUrl
   thumbnailUrl
@@ -20,8 +21,11 @@ query MiniatureList(
   $ownership: Ownership
   $stage: PaintingStatus
   $search: String
+  $folderId: ID
+  $flat: Boolean! = true
 ) {
-  home(first: $first, after: $after, stage: $stage, search: $search) @include(if: $workbench) {
+  home(first: $first, after: $after, stage: $stage, search: $search, folderId: $folderId, flat: $flat)
+    @include(if: $workbench) {
     revision {
       epoch
       seq
@@ -49,8 +53,15 @@ query MiniatureList(
       }
     }
   }
-  miniatures(first: $first, after: $after, ownership: $ownership, stage: $stage, search: $search)
-    @skip(if: $workbench) {
+  miniatures(
+    first: $first
+    after: $after
+    ownership: $ownership
+    stage: $stage
+    search: $search
+    folderId: $folderId
+    flat: $flat
+  ) @skip(if: $workbench) {
     revision {
       epoch
       seq

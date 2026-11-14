@@ -62,10 +62,19 @@ type ColorIndexView {
 
 type Query {
   colorIndex(first: Int! = 100, after: String): ColorIndexView!
-  home(first: Int! = 48, after: String, stage: PaintingStatus, search: String): HomeView!
+  home(
+    first: Int! = 48
+    after: String
+    stage: PaintingStatus
+    search: String
+    folderId: ID
+    flat: Boolean! = true
+  ): HomeView!
   miniatures(
     first: Int! = 48
     after: String
+    folderId: ID
+    flat: Boolean! = true
     ownership: Ownership
     stage: PaintingStatus
     search: String
@@ -257,6 +266,7 @@ type MiniatureSwatch {
 }
 type Miniature {
   id: ID!
+  folderId: ID
   title: String!
   status: Ownership!
   paintingStatus: PaintingStatus!
@@ -381,6 +391,7 @@ type MiniatureSchemeEntryConnection {
   pageInfo: PageInfo!
 }
 input MiniatureInput {
+  folderId: ID
   title: String
   status: Ownership
   paintingStatus: PaintingStatus
@@ -483,14 +494,44 @@ type SourceShareableView {
   schemes: [SourceShareItem!]!
   templates: [SourceShareItem!]!
 }
-extend type Query {
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   sources: SourcesView!
   sourceVersions: SourceVersionsView!
   sourceRemoval(id: ID!): SourceRemovalView!
   sourceShareable: SourceShareableView!
 }
 
-extend type Query {
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   wishlist(
     first: Int! = 48
     after: String
@@ -572,8 +613,25 @@ type WishlistExport {
   totalCount: Int!
 }
 
-extend type Query {
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   templates(
+    folderId: ID
+    flat: Boolean! = true
     id: ID
     first: Int! = 48
     after: String
@@ -591,6 +649,7 @@ extend type Mutation {
 }
 type TemplateSummary {
   id: ID!
+  folderId: ID
   name: String!
   manufacturer: String!
   faction: String!
@@ -648,6 +707,7 @@ input TemplatePaintInput {
   sortOrder: Int! = 0
 }
 input TemplateInput {
+  folderId: ID
   name: String
   manufacturer: String
   faction: String
@@ -664,7 +724,22 @@ type TemplateMutationPayload {
 }
 
 # Schemes browse and ordinary owner commands share the miniature scheme projection.
-extend type Query {
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   schemes(
     first: Int! = 48
     after: String
@@ -729,7 +804,22 @@ type SchemeMutationPayload {
   invalidatedFamilies: [VaultFamily!]!
 }
 
-extend type Query {
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   paintRanking(id: ID!, first: Int! = 30, after: String, ownedOnly: Boolean! = false): PaintRankingView!
   ownedPaintOptions(search: String! = "", first: Int! = 30): PaintOptionsView!
 }
@@ -815,4 +905,113 @@ type SubstitutionMutationPayload {
   revision: VaultRevision!
   clientMutationId: String
   invalidatedFamilies: [VaultFamily!]!
+}
+
+enum FolderKind {
+  MINIATURE
+  TEMPLATE
+}
+enum FolderDeleteMode {
+  DELETE_CONTENTS
+  MOVE_UP
+}
+type Folder {
+  id: ID!
+  name: String!
+  parentId: ID
+  directCount: Int!
+  recursiveCount: Int!
+  coverThumbnailUrl: String
+}
+union FolderSearchResult = Folder | Miniature | TemplateSummary
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
+  folderSearch(
+    kind: FolderKind!
+    search: String!
+    folderId: ID
+    ownership: Ownership
+    stage: PaintingStatus
+    category: String
+    sourceId: ID
+    noSource: Boolean! = false
+    first: Int! = 48
+    after: String
+  ): FolderSearchView!
+}
+type FolderSearchView {
+  revision: VaultRevision!
+  results: FolderSearchConnection!
+}
+type FolderSearchConnection {
+  nodes: [FolderSearchResult!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+type FolderMutationPayload {
+  revision: VaultRevision!
+  invalidatedFamilies: [VaultFamily!]!
+}
+extend type Mutation {
+  createFolder(
+    kind: FolderKind!
+    name: String!
+    parentId: ID
+    clientMutationId: String
+  ): FolderMutationPayload!
+  renameFolder(id: ID!, name: String!, clientMutationId: String): FolderMutationPayload!
+  moveFolder(id: ID!, parentId: ID, clientMutationId: String): FolderMutationPayload!
+  deleteFolder(id: ID!, mode: FolderDeleteMode!, clientMutationId: String): FolderMutationPayload!
+  moveFolderItems(
+    kind: FolderKind!
+    ids: [ID!]!
+    folderId: ID
+    clientMutationId: String
+  ): FolderMutationPayload!
+}
+
+type FolderBrowserPayload {
+  revision: VaultRevision!
+  folders: [Folder!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+extend type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
+  folderBrowser(
+    kind: FolderKind!
+    parentId: ID
+    search: String
+    flat: Boolean! = false
+    first: Int! = 100
+    after: String
+  ): FolderBrowserPayload!
 }

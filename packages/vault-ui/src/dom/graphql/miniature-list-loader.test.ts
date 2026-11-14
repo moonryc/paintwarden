@@ -198,6 +198,7 @@ void test("missing continuation cursors never publish a partial window", async (
 void test("tile projections keep server counts and colors, without synthetic Paint or State objects", () => {
   const projection = miniatureTileProjection({
     id: "mini",
+    folderId: null,
     title: "Dragon",
     status: "OWNED",
     imageUrl: null,
@@ -206,7 +207,14 @@ void test("tile projections keep server counts and colors, without synthetic Pai
     previewSwatches: [{ colorHex: "#112233" }, { colorHex: "#445566" }],
   });
   assert.deepEqual(projection, {
-    mini: { id: "mini", title: "Dragon", status: "OWNED", imageUrl: null, thumbnailUrl: null },
+    mini: {
+      id: "mini",
+      folderId: null,
+      title: "Dragon",
+      status: "OWNED",
+      imageUrl: null,
+      thumbnailUrl: null,
+    },
     total: 120,
     missing: 80,
     swatches: [{ colorHex: "#112233" }, { colorHex: "#445566" }],

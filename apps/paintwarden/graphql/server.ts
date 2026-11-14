@@ -1,4 +1,3 @@
-import { publicError } from "../lib/public-errors.ts";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 
@@ -7,10 +6,13 @@ import { createSchema, createYoga, maskError } from "graphql-yoga";
 
 import { getSqlite } from "../db/index.ts";
 import { PaintStockError, setPaintStock } from "../lib/paint-stock.ts";
+import { publicError } from "../lib/public-errors.ts";
 
 import { checkOperation, GRAPHQL_BODY_BYTES } from "./budgets.ts";
 import { invalidationSince, subscribeChanges, type Family } from "./changes.ts";
 import type { GraphQLContext } from "./context.ts";
+import { readColorIndex } from "./color-tools.ts";
+import { folderMutations, folderQueries } from "./folders.ts";
 import type { Resolvers } from "./generated/resolvers.ts";
 import {
   paintSubstitutions,
@@ -41,22 +43,22 @@ import {
 import { paintMutations } from "./paint-mutations.ts";
 import { readOwnedPaintOptions, readPaintRanking } from "./paint-tools.ts";
 import { acquireOperation } from "./rate-limit.ts";
+import { readSchemes, readSchemePaintOptions, schemeMutations } from "./schemes.ts";
+import { Sequence } from "./sequence.ts";
+import { readSources, readSourceVersions, readSourceRemoval, readSourceShareable } from "./sources.ts";
+import { templateQueries, templateMutations, templateViewResolvers } from "./templates.ts";
 import {
   readWishlist,
   readWishlistModelOptions,
   readWishlistRelatedProjects,
   readWishlistExport,
 } from "./wishlist.ts";
-import { readSchemes, readSchemePaintOptions, schemeMutations } from "./schemes.ts";
-import { readColorIndex } from "./color-tools.ts";
-import { Sequence } from "./sequence.ts";
-import { readSources, readSourceVersions, readSourceRemoval, readSourceShareable } from "./sources.ts";
-import { templateQueries, templateMutations, templateViewResolvers } from "./templates.ts";
 
 const resolvers: Resolvers<GraphQLContext> = {
   Sequence,
   Query: {
     ...templateQueries,
+    ...folderQueries,
     colorIndex: (_root, args) => readColorIndex(args),
     home: (_root, args, context) => {
       const view = readHome(args);
@@ -99,6 +101,10 @@ const resolvers: Resolvers<GraphQLContext> = {
     vaultRevision: () => getSqlite().transaction(readRevision)(),
     vaultInvalidation: (_root, args) => invalidationSince(args),
   },
+  FolderSearchResult: {
+    __resolveType: (parent) =>
+      (parent as { __typename: "Folder" | "Miniature" | "TemplateSummary" }).__typename,
+  },
   MiniatureView: {
     recipe: (parent, args) => miniatureRecipe(parent, args),
     schemes: (parent, args) => miniatureSchemes(parent, args),
@@ -117,6 +123,7 @@ const resolvers: Resolvers<GraphQLContext> = {
     ...paintMutations,
     ...schemeMutations,
     ...templateMutations,
+    ...folderMutations,
     setPaintStock: (_root, args) => {
       try {
         return getSqlite().transaction(() => {

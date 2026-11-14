@@ -195,7 +195,7 @@ test("backup", async (t) => {
 
     await t.test("exports a zip with every section and the images the vault uses", () => {
       assert.equal(manifestA.format, "paintwarden-backup");
-      assert.equal(manifestA.version, 1);
+      assert.equal(manifestA.version, 2);
       assert.equal(manifestA.appVersion, APP_VERSION);
       assert.deepEqual(Object.keys(manifestA.tables), SECTION_KEYS);
       assert.deepEqual(manifestA.images, [photo, asset].sort());
@@ -402,7 +402,7 @@ test("backup", async (t) => {
         ],
       };
       const broken = zip(
-        { format: "paintwarden-backup", version: 1, exportedAt: "", images: [NEW_PHOTO], tables },
+        { format: "paintwarden-backup", version: 2, exportedAt: "", images: [NEW_PHOTO], tables },
         { [NEW_PHOTO]: new Uint8Array([1]) },
       );
       for (const mode of ["replace", "merge"]) {
@@ -421,7 +421,7 @@ test("backup", async (t) => {
       const keys = [shared, ...Array.from({ length: 500 }, (_, index) => `${testId(`race-${index}`)}.png`)];
       const manifest = {
         format: "paintwarden-backup",
-        version: 1,
+        version: 2,
         images: keys,
         tables: {
           paintInventory: [{ paintId: testId("missing race paint"), state: "OWNED", quantity: 1 }],
@@ -493,7 +493,7 @@ test("backup", async (t) => {
         zip(
           {
             format: "paintwarden-backup",
-            version: 1,
+            version: 2,
             images: [key],
             tables: {
               paintInventory: [{ paintId: testId("absent recovery paint"), state: "OWNED", quantity: 1 }],
@@ -526,7 +526,7 @@ test("backup", async (t) => {
       });
       await started;
       const photo = uploadPhoto(testId("mini-locked"), 15);
-      const emptyMerge = restore(zip({ format: "paintwarden-backup", version: 1, images: [], tables: {} }));
+      const emptyMerge = restore(zip({ format: "paintwarden-backup", version: 2, images: [], tables: {} }));
       let photoDone = false;
       let restoreDone = false;
       void photo.then(
@@ -587,11 +587,11 @@ test("backup", async (t) => {
     });
 
     await t.test("rejects other files, versions and modes", async () => {
-      const valid = { format: "paintwarden-backup", version: 1, exportedAt: "", images: [], tables: {} };
+      const valid = { format: "paintwarden-backup", version: 2, exportedAt: "", images: [], tables: {} };
       assert.equal((await restore(zip(valid), "overwrite")).status, 400);
       assert.equal((await restore("not a backup")).status, 400);
       assert.equal((await restore(zipSync({ "other.txt": strToU8("x") }))).status, 400);
-      assert.equal((await restore(zip({ ...valid, version: 2 }))).status, 400);
+      assert.equal((await restore(zip({ ...valid, version: 3 }))).status, 400);
       assert.match(
         await errorOf(await restore(zip({ ...valid, tables: { surprise: [] } }))),
         /different version/,
@@ -604,7 +604,7 @@ test("backup", async (t) => {
       const key = `${testId("damaged photo")}.png`;
       const valid = {
         format: "paintwarden-backup",
-        version: 1,
+        version: 2,
         exportedAt: "",
         images: [key],
         tables: Object.fromEntries(SECTION_KEYS.map((key) => [key, []])),
@@ -622,7 +622,7 @@ test("backup", async (t) => {
     });
 
     await t.test("an empty or truncated upload is refused and its temporary file removed", async () => {
-      const valid = { format: "paintwarden-backup", version: 1, exportedAt: "", images: [], tables: {} };
+      const valid = { format: "paintwarden-backup", version: 2, exportedAt: "", images: [], tables: {} };
       assert.equal((await restore(new Uint8Array())).status, 400);
       const truncated = await restore(zip(valid).subarray(0, 30));
       assert.equal(truncated.status, 400);
@@ -746,7 +746,7 @@ test("backup", async (t) => {
       const before = (await exportZip()).manifest.tables;
       const images = readdirSync(path.join(directory, "images")).sort();
       for (const body of [
-        JSON.stringify({ format: "paintwarden-backup", version: 1, tables: before, images: [] }),
+        JSON.stringify({ format: "paintwarden-backup", version: 2, tables: before, images: [] }),
         "not a ZIP",
       ]) {
         for (const mode of ["merge", "replace"]) {

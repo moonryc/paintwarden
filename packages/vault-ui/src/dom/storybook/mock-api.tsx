@@ -208,6 +208,37 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
         },
       };
     }
+    if (operationName === "BrowseFolders")
+      return {
+        folderBrowser: {
+          revision: revision(),
+          folders: [],
+          totalCount: 0,
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      };
+    if (operationName === "SearchFolderContents") {
+      type Results = { nodes: Record<string, unknown>[]; totalCount: number; pageInfo: unknown };
+      if (vars.kind === "TEMPLATE") {
+        const response = fixtureTemplateResponse(data, "TemplateSummaries", vars, revision()) as {
+          templates: { templates: Results };
+        };
+        const results = response.templates.templates;
+        return {
+          folderSearch: {
+            revision: revision(),
+            results: {
+              ...results,
+              nodes: results.nodes.map((row) => ({ ...row, templateImageUrl: row.imageUrl })),
+            },
+          },
+        };
+      }
+      const response = fixtureMiniatureResponse(data, "MiniatureList", vars, revision(), projectPaint) as {
+        miniatures: { miniatures: Results };
+      };
+      return { folderSearch: { revision: revision(), results: response.miniatures.miniatures } };
+    }
     const paintTools = fixturePaintToolsResponse(data, operationName, vars, revision(), projectPaint);
     if (paintTools) return paintTools;
     const template = fixtureTemplateResponse(data, operationName, vars, revision());

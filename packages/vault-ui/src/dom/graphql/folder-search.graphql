@@ -1,0 +1,70 @@
+fragment SearchTemplateFields on TemplateSummary {
+  id
+  name
+  manufacturer
+  faction
+  templateImageUrl: imageUrl
+  thumbnailUrl
+  categories
+  kind
+  folderId
+  sourceId
+  sourceName
+  sourceLogoUrl
+  schemeCount
+  paintCount
+}
+query SearchFolderContents(
+  $kind: FolderKind!
+  $search: String!
+  $folderId: ID
+  $ownership: Ownership
+  $stage: PaintingStatus
+  $category: String
+  $sourceId: ID
+  $noSource: Boolean = false
+  $first: Int! = 48
+  $after: String
+) {
+  folderSearch(
+    kind: $kind
+    search: $search
+    folderId: $folderId
+    ownership: $ownership
+    stage: $stage
+    category: $category
+    sourceId: $sourceId
+    noSource: $noSource
+    first: $first
+    after: $after
+  ) {
+    revision {
+      epoch
+      seq
+    }
+    results {
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+      nodes {
+        __typename
+        ... on Folder {
+          id
+          name
+          parentId
+          directCount
+          recursiveCount
+          coverThumbnailUrl
+        }
+        ... on Miniature {
+          ...MiniatureTile
+        }
+        ... on TemplateSummary {
+          ...SearchTemplateFields
+        }
+      }
+    }
+  }
+}

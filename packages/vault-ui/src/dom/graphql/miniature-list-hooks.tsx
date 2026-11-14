@@ -27,6 +27,8 @@ export type MiniatureListFilters = {
   ownership: "ALL" | "OWNED" | "WISHLIST";
   stage: PaintingStatus | "ALL";
   search: string;
+  folderId?: string | null;
+  flat?: boolean;
 };
 export type MiniatureListView = {
   rows: MiniatureTileProjection[];
@@ -79,6 +81,8 @@ export function miniatureListVariables(filters: MiniatureListFilters): Miniature
     ownership: filters.ownership === "ALL" ? undefined : filters.ownership,
     stage: filters.workbench && filters.stage !== "ALL" ? filters.stage : undefined,
     search: filters.search.trim(),
+    ...(filters.folderId !== undefined ? { folderId: filters.folderId } : {}),
+    ...(filters.flat !== undefined ? { flat: filters.flat } : {}),
   };
 }
 

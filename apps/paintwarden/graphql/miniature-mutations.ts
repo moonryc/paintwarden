@@ -18,6 +18,7 @@ import { deleteImage } from "../lib/image-store.ts";
 
 import { invalidationSince } from "./changes.ts";
 import type { GraphQLContext } from "./context.ts";
+import { moveItems } from "./folders.ts";
 import type { Resolvers } from "./generated/resolvers.ts";
 import { readRevision } from "./library.ts";
 
@@ -52,7 +53,11 @@ export const miniatureMutations: NonNullable<Resolvers<GraphQLContext>["Mutation
     try {
       return await withImageMutation(() =>
         withPreparedMiniatureImage(args.input, (key) =>
-          atomic(() => ({ miniatureId: createMiniature(args.input, key).id }), args.clientMutationId),
+          atomic(() => {
+            const id = createMiniature(args.input, key).id;
+            if (args.input.folderId !== undefined) moveItems("miniature", [id], args.input.folderId);
+            return { miniatureId: id };
+          }, args.clientMutationId),
         ),
       );
     } catch (error) {
@@ -63,6 +68,7 @@ export const miniatureMutations: NonNullable<Resolvers<GraphQLContext>["Mutation
     try {
       return atomic(() => {
         updateMiniature(args.id, args.input);
+        if (args.input.folderId !== undefined) moveItems("miniature", [args.id], args.input.folderId);
         return { miniatureId: args.id };
       }, args.clientMutationId);
     } catch (error) {

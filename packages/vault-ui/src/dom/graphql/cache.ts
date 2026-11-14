@@ -48,6 +48,7 @@ const paginationKeys: NonNullable<FieldPolicy["keyArgs"]> = (args) =>
 
 export function createVaultCache(): InMemoryCache {
   return new InMemoryCache({
+    possibleTypes: { FolderSearchResult: ["Folder", "Miniature", "TemplateSummary"] },
     typePolicies: {
       Query: {
         fields: {

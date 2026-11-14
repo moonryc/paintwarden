@@ -19,6 +19,7 @@ type Stage = "NOT_STARTED" | "ASSEMBLED" | "PRIMED" | "IN_PROGRESS" | "COMPLETE"
 type MiniatureRow = {
   id: string;
   title: string;
+  folderId: string | null;
   status: Ownership;
   paintingStatus: Stage;
   notes: string;
@@ -43,7 +44,7 @@ const bad = (message: string): never => {
   throw new GraphQLError(message, { extensions: { code: "BAD_USER_INPUT" } });
 };
 
-function cursorAnchor(after: string, revision: Revision, scope: string): string {
+export function cursorAnchor(after: string, revision: Revision, scope: string): string {
   try {
     if (!after || !/^[\w-]+$/.test(after)) throw new Error();
     const c: unknown = JSON.parse(Buffer.from(after, "base64url").toString("utf8"));
@@ -135,6 +136,7 @@ function miniatureRead(row: MiniatureRow, required: PaintRead[], missing: Missin
   return {
     id: row.id,
     title: row.title,
+    folderId: row.folderId,
     status: row.status,
     paintingStatus: row.paintingStatus,
     notes: row.notes,
@@ -168,14 +170,17 @@ type Aggregate = {
   resultSets: Map<string, { items: MiniatureRead[]; accessed: number }>;
   ownershipCounts: ReturnType<typeof facets>;
   stageCounts: ReturnType<typeof facets>;
-  homeCounts: {
-    catalogCount: number;
-    owned: number;
-    ready: number;
-    distinctMissingPaints: number;
-    wishlistedMissingPaints: number;
-    stages: ReturnType<typeof facets>;
-  };
+  homeCounts: Map<
+    string,
+    {
+      catalogCount: number;
+      owned: number;
+      ready: number;
+      distinctMissingPaints: number;
+      wishlistedMissingPaints: number;
+      stages: ReturnType<typeof facets>;
+    }
+  >;
 };
 let cached: Aggregate | undefined;
 let builds = 0,
@@ -199,7 +204,7 @@ function aggregate(allowCache: boolean): Aggregate {
     paint = readPaintProjection(allowCache);
   const rows = sqlite
     .prepare(
-      `SELECT id,title,status,painting_status AS paintingStatus,notes,manufacturer,faction,scale,
+      `SELECT id,title,folder_id AS folderId,status,painting_status AS paintingStatus,notes,manufacturer,faction,scale,
     image_key AS imageKey,source_image_url AS sourceImageUrl,created_at AS createdAt,updated_at AS updatedAt FROM miniatures`,
     )
     .all() as MiniatureRow[];
@@ -260,21 +265,11 @@ function aggregate(allowCache: boolean): Aggregate {
     missing.set(row.id, unavailable);
     return miniatureRead(row, paints, unavailable);
   });
-  const owned = miniatures.filter((m) => m.status === "OWNED"),
-    allMissing = new Set<string>();
-  for (const m of owned) for (const p of missing.get(m.id) ?? []) allMissing.add(p.id);
   const result: Aggregate = {
     revision,
     ownershipCounts: facets(miniatures, ["OWNED", "WISHLIST"], (m) => m.status),
     stageCounts: facets(miniatures, stages, (m) => m.paintingStatus),
-    homeCounts: {
-      catalogCount: paint.paints.length,
-      owned: owned.length,
-      ready: owned.filter((m) => m.readiness.ready).length,
-      distinctMissingPaints: allMissing.size,
-      wishlistedMissingPaints: [...allMissing].filter((id) => shopping(paint.byId.get(id)!)).length,
-      stages: facets(owned, stages, (m) => m.paintingStatus),
-    },
+    homeCounts: new Map(),
     paint,
     miniatures,
     byId: new Map(miniatures.map((m) => [m.id, m])),
@@ -290,16 +285,46 @@ function aggregate(allowCache: boolean): Aggregate {
   if (allowCache) cached = result;
   return result;
 }
-type ListArgs = Page & { ownership?: Ownership | null; stage?: Stage | null; search?: string | null };
+export type FolderScopeArgs = { folderId?: string | null; flat?: boolean | null };
+// Null means unrestricted; a set contains only eligible folder IDs (including root).
+// UNION, rather than UNION ALL, keeps even a corrupt cyclic folder graph bounded.
+export function folderScopeIds(kind: "miniature" | "template", args: FolderScopeArgs) {
+  const folderId = args.folderId ?? null;
+  if (folderId === null) return args.flat === false ? new Set<string | null>([null]) : null;
+  const rows = getSqlite()
+    .prepare(
+      args.flat === false
+        ? "SELECT id FROM folders WHERE id=? AND kind=?"
+        : `WITH RECURSIVE subtree(id) AS (
+          SELECT id FROM folders WHERE id=? AND kind=?
+          UNION SELECT f.id FROM folders f JOIN subtree s ON f.parent_id=s.id WHERE f.kind=?
+        ) SELECT id FROM subtree`,
+    )
+    .all(...(args.flat === false ? [folderId, kind] : [folderId, kind, kind])) as { id: string }[];
+  return new Set<string | null>(rows.map((row) => row.id));
+}
+type ListArgs = Page &
+  FolderScopeArgs & {
+    ownership?: Ownership | null;
+    stage?: Stage | null;
+    search?: string | null;
+  };
 function validateList(args: ListArgs) {
   validatePage(args);
   validateText(args.search, "search", 128);
+  validateText(args.folderId, "folderId");
   if (args.ownership != null && !["OWNED", "WISHLIST"].includes(args.ownership)) bad("Invalid ownership");
   if (args.stage != null && !stages.includes(args.stage)) bad("Invalid stage");
 }
-function filtered(s: Aggregate, args: ListArgs, root: "home" | "miniatures") {
+function filtered(s: Aggregate, args: ListArgs, root: "home" | "miniatures" | "folder-search") {
   const search = args.search?.trim() ?? "",
-    key = fingerprint([args.ownership ?? null, args.stage ?? null, search]);
+    key = fingerprint([
+      args.ownership ?? null,
+      args.stage ?? null,
+      search,
+      args.folderId ?? null,
+      args.flat !== false,
+    ]);
   if (args.after != null) cursorAnchor(args.after, s.revision, `${root}:${key}`);
   const now = Date.now();
   for (const [k, v] of s.resultSets) if (now - v.accessed > 60_000) s.resultSets.delete(k);
@@ -310,9 +335,12 @@ function filtered(s: Aggregate, args: ListArgs, root: "home" | "miniatures") {
   }
   if (search && args.after != null)
     throw new GraphQLError("Search expired; restart pagination", { extensions: { code: "STALE_CURSOR" } });
+  const folders = folderScopeIds("miniature", args);
   const candidates = s.miniatures.filter(
     (m) =>
-      (!args.ownership || m.status === args.ownership) && (!args.stage || m.paintingStatus === args.stage),
+      (!folders || folders.has(m.folderId)) &&
+      (!args.ownership || m.status === args.ownership) &&
+      (!args.stage || m.paintingStatus === args.stage),
   );
   const ids = new Set(candidates.map((m) => m.id));
   // Filter BEFORE fuzzy matching: an excluded literal must not suppress eligible typo matches.
@@ -332,6 +360,38 @@ const facets = (items: MiniatureRead[], values: string[], key: (m: MiniatureRead
     label: value,
     count: value === "ALL" ? items.length : items.filter((m) => key(m) === value).length,
   }));
+function folderItems(s: Aggregate, args: FolderScopeArgs) {
+  const folders = folderScopeIds("miniature", args);
+  return folders ? s.miniatures.filter((m) => folders.has(m.folderId)) : s.miniatures;
+}
+function homeCounts(s: Aggregate, args: FolderScopeArgs) {
+  const key = fingerprint([args.folderId ?? null]);
+  const hit = s.homeCounts.get(key);
+  if (hit) return hit;
+  // A folder's Workbench summarizes its entire subtree even while browsing
+  // direct children. The root summarizes the complete collection in either view.
+  const owned = folderItems(s, { ...args, flat: true }).filter((m) => m.status === "OWNED");
+  const allMissing = new Set<string>();
+  for (const m of owned) for (const p of s.missing.get(m.id) ?? []) allMissing.add(p.id);
+  const counts = {
+    catalogCount: s.paint.paints.length,
+    owned: owned.length,
+    ready: owned.filter((m) => m.readiness.ready).length,
+    distinctMissingPaints: allMissing.size,
+    wishlistedMissingPaints: [...allMissing].filter((id) => shopping(s.paint.byId.get(id)!)).length,
+    stages: facets(owned, stages, (m) => m.paintingStatus),
+  };
+  if (s.homeCounts.size >= 100) s.homeCounts.delete(s.homeCounts.keys().next().value!);
+  s.homeCounts.set(key, counts);
+  return counts;
+}
+// Mixed search consumes the same generation and readiness projection without paging
+// (and re-ranking) the entire collection through repeated public resolver calls.
+export function miniatureFolderSearchCandidates(args: Omit<ListArgs, "first" | "after">, allowCache = false) {
+  validateList({ ...args, first: 1 });
+  const s = aggregate(allowCache);
+  return filtered(s, { ...args, first: 1, search: null, flat: true }, "folder-search").items;
+}
 export function readMiniatures(args: ListArgs) {
   validateList(args);
   const allowCache = !getSqlite().inTransaction;
@@ -340,8 +400,14 @@ export function readMiniatures(args: ListArgs) {
       { items, key } = filtered(s, args, "miniatures");
     return {
       revision: s.revision,
-      ownershipCounts: s.ownershipCounts,
-      stageCounts: s.stageCounts,
+      ownershipCounts:
+        args.folderId != null || args.flat === false
+          ? facets(folderItems(s, args), ["OWNED", "WISHLIST"], (m) => m.status)
+          : s.ownershipCounts,
+      stageCounts:
+        args.folderId != null || args.flat === false
+          ? facets(folderItems(s, args), stages, (m) => m.paintingStatus)
+          : s.stageCounts,
       miniatures: paginateProjection(items, args, s.revision, `miniatures:${key}`),
     };
   })();
@@ -354,7 +420,7 @@ export function readHome(args: Omit<ListArgs, "ownership">) {
     const { items, key } = filtered(s, { ...args, ownership: "OWNED" }, "home");
     return {
       revision: s.revision,
-      counts: s.homeCounts,
+      counts: homeCounts(s, args),
       miniatures: paginateProjection(items, args, s.revision, `home:${key}`),
     };
   })();

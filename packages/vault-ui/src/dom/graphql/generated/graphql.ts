@@ -24,10 +24,15 @@ export type CustomPaintInput = {
   sourceUrl?: string | null | undefined;
 };
 
+export type FolderDeleteMode = "DELETE_CONTENTS" | "MOVE_UP";
+
+export type FolderKind = "MINIATURE" | "TEMPLATE";
+
 export type LibraryFilter = "ALL" | "OWNED" | "UNTRACKED" | "WISHLIST";
 
 export type MiniatureInput = {
   faction?: string | null | undefined;
+  folderId?: string | number | null | undefined;
   includeTemplateImage?: boolean | null | undefined;
   manufacturer?: string | null | undefined;
   notes?: string | null | undefined;
@@ -88,6 +93,7 @@ export type SubstitutionInput = {
 
 export type TemplateInput = {
   faction?: string | null | undefined;
+  folderId?: string | number | null | undefined;
   imageUrl?: string | null | undefined;
   manufacturer?: string | null | undefined;
   name?: string | null | undefined;
@@ -219,6 +225,132 @@ export type PaintPickerOptionsQuery = {
     revision: { epoch: string; seq: string };
     items: Array<{ " $fragmentRefs"?: { DetailPaintFragment: DetailPaintFragment } }>;
   };
+};
+
+export type SearchTemplateFieldsFragment = {
+  id: string;
+  name: string;
+  manufacturer: string;
+  faction: string;
+  thumbnailUrl: string | null;
+  categories: Array<string>;
+  kind: string;
+  folderId: string | null;
+  sourceId: string | null;
+  sourceName: string | null;
+  sourceLogoUrl: string | null;
+  schemeCount: number;
+  paintCount: number;
+  templateImageUrl: string;
+} & { " $fragmentName"?: "SearchTemplateFieldsFragment" };
+
+export type SearchFolderContentsQueryVariables = Exact<{
+  kind: FolderKind;
+  search: string;
+  folderId?: string | number | null | undefined;
+  ownership?: Ownership | null | undefined;
+  stage?: PaintingStatus | null | undefined;
+  category?: string | null | undefined;
+  sourceId?: string | number | null | undefined;
+  noSource?: boolean | null | undefined;
+  first?: number;
+  after?: string | null | undefined;
+}>;
+
+export type SearchFolderContentsQuery = {
+  folderSearch: {
+    revision: { epoch: string; seq: string };
+    results: {
+      totalCount: number;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+      nodes: Array<
+        | {
+            __typename: "Folder";
+            id: string;
+            name: string;
+            parentId: string | null;
+            directCount: number;
+            recursiveCount: number;
+            coverThumbnailUrl: string | null;
+          }
+        | ({ __typename: "Miniature" } & {
+            " $fragmentRefs"?: { MiniatureTileFragment: MiniatureTileFragment };
+          })
+        | ({ __typename: "TemplateSummary" } & {
+            " $fragmentRefs"?: { SearchTemplateFieldsFragment: SearchTemplateFieldsFragment };
+          })
+      >;
+    };
+  };
+};
+
+export type BrowseFoldersQueryVariables = Exact<{
+  kind: FolderKind;
+  first?: number;
+  after?: string | null | undefined;
+}>;
+
+export type BrowseFoldersQuery = {
+  folderBrowser: {
+    totalCount: number;
+    revision: { epoch: string; seq: string };
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    folders: Array<{
+      id: string;
+      name: string;
+      parentId: string | null;
+      directCount: number;
+      recursiveCount: number;
+      coverThumbnailUrl: string | null;
+    }>;
+  };
+};
+
+export type CreateBrowserFolderMutationVariables = Exact<{
+  kind: FolderKind;
+  name: string;
+  parentId?: string | number | null | undefined;
+}>;
+
+export type CreateBrowserFolderMutation = {
+  createFolder: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
+};
+
+export type RenameBrowserFolderMutationVariables = Exact<{
+  id: string | number;
+  name: string;
+}>;
+
+export type RenameBrowserFolderMutation = {
+  renameFolder: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
+};
+
+export type MoveBrowserFolderMutationVariables = Exact<{
+  id: string | number;
+  parentId?: string | number | null | undefined;
+}>;
+
+export type MoveBrowserFolderMutation = {
+  moveFolder: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
+};
+
+export type DeleteBrowserFolderMutationVariables = Exact<{
+  id: string | number;
+  mode: FolderDeleteMode;
+}>;
+
+export type DeleteBrowserFolderMutation = {
+  deleteFolder: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
+};
+
+export type MoveBrowserFolderItemsMutationVariables = Exact<{
+  kind: FolderKind;
+  ids: Array<string | number> | string | number;
+  folderId?: string | number | null | undefined;
+}>;
+
+export type MoveBrowserFolderItemsMutation = {
+  moveFolderItems: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
 };
 
 export type LibraryPaintFragment = {
@@ -418,6 +550,7 @@ export type SetProjectSchemesMutation = {
 export type MiniatureTileFragment = {
   id: string;
   title: string;
+  folderId: string | null;
   status: Ownership;
   imageUrl: string | null;
   thumbnailUrl: string | null;
@@ -432,6 +565,8 @@ export type MiniatureListQueryVariables = Exact<{
   ownership?: Ownership | null | undefined;
   stage?: PaintingStatus | null | undefined;
   search?: string | null | undefined;
+  folderId?: string | number | null | undefined;
+  flat?: boolean;
 }>;
 
 export type MiniatureListQuery = {
@@ -861,6 +996,7 @@ export type TemplateSummaryFieldsFragment = {
   thumbnailUrl: string | null;
   categories: Array<string>;
   kind: string;
+  folderId: string | null;
   sourceId: string | null;
   sourceName: string | null;
   sourceLogoUrl: string | null;
@@ -875,6 +1011,8 @@ export type TemplateSummariesQueryVariables = Exact<{
   search?: string | null | undefined;
   category?: string | null | undefined;
   sourceId?: string | number | null | undefined;
+  folderId?: string | number | null | undefined;
+  flat?: boolean;
   noSource?: boolean | null | undefined;
 }>;
 
@@ -1238,6 +1376,39 @@ export const DetailSubstitutionFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<DetailSubstitutionFragment, unknown>;
+export const SearchTemplateFieldsFragmentDoc = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "SearchTemplateFields" },
+      typeCondition: { kind: "NamedType", name: { kind: "Name", value: "TemplateSummary" } },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "name" } },
+          { kind: "Field", name: { kind: "Name", value: "manufacturer" } },
+          { kind: "Field", name: { kind: "Name", value: "faction" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "templateImageUrl" },
+            name: { kind: "Name", value: "imageUrl" },
+          },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "categories" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceId" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceName" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceLogoUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "schemeCount" } },
+          { kind: "Field", name: { kind: "Name", value: "paintCount" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchTemplateFieldsFragment, unknown>;
 export const MiniatureEditResultFragmentDoc = {
   kind: "Document",
   definitions: [
@@ -1279,6 +1450,7 @@ export const MiniatureTileFragmentDoc = {
         selections: [
           { kind: "Field", name: { kind: "Name", value: "id" } },
           { kind: "Field", name: { kind: "Name", value: "title" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
           { kind: "Field", name: { kind: "Name", value: "status" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
           { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
@@ -1418,6 +1590,7 @@ export const TemplateSummaryFieldsFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           { kind: "Field", name: { kind: "Name", value: "categories" } },
           { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
           { kind: "Field", name: { kind: "Name", value: "sourceId" } },
           { kind: "Field", name: { kind: "Name", value: "sourceName" } },
           { kind: "Field", name: { kind: "Name", value: "sourceLogoUrl" } },
@@ -2243,6 +2416,728 @@ export const PaintPickerOptionsDocument = {
     },
   ],
 } as unknown as DocumentNode<PaintPickerOptionsQuery, PaintPickerOptionsQueryVariables>;
+export const SearchFolderContentsDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "SearchFolderContents" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderKind" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "search" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "String" } } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "ownership" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Ownership" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "stage" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "PaintingStatus" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "category" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "sourceId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "noSource" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
+          defaultValue: { kind: "BooleanValue", value: false },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "first" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "Int" } } },
+          defaultValue: { kind: "IntValue", value: "48" },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "after" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "folderSearch" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "kind" },
+                value: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "search" },
+                value: { kind: "Variable", name: { kind: "Name", value: "search" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "folderId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "ownership" },
+                value: { kind: "Variable", name: { kind: "Name", value: "ownership" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "stage" },
+                value: { kind: "Variable", name: { kind: "Name", value: "stage" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "category" },
+                value: { kind: "Variable", name: { kind: "Name", value: "category" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "sourceId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "sourceId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "noSource" },
+                value: { kind: "Variable", name: { kind: "Name", value: "noSource" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "Variable", name: { kind: "Name", value: "first" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "after" },
+                value: { kind: "Variable", name: { kind: "Name", value: "after" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "results" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "totalCount" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "pageInfo" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                            { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                          ],
+                        },
+                      },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "nodes" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "__typename" } },
+                            {
+                              kind: "InlineFragment",
+                              typeCondition: { kind: "NamedType", name: { kind: "Name", value: "Folder" } },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "id" } },
+                                  { kind: "Field", name: { kind: "Name", value: "name" } },
+                                  { kind: "Field", name: { kind: "Name", value: "parentId" } },
+                                  { kind: "Field", name: { kind: "Name", value: "directCount" } },
+                                  { kind: "Field", name: { kind: "Name", value: "recursiveCount" } },
+                                  { kind: "Field", name: { kind: "Name", value: "coverThumbnailUrl" } },
+                                ],
+                              },
+                            },
+                            {
+                              kind: "InlineFragment",
+                              typeCondition: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "Miniature" },
+                              },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "FragmentSpread", name: { kind: "Name", value: "MiniatureTile" } },
+                                ],
+                              },
+                            },
+                            {
+                              kind: "InlineFragment",
+                              typeCondition: {
+                                kind: "NamedType",
+                                name: { kind: "Name", value: "TemplateSummary" },
+                              },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  {
+                                    kind: "FragmentSpread",
+                                    name: { kind: "Name", value: "SearchTemplateFields" },
+                                  },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "MiniatureTile" },
+      typeCondition: { kind: "NamedType", name: { kind: "Name", value: "Miniature" } },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "title" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
+          { kind: "Field", name: { kind: "Name", value: "status" } },
+          { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "readiness" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "total" } },
+                { kind: "Field", name: { kind: "Name", value: "missing" } },
+              ],
+            },
+          },
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "previewSwatches" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [{ kind: "Field", name: { kind: "Name", value: "colorHex" } }],
+            },
+          },
+        ],
+      },
+    },
+    {
+      kind: "FragmentDefinition",
+      name: { kind: "Name", value: "SearchTemplateFields" },
+      typeCondition: { kind: "NamedType", name: { kind: "Name", value: "TemplateSummary" } },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          { kind: "Field", name: { kind: "Name", value: "id" } },
+          { kind: "Field", name: { kind: "Name", value: "name" } },
+          { kind: "Field", name: { kind: "Name", value: "manufacturer" } },
+          { kind: "Field", name: { kind: "Name", value: "faction" } },
+          {
+            kind: "Field",
+            alias: { kind: "Name", value: "templateImageUrl" },
+            name: { kind: "Name", value: "imageUrl" },
+          },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "categories" } },
+          { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceId" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceName" } },
+          { kind: "Field", name: { kind: "Name", value: "sourceLogoUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "schemeCount" } },
+          { kind: "Field", name: { kind: "Name", value: "paintCount" } },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchFolderContentsQuery, SearchFolderContentsQueryVariables>;
+export const BrowseFoldersDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "BrowseFolders" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderKind" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "first" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "Int" } } },
+          defaultValue: { kind: "IntValue", value: "100" },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "after" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "folderBrowser" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "kind" },
+                value: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "flat" },
+                value: { kind: "BooleanValue", value: true },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "Variable", name: { kind: "Name", value: "first" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "after" },
+                value: { kind: "Variable", name: { kind: "Name", value: "after" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "totalCount" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pageInfo" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                      { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "folders" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "name" } },
+                      { kind: "Field", name: { kind: "Name", value: "parentId" } },
+                      { kind: "Field", name: { kind: "Name", value: "directCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "recursiveCount" } },
+                      { kind: "Field", name: { kind: "Name", value: "coverThumbnailUrl" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<BrowseFoldersQuery, BrowseFoldersQueryVariables>;
+export const CreateBrowserFolderDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "CreateBrowserFolder" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderKind" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "name" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "String" } } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "parentId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "createFolder" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "kind" },
+                value: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "name" },
+                value: { kind: "Variable", name: { kind: "Name", value: "name" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "parentId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "parentId" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateBrowserFolderMutation, CreateBrowserFolderMutationVariables>;
+export const RenameBrowserFolderDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "RenameBrowserFolder" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "ID" } } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "name" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "String" } } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "renameFolder" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "id" },
+                value: { kind: "Variable", name: { kind: "Name", value: "id" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "name" },
+                value: { kind: "Variable", name: { kind: "Name", value: "name" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<RenameBrowserFolderMutation, RenameBrowserFolderMutationVariables>;
+export const MoveBrowserFolderDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "MoveBrowserFolder" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "ID" } } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "parentId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "moveFolder" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "id" },
+                value: { kind: "Variable", name: { kind: "Name", value: "id" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "parentId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "parentId" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MoveBrowserFolderMutation, MoveBrowserFolderMutationVariables>;
+export const DeleteBrowserFolderDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "DeleteBrowserFolder" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "id" } },
+          type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "ID" } } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "mode" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderDeleteMode" } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "deleteFolder" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "id" },
+                value: { kind: "Variable", name: { kind: "Name", value: "id" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "mode" },
+                value: { kind: "Variable", name: { kind: "Name", value: "mode" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteBrowserFolderMutation, DeleteBrowserFolderMutationVariables>;
+export const MoveBrowserFolderItemsDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "MoveBrowserFolderItems" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderKind" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "ids" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "ListType",
+              type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "ID" } } },
+            },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "moveFolderItems" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "kind" },
+                value: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "ids" },
+                value: { kind: "Variable", name: { kind: "Name", value: "ids" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "folderId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<MoveBrowserFolderItemsMutation, MoveBrowserFolderItemsMutationVariables>;
 export const LibraryPageDocument = {
   kind: "Document",
   definitions: [
@@ -3417,6 +4312,20 @@ export const MiniatureListDocument = {
           variable: { kind: "Variable", name: { kind: "Name", value: "search" } },
           type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
         },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "flat" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
+          },
+          defaultValue: { kind: "BooleanValue", value: true },
+        },
       ],
       selectionSet: {
         kind: "SelectionSet",
@@ -3444,6 +4353,16 @@ export const MiniatureListDocument = {
                 kind: "Argument",
                 name: { kind: "Name", value: "search" },
                 value: { kind: "Variable", name: { kind: "Name", value: "search" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "folderId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "flat" },
+                value: { kind: "Variable", name: { kind: "Name", value: "flat" } },
               },
             ],
             directives: [
@@ -3562,6 +4481,16 @@ export const MiniatureListDocument = {
                 name: { kind: "Name", value: "search" },
                 value: { kind: "Variable", name: { kind: "Name", value: "search" } },
               },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "folderId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "flat" },
+                value: { kind: "Variable", name: { kind: "Name", value: "flat" } },
+              },
             ],
             directives: [
               {
@@ -3660,6 +4589,7 @@ export const MiniatureListDocument = {
         selections: [
           { kind: "Field", name: { kind: "Name", value: "id" } },
           { kind: "Field", name: { kind: "Name", value: "title" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
           { kind: "Field", name: { kind: "Name", value: "status" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
           { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
@@ -6030,6 +6960,20 @@ export const TemplateSummariesDocument = {
         },
         {
           kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "ID" } },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "flat" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
+          },
+          defaultValue: { kind: "BooleanValue", value: true },
+        },
+        {
+          kind: "VariableDefinition",
           variable: { kind: "Variable", name: { kind: "Name", value: "noSource" } },
           type: { kind: "NamedType", name: { kind: "Name", value: "Boolean" } },
           defaultValue: { kind: "BooleanValue", value: false },
@@ -6071,6 +7015,16 @@ export const TemplateSummariesDocument = {
                 kind: "Argument",
                 name: { kind: "Name", value: "sourceId" },
                 value: { kind: "Variable", name: { kind: "Name", value: "sourceId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "folderId" },
+                value: { kind: "Variable", name: { kind: "Name", value: "folderId" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "flat" },
+                value: { kind: "Variable", name: { kind: "Name", value: "flat" } },
               },
               {
                 kind: "Argument",
@@ -6171,6 +7125,7 @@ export const TemplateSummariesDocument = {
           { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           { kind: "Field", name: { kind: "Name", value: "categories" } },
           { kind: "Field", name: { kind: "Name", value: "kind" } },
+          { kind: "Field", name: { kind: "Name", value: "folderId" } },
           { kind: "Field", name: { kind: "Name", value: "sourceId" } },
           { kind: "Field", name: { kind: "Name", value: "sourceName" } },
           { kind: "Field", name: { kind: "Name", value: "sourceLogoUrl" } },

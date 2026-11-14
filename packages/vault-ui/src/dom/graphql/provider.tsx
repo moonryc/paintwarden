@@ -26,8 +26,8 @@ const fields: Record<VaultFamily, readonly string[]> = {
   LIBRARY: ["library", "vaultNavigation"],
   PAINT: ["paint", "paintRanking", "ownedPaintOptions"],
   OPTIONS: ["paintOptions", "ownedPaintOptions"],
-  HOME: ["home"],
-  MINIATURES: ["miniatures", "miniature"],
+  HOME: ["home", "folderBrowser", "folderSearch"],
+  MINIATURES: ["miniatures", "miniature", "folderBrowser", "folderSearch"],
   WISHLIST: [
     "wishlist",
     "wishlistModelOptions",
@@ -36,7 +36,7 @@ const fields: Record<VaultFamily, readonly string[]> = {
     "vaultNavigation",
   ],
   SCHEMES: ["schemes", "schemeOptions", "schemePaintOptions", "miniatureScheme"],
-  TEMPLATES: ["templates", "templateRecipe"],
+  TEMPLATES: ["templates", "templateRecipe", "folderBrowser", "folderSearch"],
   SOURCES: ["sources", "sourceVersions", "sourceRemoval", "sourceShareable"],
 };
 

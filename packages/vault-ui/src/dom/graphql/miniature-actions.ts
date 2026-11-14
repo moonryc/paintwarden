@@ -32,6 +32,7 @@ export type MiniatureActions = {
 function input(values: Values): MiniatureInput {
   const {
     title,
+    folderId,
     status,
     notes,
     manufacturer,
@@ -45,6 +46,7 @@ function input(values: Values): MiniatureInput {
     throw new Error(i18n.t("shell:invalidMiniatureCollection"));
   return {
     title,
+    folderId,
     status,
     notes,
     manufacturer,

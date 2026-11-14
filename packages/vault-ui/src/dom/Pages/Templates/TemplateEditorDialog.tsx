@@ -17,6 +17,7 @@ import type { MiniatureTemplate } from "../../types";
 
 type EditorProps = {
   template: MiniatureTemplate | null;
+  folderId?: string | null;
   onSaved: () => Promise<void>;
   onClose: () => void;
 };
@@ -101,6 +102,7 @@ function ReadError({ error, retry }: { error: Error; retry: () => unknown }) {
 
 function TemplateEditorFields({
   template,
+  folderId,
   onSaved,
   onClose,
   recipe,
@@ -179,7 +181,7 @@ function TemplateEditorFields({
         paints: paintEntries.map((entry, sortOrder) => ({ ...entry, sortOrder })),
       };
       if (template) await actions.update(template.id, input);
-      else await actions.create(input);
+      else await actions.create({ ...input, folderId });
       await onSaved();
     } catch (error) {
       setSaveError(error instanceof Error ? error : new Error(String(error)));

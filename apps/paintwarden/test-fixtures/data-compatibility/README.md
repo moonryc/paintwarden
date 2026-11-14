@@ -30,3 +30,19 @@ The pre-release rebrand explicitly replaced the synthetic backup artifacts and p
 `backup-golden.test.ts` checks fixture hashes before use, restores ZIP1 with Replace/Merge/Replace, compares all fields/images and verifies destination owner/session preservation. Non-ZIP uploads, unknown identifiers and unsupported versions must reject without mutation. Database-upgrade checks preserve all original columns/rows while permitting new columns/tables and appended journal rows. Application schema equality excludes internal migration table formatting differences between Drizzle and the current transaction wrapper.
 
 See [data compatibility policy](../../../../docs/data-compatibility.md) for forward-only migration, recovery and downgrade limitations.
+
+## Additive folders / ZIP2 contract
+
+`zip-v2-folders.zip` and `v2-folders-tables.json` add four invented folders (nested miniature projects and nested template folders) and membership on the original synthetic items. `provenance-v2-folders.json` records their hashes and current source hashes separately. Original ZIP1, SQLite, tables, pixel, release ledger and provenance remain unchanged. No historical exporter/release claim is made.
+
+For the current contract, generate into an empty outside directory with:
+
+```sh
+output="$(mktemp -d)"
+node --import tsx scripts/generate-folder-backup-fixtures.mjs "$output"
+for file in zip-v2-folders.zip v2-folders-tables.json provenance-v2-folders.json; do
+  cmp "apps/paintwarden/test-fixtures/data-compatibility/$file" "$output/$file" || exit 1
+done
+```
+
+The earlier generator and recorded source hashes describe ZIP1 at its original tree; its version guard intentionally prevents using the current ZIP2 contract to overwrite ZIP1. The golden test upgrades ZIP1 explicitly to root membership and checks ZIP2 Replace/Merge/Replace, shuffled folder ordering, cycle/duplicate/wrong-kind rejection with rollback, image bytes and owner preservation.

@@ -166,6 +166,8 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
     category: filters.category || null,
     sourceId: filters.sourceId || null,
     noSource: filters.noSource ?? false,
+    folderId: filters.folderId ?? null,
+    flat: filters.flat ?? true,
   });
   const variables = useMemo(() => JSON.parse(key) as TemplateVariables, [key]);
   const read = useCallback(

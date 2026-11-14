@@ -366,3 +366,9 @@ restoring one brings them back. Only ZIP backups are supported. If you restore
 a volume archive without its photos, restore the complete volume backup,
 including the `images/` directory.
 
+
+### Projects and template folders
+
+Workbench and Miniatures can organize models into nested **Projects**; Templates has its own nested folders. Use Folder view to browse breadcrumbs and folder tiles, or Flat view to see every item. Each page remembers its view on the current device. Add asks for an item or folder and creates it at the current location. Item menus and bulk selection move items through a folder picker. Deleting a folder lets you preserve its contents by moving them up, or delete its entire subtree. Search includes both folders and items; Workbench summary counts follow the current project subtree (the whole collection at root or in Flat view).
+
+Folders use a forward-only migration and ZIP2 backups, with an explicit ZIP1 reader restoring old items at root. Keep pre-upgrade recovery copies; see [data compatibility](docs/data-compatibility.md).

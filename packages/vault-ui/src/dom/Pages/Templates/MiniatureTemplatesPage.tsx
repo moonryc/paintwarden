@@ -5,9 +5,13 @@ import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar } from "../../Components/FilterToolbar";
+import { FolderBrowser } from "../../Components/FolderBrowser";
+import { FolderPicker } from "../../Components/FolderPicker";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
-import { Plus, TemplateCopy } from "../../icons";
+import { useFolderBrowser } from "../../graphql/folder-hooks";
+import { useFolderSearch } from "../../graphql/folder-search-hooks";
+import { TemplateCopy } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
 import { useTemplateActions, useTemplateCatalog } from "../../store/template-hooks";
 import type { MiniatureTemplate } from "../../types";
@@ -28,21 +32,41 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("ALL");
   const [plugin, setPlugin] = useState("ALL");
+  const browser = useFolderBrowser("templates", "TEMPLATE", search);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [movingIds, setMovingIds] = useState<string[] | null>(null);
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [browser.folderId, browser.flat, search, category, plugin]);
   const catalogQuery = useTemplateCatalog(true, {
     search,
+    folderId: browser.flat ? null : browser.folderId,
+    flat: browser.flat || Boolean(search.trim()),
     category: category === "ALL" ? null : category,
     sourceId: plugin === "ALL" || plugin === "NONE" ? null : plugin,
     noSource: plugin === "NONE",
   });
+  const mixedSearch = useFolderSearch({
+    kind: "TEMPLATE",
+    search,
+    folderId: browser.flat ? null : browser.folderId,
+    category: category === "ALL" ? null : category,
+    sourceId: plugin === "ALL" || plugin === "NONE" ? null : plugin,
+    noSource: plugin === "NONE",
+  });
+  const searching = Boolean(search.trim());
   const catalog = catalogQuery.data;
-  const error = catalogQuery.error?.message;
-  const loadMore = catalogQuery.loadMore;
-  const loading = catalogQuery.loading;
-  const initialLoading = useInitialPageLoading(loading, Boolean(catalogQuery.error));
+  const error = searching ? mixedSearch.error : catalogQuery.error?.message;
+  const loadMore = searching ? mixedSearch.loadMore : catalogQuery.loadMore;
+  const retry = searching ? mixedSearch.retry : catalogQuery.refetch;
+  const loading = searching ? mixedSearch.loading || mixedSearch.refreshing : catalogQuery.loading;
+  const hasNextPage = searching ? mixedSearch.hasNextPage : catalog?.hasNextPage;
+  const totalCount = searching ? mixedSearch.totalCount : (catalog?.totalCount ?? 0);
+  const initialLoading = useInitialPageLoading(loading, Boolean(error));
   const loadMoreRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const target = loadMoreRef.current;
-    if (!target || !catalog?.hasNextPage || loading) return;
+    if (!target || !hasNextPage || loading) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) loadMore();
@@ -51,7 +75,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [catalog?.hasNextPage, loading, loadMore]);
+  }, [hasNextPage, loading, loadMore]);
   const [editing, setEditing] = useState<MiniatureTemplate | null | undefined>();
   const [selected, setSelected] = useState<MiniatureTemplate | null>(null);
   // The template whose Delete was clicked once; a second click deletes it.
@@ -109,7 +133,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const gap = gridWidth >= 600 ? 16 : 12;
   const columnWidth = Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
   const rowHeight = Math.max(1, ((columnWidth - 2 * CARD_BORDER) * 5) / 4 + 2 * CARD_BORDER);
-  const matching = catalog?.templates ?? [];
+  const matching = searching ? mixedSearch.templates : (catalog?.templates ?? []);
   const gridWindow = schemeGridWindow({
     itemCount: matching.length,
     columns,
@@ -151,17 +175,12 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         eyebrow={t("templatesLibrary")}
         title={t("templatesPageTitle")}
         body={t("templatesPageBody")}
-        action={
-          <Button variant="contained" startIcon={<Plus size={17} />} onClick={() => setEditing(null)}>
-            {t("templatesNewTemplate")}
-          </Button>
-        }
       />
       {error && (
         <Alert
           severity="error"
           sx={{ mb: 2 }}
-          action={<Button onClick={() => void catalogQuery.refetch()}>{t("templatesRetry")}</Button>}
+          action={<Button onClick={() => void retry()}>{t("templatesRetry")}</Button>}
         >
           {error}
         </Alert>
@@ -220,6 +239,26 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           </TextField>
         </Box>
       </FilterToolbar>
+      <FolderBrowser
+        browser={{
+          ...browser,
+          visibleFolders: searching ? mixedSearch.folders : browser.visibleFolders,
+          navigate: (id) => {
+            setSearch("");
+            browser.navigate(id);
+          },
+        }}
+        kind="template"
+        onAddItem={() => setEditing(null)}
+      />
+      {selectedIds.length > 0 && (
+        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+          <Button onClick={() => setMovingIds(selectedIds)}>
+            {t("folders.moveSelected", { count: selectedIds.length })}
+          </Button>
+          <Button onClick={() => setSelectedIds([])}>{t("folders.clearSelection")}</Button>
+        </Box>
+      )}
       {!hasGrid ? (
         <EmptyState
           icon={<TemplateCopy size={26} />}
@@ -238,10 +277,12 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
               color: "var(--ink-faint)",
             }}
           >
-            {t("templatesTotalCount", {
-              count: catalog?.totalCount ?? 0,
-              formattedCount: new Intl.NumberFormat(i18n.language).format(catalog?.totalCount ?? 0),
-            })}
+            {searching
+              ? t("folders.resultsCount", { count: totalCount })
+              : t("templatesTotalCount", {
+                  count: totalCount,
+                  formattedCount: new Intl.NumberFormat(i18n.language).format(totalCount),
+                })}
           </Box>
           <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
             <Box
@@ -259,6 +300,14 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
                   key={template.id}
                   template={template}
                   index={gridWindow.startIndex + offset}
+                  checked={selectedIds.includes(template.id)}
+                  onSelect={() =>
+                    setSelectedIds((ids) =>
+                      ids.includes(template.id)
+                        ? ids.filter((id) => id !== template.id)
+                        : [...ids, template.id],
+                    )
+                  }
                   onOpen={() => setSelected(template)}
                   onKeyDown={(event) => {
                     if (event.key !== "Tab") return;
@@ -275,16 +324,20 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         </>
       )}
       <Box ref={loadMoreRef} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-        {catalog?.hasNextPage && (
-          <Button onClick={catalogQuery.loadMore} disabled={catalogQuery.loading}>
+        {hasNextPage && (
+          <Button onClick={loadMore} disabled={loading}>
             {t("templatesLoadMoreTemplates")}
           </Button>
         )}
-        {catalogQuery.loading && <Box role="status">{t("templatesLoadingTemplates")}</Box>}
+        {loading && <Box role="status">{t("templatesLoadingTemplates")}</Box>}
       </Box>
       {selected && (
         <TemplateDetailsDialog
           template={selected}
+          onMove={() => {
+            setMovingIds([selected.id]);
+            setSelected(null);
+          }}
           confirmingDelete={confirmDeleteId === selected.id}
           onDelete={() =>
             confirmDeleteId === selected.id ? void remove(selected) : setConfirmDeleteId(selected.id)
@@ -300,9 +353,21 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           onClose={() => setSelected(null)}
         />
       )}
+      {movingIds && (
+        <FolderPicker
+          folders={browser.folders}
+          onMove={async (destination) => {
+            await browser.moveItems(movingIds, destination);
+            setMovingIds(null);
+            setSelectedIds([]);
+          }}
+          onClose={() => setMovingIds(null)}
+        />
+      )}
       {editing !== undefined && (
         <TemplateEditorDialog
           template={editing}
+          folderId={browser.flat ? null : browser.folderId}
           onSaved={async () => {
             setEditing(undefined);
             notify(editing ? t("templatesUpdated") : t("templatesCreated"));

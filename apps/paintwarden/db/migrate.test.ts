@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -162,5 +162,82 @@ void test("migrations cannot run inside an outer transaction where FK toggles wo
     })();
   } finally {
     sqlite.close();
+  }
+});
+
+void test("folders forward migration preserves pre-folder rows and relationships with null membership", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "paintwarden-folders-migration-"));
+  const folder = path.join(directory, "drizzle");
+  const sqlite = new Database(":memory:");
+  const released = ["0000_init", "0001_credential_generation"];
+  const statements = (name: string) =>
+    readFileSync(new URL(`../drizzle/${name}.sql`, import.meta.url), "utf8").split(
+      "--> statement-breakpoint",
+    );
+  try {
+    sqlite.pragma("foreign_keys = ON");
+    const old = released.map(statements);
+    writeMigrations(folder, old);
+    migrateVault(sqlite, folder);
+    const model = "00000000-0000-4000-8000-000000000001",
+      template = "user:00000000-0000-4000-8000-000000000002",
+      paint = "00000000-0000-4000-8000-000000000003",
+      scheme = "user:00000000-0000-4000-8000-000000000004";
+    sqlite
+      .prepare(
+        "INSERT INTO miniatures(id,title,status,notes,created_at) VALUES(?,'Existing miniature','OWNED','Preserved notes',1)",
+      )
+      .run(model);
+    sqlite
+      .prepare(
+        "INSERT INTO miniature_templates(id,name,categories,created_at) VALUES(?,'Existing template','[\"Category\"]',1)",
+      )
+      .run(template);
+    sqlite
+      .prepare("INSERT INTO paint_catalog(id,brand,range,name) VALUES(?,'Brand','Range','Paint')")
+      .run(paint);
+    sqlite.prepare("INSERT INTO color_schemes(id,name,created_at) VALUES(?,'Scheme',1)").run(scheme);
+    sqlite
+      .prepare(
+        "INSERT INTO miniature_template_paints(template_id,sort_order,paint_id,notes) VALUES(?,0,?,'Full recipe')",
+      )
+      .run(template, paint);
+    sqlite
+      .prepare("INSERT INTO miniature_template_schemes(template_id,scheme_id) VALUES(?,?)")
+      .run(template, scheme);
+    sqlite
+      .prepare("INSERT INTO miniature_color_schemes(miniature_id,scheme_id) VALUES(?,?)")
+      .run(model, scheme);
+    const tables = sqlite
+      .prepare(
+        "SELECT name FROM sqlite_schema WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '__drizzle%'",
+      )
+      .pluck()
+      .all() as string[];
+    const snapshots = tables.map((name) => ({
+      name,
+      columns: (sqlite.pragma(`table_info(${name})`) as { name: string }[])
+        .map((c) => `"${c.name}"`)
+        .join(","),
+      rows: sqlite.prepare(`SELECT * FROM "${name}"`).all(),
+    }));
+    writeMigrations(folder, [...old, statements("0002_mixed_phalanx")]);
+    migrateVault(sqlite, folder);
+    for (const table of snapshots)
+      assert.deepEqual(
+        sqlite.prepare(`SELECT ${table.columns} FROM "${table.name}"`).all(),
+        table.rows,
+        table.name,
+      );
+    assert.equal(sqlite.prepare("SELECT folder_id FROM miniatures WHERE id=?").pluck().get(model), null);
+    assert.equal(
+      sqlite.prepare("SELECT folder_id FROM miniature_templates WHERE id=?").pluck().get(template),
+      null,
+    );
+    assert.equal(sqlite.prepare("SELECT count(*) FROM folders").pluck().get(), 0);
+    assert.deepEqual(sqlite.pragma("foreign_key_check"), []);
+  } finally {
+    sqlite.close();
+    rmSync(directory, { recursive: true, force: true });
   }
 });

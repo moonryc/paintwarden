@@ -139,11 +139,13 @@ export function NavPanel({
           </IconButton>
         )}
       </Box>
-      <AddMenuButton
-        onAddMiniature={then(onAddMiniature)}
-        onAddPaint={() => chooseAddAction(onAddPaint)}
-        onAddScheme={() => chooseAddAction(onAddScheme)}
-      />
+      {tab !== "dashboard" && tab !== "miniatures" && tab !== "templates" && (
+        <AddMenuButton
+          onAddMiniature={then(onAddMiniature)}
+          onAddPaint={() => chooseAddAction(onAddPaint)}
+          onAddScheme={() => chooseAddAction(onAddScheme)}
+        />
+      )}
       <Box
         component="nav"
         aria-label={t("layoutPrimary")}

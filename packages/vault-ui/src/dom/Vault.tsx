@@ -93,6 +93,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
     [setupCode, setSetupCode] = useState(""),
     [authBusy, setAuthBusy] = useState(false);
   const [showMiniForm, setShowMiniForm] = useState(false),
+    [initialFolderId, setInitialFolderId] = useState<string | null>(null),
     [initialTemplateId, setInitialTemplateId] = useState<string | null>(null),
     [showPaintForm, setShowPaintForm] = useState(false),
     [showSchemeForm, setShowSchemeForm] = useState(false);
@@ -141,7 +142,8 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   }
 
   const toast = toasts.at(-1);
-  const addMini = () => {
+  const addMini = (folderId: string | null = null) => {
+    setInitialFolderId(folderId);
     setInitialTemplateId(null);
     setShowMiniForm(true);
   };
@@ -150,7 +152,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
     tab,
     go,
     displayName,
-    onAddMiniature: addMini,
+    onAddMiniature: () => addMini(),
     onAddPaint: () => setShowPaintForm(true),
     onAddScheme: () => setShowSchemeForm(true),
     onAccount: () => go("settings"),
@@ -502,6 +504,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                       ) : tab === "templates" ? (
                         <MiniatureTemplatesPage
                           onUse={(id) => {
+                            setInitialFolderId(null);
                             setInitialTemplateId(id);
                             setShowMiniForm(true);
                           }}
@@ -540,6 +543,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
           </Box>
           {showMiniForm && (
             <CreateMiniatureDialog
+              initialFolderId={initialFolderId}
               initialTemplateId={initialTemplateId}
               onClose={() => setShowMiniForm(false)}
             />
@@ -627,9 +631,11 @@ function VaultNavPanel(props: Omit<ComponentProps<typeof NavPanel>, "counts">) {
 }
 
 function CreateMiniatureDialog({
+  initialFolderId,
   initialTemplateId,
   onClose,
 }: {
+  initialFolderId: string | null;
   initialTemplateId: string | null;
   onClose(): void;
 }) {
@@ -642,7 +648,7 @@ function CreateMiniatureDialog({
         initialTemplateId={initialTemplateId}
         onClose={onClose}
         onSubmit={async (values) => {
-          const id = await actions.create(values);
+          const id = await actions.create({ ...values, folderId: initialFolderId });
           onClose();
           notify(i18n.t("shell:added", { value1: values.title }));
           openMini(id);

@@ -3,7 +3,7 @@
 `packages/vault-ui/src/dom/graphql/miniature-list.graphql` owns the production
 `MiniatureList` operation. Its `workbench` variable selects exactly one root:
 `home` for Workbench and `miniatures` for the collection. The shared Home component
-preserves the existing Step/Collection selectors, search, Add tile and responsive
+preserves the existing Step/Collection selectors, search, a single Add choice dialog and responsive
 virtualized shelf. It does not call `useVault()` or construct a partial `State`.
 
 ## Projection and counts
@@ -18,10 +18,10 @@ appearance. Recipe rows, paint metadata and notes load only for a selected drawe
 
 Workbench is owned-only, ordered by newest creation time, normalized title and
 unique ID. Its readiness ring, stage counts, distinct missing paints and
-wishlisted missing paints are global across owned miniatures, independent of the
-loaded page, stage selection and search. An empty recipe is not ready. Broken
+wishlisted missing paints include owned miniatures in the current folder subtree, independent of the
+loaded page, stage selection and search. At root and in flat view these counts cover the whole collection. An empty recipe is not ready. Broken
 active substitutions do not fall back to physical original ownership. The
-collection returns global all/owned/wishlist counts and server-filtered rows.
+collection returns scope-filtered all/owned/wishlist counts and server-filtered rows.
 
 Search runs on the server over title, notes, manufacturer, faction, scale and
 painting status, using the shared fuzzy scorer. Nonblank queries are debounced
@@ -89,3 +89,7 @@ npm run storybook:test
 
 Web/native/Docker evidence is recorded in the phase report. Passing a browser
 story is not a claim of native packaged UI coverage.
+
+## Projects and mixed search
+
+See [folders](graphql-folders.md). Non-flat browse uses `folderId` and direct membership, while Workbench counts always summarize descendants. The three per-page device preferences do not share a global folder location. Mixed search uses the bounded `FolderSearchResult` union rather than manufacturing a full-vault state.

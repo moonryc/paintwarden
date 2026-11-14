@@ -4,6 +4,7 @@ import { RECIPE_STEP_VALUES } from "@paintwarden/core/recipe-steps";
 import { sql } from "drizzle-orm";
 import { check, index, integer, primaryKey, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
+import { folders } from "./folder-schema.ts";
 import {
   isBoolean,
   isColorHex,
@@ -16,6 +17,8 @@ import {
   updatedAt,
   vaultTable,
 } from "./schema-checks.ts";
+
+export { folders, FOLDER_KINDS } from "./folder-schema.ts";
 
 const OWNERSHIP = ["OWNED", "WISHLIST"] as const;
 const PAINTING_STATUSES = ["NOT_STARTED", "ASSEMBLED", "PRIMED", "IN_PROGRESS", "COMPLETE"] as const;
@@ -120,6 +123,7 @@ export const miniatures = vaultTable(
   {
     id: text("id").primaryKey(),
     title: text("title").notNull(),
+    folderId: text("folder_id").references(() => folders.id, { onDelete: "cascade" }),
     status: text("status", { enum: OWNERSHIP }).notNull(),
     notes: text("notes").notNull().default(""),
     manufacturer: text("manufacturer").notNull().default(""),
@@ -132,6 +136,7 @@ export const miniatures = vaultTable(
     updatedAt: updatedAt(),
   },
   (t) => [
+    index("miniatures_folder_idx").on(t.folderId),
     isUuid("miniatures_id_check", t.id),
     isImageKey("miniatures_image_key_check", t.imageKey),
     maxLengths("miniatures_lengths_check", [
@@ -152,6 +157,7 @@ export const miniatureTemplates = vaultTable(
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
+    folderId: text("folder_id").references(() => folders.id, { onDelete: "cascade" }),
     manufacturer: text("manufacturer").notNull().default(""),
     faction: text("faction").notNull().default(""),
     categories: text("categories", { mode: "json" }).$type<string[]>().notNull().default([]),
@@ -161,6 +167,7 @@ export const miniatureTemplates = vaultTable(
     updatedAt: updatedAt(),
   },
   (t) => [
+    index("miniature_templates_folder_idx").on(t.folderId),
     isItemId("miniature_templates_id_check", t.id),
     isImageKey("miniature_templates_image_key_check", t.imageKey),
     maxLengths("miniature_templates_lengths_check", [

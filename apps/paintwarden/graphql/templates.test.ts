@@ -69,7 +69,7 @@ async function gql(query: string, variables: Record<string, unknown> = {}) {
 const selection = "templateId revision{epoch seq} invalidatedFamilies clientMutationId";
 beforeEach(() => {
   sqlite.exec(
-    "DELETE FROM miniatures; DELETE FROM miniature_templates; DELETE FROM color_schemes; DELETE FROM paint_catalog; DELETE FROM catalog_sources; DELETE FROM vault_sessions; DELETE FROM vault_account;",
+    "DELETE FROM miniatures; DELETE FROM miniature_templates; DELETE FROM color_schemes; DELETE FROM paint_catalog; DELETE FROM catalog_sources; DELETE FROM vault_sessions; DELETE FROM vault_account; DELETE FROM folders;",
   );
   clearTemplateProjectionCache();
   sqlite
@@ -262,4 +262,90 @@ void test("template summaries expose bounded local thumbnails without replacing 
     assert.equal(row.imageUrl, image);
     assert.equal(row.thumbnailUrl, image.startsWith("/api/") ? `${image}?w=320` : image);
   }
+});
+
+void test("template folder paging isolates root/direct/subtree scopes, searches and cursors", () => {
+  const parent = randomUUID(),
+    child = randomUUID(),
+    sibling = randomUUID(),
+    wrongKind = randomUUID();
+  const folder = sqlite.prepare(
+    "INSERT INTO folders(id,kind,parent_id,name,created_at,updated_at) VALUES(?,?,?,?,1,1)",
+  );
+  folder.run(parent, "template", null, "Parent");
+  folder.run(child, "template", parent, "Child");
+  folder.run(sibling, "template", null, "Sibling");
+  folder.run(wrongKind, "miniature", null, "Miniatures");
+  const root = insertTemplate("Scarlet");
+  const direct = insertTemplate("Scarlat A", true);
+  const nested = insertTemplate("Scarlat B", true);
+  const other = insertTemplate("Scarlet sibling");
+  for (const [id, folderId] of [
+    [direct, parent],
+    [nested, child],
+    [other, sibling],
+  ])
+    sqlite.prepare("UPDATE miniature_templates SET folder_id=? WHERE id=?").run(folderId, id);
+  const ids = (args: Parameters<typeof readTemplates>[0]) =>
+    readTemplates(args).templates.nodes.map((row) => row.id);
+  assert.equal(readTemplates({ first: 100 }).templates.totalCount, 4);
+  assert.deepEqual(ids({ first: 100, flat: false }), [root]);
+  assert.deepEqual(ids({ first: 100, folderId: parent, flat: false }), [direct]);
+  assert.deepEqual(ids({ first: 100, folderId: parent }), [direct, nested]);
+  assert.equal(readTemplates({ first: 1, id: nested }).templates.nodes[0].folderId, child);
+  assert.deepEqual(ids({ first: 100, folderId: parent, id: other }), []);
+  assert.deepEqual(ids({ first: 100, folderId: wrongKind }), []);
+  assert.deepEqual(ids({ first: 100, folderId: "absent" }), []);
+  const first = readTemplates({ first: 1, folderId: parent, search: "scarlet" });
+  assert.equal(first.templates.totalCount, 2, "excluded literals cannot suppress folder typo matches");
+  const after = first.templates.pageInfo.endCursor;
+  assert.deepEqual(ids({ first: 1, folderId: parent, search: "scarlet", after }), [nested]);
+  for (const scope of [{ folderId: parent, flat: false }, { folderId: sibling }, {}])
+    assert.throws(
+      () => readTemplates({ first: 1, search: "scarlet", after, ...scope }),
+      code("BAD_USER_INPUT"),
+    );
+  assert.equal(readTemplates({ first: 1, folderId: sibling, search: "scarlet" }).templates.totalCount, 1);
+  sqlite.prepare("UPDATE miniature_templates SET folder_id=? WHERE id=?").run(sibling, nested);
+  assert.throws(
+    () => readTemplates({ first: 1, folderId: parent, search: "scarlet", after }),
+    code("STALE_CURSOR"),
+  );
+  assert.deepEqual(ids({ first: 100, folderId: parent }), [direct]);
+});
+
+void test("GraphQL template folder assignments validate and roll back atomically", async () => {
+  const folderId = randomUUID(),
+    wrongKind = randomUUID();
+  sqlite
+    .prepare("INSERT INTO folders(id,kind,name,created_at,updated_at) VALUES(?,'template','Templates',1,1)")
+    .run(folderId);
+  sqlite
+    .prepare("INSERT INTO folders(id,kind,name,created_at,updated_at) VALUES(?,'miniature','Miniatures',1,1)")
+    .run(wrongKind);
+  const created = await gql(`mutation($input:TemplateInput!){createTemplate(input:$input){${selection}}}`, {
+    input: { name: "Filed template", folderId },
+  });
+  assert.equal(created.errors, undefined, JSON.stringify(created));
+  const id = created.data!.createTemplate.templateId;
+  assert.equal(readTemplates({ first: 1, id }).templates.nodes[0].folderId, folderId);
+  const update = `mutation($id:ID!,$input:TemplateInput!){updateTemplate(id:$id,input:$input){${selection}}}`;
+  const before = currentChangeSeq(sqlite);
+  const rejected = await gql(update, { id, input: { name: "Must roll back", folderId: wrongKind } });
+  assert.ok(rejected.errors?.length, JSON.stringify(rejected));
+  assert.equal(currentChangeSeq(sqlite), before);
+  assert.equal(readTemplates({ first: 1, id }).templates.nodes[0].name, "Filed template");
+  const renamed = await gql(update, { id, input: { name: "Still filed" } });
+  assert.equal(renamed.errors, undefined, JSON.stringify(renamed));
+  assert.equal(readTemplates({ first: 1, id }).templates.nodes[0].folderId, folderId);
+  const moved = await gql(update, { id, input: { folderId: null } });
+  assert.equal(moved.errors, undefined, JSON.stringify(moved));
+  assert.equal(readTemplates({ first: 1, id }).templates.nodes[0].folderId, null);
+  const count = readTemplates({ first: 1 }).templates.totalCount;
+  const rejectedCreate = await gql(
+    `mutation($input:TemplateInput!){createTemplate(input:$input){${selection}}}`,
+    { input: { name: "Must not persist", folderId: "absent" } },
+  );
+  assert.ok(rejectedCreate.errors?.length);
+  assert.equal(readTemplates({ first: 1 }).templates.totalCount, count);
 });

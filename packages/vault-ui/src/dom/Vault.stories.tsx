@@ -74,7 +74,9 @@ export const Project: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await openPage(canvas, "Miniatures");
-    await userEvent.click(await canvas.findByRole("button", { name: new RegExp(miniatures.knight.title) }));
+    await userEvent.click(
+      await canvas.findByRole("button", { name: new RegExp(`^(?!Actions for).*${miniatures.knight.title}`) }),
+    );
     const dialog = await within(document.body).findByRole("dialog", { name: miniatures.knight.title });
     await expect(
       await within(dialog).findByRole("heading", { name: miniatures.knight.title }),
@@ -87,8 +89,13 @@ export const AddMiniature: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await openPage(canvas, "Miniatures");
-    await userEvent.click(await canvas.findByRole("button", { name: /Add miniature/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeInTheDocument();
+    await userEvent.click(await canvas.findByRole("button", { name: /^Add$/ }));
+    const chooser = within(await within(document.body).findByRole("dialog", { name: "Add" }));
+    await expect(chooser.getByRole("button", { name: "Folder" })).toBeInTheDocument();
+    await userEvent.click(chooser.getByRole("button", { name: "Miniature" }));
+    await expect(
+      await within(document.body).findByRole("dialog", { name: /miniature/i }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -165,10 +172,12 @@ export const ChangesFromAnotherClient: Story = {
     const canvas = within(canvasElement);
     changedElsewhere = false;
     await openPage(canvas, "Miniatures");
-    await canvas.findByRole("button", { name: new RegExp(miniatures.knight.title) });
+    await canvas.findByRole("button", { name: new RegExp(`^(?!Actions for).*${miniatures.knight.title}`) });
     changedElsewhere = true;
     window.dispatchEvent(new Event("focus"));
-    await expect(await canvas.findByRole("button", { name: new RegExp(renamed) })).toBeInTheDocument();
+    await expect(
+      await canvas.findByRole("button", { name: new RegExp(`^(?!Actions for).*${renamed}`) }),
+    ).toBeInTheDocument();
     changedElsewhere = false;
   },
 };

@@ -14,10 +14,11 @@ import {
   type ZipEntry,
   type ZipSource,
 } from "@paintwarden/core/zip-reader";
+import { eq } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 
 import { getDb, shrinkDatabase } from "../db";
-import { catalogSources, paintSubstitutions } from "../db/schema";
+import { catalogSources, folders, paintSubstitutions } from "../db/schema";
 
 import { APP_VERSION } from "./app-version.ts";
 import {
@@ -26,6 +27,7 @@ import {
   BACKUP_MANIFEST,
   BACKUP_SECTIONS,
   BACKUP_VERSION,
+  BACKUP_V1_SECTIONS,
   SECTION_KEYS,
   pickFields,
   type BackupManifest,
@@ -186,22 +188,55 @@ function readManifest(value: unknown, mode: RestoreMode): BackupTables {
     throw new BackupError("This isn't a Paintwarden backup");
   const manifest = value as Record<string, unknown>;
   if (manifest.format !== BACKUP_FORMAT) throw new BackupError("This isn't a Paintwarden backup");
-  if (manifest.version !== BACKUP_VERSION)
+  if (manifest.version !== 1 && manifest.version !== BACKUP_VERSION)
     throw new BackupError("This backup was made by a different version of Paintwarden");
   const tables = manifest.tables;
   if (!tables || typeof tables !== "object" || Array.isArray(tables))
     throw new BackupError("This backup is damaged");
+  const sections = manifest.version === 1 ? BACKUP_V1_SECTIONS : BACKUP_SECTIONS;
   const result: BackupTables = {};
   for (const [key, rows] of Object.entries(tables)) {
-    if (!(key in BACKUP_SECTIONS) || !Array.isArray(rows))
+    if (!Object.hasOwn(sections, key) || !Array.isArray(rows))
       throw new BackupError("This backup was made by a different version of Paintwarden");
     if (rows.some((row) => !row || typeof row !== "object" || Array.isArray(row)))
       throw new BackupError("This backup is damaged");
-    result[key as BackupSectionKey] = rows as BackupRow[];
+    const fields = sections[key as keyof typeof sections].fields;
+    result[key as BackupSectionKey] = (rows as BackupRow[]).map((row) =>
+      Object.fromEntries(
+        fields.filter((field) => Object.hasOwn(row, field)).map((field) => [field, row[field]]),
+      ),
+    );
   }
-  if (mode === "replace" && SECTION_KEYS.some((key) => !Object.hasOwn(result, key)))
+  if (mode === "replace" && Object.keys(sections).some((key) => !Object.hasOwn(result, key)))
     throw new BackupError("This backup is incomplete: Replace requires every vault section");
+  if (manifest.version === 1) {
+    result.folders = [];
+    for (const key of ["miniatures", "templates"] as const)
+      if (result[key]) result[key] = result[key].map((row) => ({ ...row, folderId: null }));
+  }
+  if (result.folders) result.folders = orderFolders(result.folders);
   return result;
+}
+
+// Manifest order is not meaningful. Sort only the imported graph; merge may refer to existing
+// parents, which SQLite validates in the transaction. Reject duplicate IDs and cycles up front.
+function orderFolders(rows: BackupRow[]): BackupRow[] {
+  const pending = new Map(rows.map((row) => [row.id, row]));
+  if (pending.size !== rows.length) throw new BackupError("This backup is damaged");
+  const children = new Map<unknown, BackupRow[]>();
+  const queue: BackupRow[] = [];
+  for (const row of rows) {
+    if (row.parentId == null || !pending.has(row.parentId)) queue.push(row);
+    else {
+      const siblings = children.get(row.parentId) ?? [];
+      siblings.push(row);
+      children.set(row.parentId, siblings);
+    }
+  }
+  for (let index = 0; index < queue.length; index++)
+    for (const child of children.get(queue[index].id) ?? []) queue.push(child);
+  if (queue.length !== rows.length) throw new BackupError("This backup is damaged");
+  return queue;
 }
 
 const damagedEntry = () => new BackupError("This backup file is damaged");
@@ -304,10 +339,21 @@ function alignPlugins(tx: Tx, tables: BackupTables): BackupTables {
 function writeTables(tx: Tx, tables: BackupTables, mode: RestoreMode) {
   const counts: Partial<Record<BackupSectionKey, number>> = {};
   if (mode === "replace") {
-    for (const key of [...SECTION_KEYS].reverse()) tx.delete(BACKUP_SECTIONS[key].table).run();
+    for (const key of [...SECTION_KEYS].reverse()) {
+      if (key === "folders") {
+        // Avoid SQLite's recursive cascade limit for deeply nested authored folders.
+        const existing = tx.select({ id: folders.id, parentId: folders.parentId }).from(folders).all();
+        for (const row of orderFolders(existing).reverse())
+          tx.delete(folders)
+            .where(eq(folders.id, row.id as string))
+            .run();
+      } else tx.delete(BACKUP_SECTIONS[key].table).run();
+    }
     for (const key of SECTION_KEYS) {
       const rows = (tables[key] ?? []).map((row) => pickFields(key, row));
-      insertRows(tx, BACKUP_SECTIONS[key].table, rows, false);
+      if (key === "folders") {
+        for (const row of rows) insertRows(tx, BACKUP_SECTIONS[key].table, [row], false);
+      } else insertRows(tx, BACKUP_SECTIONS[key].table, rows, false);
       counts[key] = rows.length;
     }
     return counts;
@@ -333,7 +379,9 @@ function writeTables(tx: Tx, tables: BackupTables, mode: RestoreMode) {
       const parents = added.get(childOf) ?? new Set();
       rows = rows.filter((row) => parents.has(row[field]));
     }
-    insertRows(tx, section.table, rows, true);
+    if (key === "folders") {
+      for (const row of rows) insertRows(tx, section.table, [row], true);
+    } else insertRows(tx, section.table, rows, true);
     counts[key] = rows.length;
   }
   return counts;
@@ -345,6 +393,8 @@ function describeFailure(error: unknown, mode: RestoreMode) {
     return mode === "merge"
       ? "This backup refers to paints, schemes or plugins that aren't in this vault. Install the plugins it uses, then try again"
       : "This backup is damaged: some records refer to items it doesn't contain";
+  if (/Folder (parent|kind|cycle)|(?:Miniature|Template) folder/.test(message))
+    return "This backup is damaged: some records refer to items it doesn't contain";
   if (/constraint failed/.test(message)) return "This backup contains records this version can't store";
   return null;
 }

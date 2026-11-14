@@ -1,0 +1,66 @@
+query BrowseFolders($kind: FolderKind!, $first: Int! = 100, $after: String) {
+  folderBrowser(kind: $kind, flat: true, first: $first, after: $after) {
+    revision {
+      epoch
+      seq
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+    folders {
+      id
+      name
+      parentId
+      directCount
+      recursiveCount
+      coverThumbnailUrl
+    }
+  }
+}
+mutation CreateBrowserFolder($kind: FolderKind!, $name: String!, $parentId: ID) {
+  createFolder(kind: $kind, name: $name, parentId: $parentId) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}
+mutation RenameBrowserFolder($id: ID!, $name: String!) {
+  renameFolder(id: $id, name: $name) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}
+mutation MoveBrowserFolder($id: ID!, $parentId: ID) {
+  moveFolder(id: $id, parentId: $parentId) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}
+mutation DeleteBrowserFolder($id: ID!, $mode: FolderDeleteMode!) {
+  deleteFolder(id: $id, mode: $mode) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}
+mutation MoveBrowserFolderItems($kind: FolderKind!, $ids: [ID!]!, $folderId: ID) {
+  moveFolderItems(kind: $kind, ids: $ids, folderId: $folderId) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}

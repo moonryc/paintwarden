@@ -8,6 +8,7 @@ import {
   colorSchemeImages,
   colorSchemePaints,
   colorSchemes,
+  folders,
   miniatureColorSchemes,
   miniaturePaintSubstitutions,
   miniatureRecipeSteps,
@@ -26,7 +27,7 @@ import {
 // backup.json: each section lists exactly which fields it stores, so renaming or adding a database
 // column never changes the file format by accident. A change to these lists needs a new version.
 export const BACKUP_FORMAT = "paintwarden-backup";
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 2;
 export const BACKUP_MANIFEST = "backup.json";
 export const BACKUP_IMAGE_FOLDER = "images/";
 
@@ -41,7 +42,8 @@ export type BackupSection = {
 const timestamps = ["updatedAt"] as const;
 
 // Sections are listed in an order that satisfies foreign keys when inserted top to bottom.
-export const BACKUP_SECTIONS = {
+// Frozen ZIP1 field contract; the backward reader must never accept newer fields.
+export const BACKUP_V1_SECTIONS = {
   plugins: {
     table: catalogSources,
     fields: [
@@ -183,6 +185,24 @@ export const BACKUP_SECTIONS = {
     table: miniaturePaintSubstitutions,
     fields: ["miniatureId", "targetPaintId", "substitutionId", "useOriginal", ...timestamps],
     merge: { childOf: "miniatures", field: "miniatureId" },
+  },
+} satisfies Record<string, BackupSection>;
+
+// ZIP2 adds folder hierarchy and single-folder membership. Parents precede items.
+export const BACKUP_SECTIONS = {
+  folders: {
+    table: folders,
+    fields: ["id", "name", "kind", "parentId", "sortOrder", "createdAt", ...timestamps],
+    merge: { parent: true },
+  },
+  ...BACKUP_V1_SECTIONS,
+  templates: {
+    ...BACKUP_V1_SECTIONS.templates,
+    fields: [...BACKUP_V1_SECTIONS.templates.fields, "folderId"],
+  },
+  miniatures: {
+    ...BACKUP_V1_SECTIONS.miniatures,
+    fields: [...BACKUP_V1_SECTIONS.miniatures.fields, "folderId"],
   },
 } satisfies Record<string, BackupSection>;
 

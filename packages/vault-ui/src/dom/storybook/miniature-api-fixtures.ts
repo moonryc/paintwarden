@@ -51,6 +51,7 @@ export function fixtureMiniatureResponse(
       view.rows.map(({ mini, swatches, total, missing }) => ({
         __typename: "Miniature",
         ...mini,
+        folderId: null,
         thumbnailUrl: mini.imageUrl ? imageThumbnailUrl(mini.imageUrl) : null,
         readiness: { __typename: "Readiness", total, missing },
         previewSwatches: swatches

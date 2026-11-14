@@ -15,6 +15,13 @@
       "when": 1794636335945,
       "tag": "0001_credential_generation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794684591529,
+      "tag": "0002_mixed_phalanx",
+      "breakpoints": true
     }
   ]
 }

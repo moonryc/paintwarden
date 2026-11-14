@@ -17,6 +17,7 @@ export function TemplateDetailsDialog({
   onEdit,
   onUse,
   onClose,
+  onMove,
 }: {
   template: MiniatureTemplate;
   // Delete was clicked once; the next click deletes.
@@ -25,6 +26,7 @@ export function TemplateDetailsDialog({
   onEdit: () => void;
   onUse: () => void;
   onClose: () => void;
+  onMove?: () => void;
 }) {
   const { t, i18n } = useTranslation("pages");
   return (
@@ -47,6 +49,7 @@ export function TemplateDetailsDialog({
               <Button onClick={onEdit}>{t("templatesEdit")}</Button>
             </>
           )}
+          {onMove && <Button onClick={onMove}>{t("folders.move")}</Button>}
           <Button onClick={onClose}>{t("templatesClose")}</Button>
           <Button variant="contained" {...dialogPreloadHandlers("miniature")} onClick={onUse}>
             {t("templatesAddMiniature")}

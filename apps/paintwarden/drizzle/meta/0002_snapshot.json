@@ -1,0 +1,2143 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "b57e2ead-88a7-49b2-b94c-14d2f45b3c31",
+  "prevId": "f02a19a5-7244-4458-9da4-f7726c120314",
+  "tables": {
+    "catalog_source_assets": {
+      "name": "catalog_source_assets",
+      "columns": {
+        "source_id": {
+          "name": "source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "asset_path": {
+          "name": "asset_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sha256": {
+          "name": "sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "catalog_source_assets_source_id_catalog_sources_id_fk": {
+          "name": "catalog_source_assets_source_id_catalog_sources_id_fk",
+          "tableFrom": "catalog_source_assets",
+          "tableTo": "catalog_sources",
+          "columnsFrom": [
+            "source_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "catalog_source_assets_source_id_asset_path_pk": {
+          "columns": [
+            "source_id",
+            "asset_path"
+          ],
+          "name": "catalog_source_assets_source_id_asset_path_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "catalog_source_assets_image_key_check": {
+          "name": "catalog_source_assets_image_key_check",
+          "value": "\"catalog_source_assets\".\"image_key\" IS NULL OR (substr(\"catalog_source_assets\".\"image_key\", 1, 36) GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' AND substr(\"catalog_source_assets\".\"image_key\", 37) IN ('.avif', '.gif', '.jpg', '.jpeg', '.png', '.webp', '.img'))"
+        }
+      }
+    },
+    "catalog_source_items": {
+      "name": "catalog_source_items",
+      "columns": {
+        "source_id": {
+          "name": "source_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "catalog_source_items_item_idx": {
+          "name": "catalog_source_items_item_idx",
+          "columns": [
+            "kind",
+            "item_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "catalog_source_items_source_id_catalog_sources_id_fk": {
+          "name": "catalog_source_items_source_id_catalog_sources_id_fk",
+          "tableFrom": "catalog_source_items",
+          "tableTo": "catalog_sources",
+          "columnsFrom": [
+            "source_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "catalog_source_items_source_id_kind_item_id_pk": {
+          "columns": [
+            "source_id",
+            "kind",
+            "item_id"
+          ],
+          "name": "catalog_source_items_source_id_kind_item_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "catalog_source_items_kind_check": {
+          "name": "catalog_source_items_kind_check",
+          "value": "\"catalog_source_items\".\"kind\" IN ('paint', 'scheme', 'template')"
+        },
+        "catalog_source_items_item_id_check": {
+          "name": "catalog_source_items_item_id_check",
+          "value": "\"catalog_source_items\".\"item_id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        }
+      }
+    },
+    "catalog_sources": {
+      "name": "catalog_sources",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "repository": {
+          "name": "repository",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "branch": {
+          "name": "branch",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "version": {
+          "name": "version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "license": {
+          "name": "license",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "attribution": {
+          "name": "attribution",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "dependencies": {
+          "name": "dependencies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "logo_svg": {
+          "name": "logo_svg",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "catalog_sources_repository_idx": {
+          "name": "catalog_sources_repository_idx",
+          "columns": [
+            "repository"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "catalog_sources_id_check": {
+          "name": "catalog_sources_id_check",
+          "value": "\"catalog_sources\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "catalog_sources_dependencies_check": {
+          "name": "catalog_sources_dependencies_check",
+          "value": "json_valid(\"catalog_sources\".\"dependencies\") AND json_type(\"catalog_sources\".\"dependencies\") = 'array'"
+        },
+        "catalog_sources_integers_check": {
+          "name": "catalog_sources_integers_check",
+          "value": "typeof(\"catalog_sources\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "color_scheme_dividers": {
+      "name": "color_scheme_dividers",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tone": {
+          "name": "tone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'SECTION'"
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "color_scheme_dividers_scheme_idx": {
+          "name": "color_scheme_dividers_scheme_idx",
+          "columns": [
+            "scheme_id",
+            "sort_order"
+          ],
+          "isUnique": false
+        },
+        "color_scheme_dividers_role_idx": {
+          "name": "color_scheme_dividers_role_idx",
+          "columns": [
+            "scheme_id",
+            "role"
+          ],
+          "isUnique": true,
+          "where": "\"color_scheme_dividers\".\"role\" IS NOT NULL"
+        }
+      },
+      "foreignKeys": {
+        "color_scheme_dividers_scheme_id_color_schemes_id_fk": {
+          "name": "color_scheme_dividers_scheme_id_color_schemes_id_fk",
+          "tableFrom": "color_scheme_dividers",
+          "tableTo": "color_schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "color_scheme_dividers_scheme_id_id_pk": {
+          "columns": [
+            "scheme_id",
+            "id"
+          ],
+          "name": "color_scheme_dividers_scheme_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "color_scheme_dividers_id_check": {
+          "name": "color_scheme_dividers_id_check",
+          "value": "\"color_scheme_dividers\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "color_scheme_dividers_lengths_check": {
+          "name": "color_scheme_dividers_lengths_check",
+          "value": "length(\"color_scheme_dividers\".\"label\") <= 80"
+        },
+        "color_scheme_dividers_tone_check": {
+          "name": "color_scheme_dividers_tone_check",
+          "value": "\"color_scheme_dividers\".\"tone\" IN ('SECTION', 'MILESTONE')"
+        },
+        "color_scheme_dividers_role_check": {
+          "name": "color_scheme_dividers_role_check",
+          "value": "\"color_scheme_dividers\".\"role\" IN ('START', 'COMPLETE') OR \"color_scheme_dividers\".\"role\" IS NULL"
+        },
+        "color_scheme_dividers_role_tone_check": {
+          "name": "color_scheme_dividers_role_tone_check",
+          "value": "\"color_scheme_dividers\".\"role\" IS NULL OR \"color_scheme_dividers\".\"tone\" = 'MILESTONE'"
+        },
+        "color_scheme_dividers_integers_check": {
+          "name": "color_scheme_dividers_integers_check",
+          "value": "typeof(\"color_scheme_dividers\".\"sort_order\") = 'integer' AND typeof(\"color_scheme_dividers\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "color_scheme_images": {
+      "name": "color_scheme_images",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "thumbnail_url": {
+          "name": "thumbnail_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "image_type": {
+          "name": "image_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "method": {
+          "name": "method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "color_scheme_images_scheme_idx": {
+          "name": "color_scheme_images_scheme_idx",
+          "columns": [
+            "scheme_id",
+            "sort_order"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "color_scheme_images_scheme_id_color_schemes_id_fk": {
+          "name": "color_scheme_images_scheme_id_color_schemes_id_fk",
+          "tableFrom": "color_scheme_images",
+          "tableTo": "color_schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "color_scheme_images_scheme_id_id_pk": {
+          "columns": [
+            "scheme_id",
+            "id"
+          ],
+          "name": "color_scheme_images_scheme_id_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "color_scheme_images_id_check": {
+          "name": "color_scheme_images_id_check",
+          "value": "\"color_scheme_images\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "color_scheme_images_lengths_check": {
+          "name": "color_scheme_images_lengths_check",
+          "value": "length(\"color_scheme_images\".\"image_url\") <= 2000 AND length(\"color_scheme_images\".\"thumbnail_url\") <= 2000 AND length(\"color_scheme_images\".\"image_type\") <= 40 AND length(\"color_scheme_images\".\"method\") <= 40"
+        },
+        "color_scheme_images_integers_check": {
+          "name": "color_scheme_images_integers_check",
+          "value": "typeof(\"color_scheme_images\".\"sort_order\") = 'integer' AND typeof(\"color_scheme_images\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "color_scheme_paints": {
+      "name": "color_scheme_paints",
+      "columns": {
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "paint_id": {
+          "name": "paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "color_scheme_paints_paint_idx": {
+          "name": "color_scheme_paints_paint_idx",
+          "columns": [
+            "paint_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "color_scheme_paints_scheme_id_color_schemes_id_fk": {
+          "name": "color_scheme_paints_scheme_id_color_schemes_id_fk",
+          "tableFrom": "color_scheme_paints",
+          "tableTo": "color_schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "color_scheme_paints_paint_id_paint_catalog_id_fk": {
+          "name": "color_scheme_paints_paint_id_paint_catalog_id_fk",
+          "tableFrom": "color_scheme_paints",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "color_scheme_paints_scheme_id_sort_order_pk": {
+          "columns": [
+            "scheme_id",
+            "sort_order"
+          ],
+          "name": "color_scheme_paints_scheme_id_sort_order_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "color_scheme_paints_integers_check": {
+          "name": "color_scheme_paints_integers_check",
+          "value": "typeof(\"color_scheme_paints\".\"sort_order\") = 'integer' AND typeof(\"color_scheme_paints\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "color_schemes": {
+      "name": "color_schemes",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "category": {
+          "name": "category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "color_schemes_id_check": {
+          "name": "color_schemes_id_check",
+          "value": "\"color_schemes\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' OR \"color_schemes\".\"id\" GLOB 'user:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "color_schemes_lengths_check": {
+          "name": "color_schemes_lengths_check",
+          "value": "length(\"color_schemes\".\"name\") <= 200"
+        },
+        "color_schemes_category_check": {
+          "name": "color_schemes_category_check",
+          "value": "\"color_schemes\".\"category\" IN ('RED', 'PINK', 'ORANGE', 'YELLOW', 'GREEN', 'TURQUOISE', 'BLUE', 'PURPLE', 'BROWN', 'BLACK', 'GREY', 'WHITE', 'GOLD', 'SILVER', 'BONE', 'FLESH') OR \"color_schemes\".\"category\" IS NULL"
+        },
+        "color_schemes_integers_check": {
+          "name": "color_schemes_integers_check",
+          "value": "typeof(\"color_schemes\".\"created_at\") = 'integer' AND typeof(\"color_schemes\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "folders": {
+      "name": "folders",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        }
+      },
+      "indexes": {
+        "folders_parent_idx": {
+          "name": "folders_parent_idx",
+          "columns": [
+            "kind",
+            "parent_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "folders_parent_id_folders_id_fk": {
+          "name": "folders_parent_id_folders_id_fk",
+          "tableFrom": "folders",
+          "tableTo": "folders",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "folders_id_check": {
+          "name": "folders_id_check",
+          "value": "\"folders\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "folders_kind_check": {
+          "name": "folders_kind_check",
+          "value": "\"folders\".\"kind\" IN ('miniature', 'template')"
+        },
+        "folders_lengths_check": {
+          "name": "folders_lengths_check",
+          "value": "length(\"folders\".\"name\") <= 200"
+        },
+        "folders_name_check": {
+          "name": "folders_name_check",
+          "value": "length(trim(\"folders\".\"name\")) > 0"
+        },
+        "folders_self_parent_check": {
+          "name": "folders_self_parent_check",
+          "value": "\"folders\".\"parent_id\" IS NULL OR \"folders\".\"parent_id\" <> \"folders\".\"id\""
+        },
+        "folders_integers_check": {
+          "name": "folders_integers_check",
+          "value": "typeof(\"folders\".\"sort_order\") = 'integer' AND typeof(\"folders\".\"created_at\") = 'integer' AND typeof(\"folders\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_color_schemes": {
+      "name": "miniature_color_schemes",
+      "columns": {
+        "miniature_id": {
+          "name": "miniature_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_color_schemes_scheme_idx": {
+          "name": "miniature_color_schemes_scheme_idx",
+          "columns": [
+            "scheme_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_color_schemes_miniature_id_miniatures_id_fk": {
+          "name": "miniature_color_schemes_miniature_id_miniatures_id_fk",
+          "tableFrom": "miniature_color_schemes",
+          "tableTo": "miniatures",
+          "columnsFrom": [
+            "miniature_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_color_schemes_scheme_id_color_schemes_id_fk": {
+          "name": "miniature_color_schemes_scheme_id_color_schemes_id_fk",
+          "tableFrom": "miniature_color_schemes",
+          "tableTo": "color_schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "miniature_color_schemes_miniature_id_scheme_id_pk": {
+          "columns": [
+            "miniature_id",
+            "scheme_id"
+          ],
+          "name": "miniature_color_schemes_miniature_id_scheme_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_color_schemes_integers_check": {
+          "name": "miniature_color_schemes_integers_check",
+          "value": "typeof(\"miniature_color_schemes\".\"sort_order\") = 'integer' AND typeof(\"miniature_color_schemes\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_paint_substitutions": {
+      "name": "miniature_paint_substitutions",
+      "columns": {
+        "miniature_id": {
+          "name": "miniature_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_paint_id": {
+          "name": "target_paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "substitution_id": {
+          "name": "substitution_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "use_original": {
+          "name": "use_original",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_paint_substitutions_target_paint_idx": {
+          "name": "miniature_paint_substitutions_target_paint_idx",
+          "columns": [
+            "target_paint_id"
+          ],
+          "isUnique": false
+        },
+        "miniature_paint_substitutions_substitution_idx": {
+          "name": "miniature_paint_substitutions_substitution_idx",
+          "columns": [
+            "substitution_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_paint_substitutions_miniature_id_miniatures_id_fk": {
+          "name": "miniature_paint_substitutions_miniature_id_miniatures_id_fk",
+          "tableFrom": "miniature_paint_substitutions",
+          "tableTo": "miniatures",
+          "columnsFrom": [
+            "miniature_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_paint_substitutions_target_paint_id_paint_catalog_id_fk": {
+          "name": "miniature_paint_substitutions_target_paint_id_paint_catalog_id_fk",
+          "tableFrom": "miniature_paint_substitutions",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "target_paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_paint_substitutions_substitution_id_paint_substitutions_id_fk": {
+          "name": "miniature_paint_substitutions_substitution_id_paint_substitutions_id_fk",
+          "tableFrom": "miniature_paint_substitutions",
+          "tableTo": "paint_substitutions",
+          "columnsFrom": [
+            "substitution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "miniature_paint_substitutions_miniature_id_target_paint_id_pk": {
+          "columns": [
+            "miniature_id",
+            "target_paint_id"
+          ],
+          "name": "miniature_paint_substitutions_miniature_id_target_paint_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_paint_substitutions_choice_check": {
+          "name": "miniature_paint_substitutions_choice_check",
+          "value": "(\"miniature_paint_substitutions\".\"use_original\" = 1 AND \"miniature_paint_substitutions\".\"substitution_id\" IS NULL) OR (\"miniature_paint_substitutions\".\"use_original\" = 0 AND \"miniature_paint_substitutions\".\"substitution_id\" IS NOT NULL)"
+        },
+        "miniature_paint_substitutions_integers_check": {
+          "name": "miniature_paint_substitutions_integers_check",
+          "value": "typeof(\"miniature_paint_substitutions\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_recipe_steps": {
+      "name": "miniature_recipe_steps",
+      "columns": {
+        "miniature_id": {
+          "name": "miniature_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "step": {
+          "name": "step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "miniature_recipe_steps_miniature_id_miniatures_id_fk": {
+          "name": "miniature_recipe_steps_miniature_id_miniatures_id_fk",
+          "tableFrom": "miniature_recipe_steps",
+          "tableTo": "miniatures",
+          "columnsFrom": [
+            "miniature_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "miniature_recipe_steps_miniature_id_step_pk": {
+          "columns": [
+            "miniature_id",
+            "step"
+          ],
+          "name": "miniature_recipe_steps_miniature_id_step_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_recipe_steps_step_check": {
+          "name": "miniature_recipe_steps_step_check",
+          "value": "\"miniature_recipe_steps\".\"step\" IN ('PRIMER', 'UNDERCOAT', 'SPRAY', 'BASECOAT', 'APPLY', 'SHADE', 'WASH', 'LAYER', 'DRYBRUSH', 'GLAZE', 'HIGHLIGHT', 'EDGE_HIGHLIGHT', 'DETAIL', 'TECHNICAL', 'BASING', 'VARNISH', 'OTHER')"
+        },
+        "miniature_recipe_steps_integers_check": {
+          "name": "miniature_recipe_steps_integers_check",
+          "value": "typeof(\"miniature_recipe_steps\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_required_paints": {
+      "name": "miniature_required_paints",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "miniature_id": {
+          "name": "miniature_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "paint_id": {
+          "name": "paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "step": {
+          "name": "step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'OTHER'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_required_paints_step_paint_idx": {
+          "name": "miniature_required_paints_step_paint_idx",
+          "columns": [
+            "miniature_id",
+            "step",
+            "paint_id"
+          ],
+          "isUnique": true
+        },
+        "miniature_required_paints_paint_idx": {
+          "name": "miniature_required_paints_paint_idx",
+          "columns": [
+            "paint_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_required_paints_miniature_id_miniatures_id_fk": {
+          "name": "miniature_required_paints_miniature_id_miniatures_id_fk",
+          "tableFrom": "miniature_required_paints",
+          "tableTo": "miniatures",
+          "columnsFrom": [
+            "miniature_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_required_paints_paint_id_paint_catalog_id_fk": {
+          "name": "miniature_required_paints_paint_id_paint_catalog_id_fk",
+          "tableFrom": "miniature_required_paints",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_required_paints_id_check": {
+          "name": "miniature_required_paints_id_check",
+          "value": "\"miniature_required_paints\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "miniature_required_paints_lengths_check": {
+          "name": "miniature_required_paints_lengths_check",
+          "value": "length(\"miniature_required_paints\".\"notes\") <= 2000"
+        },
+        "miniature_required_paints_step_check": {
+          "name": "miniature_required_paints_step_check",
+          "value": "\"miniature_required_paints\".\"step\" IN ('PRIMER', 'UNDERCOAT', 'SPRAY', 'BASECOAT', 'APPLY', 'SHADE', 'WASH', 'LAYER', 'DRYBRUSH', 'GLAZE', 'HIGHLIGHT', 'EDGE_HIGHLIGHT', 'DETAIL', 'TECHNICAL', 'BASING', 'VARNISH', 'OTHER')"
+        },
+        "miniature_required_paints_integers_check": {
+          "name": "miniature_required_paints_integers_check",
+          "value": "typeof(\"miniature_required_paints\".\"sort_order\") = 'integer' AND typeof(\"miniature_required_paints\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_template_paints": {
+      "name": "miniature_template_paints",
+      "columns": {
+        "template_id": {
+          "name": "template_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "paint_id": {
+          "name": "paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "step": {
+          "name": "step",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'OTHER'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_template_paints_step_paint_idx": {
+          "name": "miniature_template_paints_step_paint_idx",
+          "columns": [
+            "template_id",
+            "step",
+            "paint_id"
+          ],
+          "isUnique": true
+        },
+        "miniature_template_paints_paint_idx": {
+          "name": "miniature_template_paints_paint_idx",
+          "columns": [
+            "paint_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_template_paints_template_id_miniature_templates_id_fk": {
+          "name": "miniature_template_paints_template_id_miniature_templates_id_fk",
+          "tableFrom": "miniature_template_paints",
+          "tableTo": "miniature_templates",
+          "columnsFrom": [
+            "template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_template_paints_paint_id_paint_catalog_id_fk": {
+          "name": "miniature_template_paints_paint_id_paint_catalog_id_fk",
+          "tableFrom": "miniature_template_paints",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "miniature_template_paints_template_id_sort_order_pk": {
+          "columns": [
+            "template_id",
+            "sort_order"
+          ],
+          "name": "miniature_template_paints_template_id_sort_order_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_template_paints_lengths_check": {
+          "name": "miniature_template_paints_lengths_check",
+          "value": "length(\"miniature_template_paints\".\"notes\") <= 2000"
+        },
+        "miniature_template_paints_step_check": {
+          "name": "miniature_template_paints_step_check",
+          "value": "\"miniature_template_paints\".\"step\" IN ('PRIMER', 'UNDERCOAT', 'SPRAY', 'BASECOAT', 'APPLY', 'SHADE', 'WASH', 'LAYER', 'DRYBRUSH', 'GLAZE', 'HIGHLIGHT', 'EDGE_HIGHLIGHT', 'DETAIL', 'TECHNICAL', 'BASING', 'VARNISH', 'OTHER')"
+        },
+        "miniature_template_paints_integers_check": {
+          "name": "miniature_template_paints_integers_check",
+          "value": "typeof(\"miniature_template_paints\".\"sort_order\") = 'integer' AND typeof(\"miniature_template_paints\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_template_schemes": {
+      "name": "miniature_template_schemes",
+      "columns": {
+        "template_id": {
+          "name": "template_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "scheme_id": {
+          "name": "scheme_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_template_schemes_scheme_idx": {
+          "name": "miniature_template_schemes_scheme_idx",
+          "columns": [
+            "scheme_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_template_schemes_template_id_miniature_templates_id_fk": {
+          "name": "miniature_template_schemes_template_id_miniature_templates_id_fk",
+          "tableFrom": "miniature_template_schemes",
+          "tableTo": "miniature_templates",
+          "columnsFrom": [
+            "template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "miniature_template_schemes_scheme_id_color_schemes_id_fk": {
+          "name": "miniature_template_schemes_scheme_id_color_schemes_id_fk",
+          "tableFrom": "miniature_template_schemes",
+          "tableTo": "color_schemes",
+          "columnsFrom": [
+            "scheme_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "miniature_template_schemes_template_id_scheme_id_pk": {
+          "columns": [
+            "template_id",
+            "scheme_id"
+          ],
+          "name": "miniature_template_schemes_template_id_scheme_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_template_schemes_integers_check": {
+          "name": "miniature_template_schemes_integers_check",
+          "value": "typeof(\"miniature_template_schemes\".\"sort_order\") = 'integer' AND typeof(\"miniature_template_schemes\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniature_templates": {
+      "name": "miniature_templates",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "folder_id": {
+          "name": "folder_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "faction": {
+          "name": "faction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "categories": {
+          "name": "categories",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "image_url": {
+          "name": "image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniature_templates_folder_idx": {
+          "name": "miniature_templates_folder_idx",
+          "columns": [
+            "folder_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniature_templates_folder_id_folders_id_fk": {
+          "name": "miniature_templates_folder_id_folders_id_fk",
+          "tableFrom": "miniature_templates",
+          "tableTo": "folders",
+          "columnsFrom": [
+            "folder_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniature_templates_id_check": {
+          "name": "miniature_templates_id_check",
+          "value": "\"miniature_templates\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' OR \"miniature_templates\".\"id\" GLOB 'user:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "miniature_templates_image_key_check": {
+          "name": "miniature_templates_image_key_check",
+          "value": "\"miniature_templates\".\"image_key\" IS NULL OR (substr(\"miniature_templates\".\"image_key\", 1, 36) GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' AND substr(\"miniature_templates\".\"image_key\", 37) IN ('.avif', '.gif', '.jpg', '.jpeg', '.png', '.webp', '.img'))"
+        },
+        "miniature_templates_lengths_check": {
+          "name": "miniature_templates_lengths_check",
+          "value": "length(\"miniature_templates\".\"name\") <= 200 AND length(\"miniature_templates\".\"manufacturer\") <= 200 AND length(\"miniature_templates\".\"faction\") <= 200 AND length(\"miniature_templates\".\"image_url\") <= 2000"
+        },
+        "miniature_templates_categories_check": {
+          "name": "miniature_templates_categories_check",
+          "value": "json_valid(\"miniature_templates\".\"categories\") AND json_type(\"miniature_templates\".\"categories\") = 'array'"
+        },
+        "miniature_templates_integers_check": {
+          "name": "miniature_templates_integers_check",
+          "value": "typeof(\"miniature_templates\".\"created_at\") = 'integer' AND typeof(\"miniature_templates\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "miniatures": {
+      "name": "miniatures",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "folder_id": {
+          "name": "folder_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "manufacturer": {
+          "name": "manufacturer",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "faction": {
+          "name": "faction",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "scale": {
+          "name": "scale",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "''"
+        },
+        "painting_status": {
+          "name": "painting_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'NOT_STARTED'"
+        },
+        "image_key": {
+          "name": "image_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_image_url": {
+          "name": "source_image_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "miniatures_folder_idx": {
+          "name": "miniatures_folder_idx",
+          "columns": [
+            "folder_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "miniatures_folder_id_folders_id_fk": {
+          "name": "miniatures_folder_id_folders_id_fk",
+          "tableFrom": "miniatures",
+          "tableTo": "folders",
+          "columnsFrom": [
+            "folder_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "miniatures_id_check": {
+          "name": "miniatures_id_check",
+          "value": "\"miniatures\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "miniatures_image_key_check": {
+          "name": "miniatures_image_key_check",
+          "value": "\"miniatures\".\"image_key\" IS NULL OR (substr(\"miniatures\".\"image_key\", 1, 36) GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' AND substr(\"miniatures\".\"image_key\", 37) IN ('.avif', '.gif', '.jpg', '.jpeg', '.png', '.webp', '.img'))"
+        },
+        "miniatures_lengths_check": {
+          "name": "miniatures_lengths_check",
+          "value": "length(\"miniatures\".\"title\") <= 200 AND length(\"miniatures\".\"notes\") <= 10000 AND length(\"miniatures\".\"manufacturer\") <= 200 AND length(\"miniatures\".\"faction\") <= 200 AND length(\"miniatures\".\"scale\") <= 200 AND length(\"miniatures\".\"source_image_url\") <= 2000"
+        },
+        "miniatures_status_check": {
+          "name": "miniatures_status_check",
+          "value": "\"miniatures\".\"status\" IN ('OWNED', 'WISHLIST')"
+        },
+        "miniatures_painting_status_check": {
+          "name": "miniatures_painting_status_check",
+          "value": "\"miniatures\".\"painting_status\" IN ('NOT_STARTED', 'ASSEMBLED', 'PRIMED', 'IN_PROGRESS', 'COMPLETE')"
+        },
+        "miniatures_integers_check": {
+          "name": "miniatures_integers_check",
+          "value": "typeof(\"miniatures\".\"created_at\") = 'integer' AND typeof(\"miniatures\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "paint_catalog": {
+      "name": "paint_catalog",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "brand": {
+          "name": "brand",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "range": {
+          "name": "range",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "discontinued": {
+          "name": "discontinued",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "color_hex": {
+          "name": "color_hex",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_url": {
+          "name": "source_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "source_label": {
+          "name": "source_label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "paint_catalog_id_check": {
+          "name": "paint_catalog_id_check",
+          "value": "\"paint_catalog\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]' OR \"paint_catalog\".\"id\" GLOB 'user:[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "paint_catalog_lengths_check": {
+          "name": "paint_catalog_lengths_check",
+          "value": "length(\"paint_catalog\".\"brand\") <= 120 AND length(\"paint_catalog\".\"range\") <= 120 AND length(\"paint_catalog\".\"name\") <= 200 AND length(\"paint_catalog\".\"source_url\") <= 2000 AND length(\"paint_catalog\".\"source_label\") <= 200"
+        },
+        "paint_catalog_type_check": {
+          "name": "paint_catalog_type_check",
+          "value": "\"paint_catalog\".\"type\" IN ('PRIMER', 'BASE', 'LAYER', 'SHADE', 'CONTRAST', 'TECHNICAL', 'DRY', 'AIR', 'METALLIC', 'VARNISH', 'INK', 'OTHER') OR \"paint_catalog\".\"type\" IS NULL"
+        },
+        "paint_catalog_discontinued_check": {
+          "name": "paint_catalog_discontinued_check",
+          "value": "\"paint_catalog\".\"discontinued\" IN (0, 1)"
+        },
+        "paint_catalog_color_hex_check": {
+          "name": "paint_catalog_color_hex_check",
+          "value": "\"paint_catalog\".\"color_hex\" IS NULL OR \"paint_catalog\".\"color_hex\" GLOB '#[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]'"
+        },
+        "paint_catalog_integers_check": {
+          "name": "paint_catalog_integers_check",
+          "value": "typeof(\"paint_catalog\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "paint_inventory": {
+      "name": "paint_inventory",
+      "columns": {
+        "paint_id": {
+          "name": "paint_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "stock_level": {
+          "name": "stock_level",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'FULL'"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "paint_inventory_paint_id_paint_catalog_id_fk": {
+          "name": "paint_inventory_paint_id_paint_catalog_id_fk",
+          "tableFrom": "paint_inventory",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "paint_inventory_state_check": {
+          "name": "paint_inventory_state_check",
+          "value": "\"paint_inventory\".\"state\" IN ('OWNED', 'WISHLIST')"
+        },
+        "paint_inventory_stock_level_check": {
+          "name": "paint_inventory_stock_level_check",
+          "value": "\"paint_inventory\".\"stock_level\" IN ('FULL', 'LOW', 'EMPTY')"
+        },
+        "paint_inventory_quantity_check": {
+          "name": "paint_inventory_quantity_check",
+          "value": "\"paint_inventory\".\"quantity\" >= 0"
+        },
+        "paint_inventory_integers_check": {
+          "name": "paint_inventory_integers_check",
+          "value": "typeof(\"paint_inventory\".\"quantity\") = 'integer' AND typeof(\"paint_inventory\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "paint_substitution_ingredients": {
+      "name": "paint_substitution_ingredients",
+      "columns": {
+        "substitution_id": {
+          "name": "substitution_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "paint_id": {
+          "name": "paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parts": {
+          "name": "parts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "paint_substitution_ingredients_paint_idx": {
+          "name": "paint_substitution_ingredients_paint_idx",
+          "columns": [
+            "paint_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "paint_substitution_ingredients_substitution_id_paint_substitutions_id_fk": {
+          "name": "paint_substitution_ingredients_substitution_id_paint_substitutions_id_fk",
+          "tableFrom": "paint_substitution_ingredients",
+          "tableTo": "paint_substitutions",
+          "columnsFrom": [
+            "substitution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "paint_substitution_ingredients_paint_id_paint_catalog_id_fk": {
+          "name": "paint_substitution_ingredients_paint_id_paint_catalog_id_fk",
+          "tableFrom": "paint_substitution_ingredients",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "paint_substitution_ingredients_substitution_id_paint_id_pk": {
+          "columns": [
+            "substitution_id",
+            "paint_id"
+          ],
+          "name": "paint_substitution_ingredients_substitution_id_paint_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "paint_substitution_ingredients_parts_check": {
+          "name": "paint_substitution_ingredients_parts_check",
+          "value": "\"paint_substitution_ingredients\".\"parts\" >= 1"
+        },
+        "paint_substitution_ingredients_integers_check": {
+          "name": "paint_substitution_ingredients_integers_check",
+          "value": "typeof(\"paint_substitution_ingredients\".\"parts\") = 'integer' AND typeof(\"paint_substitution_ingredients\".\"sort_order\") = 'integer' AND typeof(\"paint_substitution_ingredients\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "paint_substitutions": {
+      "name": "paint_substitutions",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "target_paint_id": {
+          "name": "target_paint_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_default": {
+          "name": "is_default",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {
+        "paint_substitutions_target_paint_idx": {
+          "name": "paint_substitutions_target_paint_idx",
+          "columns": [
+            "target_paint_id"
+          ],
+          "isUnique": false
+        },
+        "paint_substitutions_default_idx": {
+          "name": "paint_substitutions_default_idx",
+          "columns": [
+            "target_paint_id"
+          ],
+          "isUnique": true,
+          "where": "\"paint_substitutions\".\"is_default\" = 1"
+        }
+      },
+      "foreignKeys": {
+        "paint_substitutions_target_paint_id_paint_catalog_id_fk": {
+          "name": "paint_substitutions_target_paint_id_paint_catalog_id_fk",
+          "tableFrom": "paint_substitutions",
+          "tableTo": "paint_catalog",
+          "columnsFrom": [
+            "target_paint_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "paint_substitutions_id_check": {
+          "name": "paint_substitutions_id_check",
+          "value": "\"paint_substitutions\".\"id\" GLOB '[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f]-[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'"
+        },
+        "paint_substitutions_lengths_check": {
+          "name": "paint_substitutions_lengths_check",
+          "value": "length(\"paint_substitutions\".\"name\") <= 80"
+        },
+        "paint_substitutions_is_default_check": {
+          "name": "paint_substitutions_is_default_check",
+          "value": "\"paint_substitutions\".\"is_default\" IN (0, 1)"
+        },
+        "paint_substitutions_integers_check": {
+          "name": "paint_substitutions_integers_check",
+          "value": "typeof(\"paint_substitutions\".\"created_at\") = 'integer' AND typeof(\"paint_substitutions\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "vault_account": {
+      "name": "vault_account",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "credential_generation": {
+          "name": "credential_generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "require_sign_in": {
+          "name": "require_sign_in",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(cast(unixepoch('subsec') * 1000 as integer))"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "vault_account_single_owner_check": {
+          "name": "vault_account_single_owner_check",
+          "value": "\"vault_account\".\"id\" = 1"
+        },
+        "vault_account_require_sign_in_check": {
+          "name": "vault_account_require_sign_in_check",
+          "value": "\"vault_account\".\"require_sign_in\" IN (0, 1)"
+        },
+        "vault_account_integers_check": {
+          "name": "vault_account_integers_check",
+          "value": "typeof(\"vault_account\".\"id\") = 'integer' AND typeof(\"vault_account\".\"credential_generation\") = 'integer' AND typeof(\"vault_account\".\"updated_at\") = 'integer'"
+        }
+      }
+    },
+    "vault_sessions": {
+      "name": "vault_sessions",
+      "columns": {
+        "token_hash": {
+          "name": "token_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "vault_sessions_expires_at_idx": {
+          "name": "vault_sessions_expires_at_idx",
+          "columns": [
+            "expires_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "vault_sessions_integers_check": {
+          "name": "vault_sessions_integers_check",
+          "value": "typeof(\"vault_sessions\".\"expires_at\") = 'integer'"
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}
