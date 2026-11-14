@@ -38,7 +38,7 @@
   "scripts": {
     "test": "node --experimental-strip-types --test src/dom/utils/*.test.mjs",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "code-lint": "eslint src/dom --ext .ts,.tsx",
+    "code-lint": "node --max-old-space-size=4096 ../../node_modules/eslint/bin/eslint.js src/dom --ext .ts,.tsx",
     "storybook": "storybook dev -p 6006",
     "storybook:build": "storybook build -o dist/storybook",
     "storybook:test": "vitest run"

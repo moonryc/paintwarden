@@ -19,7 +19,9 @@ The Astro site's committed `src/env.d.ts` loads `astro/client` (including Vite's
 types). Lint and typecheck must work before `astro sync`, dev, or build has generated `.astro/`.
 To reproduce CI, use a fresh clone with `npm ci` and run the steps in
 `.github/workflows/quality.yml` in order, without copying `.astro/`, `dist/`, or `.nx/` from a
-working checkout.
+working checkout. The typed UI ESLint process has an explicit 4 GiB heap budget; the root lint
+command limits Nx to two concurrent projects so Linux runners do not hit Node's smaller default
+heap or exhaust memory running all TypeScript programs together.
 
 Shared UI styling lives in React `sx` props. Colors come from the CSS variables defined in
 `packages/vault-ui/src/dom/theme-tokens.ts`, such as `var(--ink)`, which also feeds the MUI theme,
