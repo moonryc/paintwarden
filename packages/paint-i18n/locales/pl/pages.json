@@ -645,5 +645,6 @@
   "complementaryChoose": "Wybierz farbę, aby wygenerować pozostałe trzy role.",
   "complementarySelected": "Wybrane dopasowanie",
   "complementaryInputMissing": "Tej farby nie ma już w bibliotece. Wybierz inną.",
-  "complementaryOwned": "Posiadane"
+  "complementaryOwned": "Posiadane",
+  "complementaryDistanceHint": "ΔE mierzy różnicę kolorów: im niższa wartość, tym bardziej zbliżone kolory."
 }

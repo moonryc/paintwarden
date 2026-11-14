@@ -617,5 +617,6 @@
   "complementaryChoose": "Escolha uma tinta para gerar as outras três funções.",
   "complementarySelected": "Correspondência selecionada",
   "complementaryInputMissing": "Esta tinta não está mais na biblioteca. Escolha outra.",
-  "complementaryOwned": "Em posse"
+  "complementaryOwned": "Em posse",
+  "complementaryDistanceHint": "ΔE mede a diferença de cor: quanto menor o valor, mais próximas são as cores."
 }

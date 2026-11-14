@@ -589,5 +589,6 @@
   "complementaryChoose": "Choose a paint to generate the other three roles.",
   "complementarySelected": "Selected match",
   "complementaryInputMissing": "This paint is no longer in the library. Choose another paint.",
-  "complementaryOwned": "Owned"
+  "complementaryOwned": "Owned",
+  "complementaryDistanceHint": "ΔE measures color difference: lower is closer."
 }

@@ -645,5 +645,6 @@
   "complementaryChoose": "Выберите краску, чтобы подобрать остальные три роли.",
   "complementarySelected": "Выбранное соответствие",
   "complementaryInputMissing": "Этой краски больше нет в библиотеке. Выберите другую.",
-  "complementaryOwned": "В коллекции"
+  "complementaryOwned": "В коллекции",
+  "complementaryDistanceHint": "ΔE измеряет различие цветов: чем меньше значение, тем ближе цвета."
 }

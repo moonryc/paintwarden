@@ -617,5 +617,6 @@
   "complementaryChoose": "Elige una pintura para generar las otras tres funciones.",
   "complementarySelected": "Coincidencia seleccionada",
   "complementaryInputMissing": "Esta pintura ya no está en la biblioteca. Elige otra.",
-  "complementaryOwned": "En propiedad"
+  "complementaryOwned": "En propiedad",
+  "complementaryDistanceHint": "ΔE mide la diferencia de color: cuanto menor es el valor, más se parecen los colores."
 }

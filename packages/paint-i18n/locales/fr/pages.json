@@ -617,5 +617,6 @@
   "complementaryChoose": "Choisissez une peinture pour générer les trois autres rôles.",
   "complementarySelected": "Correspondance sélectionnée",
   "complementaryInputMissing": "Cette peinture n’est plus dans la bibliothèque. Choisissez-en une autre.",
-  "complementaryOwned": "Possédée"
+  "complementaryOwned": "Possédée",
+  "complementaryDistanceHint": "ΔE mesure la différence de couleur : plus la valeur est faible, plus les couleurs sont proches."
 }

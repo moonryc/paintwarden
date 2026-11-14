@@ -561,5 +561,6 @@
   "complementaryChoose": "選擇一款顏料以產生其他三個角色的顏色。",
   "complementarySelected": "已選配對項目",
   "complementaryInputMissing": "此顏料已不在收藏庫中。請選擇其他顏料。",
-  "complementaryOwned": "已擁有"
+  "complementaryOwned": "已擁有",
+  "complementaryDistanceHint": "ΔE 衡量顏色差異：數值越低，顏色越接近。"
 }

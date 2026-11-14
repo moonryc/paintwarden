@@ -589,5 +589,6 @@
   "complementaryChoose": "Wähle eine Farbe, um die anderen drei Rollen zu erzeugen.",
   "complementarySelected": "Ausgewählter Treffer",
   "complementaryInputMissing": "Diese Farbe ist nicht mehr in der Bibliothek. Wähle eine andere Farbe.",
-  "complementaryOwned": "Im Bestand"
+  "complementaryOwned": "Im Bestand",
+  "complementaryDistanceHint": "ΔE misst den Farbunterschied: Je niedriger der Wert, desto ähnlicher die Farben."
 }

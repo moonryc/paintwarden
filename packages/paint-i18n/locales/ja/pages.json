@@ -561,5 +561,6 @@
   "complementaryChoose": "塗料を選ぶと、残りの3つの役割の色を生成します。",
   "complementarySelected": "選択中の候補",
   "complementaryInputMissing": "この塗料はライブラリにありません。別の塗料を選んでください。",
-  "complementaryOwned": "所有済み"
+  "complementaryOwned": "所有済み",
+  "complementaryDistanceHint": "ΔE は色の差を表します。値が小さいほど近い色です。"
 }

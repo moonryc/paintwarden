@@ -617,5 +617,6 @@
   "complementaryChoose": "Scegli un colore per generare gli altri tre ruoli.",
   "complementarySelected": "Corrispondenza selezionata",
   "complementaryInputMissing": "Questo colore non è più nella libreria. Scegline un altro.",
-  "complementaryOwned": "Posseduto"
+  "complementaryOwned": "Posseduto",
+  "complementaryDistanceHint": "ΔE misura la differenza di colore: più il valore è basso, più i colori sono simili."
 }

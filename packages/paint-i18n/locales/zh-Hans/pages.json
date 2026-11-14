@@ -561,5 +561,6 @@
   "complementaryChoose": "选择一款颜料以生成其他三个角色的颜色。",
   "complementarySelected": "已选匹配项",
   "complementaryInputMissing": "此颜料已不在库中。请选择其他颜料。",
-  "complementaryOwned": "已拥有"
+  "complementaryOwned": "已拥有",
+  "complementaryDistanceHint": "ΔE 衡量颜色差异：数值越低，颜色越接近。"
 }
