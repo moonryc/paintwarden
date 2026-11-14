@@ -293,7 +293,7 @@ try {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
       assert.equal(overflow, false);
       const screenshot = `browser-${width}-${kind}-loading.png`;
-      await page.screenshot({ path: path.join(evidence, screenshot) });
+      await page.screenshot({ path: path.join(evidence, screenshot), animations: "disabled" });
       await page.keyboard.press("Escape");
       await page.locator("[data-dialog-code-loading]").waitFor({ state: "detached" });
       release.resolve();
