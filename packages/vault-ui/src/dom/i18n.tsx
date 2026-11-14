@@ -2,10 +2,26 @@ import { localizedFontVars } from "./theme-tokens";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import * as muiLocales from "@mui/material/locale";
-
+import {
+  enUS,
+  esES,
+  frFR,
+  deDE,
+  itIT,
+  ptBR,
+  nlNL,
+  plPL,
+  ruRU,
+  jaJP,
+  koKR,
+  zhCN,
+  zhTW,
+} from "@mui/material/locale";
 import { i18n, i18nReady, resolveLanguage } from "@paint-vault/i18n/runtime";
 import { theme } from "./theme";
+
+// Explicit imports let Vite discard MUI's other, unsupported language catalogs.
+const muiLocales = { enUS, esES, frFR, deDE, itIT, ptBR, nlNL, plPL, ruRU, jaJP, koKR, zhCN, zhTW };
 export {
   i18n,
   i18nReady,
@@ -105,8 +121,6 @@ function DeviceLanguageProvider({ children, language: requestedLanguage }: Langu
         "zh-Hant": "zhTW",
       } as const
     )[resolveLanguage(language)];
-    // The key is constrained to exported MUI locale names above.
-    // eslint-disable-next-line import/namespace
     return createTheme(theme, muiLocales[key]);
   }, [language]);
   if (!ready) return null;
