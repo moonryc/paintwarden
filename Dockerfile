@@ -8,6 +8,7 @@ COPY package.json package-lock.json ./
 COPY apps/paint-vault/package.json ./apps/paint-vault/package.json
 COPY apps/paint-vault-web/package.json ./apps/paint-vault-web/package.json
 COPY packages/paint-core/package.json ./packages/paint-core/package.json
+COPY packages/paint-i18n/package.json ./packages/paint-i18n/package.json
 COPY packages/vault-ui/package.json ./packages/vault-ui/package.json
 RUN npm ci --no-audit --no-fund
 

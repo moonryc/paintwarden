@@ -23,6 +23,40 @@ export const languageCodes = [
 ];
 const plural = /_(zero|one|two|few|many|other)$/;
 export const baseKey = (key) => key.replace(plural, "");
+export function validateResourceStructure(text) {
+  const value = JSON.parse(text);
+  const failures = [];
+  const source = ts.parseJsonText("locale.json", text);
+  function visit(node, prefix = "") {
+    if (!ts.isObjectLiteralExpression(node)) {
+      failures.push(`${prefix || "root"}: expected object`);
+      return;
+    }
+    if (!node.properties.length) failures.push(`${prefix || "root"}: empty object`);
+    const keys = new Set();
+    for (const property of node.properties) {
+      const key = property.name?.text;
+      const name = prefix ? `${prefix}.${key}` : key;
+      if (keys.has(key)) failures.push(`${name}: duplicate key`);
+      keys.add(key);
+      if (ts.isStringLiteral(property.initializer)) {
+        if (!property.initializer.text.trim()) failures.push(`${name}: empty value`);
+      } else if (ts.isObjectLiteralExpression(property.initializer)) visit(property.initializer, name);
+      else failures.push(`${name}: expected string or object`);
+    }
+  }
+  visit(source.statements[0].expression);
+  return { value, failures };
+}
+function objectPaths(value, prefix = []) {
+  return Object.entries(value)
+    .flatMap(([key, item]) =>
+      item && typeof item === "object"
+        ? [JSON.stringify([...prefix, key]), ...objectPaths(item, [...prefix, key])]
+        : [],
+    )
+    .sort();
+}
 export function flatten(object, prefix = "") {
   return Object.fromEntries(
     Object.entries(object).flatMap(([key, value]) => {
@@ -183,7 +217,15 @@ export function main() {
       failures.push(`${language}: namespace file mismatch`);
     }
     for (const namespace of actual.filter((name) => namespaces.includes(name))) {
-      const translated = flatten(JSON.parse(fs.readFileSync(path.join(directory, namespace), "utf8")));
+      const parsed = validateResourceStructure(fs.readFileSync(path.join(directory, namespace), "utf8"));
+      failures.push(...parsed.failures.map((message) => `${language}/${namespace}: ${message}`));
+      const original = JSON.parse(fs.readFileSync(path.join(localeRoot, "en", namespace), "utf8"));
+      try {
+        assert.deepEqual(objectPaths(parsed.value), objectPaths(original));
+      } catch {
+        failures.push(`${language}/${namespace}: nested object structure mismatch`);
+      }
+      const translated = flatten(parsed.value);
       failures.push(
         ...validateResources(source[namespace], translated, language).map(
           (message) => `${language}/${namespace}: ${message}`,

@@ -46,7 +46,25 @@ const accents: Record<string, string> = {
 };
 export function pseudoText(text: string): string {
   const parts = text.split(/(\{\{.*?\}\}|\$t\(.*?\)|<[^>]*>)/g);
-  return `［${parts.map((part, index) => (index % 2 ? part : part.replace(/[aeiouAEIOU]/g, (c) => accents[c]) + "~".repeat(Math.ceil(part.length * 0.4)))).join("")}］`;
+  return `［${parts
+    .map((part, index) => {
+      if (index % 2) return part;
+      // Distribute expansion over words: a paragraph must not gain a single
+      // unbreakable 60-character padding suffix that no natural language has.
+      const words = part.match(/\S+/g) || [];
+      const weight = words.reduce((sum, word) => sum + word.length, 0);
+      const padding = Math.ceil(part.length * 0.4);
+      let cumulative = 0;
+      let emitted = 0;
+      return part.replace(/\S+/g, (word) => {
+        cumulative += word.length;
+        const target = Math.round((padding * cumulative) / weight);
+        const extra = target - emitted;
+        emitted = target;
+        return word.replace(/[aeiouAEIOU]/g, (c) => accents[c]) + "~".repeat(extra);
+      });
+    })
+    .join("")}］`;
 }
 function pseudoResource(value: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(

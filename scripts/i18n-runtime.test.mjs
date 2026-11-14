@@ -1,3 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { languages } from "../packages/paint-i18n/languages.ts";
+import { flatten } from "./check-i18n.mjs";
+import { localizedFontVars } from "../packages/vault-ui/src/dom/theme-tokens.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
@@ -74,4 +78,46 @@ test("server error boundaries provide stable codes, parameters and safe client f
   assert.deepEqual(await response.json(), { error: "Each paint needs brand and name", ...error });
   const successful = Response.json({ content: "User and plugin data stays untouched" });
   assert.equal(await withPublicError(successful), successful);
+});
+
+test("regional CJK fallback faces do not use the wrong script's font", () => {
+  assert.match(localizedFontVars("ja")["--font-serif"], /Hiragino Mincho/);
+  assert.doesNotMatch(localizedFontVars("ja")["--font-serif"], /Songti SC/);
+  assert.match(localizedFontVars("zh-Hant")["--font-serif"], /Songti TC/);
+  assert.match(localizedFontVars("ko")["--font-sans"], /Apple SD Gothic Neo/);
+});
+
+test("all 13 languages resolve all 56 plural families using current CLDR categories and Intl interpolation", async () => {
+  const families = [];
+  for (const namespace of ["components", "pages", "shell"]) {
+    const resource = flatten(
+      JSON.parse(
+        await readFile(
+          new URL(`../packages/paint-i18n/locales/en/${namespace}.json`, import.meta.url),
+          "utf8",
+        ),
+      ),
+    );
+    for (const key of Object.keys(resource).filter((key) => key.endsWith("_one")))
+      families.push([namespace, key.slice(0, -4)]);
+  }
+  assert.equal(families.length, 56);
+  try {
+    for (const { code } of languages) {
+      await i18n.changeLanguage(code);
+      const rules = new Intl.PluralRules(code);
+      for (const count of [0, 1, 2, 5, 21, 22, 25, 1.5, 1_000_000])
+        for (const [namespace, key] of families) {
+          const raw = i18n.getResource(code, namespace, `${key}_${rules.select(count)}`);
+          assert.equal(typeof raw, "string", `${code}/${namespace}/${key}/${count}`);
+          const text = i18n.t(`${namespace}:${key}`, { count });
+          const expected = raw
+            .replace(/\{\{count, number\}\}/g, new Intl.NumberFormat(code).format(count))
+            .replace(/\{\{count\}\}/g, String(count));
+          assert.equal(text, expected, `${code}/${namespace}/${key}/${count}`);
+        }
+    }
+  } finally {
+    await i18n.changeLanguage("en");
+  }
 });

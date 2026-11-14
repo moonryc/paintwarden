@@ -1,12 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { rawJSX, validateResources } from "./check-i18n.mjs";
+import { rawJSX, validateResources, validateResourceStructure } from "./check-i18n.mjs";
 
 test("locale validation rejects missing/extra/empty keys and interpolation drift", () => {
   const source = { title: "Hello {{name}}", label: "Label" };
   assert.deepEqual(validateResources(source, { title: "Hallo {{name}}", label: "Name" }, "de"), []);
   assert.ok(validateResources(source, { title: "Hallo {{other}}", extra: "" }, "de").length >= 3);
+});
+test("locale validation rejects malformed placeholders and formatter drift", () => {
+  assert.ok(validateResources({ label: "{{count, number}}" }, { label: "{{count, date}}" }, "en").length);
+  assert.ok(validateResources({ label: "Text" }, { label: "{{not!valid}}" }, "en").length);
 });
 test("locale validation uses CLDR cardinal categories, not English key equality", () => {
   const source = { paint_one: "{{count}} paint", paint_other: "{{count}} paints" };
@@ -39,4 +43,10 @@ test("raw JSX checker catches text and accessible attributes, allows explicit ex
     rawJSX("{/* i18n-allow: official product name */}\n<span>Brand Name</span>", "test.tsx"),
     [],
   );
+});
+
+test("locale JSON rejects duplicate keys, empty objects and invalid leaf types", () => {
+  for (const text of ['{"a":"x","a":"y"}', '{"a":{}}', '{"a":[]}', '{"a":false}', '{"a":12}', '{"a":"  "}'])
+    assert.ok(validateResourceStructure(text).failures.length, text);
+  assert.deepEqual(validateResourceStructure('{"nested":{"key":"text"},"flat.key":"value"}').failures, []);
 });
