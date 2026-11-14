@@ -54,7 +54,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const refresh = useVaultStore((s) => s.refresh);
   const sourceRead = usePluginSources();
-  const initialLoading = useInitialPageLoading(sourceRead.loading, Boolean(sourceRead.error));
+  const initialLoading = useInitialPageLoading(sourceRead.loading, Boolean(sourceRead.error), false);
   const { sources } = sourceRead;
   const checkedSources = useRef(false);
   const mounted = useRef(true);

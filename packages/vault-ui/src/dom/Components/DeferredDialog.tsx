@@ -28,7 +28,12 @@ function DelayedDialogSkeleton({
     document.addEventListener("keydown", escape, true);
     return () => document.removeEventListener("keydown", escape, true);
   }, [visible, onClose]);
-  return visible ? <DialogSkeleton kind={kind} title={title} onClose={onClose} /> : null;
+  return visible ? (
+    <>
+      <span hidden data-dialog-code-loading={kind} />
+      <DialogSkeleton kind={kind} title={title} onClose={onClose} />
+    </>
+  ) : null;
 }
 
 // Rejected imports propagate to the app's existing recovery/error boundary.
