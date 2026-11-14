@@ -181,5 +181,7 @@
   "vaultStartupRecovery": "Otwórz folder dzienników, aby sprawdzić dziennik serwera. Ponów próbę połączy z trwającą aktualizacją lub uruchomi serwer ponownie po awarii. Skarbiec i jego kopia odzyskiwania zostaną zachowane.",
   "vaultStartupPleaseWait": "Poczekaj. Kopie zapasowe i aktualizacje mogą potrwać kilka minut. Aplikacja zakończy aktualizację przed zamknięciem.",
   "retryVaultStartup": "Ponów próbę",
-  "openLogsFolder": "Otwórz folder dzienników"
+  "openLogsFolder": "Otwórz folder dzienników",
+  "updateNeedsConsent": "{{value1}} · Aktualizacja wymaga Twojej zgody.",
+  "updateDeferred": "{{value1}} · Aktualizacja odłożona do następnego sprawdzania."
 }

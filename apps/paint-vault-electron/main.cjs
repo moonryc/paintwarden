@@ -296,7 +296,27 @@ function stopLocalServer() {
   startupChanged({ phase: "idle" });
 }
 
+let changingConnection = 0;
+function updaterConnection() {
+  return connection.mode === "remote"
+    ? { ...connection, serverVersion: versionChecks.get(connection.serverUrl)?.version ?? null }
+    : connection;
+}
+
 async function setConnection(input) {
+  if (updater?.isInstalling()) return connection;
+  // Fail closed while a connection choice is being validated or persisted.
+  changingConnection++;
+  updater?.setConnection({ mode: null });
+  try {
+    return await chooseConnection(input);
+  } finally {
+    changingConnection--;
+    if (!changingConnection) updater?.setConnection(updaterConnection());
+  }
+}
+
+async function chooseConnection(input) {
   if (!input || typeof input !== "object") throw new Error(t("errors.connectionMode"));
   let next;
   if (input.mode === "local") {
@@ -351,7 +371,9 @@ async function remoteVersionProblem(origin, { fresh = false } = {}) {
   const check = serverVersion(origin)
     .then((version) => {
       const problem = versionMismatch(app.getVersion(), version);
-      versionChecks.set(origin, { checkedAt: Date.now(), problem });
+      versionChecks.set(origin, { checkedAt: Date.now(), problem, version });
+      if (!changingConnection && connection.mode === "remote" && connection.serverUrl === origin)
+        updater?.setConnection(updaterConnection());
       return problem;
     })
     .finally(() => pendingVersionChecks.delete(origin));
@@ -706,6 +728,7 @@ app
     updater = createUpdater({
       autoUpdater: require("electron-updater").autoUpdater,
       currentVersion: app.getVersion(),
+      connection: updaterConnection(),
       enabled: app.isPackaged && process.env.PAINT_VAULT_DISABLE_UPDATES !== "1",
       onChange: (state) => mainWindow?.webContents.send("update:state", state),
       log: (error) => console.error("Update failed:", error),
@@ -721,6 +744,10 @@ app
     ipcMain.handle("update:install", (event) => {
       allowRenderer(event);
       return updater.install();
+    });
+    ipcMain.handle("update:respond", (event, input) => {
+      allowRenderer(event);
+      return updater.respond(input);
     });
 
     if (connection.mode === "local") void ensureLocalServer().catch((error) => console.error(error));
@@ -740,6 +767,10 @@ app.on("before-quit", (event) => {
     event.preventDefault();
     quitWhenSafe = true;
     startupChanged({ phase: serverProgress.state().phase });
+    return;
+  }
+  if (updater?.installOnQuit()) {
+    event.preventDefault();
     return;
   }
   subscriptionStreams.abortAll();

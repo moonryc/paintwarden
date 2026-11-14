@@ -77,6 +77,7 @@ export default function Vault(props: { onChangeServer?: () => void } = {}) {
         <AppErrorBoundary>
           <FirstScreenPreload>
             <VaultContent {...props} />
+            <UpdatePrompt />
           </FirstScreenPreload>
         </AppErrorBoundary>
       </LanguageProvider>
@@ -568,7 +569,6 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
               <ProjectDrawer miniatureId={selectedId} onClose={closeMini} />
             </DeferredDialog>
           )}
-          <UpdatePrompt />
           <Snackbar
             key={toast?.id}
             open={!!toast}

@@ -174,5 +174,7 @@
   "vaultStartupRecovery": "Apri la cartella dei log per consultare il registro del server. Riprova si riconnette a un aggiornamento in corso o riavvia il server dopo un errore. Il tuo archivio e la sua copia di recupero vengono conservati.",
   "vaultStartupPleaseWait": "Attendi. Backup e aggiornamenti possono richiedere diversi minuti. L’app terminerà l’aggiornamento prima di chiudersi.",
   "retryVaultStartup": "Riprova",
-  "openLogsFolder": "Apri cartella dei log"
+  "openLogsFolder": "Apri cartella dei log",
+  "updateNeedsConsent": "{{value1}} · Un aggiornamento richiede il tuo consenso.",
+  "updateDeferred": "{{value1}} · Aggiornamento rimandato al prossimo controllo."
 }

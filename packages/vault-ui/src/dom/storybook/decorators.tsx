@@ -56,8 +56,15 @@ export function column(maxWidth: number): Decorator {
   };
 }
 
-// A stand-in for the desktop app's preload bridge, reporting a fixed update state.
-function fakeBridge(state: DesktopUpdateState): DesktopBridge {
+// A stand-in for the desktop app's preload bridge, including consent transitions.
+function fakeBridge(state: DesktopUpdateState, overrides: Partial<DesktopBridge>): DesktopBridge {
+  let current = state;
+  const listeners = new Set<(state: DesktopUpdateState) => void>();
+  const publish = (next: DesktopUpdateState) => {
+    current = next;
+    listeners.forEach((listener) => listener(current));
+    return Promise.resolve(current);
+  };
   return {
     getLanguage: () => Promise.resolve("en"),
     setLanguage: (language) => Promise.resolve(language),
@@ -66,17 +73,31 @@ function fakeBridge(state: DesktopUpdateState): DesktopBridge {
     saveBinary: () => Promise.resolve(true),
     saveBackup: () => Promise.resolve(true),
     restoreBackup: () => Promise.resolve({}),
-    getUpdateState: () => Promise.resolve(state),
-    checkForUpdates: () => Promise.resolve(state),
+    getUpdateState: () => Promise.resolve(current),
+    checkForUpdates: () => publish(state),
+    respondToUpdate: ({ action }) =>
+      publish({ ...current, status: action === "defer" ? "deferred" : "downloading" }),
     installUpdate: () => Promise.resolve(true),
-    onUpdateState: () => () => undefined,
+    onUpdateState: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    ...overrides,
   };
 }
 
-function WithBridge({ state, children }: { state: DesktopUpdateState; children: () => ReactNode }) {
+function WithBridge({
+  state,
+  overrides,
+  children,
+}: {
+  state: DesktopUpdateState;
+  overrides: Partial<DesktopBridge>;
+  children: () => ReactNode;
+}) {
   // Installed before the first render so the component sees the bridge as it would in Electron.
   const [installed] = useState(() => {
-    window.paintVaultDesktop = fakeBridge(state);
+    window.paintVaultDesktop = fakeBridge(state, overrides);
     return true;
   });
   useEffect(
@@ -88,8 +109,12 @@ function WithBridge({ state, children }: { state: DesktopUpdateState; children: 
   return installed ? children() : null;
 }
 
-export function desktopBridge(state: DesktopUpdateState): Decorator {
+export function desktopBridge(state: DesktopUpdateState, overrides: Partial<DesktopBridge> = {}): Decorator {
   return function DesktopBridge(Story) {
-    return <WithBridge state={state}>{() => <Story />}</WithBridge>;
+    return (
+      <WithBridge state={state} overrides={overrides}>
+        {() => <Story />}
+      </WithBridge>
+    );
   };
 }

@@ -1,17 +1,83 @@
-import { useTranslation } from "react-i18next";
-import { Alert, Button, Snackbar } from "@mui/material";
+import { Alert, Button, Snackbar, Stack, Typography } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { useDesktopUpdate } from "../utils/desktop-update";
+
+import { Modal } from "./Modal";
+
+type ConsentInput = { version: string; consentId: string; action: "download" | "defer" };
+
+function RemoteUpdateConsent({
+  version,
+  serverVersion,
+  consentId,
+  respond,
+}: {
+  version: string;
+  serverVersion?: string | null;
+  consentId: string;
+  respond: (input: ConsentInput) => Promise<void>;
+}) {
+  const { t } = useTranslation("components");
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const answer = async (action: ConsentInput["action"]) => {
+    if (pending) return;
+    setPending(true);
+    setFailed(false);
+    try {
+      await respond({ version, consentId, action });
+    } catch {
+      setFailed(true);
+    } finally {
+      setPending(false);
+    }
+  };
+  const versions = { version, serverVersion: serverVersion ?? t("updateUnknownServerVersion") };
+  return (
+    <Modal
+      title={t("updateRemoteTitle")}
+      subtitle={t("updateRemoteVersions", versions)}
+      onClose={() => void answer("defer")}
+      footer={
+        <>
+          <Button variant="outlined" disabled={pending} onClick={() => void answer("defer")}>
+            {t("updateNotNow")}
+          </Button>
+          <Button variant="contained" disabled={pending} onClick={() => void answer("download")}>
+            {t("updateAnyway")}
+          </Button>
+        </>
+      }
+    >
+      <Stack spacing={2}>
+        <Alert severity="warning">{t("updateRemoteWarning", versions)}</Alert>
+        <Typography variant="body2">{t("updateRemindNextCheck")}</Typography>
+        {failed && <Alert severity="error">{t("updateConsentFailed")}</Alert>}
+      </Stack>
+    </Modal>
+  );
+}
 
 // Offers to restart the desktop app once an update has downloaded. "Later" hides the prompt;
 // the update still installs the next time the app quits.
 export function UpdatePrompt() {
   const { t } = useTranslation("components");
-  const { state, install } = useDesktopUpdate();
+  const { state, install, respond } = useDesktopUpdate();
   const [dismissed, setDismissed] = useState<string | null>(null);
   const [restarting, setRestarting] = useState(false);
   const ready = state?.status === "ready" && dismissed !== state.version;
+  if (state?.status === "consent-required" && state.version && state.consentId)
+    return (
+      <RemoteUpdateConsent
+        key={state.consentId}
+        version={state.version}
+        serverVersion={state.serverVersion}
+        consentId={state.consentId}
+        respond={respond}
+      />
+    );
   return (
     <Snackbar
       open={ready}

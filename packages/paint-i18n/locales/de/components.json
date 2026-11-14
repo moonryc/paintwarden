@@ -415,5 +415,13 @@
   "manualMiniatureAfterError": "{{message}}. Du kannst trotzdem eine Miniatur manuell erstellen.",
   "existingDividerLabel": "{{label}} (vorhanden)",
   "schemeRefreshError": "{{message}} Deine ungespeicherten Änderungen bleiben erhalten.",
-  "schemesChanged": "{{addedSummary}}, {{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
+  "updateRemoteTitle": "Das Update kann die Serververbindung trennen",
+  "updateRemoteVersions": "Server {{serverVersion}} · App-Update {{version}}",
+  "updateRemoteWarning": "Das Update auf {{version}} kann die Verbindung dieser App zum Server {{serverVersion}} trennen, bis der Server aktualisiert wird.",
+  "updateRemindNextCheck": "Bei „Nicht jetzt“ fragen wir bei der nächsten geplanten oder manuellen Updateprüfung erneut.",
+  "updateNotNow": "Nicht jetzt",
+  "updateAnyway": "Trotzdem aktualisieren",
+  "updateUnknownServerVersion": "unbekannt",
+  "updateConsentFailed": "Deine Auswahl konnte nicht gespeichert werden. Bitte versuche es erneut."
 }

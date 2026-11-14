@@ -457,5 +457,13 @@
   "addSchemeCount_few": "Добавить {{count, number}} схемы",
   "addSchemeCount_many": "Добавить {{count, number}} схем",
   "allPaintsOnHand_few": "Все краски в наличии ({{count, number}})",
-  "allPaintsOnHand_many": "Все краски в наличии ({{count, number}})"
+  "allPaintsOnHand_many": "Все краски в наличии ({{count, number}})",
+  "updateRemoteTitle": "Обновление может отключить приложение от сервера",
+  "updateRemoteVersions": "Сервер {{serverVersion}} · Обновление приложения {{version}}",
+  "updateRemoteWarning": "Обновление до {{version}} может отключить это приложение от сервера {{serverVersion}} до обновления сервера.",
+  "updateRemindNextCheck": "Если выбрать «Не сейчас», мы спросим снова при следующей плановой или ручной проверке обновлений.",
+  "updateNotNow": "Не сейчас",
+  "updateAnyway": "Всё равно обновить",
+  "updateUnknownServerVersion": "неизвестна",
+  "updateConsentFailed": "Не удалось сохранить ваш выбор. Попробуйте ещё раз."
 }

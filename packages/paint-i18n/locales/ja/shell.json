@@ -160,5 +160,7 @@
   "vaultStartupRecovery": "ログフォルダーを開いてサーバーログを確認してください。再試行すると、実行中の更新に再接続するか、障害後にサーバーを再起動します。保管庫と復元用バックアップは保持されます。",
   "vaultStartupPleaseWait": "しばらくお待ちください。バックアップと更新には数分かかる場合があります。アプリは更新を完了してから終了します。",
   "retryVaultStartup": "再試行",
-  "openLogsFolder": "ログフォルダーを開く"
+  "openLogsFolder": "ログフォルダーを開く",
+  "updateNeedsConsent": "{{value1}} · 更新には許可が必要です。",
+  "updateDeferred": "{{value1}} · 次回の更新確認まで延期しました。"
 }

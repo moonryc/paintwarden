@@ -167,5 +167,7 @@
   "vaultStartupRecovery": "Öffne den Protokollordner, um das Serverprotokoll zu prüfen. Erneut versuchen verbindet mit einer laufenden Aktualisierung oder startet den Server nach einem Fehler neu. Dein Tresor und seine Wiederherstellungskopie bleiben erhalten.",
   "vaultStartupPleaseWait": "Bitte warten. Sicherungen und Aktualisierungen können mehrere Minuten dauern. Die App beendet die Aktualisierung vor dem Schließen.",
   "retryVaultStartup": "Erneut versuchen",
-  "openLogsFolder": "Protokollordner öffnen"
+  "openLogsFolder": "Protokollordner öffnen",
+  "updateNeedsConsent": "{{value1}} · Ein Update benötigt deine Zustimmung.",
+  "updateDeferred": "{{value1}} · Update bis zur nächsten Updateprüfung verschoben."
 }

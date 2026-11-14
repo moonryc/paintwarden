@@ -457,5 +457,13 @@
   "manualMiniatureAfterError": "{{message}}. Nadal możesz utworzyć figurkę ręcznie.",
   "existingDividerLabel": "{{label}} (istniejący)",
   "schemeRefreshError": "{{message}} Niezapisane zmiany zostały zachowane.",
-  "schemesChanged": "{{addedSummary}}, {{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
+  "updateRemoteTitle": "Aktualizacja może rozłączyć aplikację z serwerem",
+  "updateRemoteVersions": "Serwer {{serverVersion}} · Aktualizacja aplikacji {{version}}",
+  "updateRemoteWarning": "Aktualizacja do {{version}} może rozłączyć tę aplikację z serwerem {{serverVersion}} do czasu aktualizacji serwera.",
+  "updateRemindNextCheck": "Po wybraniu „Nie teraz” zapytamy ponownie przy następnym zaplanowanym lub ręcznym sprawdzaniu aktualizacji.",
+  "updateNotNow": "Nie teraz",
+  "updateAnyway": "Aktualizuj mimo to",
+  "updateUnknownServerVersion": "nieznana",
+  "updateConsentFailed": "Nie udało się zapisać wyboru. Spróbuj ponownie."
 }

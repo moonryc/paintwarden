@@ -208,7 +208,18 @@ export type DesktopConnectionChoice = { mode: "local" | "remote" | null; serverU
 
 // The desktop app's self-update progress, reported by the Electron main process.
 export type DesktopUpdateState = {
-  status: "disabled" | "idle" | "checking" | "up-to-date" | "downloading" | "ready" | "error";
+  status:
+    | "disabled"
+    | "idle"
+    | "checking"
+    | "up-to-date"
+    | "consent-required"
+    | "deferred"
+    | "downloading"
+    | "ready"
+    | "error";
+  serverVersion?: string | null;
+  consentId?: string;
   currentVersion: string;
   version: string | null;
   progress: number | null;
@@ -235,6 +246,11 @@ export type DesktopBridge = {
   ): Promise<{ error?: string; errorCode?: string; errorParameters?: Record<string, string | number> }>;
   getUpdateState(): Promise<DesktopUpdateState>;
   checkForUpdates(): Promise<DesktopUpdateState>;
+  respondToUpdate(input: {
+    version: string;
+    consentId: string;
+    action: "download" | "defer";
+  }): Promise<DesktopUpdateState>;
   installUpdate(): Promise<boolean>;
   onUpdateState(listener: (state: DesktopUpdateState) => void): () => void;
 };

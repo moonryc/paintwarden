@@ -436,5 +436,13 @@
   "schemesToAdd_many": "{{count, number}} schémas de couleurs à ajouter",
   "schemesAlreadyAttached_many": "{{count, number}} schémas de couleurs déjà sur cette figurine",
   "addSchemeCount_many": "Ajouter {{count, number}} schémas de couleurs",
-  "allPaintsOnHand_many": "Les {{count, number}} peintures sont disponibles"
+  "allPaintsOnHand_many": "Les {{count, number}} peintures sont disponibles",
+  "updateRemoteTitle": "La mise à jour peut déconnecter le serveur",
+  "updateRemoteVersions": "Serveur {{serverVersion}} · Mise à jour de l’application {{version}}",
+  "updateRemoteWarning": "La mise à jour vers {{version}} peut déconnecter cette application du serveur {{serverVersion}} jusqu’à la mise à niveau du serveur.",
+  "updateRemindNextCheck": "Avec « Pas maintenant », nous vous le redemanderons lors de la prochaine recherche de mises à jour, planifiée ou manuelle.",
+  "updateNotNow": "Pas maintenant",
+  "updateAnyway": "Mettre à jour quand même",
+  "updateUnknownServerVersion": "inconnue",
+  "updateConsentFailed": "Impossible d’enregistrer votre choix. Veuillez réessayer."
 }

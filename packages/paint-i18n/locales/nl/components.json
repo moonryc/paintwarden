@@ -415,5 +415,13 @@
   "manualMiniatureAfterError": "{{message}}. Je kunt nog steeds handmatig een miniatuur aanmaken.",
   "existingDividerLabel": "{{label}} (bestaand)",
   "schemeRefreshError": "{{message}} Je niet-opgeslagen wijzigingen blijven behouden.",
-  "schemesChanged": "{{addedSummary}}, {{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
+  "updateRemoteTitle": "Update kan de serververbinding verbreken",
+  "updateRemoteVersions": "Server {{serverVersion}} · App-update {{version}}",
+  "updateRemoteWarning": "Bijwerken naar {{version}} kan de verbinding van deze app met server {{serverVersion}} verbreken totdat de server is bijgewerkt.",
+  "updateRemindNextCheck": "Bij “Niet nu” vragen we het opnieuw bij de volgende geplande of handmatige updatecontrole.",
+  "updateNotNow": "Niet nu",
+  "updateAnyway": "Toch bijwerken",
+  "updateUnknownServerVersion": "onbekend",
+  "updateConsentFailed": "Je keuze kon niet worden opgeslagen. Probeer het opnieuw."
 }

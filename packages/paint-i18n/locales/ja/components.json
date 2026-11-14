@@ -394,5 +394,13 @@
   "manualMiniatureAfterError": "{{message}}。ミニチュアは手動で作成できます。",
   "existingDividerLabel": "{{label}}（既存）",
   "schemeRefreshError": "{{message}} 未保存の変更は保持されています。",
-  "schemesChanged": "{{addedSummary}}、{{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}、{{removedSummary}}",
+  "updateRemoteTitle": "更新によりサーバーとの接続が切れる場合があります",
+  "updateRemoteVersions": "サーバー {{serverVersion}} · アプリの更新 {{version}}",
+  "updateRemoteWarning": "{{version}} に更新すると、サーバーがアップグレードされるまで、このアプリはサーバー {{serverVersion}} に接続できなくなる場合があります。",
+  "updateRemindNextCheck": "「今はしない」を選ぶと、次回の定期または手動の更新確認時に再度お知らせします。",
+  "updateNotNow": "今はしない",
+  "updateAnyway": "それでも更新する",
+  "updateUnknownServerVersion": "不明",
+  "updateConsentFailed": "選択を保存できませんでした。もう一度お試しください。"
 }

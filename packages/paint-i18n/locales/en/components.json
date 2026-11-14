@@ -415,5 +415,13 @@
   "manualMiniatureAfterError": "{{message}}. You can still create a miniature manually.",
   "existingDividerLabel": "{{label}} (existing)",
   "schemeRefreshError": "{{message}} Your unsaved changes are kept.",
-  "schemesChanged": "{{addedSummary}}, {{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
+  "updateRemoteTitle": "Update may disconnect from server",
+  "updateRemoteVersions": "Server {{serverVersion}} · App update {{version}}",
+  "updateRemoteWarning": "Updating to {{version}} may disconnect this app from server {{serverVersion}} until the server is upgraded.",
+  "updateRemindNextCheck": "Not now: we’ll ask again at the next scheduled or manual update check.",
+  "updateNotNow": "Not now",
+  "updateAnyway": "Update anyway",
+  "updateUnknownServerVersion": "unknown",
+  "updateConsentFailed": "Could not save your choice. Please try again."
 }

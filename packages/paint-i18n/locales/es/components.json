@@ -436,5 +436,13 @@
   "schemesToAdd_many": "{{count, number}} esquemas por añadir",
   "schemesAlreadyAttached_many": "{{count, number}} esquemas ya están en esta miniatura",
   "addSchemeCount_many": "Añadir {{count, number}} esquemas",
-  "allPaintsOnHand_many": "Las {{count, number}} pinturas están disponibles"
+  "allPaintsOnHand_many": "Las {{count, number}} pinturas están disponibles",
+  "updateRemoteTitle": "La actualización puede desconectar el servidor",
+  "updateRemoteVersions": "Servidor {{serverVersion}} · Actualización de la app {{version}}",
+  "updateRemoteWarning": "Actualizar a {{version}} puede desconectar esta app del servidor {{serverVersion}} hasta que se actualice el servidor.",
+  "updateRemindNextCheck": "Si eliges «Ahora no», volveremos a preguntar en la próxima búsqueda de actualizaciones programada o manual.",
+  "updateNotNow": "Ahora no",
+  "updateAnyway": "Actualizar de todos modos",
+  "updateUnknownServerVersion": "desconocida",
+  "updateConsentFailed": "No se pudo guardar tu elección. Inténtalo de nuevo."
 }

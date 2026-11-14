@@ -394,5 +394,13 @@
   "manualMiniatureAfterError": "{{message}}。您仍可手動建立微縮模型。",
   "existingDividerLabel": "{{label}}（現有）",
   "schemeRefreshError": "{{message}} 您尚未儲存的變更已保留。",
-  "schemesChanged": "{{addedSummary}}，{{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}，{{removedSummary}}",
+  "updateRemoteTitle": "更新可能導致與伺服器中斷連線",
+  "updateRemoteVersions": "伺服器 {{serverVersion}} · 應用程式更新 {{version}}",
+  "updateRemoteWarning": "更新至 {{version}} 可能導致此應用程式與伺服器 {{serverVersion}} 中斷連線，直到伺服器完成升級。",
+  "updateRemindNextCheck": "選擇「暫不更新」後，我們會在下次排程或手動檢查更新時再次詢問。",
+  "updateNotNow": "暫不更新",
+  "updateAnyway": "仍要更新",
+  "updateUnknownServerVersion": "未知",
+  "updateConsentFailed": "無法儲存您的選擇，請重試。"
 }

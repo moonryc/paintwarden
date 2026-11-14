@@ -169,8 +169,12 @@ function remoteVersions() {
   let calls = 0;
   let now = 0;
   const requests = [];
+  const updaterChanges = [];
   const context = vm.createContext({
     t: desktopTranslate,
+    changingConnection: 0,
+    connection: { mode: "remote", serverUrl: "https://fixture.invalid" },
+    updater: { setConnection: (next) => updaterChanges.push({ ...next }) },
     app: { getVersion: () => "1.0.0" },
     Date: { now: () => now },
     versionMismatch: (_app, server) => (server === "1.0.0" ? null : { serverVersion: server }),
@@ -180,14 +184,17 @@ function remoteVersions() {
     },
   });
   vm.runInContext(
-    source.slice(source.indexOf("const VERSION_RECHECK_MS"), source.indexOf("function rememberSession(")),
+    source.slice(
+      source.indexOf("function updaterConnection("),
+      source.indexOf("async function setConnection("),
+    ) + source.slice(source.indexOf("const VERSION_RECHECK_MS"), source.indexOf("function rememberSession(")),
     context,
   );
-  return { context, requests, calls: () => calls, expire: () => (now += 6 * 60_000) };
+  return { context, requests, updaterChanges, calls: () => calls, expire: () => (now += 6 * 60_000) };
 }
 
 test("concurrent version checks coalesce per origin, including fresh checks, and respect expiry", async () => {
-  const { context, calls, requests, expire } = remoteVersions();
+  const { context, calls, requests, expire, updaterChanges } = remoteVersions();
   const origin = "https://fixture.invalid";
   const checks = Array.from({ length: 10 }, () => context.remoteVersionProblem(origin));
   checks.push(context.remoteVersionProblem(origin, { fresh: true }));
@@ -197,6 +204,11 @@ test("concurrent version checks coalesce per origin, including fresh checks, and
   requests[1].resolve("2.0.0");
   assert.deepEqual(await Promise.all(checks), Array(11).fill(null));
   assert.equal((await other).serverVersion, "2.0.0");
+  assert.deepEqual(
+    updaterChanges,
+    [{ mode: "remote", serverUrl: origin, serverVersion: "1.0.0" }],
+    "only the selected origin updates install permission",
+  );
   assert.equal(await context.remoteVersionProblem(origin), null);
   assert.equal(calls(), 2);
   const fresh = context.remoteVersionProblem(origin, { fresh: true });
@@ -210,6 +222,10 @@ test("concurrent version checks coalesce per origin, including fresh checks, and
   assert.equal(calls(), 4);
   requests[3].resolve("1.0.0");
   assert.equal(await expired, null);
+  assert.deepEqual(
+    updaterChanges.map(({ serverVersion }) => serverVersion),
+    ["1.0.0", "2.0.0", "1.0.0"],
+  );
 });
 
 test("failed version checks are not retained and can be retried", async () => {
@@ -501,9 +517,16 @@ async function subscriptionProxy(t, mode, handler) {
     server.close();
   });
   const timeouts = [],
-    calls = [];
+    calls = [],
+    updaterChanges = [];
+  const updater = {
+    installing: false,
+    isInstalling: () => updater.installing,
+    setConnection: (next) => updaterChanges.push({ ...next }),
+  };
   const context = vm.createContext({
     t: desktopTranslate,
+    updater,
     console,
     URL,
     Headers,
@@ -531,13 +554,11 @@ async function subscriptionProxy(t, mode, handler) {
   vm.runInContext(
     `let connection = ${JSON.stringify(mode === "local" ? { mode } : { mode, serverUrl: origin })};
      const cookies = new Map(); const imageCache = createImageCache();
+     const versionChecks = new Map();
      let imageScope = "initial", authorizationIdentity;
      function rotateImageScope() { imageCache.clear(); imageScope = randomBytes(24).toString("hex"); }
      function session(origin) { return cookies.get(origin); }\n` +
-      source.slice(
-        source.indexOf("async function setConnection("),
-        source.indexOf("// Remote servers must"),
-      ) +
+      source.slice(source.indexOf("let changingConnection ="), source.indexOf("// Remote servers must")) +
       source.slice(source.indexOf("function rememberSession("), source.indexOf("// Posts a file")) +
       source.slice(source.indexOf("async function proxyApi("), source.indexOf("async function serveStatic(")),
     context,
@@ -547,6 +568,8 @@ async function subscriptionProxy(t, mode, handler) {
     origin,
     timeouts,
     calls,
+    updater,
+    updaterChanges,
     request: (pathname = "/api/graphql/stream", options = {}) => {
       const url = new URL(`paintvault://app${pathname}`);
       return context.proxyApi(
@@ -724,3 +747,60 @@ test(
     assert.equal(proxy.timeouts.length, 4, "backup keeps its existing no-deadline behavior");
   },
 );
+
+test("remote version completion caches its result but cannot reopen install permission during a switch", async () => {
+  const { context, requests, updaterChanges } = remoteVersions();
+  const origin = "https://fixture.invalid";
+  context.changingConnection = 1;
+  const pending = context.remoteVersionProblem(origin);
+  requests[0].resolve("1.1.0");
+  await pending;
+  assert.deepEqual(updaterChanges, []);
+  context.changingConnection = 0;
+  assert.equal(context.updaterConnection().serverVersion, "1.1.0");
+  const stale = context.remoteVersionProblem(origin, { fresh: true });
+  context.connection = { mode: "local" };
+  requests[1].resolve("1.2.0");
+  await stale;
+  assert.deepEqual(updaterChanges, [], "completion from the old origin cannot replace the current selection");
+});
+
+for (const succeeds of [true, false]) {
+  test(`connection validation blocks updater installs until ${succeeds ? "success" : "failure"}`, async (t) => {
+    const arrived = deferred(),
+      finish = deferred();
+    const proxy = await subscriptionProxy(t, "local", async (_request, response) => {
+      arrived.resolve();
+      await finish.promise;
+      response.writeHead(succeeds ? 200 : 503, { "content-type": "application/json" });
+      response.end('{"setupRequired":false}');
+    });
+    const pending = proxy.context.setConnection({ mode: "remote", serverUrl: proxy.origin });
+    const failed = succeeds ? null : assert.rejects(pending, /Paint Vault server/);
+    assert.deepEqual(
+      proxy.updaterChanges,
+      [{ mode: null }],
+      "permission closes before asynchronous validation",
+    );
+    await arrived.promise;
+    assert.deepEqual(proxy.updaterChanges, [{ mode: null }]);
+    finish.resolve();
+    if (succeeds) await pending;
+    else await failed;
+    assert.deepEqual(proxy.updaterChanges, [
+      { mode: null },
+      succeeds ? { mode: "remote", serverUrl: proxy.origin, serverVersion: null } : { mode: "local" },
+    ]);
+  });
+}
+
+test("an installation already in progress prevents connection validation and selection changes", async (t) => {
+  const proxy = await subscriptionProxy(t, "local", (_request, response) => {
+    response.end();
+  });
+  proxy.updater.installing = true;
+  const result = await proxy.context.setConnection({ mode: "remote", serverUrl: proxy.origin });
+  assert.equal(result.mode, "local");
+  assert.deepEqual(proxy.calls, []);
+  assert.deepEqual(proxy.updaterChanges, []);
+});

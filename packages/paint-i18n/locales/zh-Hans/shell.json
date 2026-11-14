@@ -160,5 +160,7 @@
   "vaultStartupRecovery": "打开日志文件夹以查看服务器日志。重试将重新连接正在进行的更新，或在失败后重新启动服务器。收藏库及其恢复备份将予以保留。",
   "vaultStartupPleaseWait": "请稍候。备份和更新可能需要几分钟。应用将在更新完成后关闭。",
   "retryVaultStartup": "重试",
-  "openLogsFolder": "打开日志文件夹"
+  "openLogsFolder": "打开日志文件夹",
+  "updateNeedsConsent": "{{value1}} · 更新需要您的同意。",
+  "updateDeferred": "{{value1}} · 已推迟到下次检查更新。"
 }

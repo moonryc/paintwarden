@@ -436,5 +436,13 @@
   "schemesToAdd_many": "{{count, number}} schemi di colore da aggiungere",
   "schemesAlreadyAttached_many": "{{count, number}} schemi di colore già su questa miniatura",
   "addSchemeCount_many": "Aggiungi {{count, number}} schemi di colore",
-  "allPaintsOnHand_many": "Tutti e {{count, number}} i colori disponibili"
+  "allPaintsOnHand_many": "Tutti e {{count, number}} i colori disponibili",
+  "updateRemoteTitle": "L’aggiornamento potrebbe disconnettere il server",
+  "updateRemoteVersions": "Server {{serverVersion}} · Aggiornamento app {{version}}",
+  "updateRemoteWarning": "L’aggiornamento a {{version}} potrebbe disconnettere questa app dal server {{serverVersion}} finché il server non viene aggiornato.",
+  "updateRemindNextCheck": "Scegliendo «Non ora», te lo chiederemo di nuovo al prossimo controllo degli aggiornamenti, programmato o manuale.",
+  "updateNotNow": "Non ora",
+  "updateAnyway": "Aggiorna comunque",
+  "updateUnknownServerVersion": "sconosciuta",
+  "updateConsentFailed": "Impossibile salvare la scelta. Riprova."
 }

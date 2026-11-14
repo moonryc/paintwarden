@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("paintVaultDesktop", {
   getUpdateState: () => ipcRenderer.invoke("update:get"),
   checkForUpdates: () => ipcRenderer.invoke("update:check"),
   installUpdate: () => ipcRenderer.invoke("update:install"),
+  respondToUpdate: (input) => ipcRenderer.invoke("update:respond", input),
   onUpdateState: (listener) => {
     const handler = (_event, state) => listener(state);
     ipcRenderer.on("update:state", handler);

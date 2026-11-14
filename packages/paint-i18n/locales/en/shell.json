@@ -167,5 +167,7 @@
   "vaultStartupRecovery": "Open the logs folder to review the server log. Retry will reconnect to an update still running, or start the server again after a failure. Your vault and its recovery backup are kept.",
   "vaultStartupPleaseWait": "Please wait. Backups and updates can take several minutes. The app will finish the update before closing.",
   "retryVaultStartup": "Retry",
-  "openLogsFolder": "Open logs folder"
+  "openLogsFolder": "Open logs folder",
+  "updateNeedsConsent": "{{value1}} · An update needs your permission.",
+  "updateDeferred": "{{value1}} · Update postponed until the next update check."
 }

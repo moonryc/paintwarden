@@ -436,5 +436,13 @@
   "manualMiniatureAfterError": "{{message}}. Você ainda pode criar uma miniatura manualmente.",
   "existingDividerLabel": "{{label}} (existente)",
   "schemeRefreshError": "{{message}} Suas alterações não salvas foram mantidas.",
-  "schemesChanged": "{{addedSummary}}, {{removedSummary}}"
+  "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
+  "updateRemoteTitle": "A atualização pode desconectar do servidor",
+  "updateRemoteVersions": "Servidor {{serverVersion}} · Atualização do app {{version}}",
+  "updateRemoteWarning": "Atualizar para {{version}} pode desconectar este app do servidor {{serverVersion}} até que o servidor seja atualizado.",
+  "updateRemindNextCheck": "Ao escolher “Agora não”, perguntaremos novamente na próxima verificação de atualizações, agendada ou manual.",
+  "updateNotNow": "Agora não",
+  "updateAnyway": "Atualizar mesmo assim",
+  "updateUnknownServerVersion": "desconhecida",
+  "updateConsentFailed": "Não foi possível salvar sua escolha. Tente novamente."
 }

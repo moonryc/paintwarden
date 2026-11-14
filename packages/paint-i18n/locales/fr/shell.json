@@ -174,5 +174,7 @@
   "vaultStartupRecovery": "Ouvrez le dossier des journaux pour consulter le journal du serveur. Réessayer reconnecte une mise à jour en cours ou redémarre le serveur après un échec. Votre coffre et sa sauvegarde de récupération sont conservés.",
   "vaultStartupPleaseWait": "Veuillez patienter. Les sauvegardes et les mises à jour peuvent prendre plusieurs minutes. L’application terminera la mise à jour avant de se fermer.",
   "retryVaultStartup": "Réessayer",
-  "openLogsFolder": "Ouvrir le dossier des journaux"
+  "openLogsFolder": "Ouvrir le dossier des journaux",
+  "updateNeedsConsent": "{{value1}} · Une mise à jour nécessite votre accord.",
+  "updateDeferred": "{{value1}} · Mise à jour reportée à la prochaine recherche."
 }
