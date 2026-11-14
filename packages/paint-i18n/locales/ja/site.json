@@ -38,8 +38,6 @@
   "docs.formOrChoose": "の形式で貼り付けるか、",
   "docs.uploadZip": ".zipをアップロード",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": "を選んでください。カタログが依存するプラグインも一緒にインストールされます。",
-  "docs.toTryItInstallTheExamplePlugin": "試してみるには、サンプルプラグインの",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": "をインストールしてください。塗料・カラースキーム・テンプレートの小さなサンプルカタログです。保管庫内で使っていなければ、後から削除できます。",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "インストール済みのカタログはオフラインでも使えます。GitHubのプラグインは更新の確認と同期が可能です。アップロードしたプラグインを更新するには、新しいバージョンをアップロードしてください。同じバージョンでは変更されず、古いバージョンはインストール済みのものを削除するまで受け付けられません。プラグイン内の塗料・カラースキーム・テンプレートを保管庫で使わなくなれば、プラグインを削除できます。使用中の項目があればアプリに一覧表示されます。",
   "docs.createPlugin": "プラグインを作成",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "では、自作の塗料・カラースキーム・テンプレートを、すぐ公開できるリポジトリにまとめられます。各ファイルの詳細は",

@@ -38,8 +38,6 @@
   "docs.formOrChoose": "oppure scegli",
   "docs.uploadZip": "Carica .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". I plugin da cui dipende un catalogo vengono installati insieme ad esso.",
-  "docs.toTryItInstallTheExamplePlugin": "Per provare, installa il plugin di esempio",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", un piccolo catalogo con colori, schemi di colore e modelli predefiniti di esempio. Puoi rimuoverlo in seguito, purché nessun elemento del tuo archivio ne usi i contenuti.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "I cataloghi installati rimangono disponibili offline. Per i plugin da GitHub puoi controllare gli aggiornamenti e sincronizzarli. Per aggiornare un plugin caricato, caricane una versione più recente; caricare la stessa versione non cambia nulla, mentre una versione precedente viene rifiutata finché non rimuovi quella installata. Puoi rimuovere un plugin quando il tuo archivio non ne usa più colori, schemi di colore o modelli predefiniti; l'app elenca gli elementi che li usano ancora.",
   "docs.createPlugin": "Crea plugin",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "ti permette di preparare i tuoi colori, schemi di colore e modelli predefiniti come repository pronto da pubblicare. La",

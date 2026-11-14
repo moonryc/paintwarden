@@ -38,8 +38,6 @@
   "docs.formOrChoose": "，或選擇",
   "docs.uploadZip": "上傳 .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": "。目錄所需的外掛程式會一併安裝。",
-  "docs.toTryItInstallTheExamplePlugin": "若想試用，可以安裝範例外掛程式",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": "，其中包含少量示範塗料、配色方案與範本。只要資料庫內沒有項目使用其中的內容，之後即可移除。",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "已安裝的目錄可離線使用。從 GitHub 安裝的外掛程式可以檢查更新並同步。若要更新上傳的外掛程式，請上傳較新的版本；上傳相同版本不會變更任何內容，而安裝舊版前必須先移除現有版本。當資料庫不再使用某外掛程式的塗料、配色方案或範本時，即可將其移除；應用程式會列出仍在使用的項目。",
   "docs.createPlugin": "建立外掛程式",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "可將自己的塗料、配色方案與範本打包為可直接發布的儲存庫。",

@@ -159,7 +159,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   if (auth?.setupRequired || (auth?.requireSignIn && !auth.authenticated))
     return (
       <Box
-        component="div"
+        component="main"
         sx={{
           boxSizing: "border-box",
           display: "flex",

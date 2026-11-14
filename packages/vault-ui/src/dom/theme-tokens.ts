@@ -26,9 +26,12 @@ export const colors = {
   goldText: "#e8c84a",
   ok: "#85c46c",
   okSoft: "#24331f",
+  // Filled success notifications need a darker background for white text.
+  okStrong: "#416c32",
   rust: "#ff6a5c",
   rustSoft: "#3d211e",
   wishlist: "#f472b6",
+  wishlistSoft: "#3d2833",
   sky: "#66c3cc",
   // Background for white text, such as the update prompt; sky itself is too light for it.
   skyStrong: "#2f6a70",

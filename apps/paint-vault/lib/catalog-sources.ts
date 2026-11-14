@@ -196,8 +196,8 @@ export async function addCatalogSource(url: string) {
 
 // Installs a source from an uploaded .zip; its dependencies still come from GitHub. The plugin's
 // name identifies it, so a .zip whose name matches an installed uploaded plugin replaces it only
-// with a newer version: the same version changes nothing, and an older one is refused until the
-// installed plugin is removed.
+// with a newer version: the same version refreshes only the logo, and an older one is refused
+// until the installed plugin is removed.
 export async function addUploadedCatalogSource(bytes: Uint8Array) {
   const upload = await readSourceZip(bytes);
   return installPrepared(upload.id, async (prepared) => {

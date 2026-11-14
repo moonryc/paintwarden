@@ -38,8 +38,6 @@
   "docs.formOrChoose": "of kies",
   "docs.uploadZip": ".zip uploaden",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Plugins waarvan een catalogus afhankelijk is, worden mee geïnstalleerd.",
-  "docs.toTryItInstallTheExamplePlugin": "Probeer het uit door de voorbeeldplugin te installeren:",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", een kleine catalogus met voorbeeldverven, kleurenschema's en sjablonen. Je kunt deze daarna weer verwijderen, zolang niets in je kluis de items ervan gebruikt.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Geïnstalleerde catalogi blijven offline beschikbaar. Plugins van GitHub kun je controleren op updates en synchroniseren. Upload een nieuwere versie om een geüploade plugin bij te werken; dezelfde versie uploaden verandert niets en een oudere versie wordt geweigerd totdat de geïnstalleerde versie is verwijderd. Je kunt een plugin verwijderen zodra je kluis de verven, kleurenschema's of sjablonen ervan niet meer gebruikt; de app toont wat er nog van afhankelijk is.",
   "docs.createPlugin": "Plugin maken",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "bundelt je eigen verven, kleurenschema's en sjablonen als een repository die klaar is om te publiceren. De",

@@ -38,8 +38,6 @@
   "docs.formOrChoose": "ein oder wähle",
   "docs.uploadZip": ".zip hochladen",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Plugins, die ein Katalog benötigt, werden mitinstalliert.",
-  "docs.toTryItInstallTheExamplePlugin": "Installiere zum Ausprobieren das Beispiel-Plugin",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", einen kleinen Katalog mit Beispielfarben, Farbschemata und Vorlagen. Du kannst es später wieder entfernen, solange nichts in deinem Tresor seine Einträge verwendet.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Installierte Kataloge bleiben offline verfügbar. Für Plugins von GitHub kannst du nach Updates suchen und sie synchronisieren. Um ein hochgeladenes Plugin zu aktualisieren, lade eine neuere Version hoch. Dieselbe Version ändert nichts; eine ältere Version wird abgelehnt, bis du die installierte entfernt hast. Ein Plugin lässt sich entfernen, sobald dein Tresor keine seiner Farben, Farbschemata oder Vorlagen mehr verwendet. Die App zeigt dir alle noch bestehenden Verwendungen.",
   "docs.createPlugin": "Plugin erstellen",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "packt deine eigenen Farben, Farbschemata und Vorlagen in ein veröffentlichungsfertiges Repository. Die",

@@ -38,8 +38,6 @@
   "docs.formOrChoose": "form or choose",
   "docs.uploadZip": "Upload .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Plugins a catalog depends on are installed with it.",
-  "docs.toTryItInstallTheExamplePlugin": "To try it, install the example plugin",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", a small catalog of sample paints, schemes, and templates. It can be removed afterward, as long as nothing in your vault uses its items.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Installed catalogs stay available offline. Plugins from GitHub can be checked for updates and synced. To update an uploaded plugin, upload a newer version of it; uploading the same version changes nothing, and an older version is refused until the installed one is removed. A plugin can be removed once your vault no longer uses its paints, schemes, or templates; the app lists anything that still does.",
   "docs.createPlugin": "Create plugin",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "packages your own paints, schemes, and templates as a ready-to-publish repository. The",

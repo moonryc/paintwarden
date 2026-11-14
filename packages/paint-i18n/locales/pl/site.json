@@ -38,8 +38,6 @@
   "docs.formOrChoose": "lub wybierz",
   "docs.uploadZip": "Prześlij .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Wtyczki wymagane przez katalog są instalowane razem z nim.",
-  "docs.toTryItInstallTheExamplePlugin": "Aby wypróbować aplikację, zainstaluj przykładową wtyczkę",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", czyli mały katalog przykładowych farb, schematów i szablonów. Możesz ją potem usunąć, o ile nic w skarbcu nie korzysta z jej elementów.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Zainstalowane katalogi pozostają dostępne offline. Wtyczki z GitHub można sprawdzać pod kątem aktualizacji i synchronizować. Aby zaktualizować wtyczkę z pliku, prześlij jej nowszą wersję. Przesłanie tej samej wersji nic nie zmienia, a starsza zostanie odrzucona, dopóki nie usuniesz zainstalowanej. Wtyczkę można usunąć, gdy skarbiec nie korzysta już z jej farb, schematów ani szablonów. Aplikacja pokaże, co nadal z niej korzysta.",
   "docs.createPlugin": "Opcja Utwórz wtyczkę",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "pakuje własne farby, schematy i szablony w repozytorium gotowe do publikacji. Poradnik",

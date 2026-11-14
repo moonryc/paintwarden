@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { checkReleaseVersion } from "./check-release-version.mjs";
 
-// Keep the expected release surface independent of the implementation's list.
+// Keep the expected release surface independent of the discovery implementation.
 const directories = [
   "",
   "apps/paint-vault",
@@ -14,6 +14,7 @@ const directories = [
   "apps/paint-vault-site",
   "apps/paint-vault-electron",
   "packages/paint-core",
+  "packages/paint-i18n",
   "packages/vault-ui",
 ];
 const manifests = directories.map((directory) => (directory ? `${directory}/package.json` : "package.json"));
@@ -21,6 +22,16 @@ const version = "1.2.3";
 function fixture() {
   return {
     ...Object.fromEntries(manifests.map((file) => [file, { version }])),
+    "package.json": {
+      version,
+      workspaces: [
+        "apps/paint-vault",
+        "apps/paint-vault-web",
+        "apps/paint-vault-site",
+        "apps/paint-vault-electron",
+        "packages/*",
+      ],
+    },
     "package-lock.json": {
       version,
       packages: Object.fromEntries(directories.map((directory) => [directory, { version }])),
@@ -28,10 +39,14 @@ function fixture() {
   };
 }
 function check(files, tag = `v${version}`) {
-  return checkReleaseVersion(tag, (file) => {
-    if (!Object.hasOwn(files, file)) throw new Error("fixture file missing");
-    return files[file];
-  });
+  return checkReleaseVersion(
+    tag,
+    (file) => {
+      if (!Object.hasOwn(files, file)) throw new Error("fixture file missing");
+      return files[file];
+    },
+    (pattern) => manifests.filter((file) => path.matchesGlob(file, `${pattern}/package.json`)),
+  );
 }
 
 for (const tag of ["v1.2.3", "1.2.3", "v0.0.0", "v12.34.56"]) {
@@ -98,7 +113,7 @@ for (const directory of directories) {
 test("rejects missing lockfile and missing packages map", () => {
   const files = fixture();
   delete files["package-lock.json"].packages;
-  assert.equal(check(files).errors.length, 7);
+  assert.equal(check(files).errors.length, directories.length);
   delete files["package-lock.json"];
   assert.ok(check(files).errors.some((error) => error.startsWith("Cannot read package-lock.json:")));
 });
@@ -109,7 +124,7 @@ test("reports malformed JSON as a readable validation failure", () => {
 test("reports multiple version mismatches together", () => {
   const files = fixture();
   for (const manifest of manifests) files[manifest].version = "9.9.9";
-  assert.equal(check(files).errors.length, 7);
+  assert.equal(check(files).errors.length, directories.length);
 });
 
 function cli(t, { tag, envTag, mutate = () => {} } = {}) {
@@ -143,10 +158,7 @@ for (const options of [{ tag: "v1.2.3" }, { envTag: "v1.2.3" }, { tag: "v1.2.3",
   test(`CLI succeeds: ${JSON.stringify(options)}`, (t) => {
     const result = cli(t, options);
     assert.equal(result.status, 0, result.stderr);
-    assert.match(
-      result.stdout,
-      /All seven root\/workspace packages and root lockfile versions are at 1\.2\.3/,
-    );
+    assert.match(result.stdout, /All root\/workspace packages and root lockfile versions are at 1\.2\.3/);
     assert.equal(result.stderr, "");
   });
 }
@@ -168,4 +180,106 @@ test("CLI fails version drift without printing success", (t) => {
   assert.equal(result.status, 1);
   assert.match(result.stderr, /packages\["packages\/vault-ui"\] version is 9\.9\.9/);
   assert.equal(result.stdout, "");
+});
+
+for (const directory of directories.slice(1)) {
+  for (const target of ["manifest", "lock entry"]) {
+    test(`CLI discovers and rejects ${directory} ${target} version drift`, (t) => {
+      const result = cli(t, {
+        tag: `v${version}`,
+        mutate: (files) => {
+          const entry =
+            target === "manifest"
+              ? files[`${directory}/package.json`]
+              : files["package-lock.json"].packages[directory];
+          entry.version = "9.9.9";
+        },
+      });
+      assert.equal(result.status, 1);
+      assert.ok(result.stderr.includes(directory), result.stderr);
+      assert.match(result.stderr, /version is 9\.9\.9/);
+      assert.equal(result.stdout, "");
+    });
+  }
+}
+
+for (const directory of ["packages/future-workspace", "tools/future-workspace"]) {
+  for (const mutation of ["none", "manifest drift", "lock drift", "missing lock entry"]) {
+    test(`CLI discovers future workspace ${directory}: ${mutation}`, (t) => {
+      const result = cli(t, {
+        tag: `v${version}`,
+        mutate: (files) => {
+          // packages/* already covers the new package; a new explicit declaration
+          // must work too, without updating the checker or its fixture directory list.
+          if (directory.startsWith("tools/")) files["package.json"].workspaces.push(directory);
+          files[`${directory}/package.json`] = {
+            version: mutation === "manifest drift" ? "9.9.9" : version,
+          };
+          if (mutation !== "missing lock entry") {
+            files["package-lock.json"].packages[directory] = {
+              version: mutation === "lock drift" ? "9.9.9" : version,
+            };
+          }
+        },
+      });
+      assert.equal(result.status, mutation === "none" ? 0 : 1, result.stderr);
+      if (mutation === "none") {
+        assert.equal(result.stderr, "");
+      } else {
+        assert.ok(result.stderr.includes(directory), result.stderr);
+        assert.match(result.stderr, /version is (9\.9\.9|missing)/);
+        assert.equal(result.stdout, "");
+      }
+    });
+  }
+}
+
+test("supports object-form workspace declarations and overlapping patterns", (t) => {
+  const result = cli(t, {
+    tag: `v${version}`,
+    mutate: (files) => {
+      files["package.json"].workspaces = {
+        packages: [...files["package.json"].workspaces, "packages/paint-i18n"],
+      };
+    },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, "");
+});
+
+test("reports an overlapping workspace only once", () => {
+  const files = fixture();
+  files["package.json"].workspaces.push("packages/paint-i18n");
+  files["packages/paint-i18n/package.json"].version = "9.9.9";
+  assert.equal(check(files).errors.length, 1);
+});
+
+for (const workspaces of [undefined, "packages/*", {}, [42], [""]]) {
+  test(`rejects invalid workspace declarations: ${JSON.stringify(workspaces)}`, () => {
+    const files = fixture();
+    files["package.json"].workspaces = workspaces;
+    assert.ok(check(files).errors.some((error) => error.startsWith("package.json workspaces must")));
+  });
+}
+
+test("CLI fails closed if a declared workspace pattern matches no manifests", (t) => {
+  const result = cli(t, {
+    tag: `v${version}`,
+    mutate: (files) => files["package.json"].workspaces.push("tools/missing"),
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /No workspace package.json matches "tools\/missing"/);
+  assert.equal(result.stdout, "");
+});
+
+test("reports workspace discovery failures as readable validation failures", () => {
+  const files = fixture();
+  const result = checkReleaseVersion(
+    `v${version}`,
+    (file) => files[file],
+    () => {
+      throw new Error("cannot list directory");
+    },
+  );
+  assert.ok(result.errors.some((error) => /Cannot discover workspaces.*cannot list directory/.test(error)));
 });

@@ -233,9 +233,15 @@ After changing the schema, commit both `apps/paint-vault/db/schema.ts` and the
 generated files in `apps/paint-vault/drizzle/`.
 
 Packaged desktop apps update themselves from this repository's published GitHub
-releases. They check shortly after launch and every six hours, download a new
-version in the background, and offer to restart; an update the user postpones
-installs when the app quits. Data & settings shows the app version and has
+releases. They check shortly after launch and every six hours. In local mode,
+updates download in the background and offer to restart; a downloaded update
+installs when the app quits. In remote mode, an update that differs from the
+selected server's version first asks for consent, warning that updating will
+disconnect this app until the server matches. **Update anyway** permits the
+download; **Not now**, closing, or Escape defers it until the next scheduled or
+manual check. Switching connections invalidates that consent. See the
+[desktop update policy](docs/desktop-update-policy.md) for the full behavior.
+Data & settings shows the app version and has
 **Check for updates**. Unpackaged runs never update, and setting
 `PAINT_VAULT_DISABLE_UPDATES=1` turns updates off for a packaged test run.
 
@@ -244,11 +250,13 @@ installs when the app quits. Data & settings shows the app version and has
 The desktop app connects only to a server of exactly its own version, so the app
 and server are always released together under one version number.
 
-1. Set the same `version` in all seven root/workspace manifests:
+1. Set the same `version` in the root manifest and every workspace manifest:
    `package.json`, `apps/paint-vault/package.json`,
    `apps/paint-vault-electron/package.json`, `apps/paint-vault-web/package.json`,
-   `apps/paint-vault-site/package.json`, `packages/paint-core/package.json`, and
-   `packages/vault-ui/package.json`. Run `npm install --package-lock-only` with
+   `apps/paint-vault-site/package.json`, `packages/paint-core/package.json`,
+   `packages/paint-i18n/package.json`, and `packages/vault-ui/package.json`.
+   The checker discovers workspaces from root `package.json`, including future packages.
+   Run `npm install --package-lock-only` with
    the Node version in `.nvmrc` to update `package-lock.json`, then run
    `node scripts/check-release-version.mjs v1.2.3` (using the intended tag).
    The checker verifies every manifest and the root/workspace lockfile versions.
@@ -310,7 +318,8 @@ does not provide an offline replica or queued writes.
 
 Developer references: [architecture](docs/architecture.md), [screen data loading](docs/data-loading.md),
 [adding queries/fragments and codegen](docs/graphql-development.md), and
-[final migration benchmarks](docs/benchmarks/graphql-final.md).
+[final migration benchmarks](docs/benchmarks/graphql-final.md),
+[localization](docs/i18n.md), and [image thumbnails](docs/image-thumbnails.md).
 
 ## Troubleshooting
 

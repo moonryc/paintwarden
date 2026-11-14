@@ -38,8 +38,6 @@
   "docs.formOrChoose": "o elige",
   "docs.uploadZip": "Subir .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Los plugins de los que depende un catálogo se instalan junto con él.",
-  "docs.toTryItInstallTheExamplePlugin": "Para probarlo, instala el plugin de ejemplo",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", un pequeño catálogo de pinturas, esquemas y plantillas de muestra. Puedes eliminarlo después, siempre que ningún elemento de tu almacén lo utilice.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Los catálogos instalados siguen disponibles sin conexión. Puedes buscar actualizaciones y sincronizar los plugins de GitHub. Para actualizar un plugin subido, sube una versión más reciente; subir la misma versión no cambia nada y no se admite una versión anterior hasta que se elimine la instalada. Puedes eliminar un plugin cuando tu almacén ya no use sus pinturas, esquemas o plantillas; la aplicación muestra todo lo que aún los utiliza.",
   "docs.createPlugin": "Crear plugin",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "empaqueta tus pinturas, esquemas y plantillas en un repositorio listo para publicar. La",

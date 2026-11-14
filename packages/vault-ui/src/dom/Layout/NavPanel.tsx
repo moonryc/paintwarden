@@ -257,7 +257,7 @@ export function NavPanel({
                                 },
                           key === "wishlist"
                             ? {
-                                bgcolor: "color-mix(in oklab, var(--wishlist) 14%, var(--surface-raised))",
+                                bgcolor: "var(--wishlist-soft)",
                                 color: "var(--wishlist)",
                               }
                             : {},

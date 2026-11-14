@@ -38,8 +38,6 @@
   "docs.formOrChoose": "ou escolha",
   "docs.uploadZip": "Enviar .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Os plugins dos quais um catálogo depende são instalados junto com ele.",
-  "docs.toTryItInstallTheExamplePlugin": "Para experimentar, instale o plugin de exemplo",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", um pequeno catálogo com amostras de tintas, esquemas de cores e predefinições. Ele pode ser removido depois, desde que nada no seu cofre use os itens dele.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Os catálogos instalados ficam disponíveis offline. É possível verificar atualizações e sincronizar plugins do GitHub. Para atualizar um plugin enviado por arquivo, envie uma versão mais recente; enviar a mesma versão não altera nada, e uma versão mais antiga é recusada até que a instalada seja removida. Um plugin pode ser removido quando seu cofre não usar mais suas tintas, esquemas de cores ou predefinições; o aplicativo lista tudo o que ainda os usa.",
   "docs.createPlugin": "Criar plugin",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "empacota suas próprias tintas, esquemas de cores e predefinições em um repositório pronto para publicar. O",

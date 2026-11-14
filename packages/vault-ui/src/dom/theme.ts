@@ -65,6 +65,21 @@ export const theme = createTheme({
     button: { textTransform: "none", fontWeight: 650 },
   },
   components: {
+    MuiFormLabel: {
+      styleOverrides: {
+        root: { "&.Mui-focused:not(.Mui-error)": { color: "var(--brand-text)" } },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          "&.MuiAlert-filled.MuiAlert-colorSuccess": {
+            backgroundColor: "var(--ok-strong)",
+            color: "var(--on-scrim)",
+          },
+        },
+      },
+    },
     MuiPaper: { styleOverrides: { root: { backgroundImage: "none" } } },
     MuiCard: {
       defaultProps: { variant: "outlined" },

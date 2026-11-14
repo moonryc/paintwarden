@@ -38,8 +38,6 @@
   "docs.formOrChoose": "ou choisissez",
   "docs.uploadZip": "Importer un .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": ". Les extensions dont dépend un catalogue sont installées avec lui.",
-  "docs.toTryItInstallTheExamplePlugin": "Pour essayer, installez l’extension d’exemple",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": ", un petit catalogue d’exemples de peintures, de schémas de couleurs et de modèles. Vous pourrez ensuite la supprimer si aucun élément de votre coffre n’utilise son contenu.",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "Les catalogues installés restent disponibles hors ligne. Vous pouvez rechercher des mises à jour et synchroniser les extensions provenant de GitHub. Pour mettre à jour une extension importée, importez une version plus récente ; importer la même version ne change rien, et une version antérieure est refusée tant que la version installée n’a pas été supprimée. Une extension peut être supprimée dès que votre coffre n’utilise plus ses peintures, schémas de couleurs ou modèles ; l’application indique tout ce qui les utilise encore.",
   "docs.createPlugin": "Créer une extension",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "regroupe vos peintures, schémas de couleurs et modèles dans un dépôt prêt à publier. Le",

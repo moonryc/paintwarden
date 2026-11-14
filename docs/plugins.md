@@ -74,7 +74,7 @@ An update compares `version` in `source.json` with the installed version:
 | The same                  | Only `logo.svg` is refreshed. Edits to the catalog are ignored until `version` changes. |
 | Lower                     | The installed version is kept, and Settings → Plugins shows an error.                   |
 
-An uploaded plugin is updated by uploading a `.zip` with a higher version. Uploading the same version changes nothing. A lower version is refused until the installed plugin is removed.
+An uploaded plugin is updated by uploading a `.zip` with a higher version. Uploading the same version keeps the catalog and catalog images unchanged, but refreshes `logo.svg` (or removes the installed logo if the upload omits it). A lower version is refused until the installed plugin is removed.
 
 When a new version is installed:
 
@@ -134,7 +134,7 @@ Owner items have `user:<uuid>` IDs in the vault. The export uses the bare UUID, 
 
 To release a change:
 
-- Edit the files and raise `version`. Nothing reaches users until `version` changes.
+- Edit the files and raise `version`. Catalog changes reach users only when `version` changes; logos can refresh without a version bump.
 - Never change or reuse a published ID, because vaults and backups refer to it.
 - When a paint is no longer made, set `discontinued: true`. Removing it would delete it from vaults that don't use it.
 

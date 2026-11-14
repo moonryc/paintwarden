@@ -13,7 +13,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Screenshot, Surface, serif } from "../components/primitives";
 import { siteT as t } from "../i18n";
-import { examplePlugin, repository } from "../links";
+import { repository } from "../links";
 
 const steps = () => [
   {
@@ -68,13 +68,6 @@ const sections = (): Section[] => [
           {t("docs.thenPasteARepositoryIn")} {/* i18n-allow: literal GitHub repository syntax */}
           <code>owner/repository</code> {t("docs.formOrChoose")} {strong(t("docs.uploadZip"))}
           {t("docs.pluginsACatalogDependsOnAreInstalledWithIt")}
-        </p>
-        <p>
-          {t("docs.toTryItInstallTheExamplePlugin")}{" "}
-          <a href={`https://github.com/${examplePlugin}`} target="_blank" rel="noreferrer">
-            <code>{examplePlugin}</code>
-          </a>
-          {t("docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt")}
         </p>
         <p>{t("docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe")}</p>
         <p>

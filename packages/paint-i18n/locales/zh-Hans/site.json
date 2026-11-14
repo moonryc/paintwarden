@@ -38,8 +38,6 @@
   "docs.formOrChoose": "格式粘贴仓库地址，或选择",
   "docs.uploadZip": "上传 .zip",
   "docs.pluginsACatalogDependsOnAreInstalledWithIt": "。目录依赖的插件会一并安装。",
-  "docs.toTryItInstallTheExamplePlugin": "想试试看，可以安装示例插件",
-  "docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt": "，其中包含少量示例涂料、配色方案和模板。只要资料库中没有内容使用该插件的条目，之后就可以移除它。",
   "docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe": "已安装的目录可离线使用。来自 GitHub 的插件可以检查更新并同步。要更新上传的插件，请上传较新版本；上传相同版本不会造成变化，若要安装旧版，则必须先移除已安装的版本。当资料库不再使用某个插件的涂料、配色方案或模板时，即可移除该插件；应用会列出仍在使用它的内容。",
   "docs.createPlugin": "创建插件",
   "docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady": "可将自己的涂料、配色方案和模板打包成可直接发布的仓库。",
