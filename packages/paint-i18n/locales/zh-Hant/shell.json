@@ -153,5 +153,12 @@
   "backupTemplate_other": "範本",
   "backupImage_other": "圖片",
   "backupPlugin_other": "外掛程式",
-  "anUpdate": "更新"
+  "anUpdate": "更新",
+  "updatingYourVault": "正在更新收藏庫…",
+  "startingYourVault": "正在啟動收藏庫…",
+  "vaultStartupFailed": "無法啟動收藏庫",
+  "vaultStartupRecovery": "開啟日誌資料夾以檢視伺服器日誌。重試將重新連線至進行中的更新，或在失敗後重新啟動伺服器。收藏庫及其復原備份將予以保留。",
+  "vaultStartupPleaseWait": "請稍候。備份和更新可能需要幾分鐘。應用程式將在更新完成後關閉。",
+  "retryVaultStartup": "重試",
+  "openLogsFolder": "開啟日誌資料夾"
 }

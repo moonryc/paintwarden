@@ -66,5 +66,8 @@
   },
   "updater": {
     "checkFailed": "Controleren op updates mislukt"
+  },
+  "startup": {
+    "failure": "Je kluis kon niet starten. Open de logmap om het serverlogboek te bekijken. Opnieuw proberen maakt opnieuw verbinding met een lopende update of start de server na een fout opnieuw. Je kluis en de herstelkopie blijven bewaard."
   }
 }

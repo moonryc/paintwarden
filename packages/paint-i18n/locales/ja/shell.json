@@ -153,5 +153,12 @@
   "backupTemplate_other": "テンプレート",
   "backupImage_other": "画像",
   "backupPlugin_other": "プラグイン",
-  "anUpdate": "更新"
+  "anUpdate": "更新",
+  "updatingYourVault": "保管庫を更新しています…",
+  "startingYourVault": "保管庫を起動しています…",
+  "vaultStartupFailed": "保管庫を起動できませんでした",
+  "vaultStartupRecovery": "ログフォルダーを開いてサーバーログを確認してください。再試行すると、実行中の更新に再接続するか、障害後にサーバーを再起動します。保管庫と復元用バックアップは保持されます。",
+  "vaultStartupPleaseWait": "しばらくお待ちください。バックアップと更新には数分かかる場合があります。アプリは更新を完了してから終了します。",
+  "retryVaultStartup": "再試行",
+  "openLogsFolder": "ログフォルダーを開く"
 }

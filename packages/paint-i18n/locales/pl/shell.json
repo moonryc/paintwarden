@@ -174,5 +174,12 @@
   "backupPlugin_few": "wtyczki",
   "backupPlugin_many": "wtyczek",
   "backupPlugin_other": "wtyczki",
-  "anUpdate": "aktualizacja"
+  "anUpdate": "aktualizacja",
+  "updatingYourVault": "Aktualizowanie skarbca…",
+  "startingYourVault": "Uruchamianie skarbca…",
+  "vaultStartupFailed": "Nie udało się uruchomić skarbca",
+  "vaultStartupRecovery": "Otwórz folder dzienników, aby sprawdzić dziennik serwera. Ponów próbę połączy z trwającą aktualizacją lub uruchomi serwer ponownie po awarii. Skarbiec i jego kopia odzyskiwania zostaną zachowane.",
+  "vaultStartupPleaseWait": "Poczekaj. Kopie zapasowe i aktualizacje mogą potrwać kilka minut. Aplikacja zakończy aktualizację przed zamknięciem.",
+  "retryVaultStartup": "Ponów próbę",
+  "openLogsFolder": "Otwórz folder dzienników"
 }

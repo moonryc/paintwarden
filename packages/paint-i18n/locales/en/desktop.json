@@ -66,5 +66,8 @@
   },
   "updater": {
     "checkFailed": "Update check failed"
+  },
+  "startup": {
+    "failure": "Your vault could not start. Open the logs folder to review the server log. Retry will reconnect to an update still running, or start the server again after a failure. Your vault and its recovery backup are kept."
   }
 }

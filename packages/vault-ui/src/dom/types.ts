@@ -215,7 +215,14 @@ export type DesktopUpdateState = {
   error: string | null;
 };
 
+export type DesktopStartupState = {
+  phase: "idle" | "starting" | "backing-up" | "migrating" | "ready" | "failed";
+};
+
 export type DesktopBridge = {
+  getStartupState?(): Promise<DesktopStartupState>;
+  onStartupState?(listener: (state: DesktopStartupState) => void): () => void;
+  openLogsFolder?(): Promise<string>;
   getLanguage(): Promise<string>;
   setLanguage(language: string): Promise<string>;
   getConnection(): Promise<DesktopConnectionChoice>;

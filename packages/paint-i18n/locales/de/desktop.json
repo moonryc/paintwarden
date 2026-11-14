@@ -66,5 +66,8 @@
   },
   "updater": {
     "checkFailed": "Suche nach Updates fehlgeschlagen"
+  },
+  "startup": {
+    "failure": "Dein Tresor konnte nicht gestartet werden. Öffne den Protokollordner, um das Serverprotokoll zu prüfen. Erneut versuchen verbindet mit einer laufenden Aktualisierung oder startet den Server nach einem Fehler neu. Dein Tresor und seine Wiederherstellungskopie bleiben erhalten."
   }
 }

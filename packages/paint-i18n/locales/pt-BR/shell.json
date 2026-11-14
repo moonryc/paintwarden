@@ -167,5 +167,12 @@
   "backupPlugin_one": "plugin",
   "backupPlugin_many": "plugins",
   "backupPlugin_other": "plugins",
-  "anUpdate": "uma atualização"
+  "anUpdate": "uma atualização",
+  "updatingYourVault": "Atualizando seu cofre…",
+  "startingYourVault": "Iniciando seu cofre…",
+  "vaultStartupFailed": "Não foi possível iniciar seu cofre",
+  "vaultStartupRecovery": "Abra a pasta de logs para consultar o registro do servidor. Tentar novamente reconecta a uma atualização em andamento ou reinicia o servidor após uma falha. Seu cofre e sua cópia de recuperação são mantidos.",
+  "vaultStartupPleaseWait": "Aguarde. Backups e atualizações podem levar vários minutos. O aplicativo concluirá a atualização antes de fechar.",
+  "retryVaultStartup": "Tentar novamente",
+  "openLogsFolder": "Abrir pasta de logs"
 }

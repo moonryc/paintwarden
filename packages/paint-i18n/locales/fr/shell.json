@@ -167,5 +167,12 @@
   "backupScheme_many": "schémas de couleurs",
   "backupTemplate_many": "modèles",
   "backupImage_many": "images",
-  "backupPlugin_many": "extensions"
+  "backupPlugin_many": "extensions",
+  "updatingYourVault": "Mise à jour de votre coffre…",
+  "startingYourVault": "Démarrage de votre coffre…",
+  "vaultStartupFailed": "Votre coffre n’a pas pu démarrer",
+  "vaultStartupRecovery": "Ouvrez le dossier des journaux pour consulter le journal du serveur. Réessayer reconnecte une mise à jour en cours ou redémarre le serveur après un échec. Votre coffre et sa sauvegarde de récupération sont conservés.",
+  "vaultStartupPleaseWait": "Veuillez patienter. Les sauvegardes et les mises à jour peuvent prendre plusieurs minutes. L’application terminera la mise à jour avant de se fermer.",
+  "retryVaultStartup": "Réessayer",
+  "openLogsFolder": "Ouvrir le dossier des journaux"
 }

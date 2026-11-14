@@ -23,6 +23,7 @@ const {
   serverOrigin,
   versionMismatch,
 } = require("./desktop-core.cjs");
+const { createServerLog, createStartupProgress, waitForServer } = require("./desktop-startup.cjs");
 const { createUpdater } = require("./desktop-update.cjs");
 const { t, setLanguage, getLanguage, resolveLanguage } = require("./desktop-i18n.cjs");
 const { createPreferences } = require("./desktop-preferences.cjs");
@@ -61,10 +62,26 @@ const dataDirectory = dataOverride
     : path.join(os.homedir(), "Library", "Application Support", "PaintVault");
 mkdirSync(path.join(dataDirectory, "electron"), { recursive: true });
 app.setPath("userData", path.join(dataDirectory, "electron"));
+// Isolated desktop profiles must not write logs into the person's normal profile.
+if (dataOverride) app.setAppLogsPath(path.join(dataDirectory, "electron", "logs"));
 let localUrl;
 let serverProcess;
 let readyServer;
 let startingServer;
+let startupState = { phase: "idle" };
+let serverProgress;
+let stopWhenSafe = false;
+let quitWhenSafe = false;
+let serverLog;
+function startupChanged(state) {
+  startupState = state;
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send("startup:state", state);
+}
+function finishDeferredStop() {
+  if (serverProgress?.protected()) return;
+  if (quitWhenSafe) app.quit();
+  else if (stopWhenSafe) stopLocalServer();
+}
 let connection = { mode: null };
 let updater;
 const cookies = new Map();
@@ -138,14 +155,17 @@ async function serverHealthy() {
 }
 
 async function launchLocalServer() {
-  if (serverProcess?.exitCode === null) {
-    if (await serverHealthy()) {
-      readyServer = serverProcess;
-      return;
-    }
-    stopLocalServer();
-    if (!explicitPort) localUrl = `http://127.0.0.1:${await freeLoopbackPort()}`;
+  if (serverProgress?.state().phase === "failed") stopLocalServer();
+  // Retrying a slow start joins the same child: never replace a server that may be
+  // inside VACUUM or a migration. This also makes retries after the cap safe.
+  if (serverProcess?.exitCode === null && !serverProcess.killed) {
+    startupChanged({ phase: serverProgress?.state().phase || "starting" });
+    await waitForServer({ child: serverProcess, healthy: serverHealthy, progress: serverProgress });
+    readyServer = serverProcess;
+    startupChanged({ phase: "ready" });
+    return;
   }
+  startupChanged({ phase: "starting" });
   if (await serverHealthy()) {
     if (explicitPort) throw new Error(t("errors.portUsed", { port: explicitPort }));
     localUrl = `http://127.0.0.1:${await freeLoopbackPort()}`;
@@ -154,6 +174,17 @@ async function launchLocalServer() {
   const executable = path.join(directory, process.platform === "win32" ? "node.exe" : "node");
   if (!existsSync(executable) || !existsSync(path.join(directory, "server.mjs")))
     throw new Error(t("errors.missingServer"));
+  serverLog ??= createServerLog(app.getPath("logs"));
+  serverLog.write(`\n[${new Date().toISOString()}] Starting bundled server\n`);
+  serverProgress = createStartupProgress((state) => {
+    if (serverProcess !== child) return;
+    // Keep Retry disabled until the shared attempt has rejected and can be retried.
+    // A failed marker/exit can precede the next health-loop tick by 250ms.
+    if (state.phase !== "failed" || !startingServer) startupChanged(state);
+    // Do not stop synchronously on a completed backup marker: the next line may
+    // start a migration. Defer until all output from this turn has been parsed.
+    if (["ready", "failed"].includes(state.phase)) setImmediate(finishDeferredStop);
+  });
   const child = spawn(executable, ["server.mjs"], {
     cwd: directory,
     env: {
@@ -163,29 +194,59 @@ async function launchLocalServer() {
       DATA_DIR: dataDirectory,
       PAINT_VAULT_DESKTOP: "1",
     },
-    stdio: "ignore",
+    stdio: ["ignore", "pipe", "pipe"],
     windowsHide: true,
   });
   serverProcess = child;
-  child.on("exit", () => {
+  const progress = serverProgress;
+  child.stdout.on("data", (chunk) => {
+    try {
+      serverLog.write(chunk);
+    } catch (error) {
+      console.error("Server log write failed:", error);
+    }
+    progress.accept(chunk);
+  });
+  child.stderr.on("data", (chunk) => {
+    try {
+      serverLog.write(chunk);
+    } catch (error) {
+      console.error("Server log write failed:", error);
+    }
+  });
+  child.on("exit", (code, signal) => {
+    try {
+      serverLog.write(`\n[${new Date().toISOString()}] Server exited: ${code ?? signal}\n`);
+    } catch (error) {
+      console.error("Server log write failed:", error);
+    }
     if (serverProcess === child) {
       readyServer = undefined;
       serverProcess = undefined;
+      if (!startingServer) startupChanged({ phase: "failed" });
+      if (quitWhenSafe) app.quit();
     }
   });
   child.on("error", (error) => {
-    console.error("Paint Vault server failed to start:", error);
-  });
-  for (let attempt = 0; attempt < 40; attempt++) {
-    if (await serverHealthy()) {
-      if (serverProcess === child) readyServer = child;
-      return;
+    child.spawnError = error;
+    try {
+      serverLog.write(`\nServer spawn failed: ${error.stack || error}\n`);
+    } catch (logError) {
+      console.error("Server log write failed:", logError);
     }
-    if (child.exitCode !== null) break;
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  stopLocalServer();
-  throw new Error(t("errors.startServer"));
+    console.error("Paint Vault server failed to start:", error);
+    // Failed spawns emit error/close, not necessarily exit. They have no live
+    // database operation to protect, and Retry must be allowed to spawn again.
+    if (serverProcess === child) {
+      readyServer = undefined;
+      serverProcess = undefined;
+      if (!startingServer) startupChanged({ phase: "failed" });
+      if (quitWhenSafe) app.quit();
+    }
+  });
+  await waitForServer({ child, healthy: serverHealthy, progress });
+  if (serverProcess === child) readyServer = child;
+  startupChanged({ phase: "ready" });
 }
 
 function ensureLocalServer() {
@@ -197,23 +258,49 @@ function ensureLocalServer() {
   )
     return Promise.resolve();
   if (!startingServer) {
-    startingServer = launchLocalServer().finally(() => {
-      startingServer = undefined;
-    });
+    startingServer = launchLocalServer()
+      .catch((error) => {
+        console.error("Bundled server startup:", error);
+        startupChanged({ phase: "failed" });
+        // Never kill on a timeout, including the overall cap. Logs and Retry
+        // remain available while the child completes its protected operation.
+        throw new Error(`${t("errors.startServer")} ${t("startup.failure")}`);
+      })
+      .finally(() => {
+        startingServer = undefined;
+      });
   }
   return startingServer;
 }
 
+function localStartupInProgress() {
+  if (!serverProcess || serverProcess.exitCode !== null) return false;
+  // Protect the pre-marker interval too: the child can write its marker and enter
+  // SQLite before this process has drained stdout. A quit must not race that pipe.
+  return (
+    serverProgress?.protected() ||
+    (readyServer !== serverProcess && !["ready", "failed"].includes(serverProgress?.state().phase))
+  );
+}
+
 function stopLocalServer() {
+  if (localStartupInProgress()) {
+    stopWhenSafe = true;
+    return;
+  }
+  stopWhenSafe = false;
   readyServer = undefined;
-  if (serverProcess && serverProcess.exitCode === null) serverProcess.kill();
+  const child = serverProcess;
   serverProcess = undefined;
+  if (child && child.exitCode === null) child.kill();
+  startupChanged({ phase: "idle" });
 }
 
 async function setConnection(input) {
   if (!input || typeof input !== "object") throw new Error(t("errors.connectionMode"));
   let next;
   if (input.mode === "local") {
+    stopWhenSafe = false;
     await ensureLocalServer();
     next = { mode: "local" };
   } else if (input.mode === "remote") {
@@ -506,6 +593,14 @@ app
       return serveStatic(url);
     });
 
+    ipcMain.handle("startup:get", (event) => {
+      allowRenderer(event);
+      return startupState;
+    });
+    ipcMain.handle("startup:logs", (event) => {
+      allowRenderer(event);
+      return shell.openPath(app.getPath("logs"));
+    });
     ipcMain.handle("connection:get", async (event) => {
       allowRenderer(event);
       if (connection.mode === "local") await ensureLocalServer();
@@ -640,7 +735,13 @@ app
     app.quit();
   });
 
-app.on("before-quit", () => {
+app.on("before-quit", (event) => {
+  if (localStartupInProgress()) {
+    event.preventDefault();
+    quitWhenSafe = true;
+    startupChanged({ phase: serverProgress.state().phase });
+    return;
+  }
   subscriptionStreams.abortAll();
   stopLocalServer();
 });

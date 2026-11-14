@@ -160,5 +160,12 @@
   "backupImage_other": "Bilder",
   "backupPlugin_one": "Plugin",
   "backupPlugin_other": "Plugins",
-  "anUpdate": "ein Update"
+  "anUpdate": "ein Update",
+  "updatingYourVault": "Dein Tresor wird aktualisiert…",
+  "startingYourVault": "Dein Tresor wird gestartet…",
+  "vaultStartupFailed": "Dein Tresor konnte nicht gestartet werden",
+  "vaultStartupRecovery": "Öffne den Protokollordner, um das Serverprotokoll zu prüfen. Erneut versuchen verbindet mit einer laufenden Aktualisierung oder startet den Server nach einem Fehler neu. Dein Tresor und seine Wiederherstellungskopie bleiben erhalten.",
+  "vaultStartupPleaseWait": "Bitte warten. Sicherungen und Aktualisierungen können mehrere Minuten dauern. Die App beendet die Aktualisierung vor dem Schließen.",
+  "retryVaultStartup": "Erneut versuchen",
+  "openLogsFolder": "Protokollordner öffnen"
 }

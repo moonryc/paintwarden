@@ -31,7 +31,11 @@ export type ConnectionChoice = {
   serverUrl?: string;
   versionProblem?: VersionProblem;
 };
+type StartupState = { phase: "idle" | "starting" | "backing-up" | "migrating" | "ready" | "failed" };
 export type PaintVaultDesktopBridge = {
+  getStartupState?(): Promise<StartupState>;
+  onStartupState?(listener: (state: StartupState) => void): () => void;
+  openLogsFolder?(): Promise<string>;
   getLanguage(): Promise<string>;
   setLanguage(language: string): Promise<string>;
   getConnection(): Promise<ConnectionChoice>;
@@ -70,6 +74,22 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
   const [error, setError] = useState("");
 
   const [checking, setChecking] = useState(false);
+  const [startup, setStartup] = useState<StartupState>({ phase: "idle" });
+  useEffect(() => {
+    let mounted = true;
+    let received = false;
+    const unsubscribe = bridge.onStartupState?.((state) => {
+      received = true;
+      if (mounted) setStartup(state);
+    });
+    void bridge.getStartupState?.().then((state) => {
+      if (mounted && !received) setStartup(state);
+    });
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+    };
+  }, [bridge]);
 
   useEffect(() => {
     let mounted = true;
@@ -133,6 +153,43 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
     setRemoteUrl(event.target.value);
   }, []);
   const handleCancel = useCallback(() => setEditing(false), []);
+
+  const updating = ["backing-up", "migrating"].includes(startup.phase);
+  const starting = startup.phase === "starting";
+  const failed = startup.phase === "failed";
+  if ((updating || starting || failed) && (choice?.mode !== "remote" || busy)) {
+    return (
+      <ThemeProvider theme={connectionTheme}>
+        <CssBaseline />
+        <Box sx={{ minHeight: "100dvh", display: "grid", placeItems: "center", p: 3 }}>
+          <Card sx={{ width: "100%", maxWidth: 480, p: { xs: 3, sm: 4 } }} aria-busy={!failed}>
+            <Stack spacing={2.5}>
+              <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+                {failed
+                  ? i18n.t("shell:vaultStartupFailed")
+                  : updating
+                    ? i18n.t("shell:updatingYourVault")
+                    : i18n.t("shell:startingYourVault")}
+              </Typography>
+              <Typography role="status" aria-live="polite" color="text.secondary">
+                {failed ? i18n.t("shell:vaultStartupRecovery") : i18n.t("shell:vaultStartupPleaseWait")}
+              </Typography>
+              {failed && (
+                <>
+                  <Button variant="contained" onClick={handleLocal} disabled={busy}>
+                    {i18n.t("shell:retryVaultStartup")}
+                  </Button>
+                  <Button onClick={() => void bridge.openLogsFolder?.()}>
+                    {i18n.t("shell:openLogsFolder")}
+                  </Button>
+                </>
+              )}
+            </Stack>
+          </Card>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   if (choice?.mode && !choice.versionProblem && !editing) {
     return <Vault key={`${choice.mode}:${choice.serverUrl ?? ""}`} onChangeServer={handleChangeServer} />;

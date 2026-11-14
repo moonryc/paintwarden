@@ -23,6 +23,7 @@
     "files": [
       "main.cjs",
       "desktop-core.cjs",
+      "desktop-startup.cjs",
       "desktop-update.cjs",
       "preload.cjs",
       "package.json",

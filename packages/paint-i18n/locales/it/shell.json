@@ -167,5 +167,12 @@
   "backupScheme_many": "schemi di colore",
   "backupTemplate_many": "modelli predefiniti",
   "backupImage_many": "immagini",
-  "backupPlugin_many": "plugin"
+  "backupPlugin_many": "plugin",
+  "updatingYourVault": "Aggiornamento del tuo archivio…",
+  "startingYourVault": "Avvio del tuo archivio…",
+  "vaultStartupFailed": "Impossibile avviare il tuo archivio",
+  "vaultStartupRecovery": "Apri la cartella dei log per consultare il registro del server. Riprova si riconnette a un aggiornamento in corso o riavvia il server dopo un errore. Il tuo archivio e la sua copia di recupero vengono conservati.",
+  "vaultStartupPleaseWait": "Attendi. Backup e aggiornamenti possono richiedere diversi minuti. L’app terminerà l’aggiornamento prima di chiudersi.",
+  "retryVaultStartup": "Riprova",
+  "openLogsFolder": "Apri cartella dei log"
 }

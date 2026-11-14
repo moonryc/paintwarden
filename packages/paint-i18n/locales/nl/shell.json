@@ -160,5 +160,12 @@
   "backupImage_other": "afbeeldingen",
   "backupPlugin_one": "plugin",
   "backupPlugin_other": "plugins",
-  "anUpdate": "een update"
+  "anUpdate": "een update",
+  "updatingYourVault": "Je kluis bijwerken…",
+  "startingYourVault": "Je kluis starten…",
+  "vaultStartupFailed": "Je kluis kon niet starten",
+  "vaultStartupRecovery": "Open de logmap om het serverlogboek te bekijken. Opnieuw proberen maakt opnieuw verbinding met een lopende update of start de server na een fout opnieuw. Je kluis en de herstelkopie blijven bewaard.",
+  "vaultStartupPleaseWait": "Even geduld. Back-ups en updates kunnen enkele minuten duren. De app voltooit de update voordat deze sluit.",
+  "retryVaultStartup": "Opnieuw proberen",
+  "openLogsFolder": "Logmap openen"
 }

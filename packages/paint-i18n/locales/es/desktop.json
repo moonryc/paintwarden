@@ -66,5 +66,8 @@
   },
   "updater": {
     "checkFailed": "No se han podido buscar actualizaciones"
+  },
+  "startup": {
+    "failure": "No se pudo iniciar tu bóveda. Abre la carpeta de registros para revisar el registro del servidor. Reintentar volverá a conectar con una actualización en curso o iniciará el servidor de nuevo tras un fallo. Tu bóveda y su copia de recuperación se conservan."
   }
 }

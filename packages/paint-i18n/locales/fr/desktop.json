@@ -66,5 +66,8 @@
   },
   "updater": {
     "checkFailed": "Échec de la recherche de mises à jour"
+  },
+  "startup": {
+    "failure": "Votre coffre n’a pas pu démarrer. Ouvrez le dossier des journaux pour consulter le journal du serveur. Réessayer reconnecte une mise à jour en cours ou redémarre le serveur après un échec. Votre coffre et sa sauvegarde de récupération sont conservés."
   }
 }

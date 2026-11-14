@@ -10,10 +10,17 @@ const { t: desktopTranslate } = require("./desktop-i18n.cjs");
 const source = readFileSync(path.join(__dirname, "main.cjs"), "utf8");
 function localServer() {
   const children = [];
+  const startupEvents = [];
   let probes = 0;
   const context = vm.createContext({
     t: desktopTranslate,
     console,
+    ...require("./desktop-startup.cjs"),
+    createServerLog: () => ({ write() {} }),
+    startupChanged: (state) => startupEvents.push(state),
+    finishDeferredStop: () => {},
+    setImmediate,
+    app: { getPath: () => "/unused-logs", quit() {} },
     URL,
     AbortSignal,
     process,
@@ -29,6 +36,8 @@ function localServer() {
     },
     spawn: () => {
       const child = new EventEmitter();
+      child.stdout = new EventEmitter();
+      child.stderr = new EventEmitter();
       child.exitCode = null;
       child.killed = false;
       child.kill = () => {
@@ -41,14 +50,14 @@ function localServer() {
     },
   });
   vm.runInContext(
-    "let serverProcess, readyServer, startingServer;\n" +
+    "let serverProcess, readyServer, startingServer, serverProgress, serverLog; let stopWhenSafe=false, quitWhenSafe=false;\n" +
       source.slice(
         source.indexOf("async function serverHealthy()"),
         source.indexOf("async function setConnection("),
       ),
     context,
   );
-  return { context, children, probes: () => probes };
+  return { context, children, startupEvents, probes: () => probes };
 }
 
 test("a ready local child is reused without health requests; stop and exit invalidate readiness", async () => {
@@ -80,6 +89,79 @@ test("an old child's exit cannot clear a newer child's readiness", async () => {
   await context.ensureLocalServer();
   assert.equal(children.length, 2);
   assert.equal(probes(), before);
+  context.stopLocalServer();
+});
+
+test("stopping a protected migration defers killing until ready; retries reuse that child", async () => {
+  const { context, children } = localServer();
+  await context.ensureLocalServer();
+  children[0].stdout.emit(
+    "data",
+    Buffer.from('PAINT_VAULT_STARTUP {"phase":"migrating","status":"started"}\n'),
+  );
+  context.stopLocalServer();
+  assert.equal(children[0].killed, false);
+  await context.ensureLocalServer();
+  assert.equal(children.length, 1);
+  children[0].stdout.emit("data", Buffer.from('PAINT_VAULT_STARTUP {"phase":"ready"}\n'));
+  context.stopLocalServer();
+  assert.equal(children[0].killed, true);
+});
+
+test("failure UI is published only once the shared startup attempt can actually retry", async () => {
+  const { context, children, startupEvents } = localServer();
+  context.fetch = async () => ({ ok: false });
+  const first = context.ensureLocalServer();
+  const rejected = assert.rejects(first, /Could not start/);
+  await new Promise(setImmediate);
+  children[0].stdout.emit(
+    "data",
+    Buffer.from('PAINT_VAULT_STARTUP {"phase":"failed","message":"fixture failure"}\n'),
+  );
+  assert.equal(
+    startupEvents.some((state) => state.phase === "failed"),
+    false,
+  );
+  await rejected;
+  assert.equal(startupEvents.at(-1).phase, "failed");
+  context.fetch = async () => ({
+    ok: children.at(-1)?.exitCode === null,
+    json: async () => ({ setupRequired: false }),
+  });
+  await context.ensureLocalServer();
+  assert.equal(children.length, 2);
+  assert.equal(startupEvents.at(-1).phase, "ready");
+  context.stopLocalServer();
+});
+
+test("stop cannot race a child entering SQLite before its first protected marker is drained", async () => {
+  const { context, children } = localServer();
+  context.fetch = async () => ({ ok: false });
+  const starting = context.ensureLocalServer();
+  await new Promise(setImmediate);
+  context.stopLocalServer();
+  assert.equal(children[0].killed, false);
+  children[0].stdout.emit("data", Buffer.from('PAINT_VAULT_STARTUP {"phase":"ready"}\n'));
+  context.fetch = async () => ({ ok: true, json: async () => ({ setupRequired: false }) });
+  await starting;
+  context.stopLocalServer();
+  assert.equal(children[0].killed, true);
+});
+
+test("a spawn error without exit releases the child so Retry can start another", async () => {
+  const { context, children } = localServer();
+  context.fetch = async () => ({ ok: false });
+  const first = context.ensureLocalServer();
+  const rejected = assert.rejects(first, /Could not start/);
+  await new Promise(setImmediate);
+  children[0].emit("error", new Error("fixture spawn denied"));
+  await rejected;
+  context.fetch = async () => ({
+    ok: children.at(-1)?.exitCode === null && !children.at(-1)?.spawnError,
+    json: async () => ({ setupRequired: false }),
+  });
+  await context.ensureLocalServer();
+  assert.equal(children.length, 2);
   context.stopLocalServer();
 });
 

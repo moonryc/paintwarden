@@ -167,5 +167,12 @@
   "backupScheme_many": "esquemas",
   "backupTemplate_many": "plantillas",
   "backupImage_many": "imágenes",
-  "backupPlugin_many": "plugins"
+  "backupPlugin_many": "plugins",
+  "updatingYourVault": "Actualizando tu bóveda…",
+  "startingYourVault": "Iniciando tu bóveda…",
+  "vaultStartupFailed": "No se pudo iniciar tu bóveda",
+  "vaultStartupRecovery": "Abre la carpeta de registros para revisar el registro del servidor. Reintentar volverá a conectar con una actualización en curso o iniciará el servidor de nuevo tras un fallo. Tu bóveda y su copia de recuperación se conservan.",
+  "vaultStartupPleaseWait": "Espera. Las copias de seguridad y las actualizaciones pueden tardar varios minutos. La aplicación terminará la actualización antes de cerrarse.",
+  "retryVaultStartup": "Reintentar",
+  "openLogsFolder": "Abrir carpeta de registros"
 }

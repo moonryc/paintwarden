@@ -30,3 +30,35 @@ The production web build was checked separately. The isolated browser session pa
 catalog and schemes display, Settings, fixture miniature add/edit/reopen, and the 390 px Settings
 layout. Its console had no reported warnings or errors. See `web-smoke.md` for the later, fuller
 web pass.
+
+## Slow-start regression (November 13, 2026)
+
+The `dialogs-migrations` change adds targeted macOS development and unsigned packaged-app
+checks; it does not replace the broader historical checklist above or certify Windows/signing.
+Run after the normal build and bundled-server regeneration:
+
+```sh
+node scripts/smoke-dialogs-migrations-native.mjs /absolute/path/to/evidence
+```
+
+This creates isolated desktop data directories and runs an actual backup and schema migration
+with a synchronous 45-second test delay **each**, verifies the localized updating screen,
+checks the untouched recovery database, quits and relaunches, deliberately fails a backup,
+exercises Retry and the logs-folder IPC, and verifies that Quit waits for protected work.
+The fault-injection hook requires both `PAINT_VAULT_TEST_STARTUP=1` and
+`PAINT_VAULT_TEST_STARTUP_DELAY_MS`; it is bounded at two minutes per operation and is ignored
+without explicit opt-in. Never set these variables for a personal vault.
+
+Electron now retains child stdout/stderr in its application logs directory as
+`vault-server.log`, rotating at 2 MiB with three older files (8 MiB total). Files are private
+on Unix; logs can include the first-run owner setup code, recovery paths and server diagnostics,
+so review/redact before sharing. Isolated `PAINT_VAULT_DESKTOP_DATA_DIR` profiles keep logs at
+`electron/logs` within that directory. The startup error screen offers **Open logs folder**
+and **Retry** without exposing raw paths/errors in the renderer.
+
+A normal non-migration start has a 60-second grace period. Explicit backup/migration phases
+keep waiting while the child is alive, up to a 30-minute wait cap. SQLite's synchronous work
+cannot send JS heartbeats; the protected-operation start/end markers are written synchronously
+before/after it instead. Reaching a cap reports a recoverable error but never kills the child;
+Retry joins the same operation. Quit/server switching also defers termination until startup is
+known safe (including the interval before the parent's stdout parser receives a marker).
