@@ -31,6 +31,8 @@ const { createPreferences } = require("./desktop-preferences.cjs");
 const { menuTemplate } = require("./desktop-menu.cjs");
 const { supportSummary, createSupportBundle, openBugReport } = require("./desktop-support.cjs");
 
+// Electron otherwise derives its native About/app name from the workspace slug.
+app.setName("Paintwarden");
 const appOrigin = "paintwarden://app";
 const testPort = !app.isPackaged && Number(process.env.PAINTWARDEN_DESKTOP_PORT);
 // Packaged builds use the bundle icon from build/; unpackaged runs would otherwise show Electron's default.
