@@ -560,7 +560,6 @@
   "complementaryLoading": "正在加载颜料颜色…",
   "complementaryChoose": "选择一款颜料以生成其他三个角色的颜色。",
   "complementarySelected": "已选匹配项",
-  "complementaryUse": "将 {{name}} 用作{{role}}",
   "complementaryInputMissing": "此颜料已不在库中。请选择其他颜料。",
   "complementaryOwned": "已拥有"
 }

@@ -560,7 +560,6 @@
   "complementaryLoading": "塗料の色を読み込み中…",
   "complementaryChoose": "塗料を選ぶと、残りの3つの役割の色を生成します。",
   "complementarySelected": "選択中の候補",
-  "complementaryUse": "{{name}} を{{role}}として使用",
   "complementaryInputMissing": "この塗料はライブラリにありません。別の塗料を選んでください。",
   "complementaryOwned": "所有済み"
 }

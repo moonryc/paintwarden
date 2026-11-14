@@ -616,7 +616,6 @@
   "complementaryLoading": "Cargando colores de pinturas…",
   "complementaryChoose": "Elige una pintura para generar las otras tres funciones.",
   "complementarySelected": "Coincidencia seleccionada",
-  "complementaryUse": "Usar {{name}} como {{role}}",
   "complementaryInputMissing": "Esta pintura ya no está en la biblioteca. Elige otra.",
   "complementaryOwned": "En propiedad"
 }

@@ -588,7 +588,6 @@
   "complementaryLoading": "Farbtöne werden geladen…",
   "complementaryChoose": "Wähle eine Farbe, um die anderen drei Rollen zu erzeugen.",
   "complementarySelected": "Ausgewählter Treffer",
-  "complementaryUse": "{{name}} als {{role}} verwenden",
   "complementaryInputMissing": "Diese Farbe ist nicht mehr in der Bibliothek. Wähle eine andere Farbe.",
   "complementaryOwned": "Im Bestand"
 }

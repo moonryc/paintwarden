@@ -588,7 +588,6 @@
   "complementaryLoading": "Verfkleuren laden…",
   "complementaryChoose": "Kies een verf om de andere drie rollen te genereren.",
   "complementarySelected": "Geselecteerde overeenkomst",
-  "complementaryUse": "{{name}} gebruiken als {{role}}",
   "complementaryInputMissing": "Deze verf staat niet meer in de bibliotheek. Kies een andere verf.",
   "complementaryOwned": "In bezit"
 }

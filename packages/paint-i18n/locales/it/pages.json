@@ -616,7 +616,6 @@
   "complementaryLoading": "Caricamento dei colori…",
   "complementaryChoose": "Scegli un colore per generare gli altri tre ruoli.",
   "complementarySelected": "Corrispondenza selezionata",
-  "complementaryUse": "Usa {{name}} come {{role}}",
   "complementaryInputMissing": "Questo colore non è più nella libreria. Scegline un altro.",
   "complementaryOwned": "Posseduto"
 }

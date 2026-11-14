@@ -560,7 +560,6 @@
   "complementaryLoading": "도료 색상 불러오는 중…",
   "complementaryChoose": "도료를 선택하면 나머지 세 역할의 색상을 생성합니다.",
   "complementarySelected": "선택한 일치 항목",
-  "complementaryUse": "{{name}}을(를) {{role}} 역할로 사용",
   "complementaryInputMissing": "이 도료는 더 이상 라이브러리에 없습니다. 다른 도료를 선택하세요.",
   "complementaryOwned": "보유"
 }

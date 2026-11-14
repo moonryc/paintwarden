@@ -616,7 +616,6 @@
   "complementaryLoading": "Chargement des couleurs des peintures…",
   "complementaryChoose": "Choisissez une peinture pour générer les trois autres rôles.",
   "complementarySelected": "Correspondance sélectionnée",
-  "complementaryUse": "Utiliser {{name}} comme {{role}}",
   "complementaryInputMissing": "Cette peinture n’est plus dans la bibliothèque. Choisissez-en une autre.",
   "complementaryOwned": "Possédée"
 }

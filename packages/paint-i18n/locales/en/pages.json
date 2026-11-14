@@ -588,7 +588,6 @@
   "complementaryLoading": "Loading paint colors…",
   "complementaryChoose": "Choose a paint to generate the other three roles.",
   "complementarySelected": "Selected match",
-  "complementaryUse": "Use {{name}} as {{role}}",
   "complementaryInputMissing": "This paint is no longer in the library. Choose another paint.",
   "complementaryOwned": "Owned"
 }

@@ -560,7 +560,6 @@
   "complementaryLoading": "正在載入顏料顏色…",
   "complementaryChoose": "選擇一款顏料以產生其他三個角色的顏色。",
   "complementarySelected": "已選配對項目",
-  "complementaryUse": "將 {{name}} 用作{{role}}",
   "complementaryInputMissing": "此顏料已不在收藏庫中。請選擇其他顏料。",
   "complementaryOwned": "已擁有"
 }

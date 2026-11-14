@@ -644,7 +644,6 @@
   "complementaryLoading": "Wczytywanie kolorów farb…",
   "complementaryChoose": "Wybierz farbę, aby wygenerować pozostałe trzy role.",
   "complementarySelected": "Wybrane dopasowanie",
-  "complementaryUse": "Użyj {{name}} w roli {{role}}",
   "complementaryInputMissing": "Tej farby nie ma już w bibliotece. Wybierz inną.",
   "complementaryOwned": "Posiadane"
 }

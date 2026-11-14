@@ -616,7 +616,6 @@
   "complementaryLoading": "Carregando cores das tintas…",
   "complementaryChoose": "Escolha uma tinta para gerar as outras três funções.",
   "complementarySelected": "Correspondência selecionada",
-  "complementaryUse": "Usar {{name}} como {{role}}",
   "complementaryInputMissing": "Esta tinta não está mais na biblioteca. Escolha outra.",
   "complementaryOwned": "Em posse"
 }

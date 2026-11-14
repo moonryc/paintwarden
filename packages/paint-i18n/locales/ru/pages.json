@@ -644,7 +644,6 @@
   "complementaryLoading": "Загрузка цветов красок…",
   "complementaryChoose": "Выберите краску, чтобы подобрать остальные три роли.",
   "complementarySelected": "Выбранное соответствие",
-  "complementaryUse": "Использовать {{name}} как {{role}}",
   "complementaryInputMissing": "Этой краски больше нет в библиотеке. Выберите другую.",
   "complementaryOwned": "В коллекции"
 }
