@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { SwatchScanCanvas, type ScanPin } from "./SwatchScanCanvas";
 
@@ -42,7 +42,7 @@ export const KeyboardPins: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const sample = await canvas.findByRole("button", { name: "Sample at crosshair" });
-    await expect(sample).toBeEnabled();
+    await waitFor(() => expect(sample).toBeEnabled());
     await userEvent.click(sample);
     await expect(canvas.getByRole("button", { name: /Pin 1,/ })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(canvas.getByRole("group", { name: "Photo sampling area" }));
