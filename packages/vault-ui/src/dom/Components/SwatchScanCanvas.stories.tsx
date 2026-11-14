@@ -45,6 +45,8 @@ export const KeyboardPins: Story = {
     await waitFor(() => expect(sample).toBeEnabled());
     await userEvent.click(sample);
     await expect(canvas.getByRole("button", { name: /Pin 1,/ })).toHaveAttribute("aria-pressed", "true");
+    const bounds = canvas.getByRole("button", { name: /Pin 1,/ }).getBoundingClientRect();
+    await expect(Math.abs(bounds.width - bounds.height)).toBeLessThan(1);
     await userEvent.click(canvas.getByRole("group", { name: "Photo sampling area" }));
     await userEvent.keyboard("{ArrowRight}{ArrowDown}{Enter}");
     await expect(canvas.getByRole("button", { name: /Pin 2,/ })).toBeInTheDocument();

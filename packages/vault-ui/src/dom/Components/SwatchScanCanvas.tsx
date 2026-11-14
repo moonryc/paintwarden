@@ -239,6 +239,7 @@ function ScanCanvas({
                 left: `${(pin.x / size.width) * 100}%`,
                 top: `${(pin.y / size.height) * 100}%`,
                 minWidth: 30,
+                minHeight: 30,
                 width: 30,
                 height: 30,
                 p: 0,
