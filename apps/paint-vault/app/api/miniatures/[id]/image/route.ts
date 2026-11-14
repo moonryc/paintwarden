@@ -4,7 +4,7 @@ import { getDb } from "../../../../../db";
 import { miniatures } from "../../../../../db/schema";
 import { setMiniatureImage } from "../../../../../lib/commands/miniatures.ts";
 import { serializeImageMutation } from "../../../../../lib/image-mutations";
-import { deleteImage, imageCacheControl, loadImage, saveImage } from "../../../../../lib/image-store";
+import { deleteImage, imageResponse, saveImage, saveImageBytes } from "../../../../../lib/image-store";
 import { downloadPublicImage } from "../../../image-import/route";
 
 async function findMiniature(id: string) {
@@ -16,14 +16,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const { id } = await context.params;
   const row = await findMiniature(id);
   if (!row?.imageKey) return new Response("Not found", { status: 404 });
-  const image = await loadImage(row.imageKey);
-  if (!image) return new Response("Not found", { status: 404 });
-  return new Response(new Uint8Array(image.bytes), {
-    headers: {
-      "content-type": image.contentType,
-      "cache-control": imageCacheControl(request, row.imageKey),
-    },
-  });
+  return imageResponse(row.imageKey, request);
 }
 
 export const POST = serializeImageMutation(async function POST(
@@ -33,18 +26,19 @@ export const POST = serializeImageMutation(async function POST(
   const { id } = await context.params;
   const row = await findMiniature(id);
   if (!row) return Response.json({ error: "Not found" }, { status: 404 });
-  let file: FormDataEntryValue | null;
+  let file: FormDataEntryValue | { bytes: Uint8Array; type: string; size: number } | null;
   if (request.headers.get("content-type")?.includes("application/json")) {
     const body = (await request.json().catch(() => ({}))) as { url?: string };
     const result = await downloadPublicImage(body.url ?? "");
     if (!result.ok) return result;
     const imageType = result.headers.get("content-type") || "image/jpeg";
-    file = new File([await result.arrayBuffer()], "miniature-image", { type: imageType });
+    const bytes = new Uint8Array(await result.arrayBuffer());
+    file = { bytes, type: imageType.toLowerCase(), size: bytes.byteLength };
   } else {
     const data = await request.formData();
     file = (data as unknown as { get(name: string): FormDataEntryValue | null }).get("image");
   }
-  if (!(file instanceof File) || !file.type.startsWith("image/")) {
+  if (!file || typeof file === "string" || !file.type.startsWith("image/")) {
     return Response.json({ error: "Choose an image file" }, { status: 400 });
   }
   if (file.size > 8 * 1024 * 1024) {
@@ -52,7 +46,7 @@ export const POST = serializeImageMutation(async function POST(
   }
   // The old photo is removed only once the row points at the new one, so a failure at any step
   // leaves the miniature with a photo that exists; at worst an unused file is left behind.
-  const key = await saveImage(file);
+  const key = file instanceof File ? await saveImage(file) : await saveImageBytes(file.bytes, file.type);
   let previous: string | null | undefined;
   try {
     previous = setMiniatureImage(id, key);

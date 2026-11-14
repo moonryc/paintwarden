@@ -126,7 +126,8 @@ async function dispatch(request: Request, path: string, method: string): Promise
 
   const catalogMatch = path.match(/^catalog\/([^/]+)$/);
   const sourceImageMatch = path.match(/^catalog-source-images\/([^/]+)$/);
-  if (sourceImageMatch && method === "GET") return sourceImage(decodeURIComponent(sourceImageMatch[1]));
+  if (sourceImageMatch && method === "GET")
+    return sourceImage(decodeURIComponent(sourceImageMatch[1]), request);
   const sourceLogoMatch = path.match(/^catalog-source-logos\/([^/]+)$/);
   if (sourceLogoMatch && method === "GET") return sourceLogo(decodeURIComponent(sourceLogoMatch[1]));
   if (catalogMatch) {

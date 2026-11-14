@@ -13,7 +13,7 @@ import {
   paintCatalog,
 } from "../db/schema.ts";
 
-import { deleteImage, loadImage, saveImage } from "./image-store.ts";
+import { copyImage, deleteImage } from "./image-store.ts";
 import { templateRecipe, writeTemplateRecipe, type TemplateRecipe } from "./template-recipes.ts";
 
 export type TemplateInput = {
@@ -159,12 +159,7 @@ export async function withPreparedTemplateImage<T>(
   commit: (key: string | null) => T,
 ): Promise<T> {
   const result = prepared(input);
-  let key: string | null = null;
-  if (result.sourceImageKey) {
-    const image = await loadImage(result.sourceImageKey);
-    if (image)
-      key = await saveImage(new File([new Uint8Array(image.bytes)], "template", { type: image.contentType }));
-  }
+  const key = result.sourceImageKey ? await copyImage(result.sourceImageKey) : null;
   try {
     return commit(key);
   } catch (error) {

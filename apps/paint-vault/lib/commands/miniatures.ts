@@ -8,7 +8,7 @@ import {
   miniatureTemplates,
   miniatures,
 } from "../../db/schema.ts";
-import { deleteImage, loadImage, saveImage } from "../image-store.ts";
+import { copyImage, deleteImage } from "../image-store.ts";
 import { templateRecipe } from "../template-recipes.ts";
 
 export class MiniatureCommandError extends Error {
@@ -85,10 +85,7 @@ function findTemplate(input: MiniatureInput) {
 export async function prepareMiniatureImage(input: MiniatureInput): Promise<string | null> {
   const template = findTemplate(input);
   if (!template?.imageKey || input.includeTemplateImage === false) return null;
-  const image = await loadImage(template.imageKey);
-  return image
-    ? saveImage(new File([new Uint8Array(image.bytes)], "miniature", { type: image.contentType }))
-    : null;
+  return copyImage(template.imageKey);
 }
 
 // No asynchronous work inside commands: an outer GraphQL transaction can read the durable

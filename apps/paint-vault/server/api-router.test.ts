@@ -192,6 +192,99 @@ test("setup, authentication and data routes retain their API contract", async (t
     assert.equal(created.status, 201);
     const createdMiniature = await created.json();
     assert.ok(createdMiniature.id);
+    await t.test(
+      "image routes stream originals and fixed thumbnails with auth and cache policy",
+      async () => {
+        const { default: sharp } = await import("sharp");
+        const original = await sharp({
+          create: { width: 800, height: 400, channels: 3, background: "#123456" },
+        })
+          .png()
+          .toBuffer();
+        const created = await request("/api/miniatures", "POST", { title: "Thumbnail source" }, { cookie });
+        assert.equal(created.status, 201);
+        const miniatureId = (await created.json()).id as string;
+        const miniaturePath = `/api/miniatures/${encodeURIComponent(miniatureId)}/image`;
+        const form = new FormData();
+        form.set("image", new File([new Uint8Array(original)], "photo.png", { type: "image/png" }));
+        const upload = await routeApi(
+          new Request(base + miniaturePath, { method: "POST", headers: { cookie }, body: form }),
+        );
+        assert.equal(upload.status, 200);
+        const imageUrl = (await upload.json()).imageUrl as string;
+        const miniatureKey = new URL(imageUrl, base).searchParams.get("v")!;
+        const templateResponse = await request(
+          "/api/miniature-templates",
+          "POST",
+          { sourceMiniatureId: miniatureId },
+          { cookie },
+        );
+        assert.equal(templateResponse.status, 201);
+        const template = (await templateResponse.json()) as { id: string; imageKey: string };
+        assert.notEqual(template.imageKey, miniatureKey);
+        const templatePath = `/api/miniature-templates/${encodeURIComponent(template.id)}/image`;
+        const sourcePath = `/api/catalog-source-images/${template.imageKey}`;
+        const immutable = "private, max-age=31536000, immutable";
+        const paths = [
+          { url: miniaturePath, key: miniatureKey, cacheControl: "private, no-cache" },
+          { url: templatePath, key: template.imageKey, cacheControl: "private, no-cache" },
+          { url: sourcePath, key: template.imageKey, cacheControl: immutable },
+        ];
+        for (const { url, key, cacheControl } of paths) {
+          assert.equal((await request(url)).status, 401);
+          const full = await request(url, "GET", undefined, { cookie });
+          assert.equal(full.status, 200);
+          assert.equal(full.headers.get("content-type"), "image/png");
+          assert.equal(full.headers.get("cache-control"), cacheControl);
+          assert.deepEqual(Buffer.from(await full.arrayBuffer()), original);
+          for (const width of [160, 320, 640]) {
+            const thumb = await request(`${url}?w=${width}&v=${key}`, "GET", undefined, { cookie });
+            assert.equal(thumb.status, 200);
+            assert.equal(thumb.headers.get("content-type"), "image/webp");
+            assert.equal(thumb.headers.get("cache-control"), immutable);
+            const metadata = await sharp(Buffer.from(await thumb.arrayBuffer())).metadata();
+            assert.equal(metadata.width, width);
+            assert.equal(metadata.height, width / 2);
+          }
+          const stale = await request(`${url}?w=160&v=stale`, "GET", undefined, { cookie });
+          assert.equal(stale.headers.get("cache-control"), cacheControl);
+          await stale.arrayBuffer();
+        }
+        for (const url of [
+          "/api/miniatures/missing/image?w=160",
+          "/api/miniature-templates/missing/image?w=160",
+          `/api/catalog-source-images/${crypto.randomUUID()}.png?w=160`,
+          "/api/catalog-source-images/not-a-key?w=160",
+        ])
+          assert.equal((await request(url, "GET", undefined, { cookie })).status, 404);
+
+        // Template creation copies the original; deleting its miniature does not remove the copy.
+        assert.equal(
+          (await request(`/api/miniatures/${miniatureId}`, "DELETE", undefined, { cookie })).status,
+          200,
+        );
+        const cloneResponse = await request(
+          "/api/miniatures",
+          "POST",
+          { templateId: template.id },
+          { cookie },
+        );
+        assert.equal(cloneResponse.status, 201);
+        const clone = (await cloneResponse.json()) as { id: string; imageKey: string };
+        assert.notEqual(clone.imageKey, template.imageKey);
+        assert.equal(
+          (await request("/api/miniature-templates", "DELETE", { id: template.id }, { cookie })).status,
+          200,
+        );
+        const clonedPhoto = await request(`/api/miniatures/${clone.id}/image`, "GET", undefined, { cookie });
+        assert.equal(clonedPhoto.status, 200);
+        assert.deepEqual(Buffer.from(await clonedPhoto.arrayBuffer()), original);
+        assert.equal(
+          (await request(`/api/miniatures/${clone.id}`, "DELETE", undefined, { cookie })).status,
+          200,
+        );
+      },
+    );
     await t.test("template summaries omit recipes and recipe reads are ordered and scoped", async () => {
       const schemeId = getDb().select().from(colorSchemes).get()!.id;
       const paintId = testPaintId;

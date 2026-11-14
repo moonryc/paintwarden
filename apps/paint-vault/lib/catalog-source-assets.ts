@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { catalogSourceAssets, catalogSources } from "../db/schema";
 
-import { deleteImage, loadImage, saveImage } from "./image-store";
+import { deleteImage, imageExists, imageResponse, saveImageBytes } from "./image-store";
 import type { Asset } from "./source-format";
 
 // A catalog source's images: downloading them on install, and serving them and the source's
@@ -45,7 +45,7 @@ export async function downloadAssets(
       const filename = pending[next++];
       const sha256 = records[filename].sha256.toLowerCase();
       const cached = old.get(filename);
-      if (cached?.sha256 === sha256 && (await loadImage(cached.imageKey))) {
+      if (cached?.sha256 === sha256 && (await imageExists(cached.imageKey))) {
         result.set(filename, { key: cached.imageKey, sha256 });
         continue;
       }
@@ -63,7 +63,7 @@ export async function downloadAssets(
               : extension === "avif"
                 ? "image/avif"
                 : "image/jpeg";
-      const key = await saveImage(new File([new Uint8Array(bytes)], filename, { type: contentType }));
+      const key = await saveImageBytes(bytes, contentType);
       created.push(key);
       result.set(filename, { key, sha256 });
     }
@@ -77,15 +77,11 @@ export async function downloadAssets(
   return { result, created, previous };
 }
 
-export async function sourceImage(key: string) {
+export async function sourceImage(key: string, request?: Request) {
   if (!/^[a-f\d-]+\.(?:avif|gif|jpe?g|png|webp)$/i.test(key))
     return new Response("Not found", { status: 404 });
-  const image = await loadImage(key);
-  if (!image) return new Response("Not found", { status: 404 });
-  return new Response(new Uint8Array(image.bytes), {
-    // Each downloaded asset gets a new key, so a key's bytes never change.
-    headers: { "content-type": image.contentType, "cache-control": "private, max-age=31536000, immutable" },
-  });
+  // Each downloaded asset gets a new key, so a key's bytes never change.
+  return imageResponse(key, request, "private, max-age=31536000, immutable");
 }
 
 // The hash busts browser caches when a sync changes the logo.

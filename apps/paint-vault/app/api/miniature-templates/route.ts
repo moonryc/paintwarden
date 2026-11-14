@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { miniatureTemplates } from "../../../db/schema";
 import { serializeImageMutation } from "../../../lib/image-mutations";
-import { deleteImage, imageCacheControl, loadImage } from "../../../lib/image-store";
+import { deleteImage, imageResponse } from "../../../lib/image-store";
 import {
   createTemplate,
   updateTemplate,
@@ -43,9 +43,6 @@ export const DELETE = serializeImageMutation(async function DELETE(request: Requ
 
 export async function imageForTemplate(id: string, request?: Request) {
   const row = getDb().select().from(miniatureTemplates).where(eq(miniatureTemplates.id, id)).get();
-  const image = row?.imageKey ? await loadImage(row.imageKey) : null;
-  if (!row?.imageKey || !image) return new Response("Not found", { status: 404 });
-  return new Response(new Uint8Array(image.bytes), {
-    headers: { "content-type": image.contentType, "cache-control": imageCacheControl(request, row.imageKey) },
-  });
+  if (!row?.imageKey) return new Response("Not found", { status: 404 });
+  return imageResponse(row.imageKey, request);
 }
