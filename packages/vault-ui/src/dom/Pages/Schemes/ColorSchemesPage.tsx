@@ -212,25 +212,12 @@ export function ColorSchemesPage() {
           >
             <Box
               component="div"
-              sx={[
-                {
-                  display: "grid",
-                  minWidth: 0,
-                  gap: 1,
-                  [up.sm]: {
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                  },
-                },
-                {
-                  // With the Plugin filter, the three selects share a row and Uses paints gets its own.
-                  ...(sourceOptions.length
-                    ? { [up.sm]: { gridTemplateColumns: "repeat(3, minmax(0, 1fr))" } }
-                    : {}),
-                  [up.xl]: {
-                    gridTemplateColumns: `repeat(${sourceOptions.length ? 4 : 3}, minmax(0, 1fr))`,
-                  },
-                },
-              ]}
+              sx={{
+                display: "grid",
+                minWidth: 0,
+                gap: 1,
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
+              }}
             >
               {sourceOptions.length > 0 && (
                 <TextField

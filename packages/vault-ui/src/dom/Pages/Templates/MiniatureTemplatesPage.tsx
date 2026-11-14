@@ -178,10 +178,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
             display: "grid",
             gap: 1,
             "& .MuiInputLabel-root.Mui-focused": { color: "var(--ink-soft)" },
-            gridTemplateColumns: {
-              xs: "1fr",
-              sm: catalogQuery.sourceCounts.length ? "repeat(2, minmax(0, 1fr))" : "1fr",
-            },
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
           }}
         >
           {!!catalogQuery.sourceCounts.length && (

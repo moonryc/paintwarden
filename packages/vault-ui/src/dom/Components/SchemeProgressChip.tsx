@@ -31,7 +31,9 @@ export function SchemeProgressChip({
         boxSizing: "border-box",
         px: 1,
         py: 0.625,
-        ...(size === "md" ? schemePreviewChipSize : schemeCardChipSize),
+        minWidth: (size === "md" ? schemePreviewChipSize : schemeCardChipSize).width,
+        minHeight: (size === "md" ? schemePreviewChipSize : schemeCardChipSize).height,
+        maxWidth: "100%",
         borderRadius: 999,
         bgcolor: "color-mix(in oklab, var(--scrim) 55%, transparent)",
         color: "var(--on-scrim)",
@@ -39,10 +41,13 @@ export function SchemeProgressChip({
         fontSize: 11,
         fontWeight: 700,
         lineHeight: 1,
-        whiteSpace: "nowrap",
+        whiteSpace: "normal",
       }}
     >
-      <Box component="span" sx={{ position: "relative", display: "inline-flex", width: 18, height: 18 }}>
+      <Box
+        component="span"
+        sx={{ position: "relative", display: "inline-flex", flexShrink: 0, width: 18, height: 18 }}
+      >
         {ready ? (
           <Box
             component="span"

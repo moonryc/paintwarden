@@ -1,3 +1,4 @@
+import { localizedFontVars } from "@paint-vault/ui/theme-tokens";
 import { createInstance } from "i18next";
 import resourcesToBackend from "i18next-resources-to-backend";
 import { useEffect, useSyncExternalStore } from "react";
@@ -61,6 +62,8 @@ export function useSiteLanguage() {
   useEffect(() => {
     document.documentElement.lang = siteI18n.resolvedLanguage || "en";
     document.documentElement.dir = "ltr";
+    for (const [name, value] of Object.entries(localizedFontVars(siteI18n.resolvedLanguage || "en")))
+      document.documentElement.style.setProperty(name, value);
   }, [language]);
   return {
     language,

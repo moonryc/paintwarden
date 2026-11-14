@@ -264,7 +264,7 @@ function TemplateEditorFields({
             {paintEntries.map((entry, index) => (
               <Box
                 key={`${entry.paintId}:${index}`}
-                sx={{ display: "grid", gap: 1, gridTemplateColumns: { sm: "1fr 130px" } }}
+                sx={{ display: "grid", gap: 1, gridTemplateColumns: { sm: "minmax(0, 1fr) 14rem" } }}
               >
                 <TextField
                   size="small"

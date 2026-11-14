@@ -169,24 +169,14 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       >
         <Box
           component="div"
-          sx={[
-            {
-              display: "grid",
-              minWidth: 0,
-              gap: 1,
-            },
-            plugins.length
-              ? {
-                  [up.sm]: {
-                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  },
-                }
-              : {
-                  [up.sm]: {
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                  },
-                },
-          ]}
+          sx={{
+            display: "grid",
+            minWidth: 0,
+            gap: 1,
+            // Size filters by their actual container, not the window: long
+            // translated selections must also fit narrow embedded/library views.
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
+          }}
         >
           {plugins.length > 0 && (
             <TextField

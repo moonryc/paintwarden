@@ -318,6 +318,7 @@ function PaintDetailsView({
             sx={{
               boxSizing: "border-box",
               width: "100%",
+              whiteSpace: "normal",
             }}
           >
             {t("paintSubstitutionCount", { count: substitutionCount })}

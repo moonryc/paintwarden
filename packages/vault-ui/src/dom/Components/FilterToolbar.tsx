@@ -21,7 +21,7 @@ export function FilterToolbar({
   wideSearch?: boolean;
   singleLineFilters?: boolean;
 }) {
-  const { t } = useTranslation("components");
+  const { t } = useTranslation(["components", "common"]);
   return (
     <Card
       sx={[
@@ -68,7 +68,7 @@ export function FilterToolbar({
           event.stopPropagation();
           setSearch("");
         }}
-        placeholder={placeholder}
+        placeholder={t("common:search")}
         size="small"
         sx={
           singleLineFilters
@@ -87,7 +87,7 @@ export function FilterToolbar({
                 }
         }
         slotProps={{
-          htmlInput: { "aria-label": placeholder },
+          htmlInput: { "aria-label": placeholder, title: placeholder },
           input: {
             sx: {
               backgroundColor: "color-mix(in oklab, var(--sunken) 60%, transparent) !important",

@@ -61,7 +61,7 @@ function Header({
         backdropFilter: "saturate(140%) blur(18px)",
       }}
     >
-      <Container maxWidth="lg" sx={{ display: "flex", alignItems: "center", minHeight: 68, gap: 2 }}>
+      <Container maxWidth="lg" sx={{ display: "flex", alignItems: "center", minHeight: 68, gap: 2, py: 1.5 }}>
         <Box
           component="a"
           href="/"
@@ -121,7 +121,11 @@ function Header({
           onChange={(event) => {
             void setLanguage(event.target.value);
           }}
-          sx={{ minWidth: 108, maxWidth: { xs: 140, md: 180 } }}
+          sx={{
+            minWidth: 124,
+            maxWidth: { xs: 140, md: 180 },
+            "& .MuiSelect-select": { whiteSpace: "normal", overflowWrap: "anywhere" },
+          }}
         >
           {languages.map(({ code, name }) => (
             <MenuItem key={code} value={code}>

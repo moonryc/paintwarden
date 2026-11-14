@@ -44,7 +44,7 @@ const cssName = (name: string) => `--${name.replace(/[A-Z]/g, (letter) => `-${le
 
 export const themeVars: Record<string, string> = {
   "--font-sans":
-    '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Malgun Gothic", "Microsoft YaHei", "PingFang SC", "PingFang TC", sans-serif',
+    '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Apple SD Gothic Neo", "Malgun Gothic", "Microsoft YaHei", "PingFang SC", "PingFang TC", sans-serif',
   "--font-serif":
     '"Fraunces", Georgia, "Times New Roman", "Noto Serif CJK JP", "Songti SC", "Songti TC", serif',
   ...Object.fromEntries(Object.entries(colors).map(([name, value]) => [cssName(name), value])),
@@ -77,3 +77,34 @@ export const up = Object.fromEntries(
 export const down = Object.fromEntries(
   sizes.map((size) => [size, `@media (max-width: ${breakpoints[size] - 0.05}px)`]),
 ) as Record<Breakpoint, string>;
+
+// Prefer the language's regional CJK faces rather than letting, for example,
+// Japanese headings fall through to a Simplified Chinese serif font. Latin
+// characters still use the app's bundled Inter/Fraunces fonts.
+export function localizedFontVars(language: string): Record<"--font-sans" | "--font-serif", string> {
+  const faces: Record<string, [string, string]> = {
+    ja: [
+      '"Hiragino Sans", "Noto Sans CJK JP", "Yu Gothic"',
+      '"Hiragino Mincho ProN", "Noto Serif CJK JP", "Yu Mincho"',
+    ],
+    ko: [
+      '"Apple SD Gothic Neo", "Noto Sans CJK KR", "Malgun Gothic"',
+      '"AppleMyungjo", "Noto Serif CJK KR", "Batang"',
+    ],
+    "zh-Hans": [
+      '"PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei"',
+      '"Songti SC", "Noto Serif CJK SC", "SimSun"',
+    ],
+    "zh-Hant": [
+      '"PingFang TC", "Noto Sans CJK TC", "Microsoft JhengHei"',
+      '"Songti TC", "Noto Serif CJK TC", "PMingLiU"',
+    ],
+  };
+  const face = faces[language];
+  return face
+    ? {
+        "--font-sans": `"Inter", ${face[0]}, ui-sans-serif, system-ui, sans-serif`,
+        "--font-serif": `"Fraunces", Georgia, "Times New Roman", ${face[1]}, serif`,
+      }
+    : { "--font-sans": themeVars["--font-sans"], "--font-serif": themeVars["--font-serif"] };
+}

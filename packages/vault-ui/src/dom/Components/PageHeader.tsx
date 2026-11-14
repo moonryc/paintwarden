@@ -34,7 +34,7 @@ export function PageHeader({
         component="div"
         sx={{
           minWidth: 0,
-          flex: "1",
+          flex: "1 1 min(100%, 18rem)",
         }}
       >
         <Box

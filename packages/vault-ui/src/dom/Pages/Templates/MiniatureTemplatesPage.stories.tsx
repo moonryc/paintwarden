@@ -48,7 +48,7 @@ export const GlobalSearchAndSummaryOnly: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
-    await userEvent.type(canvas.getByPlaceholderText("Search templates…"), "Distant dragon");
+    await userEvent.type(canvas.getByRole("textbox", { name: "Search templates…" }), "Distant dragon");
     await expect(await canvas.findByText("1 template")).toBeInTheDocument();
     await userEvent.click(await canvas.findByRole("button", { name: /Distant dragon/ }));
     const dialog = within(await within(document.body).findByRole("dialog", { name: "Distant dragon" }));

@@ -1,3 +1,4 @@
+import { localizedFontVars } from "./theme-tokens";
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { I18nextProvider } from "react-i18next";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -66,6 +67,8 @@ function DeviceLanguageProvider({ children, language: requestedLanguage }: Langu
     if (typeof document !== "undefined") {
       document.documentElement.lang = language;
       document.documentElement.dir = "ltr";
+      for (const [name, value] of Object.entries(localizedFontVars(language)))
+        document.documentElement.style.setProperty(name, value);
     }
   }, [language]);
   const value = useMemo(

@@ -81,7 +81,17 @@ export function SchemePreview({
             size="small"
             variant="outlined"
             label={active.category ? colorCategoryLabel(active.category) : t("uncategorized")}
-            sx={{ ...schemePreviewChipSize, fontSize: 11, fontWeight: 700 }}
+            sx={{
+              ...schemePreviewChipSize,
+              width: "auto",
+              minWidth: schemePreviewChipSize.width,
+              maxWidth: "100%",
+              height: "auto",
+              minHeight: schemePreviewChipSize.height,
+              fontSize: 11,
+              fontWeight: 700,
+              "& .MuiChip-label": { whiteSpace: "normal", overflowWrap: "anywhere", py: 0.25 },
+            }}
           />
           {active.isSystem && <PluginChip name={active.sourceName} logoUrl={active.sourceLogoUrl} />}
           <SchemeProgressChip available={availableCount} total={paintCount} />

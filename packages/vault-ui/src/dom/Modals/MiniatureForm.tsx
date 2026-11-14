@@ -16,7 +16,6 @@ import { useEffect, useRef, useState } from "react";
 import { Modal } from "../Components/Modal";
 import { Archive, Check, Heart, Save, Trash2 } from "../icons";
 import { useTemplateCatalog } from "../store/template-hooks";
-import { up } from "../theme-tokens";
 import type {
   Miniature,
   MiniatureFormValues,
@@ -187,9 +186,7 @@ export function MiniatureForm({
               sx={{
                 display: "grid",
                 gap: 1.5,
-                [up.sm]: {
-                  gridTemplateColumns: "minmax(0,.8fr) minmax(0,1.2fr)",
-                },
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 18rem), 1fr))",
               }}
             >
               <TextField

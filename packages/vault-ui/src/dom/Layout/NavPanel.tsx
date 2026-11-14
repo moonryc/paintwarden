@@ -337,7 +337,7 @@ export function NavPanel({
                 fontSize: "0.875rem",
                 lineHeight: 10 / 7,
                 fontWeight: 600,
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
                 color: "var(--ink)",
               }}
             >
@@ -349,7 +349,7 @@ export function NavPanel({
                 display: "block",
                 fontSize: "0.75rem",
                 lineHeight: 4 / 3,
-                whiteSpace: "nowrap",
+                whiteSpace: "normal",
                 color: "var(--ink-soft)",
               }}
             >

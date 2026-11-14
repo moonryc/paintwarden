@@ -246,7 +246,7 @@ export const ApolloLoading: Story = {
     await expect(canvas.queryByRole("list", { name: "Paint library" })).not.toBeInTheDocument();
     await expect(await canvas.findByRole("list", { name: "Paint library" })).toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
-    const search = canvas.getByPlaceholderText("Search brand, range, or paint…");
+    const search = canvas.getByRole("textbox", { name: "Search brand, range, or paint…" });
     await userEvent.type(search, "Fixture paint 359");
     // Query changes keep the toolbar mounted instead of returning to initial skeletons.
     await expect(search).toHaveFocus();
