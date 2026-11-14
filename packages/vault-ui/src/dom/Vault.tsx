@@ -1,4 +1,3 @@
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import {
   Alert,
   Button,
@@ -10,9 +9,9 @@ import {
   useScrollTrigger,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import { LanguageProvider } from "./i18n";
-import { useTranslation } from "react-i18next";
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
 import { DeferredDialog } from "./Components/DeferredDialog";
@@ -24,6 +23,7 @@ import { useMiniatureActions } from "./graphql/miniature-actions";
 import { NavigationCountsProvider, useNavigationCounts } from "./graphql/navigation";
 import { usePaintCommands } from "./graphql/paint-actions";
 import { VaultGraphQLProvider } from "./graphql/provider";
+import { LanguageProvider } from "./i18n";
 import { MenuIcon } from "./icons";
 import { NAV } from "./Layout/nav-items";
 import { NavPanel } from "./Layout/NavPanel";
@@ -35,6 +35,7 @@ import { VaultStoreProvider } from "./store/VaultStoreProvider";
 import { up } from "./theme-tokens";
 import { useAuthStatus, useServerChecks } from "./utils/auth-hooks";
 import { installBaseStyles } from "./utils/base-styles";
+import { PublicError, publicErrorMessage } from "./utils/public-error";
 import { truncateSx } from "./utils/truncate";
 
 // Keep the workbench eager; other screens and overlays load only when opened.
@@ -130,13 +131,13 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
         body: JSON.stringify({ username, password, ...(auth?.setupCodeRequired ? { setupCode } : {}) }),
       });
       const result = (await response.json()) as { token?: string; error?: string };
-      if (!response.ok) throw new Error(translateServerError(result));
+      if (!response.ok) throw new PublicError(translateServerError(result));
       setToken(result.token ?? "");
       setPassword("");
       setSetupCode("");
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : i18n.t("shell:couldNotSignIn"));
+      setError(publicErrorMessage(cause, i18n.t("shell:couldNotSignIn")));
     } finally {
       setAuthBusy(false);
     }

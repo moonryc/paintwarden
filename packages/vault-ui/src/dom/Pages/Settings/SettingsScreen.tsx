@@ -20,6 +20,7 @@ import type { AuthStatus } from "../../types";
 import { exportBackupFile } from "../../utils/backup-export";
 import { summarizeBackup } from "../../utils/backup-summary";
 import { describeUpdate, useDesktopUpdate } from "../../utils/desktop-update";
+import { PublicError, publicErrorMessage } from "../../utils/public-error";
 
 import { ChangePasswordDialog, ChangeUsernameDialog, SignInSettingDialog } from "./AccountDialogs";
 import { type PendingBackup, type RestoreMode, RestoreBackupDialog } from "./RestoreBackupDialog";
@@ -72,7 +73,7 @@ export function SettingsScreen({
     try {
       if (await saveBackup()) setLastExport(new Date());
     } catch (error) {
-      notify(error instanceof Error ? error.message : t("settingsExportFailed"), "error");
+      notify(publicErrorMessage(error, t("settingsExportFailed")), "error");
     } finally {
       setExporting(false);
     }
@@ -91,7 +92,7 @@ export function SettingsScreen({
         body: JSON.stringify({ password, ...extra }),
       });
       const result = (await response.json()) as { error?: string; token?: string };
-      if (!response.ok) throw new Error(translateServerError(result));
+      if (!response.ok) throw new PublicError(translateServerError(result));
       if (result.token) setToken(result.token);
       await refresh();
       notify(
@@ -114,11 +115,11 @@ export function SettingsScreen({
         headers: { "content-type": "application/json", ...authHeaders() },
         body: "{}",
       });
-      if (!response.ok) throw new Error(t("settingsSignOutFailed"));
+      if (!response.ok) throw new PublicError(t("settingsSignOutFailed"));
       setToken("");
       await refresh();
     } catch (error) {
-      notify(error instanceof Error ? error.message : t("settingsSignOutFailed"), "error");
+      notify(publicErrorMessage(error, t("settingsSignOutFailed")), "error");
     }
   }
   async function stageBackup(file: File) {
@@ -136,12 +137,12 @@ export function SettingsScreen({
     setBusy(true);
     try {
       if (window.paintVaultDesktop) {
-        const { error } = await window.paintVaultDesktop.restoreBackup(pendingBackup.file, {
+        const result = await window.paintVaultDesktop.restoreBackup(pendingBackup.file, {
           mode,
           authorization: authHeaders().authorization,
         });
-        if (error) {
-          notify(error, "error");
+        if (result.error || result.errorCode) {
+          notify(translateServerError(result), "error");
           return;
         }
       } else
@@ -154,8 +155,10 @@ export function SettingsScreen({
       // A restore can change any part of the vault, so it is reloaded in full.
       await refresh();
       notify(mode === "replace" ? t("settingsVaultReplaced") : t("settingsBackupMerged"));
-    } catch {
-      // The shared API helper already displays the error.
+    } catch (cause) {
+      // Browser restores are reported by the shared API helper. Desktop failures
+      // can instead reject at the bridge, before any HTTP response is available.
+      if (window.paintVaultDesktop) notify(publicErrorMessage(cause, translateServerError({})), "error");
     } finally {
       setBusy(false);
     }

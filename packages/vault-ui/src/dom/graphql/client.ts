@@ -1,12 +1,12 @@
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import { ApolloClient, ApolloLink, HttpLink } from "@apollo/client";
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
 import { ErrorLink } from "@apollo/client/link/error";
 import { getMainDefinition } from "@apollo/client/utilities";
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import { print } from "graphql";
 import { createClient } from "graphql-sse";
-import { Observable, map } from "rxjs";
+import { Observable, catchError, map, throwError } from "rxjs";
 
 import { createVaultCache } from "./cache";
 
@@ -155,9 +155,19 @@ export function createVaultGraphQLClient(options: Options) {
       })),
     ),
   );
+  // ErrorLink must inspect the original transport class/status before wrapping.
+  // Do not mutate a fetch/library-owned error; retain it as the diagnostic cause.
+  // GraphQL result codes remain untouched, and SSE retries happen downstream.
+  const localizedTransportErrors = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      catchError((cause: unknown) =>
+        throwError(() => new Error(translateServerError({ errorCode: "REQUEST_FAILED" }), { cause })),
+      ),
+    ),
+  );
   const client = new ApolloClient({
     cache: createVaultCache(),
-    link: ApolloLink.from([lifecycle, errors, auth, localizedErrors, transport]),
+    link: ApolloLink.from([lifecycle, localizedTransportErrors, errors, auth, localizedErrors, transport]),
     defaultOptions: {
       watchQuery: {
         fetchPolicy: "cache-and-network",

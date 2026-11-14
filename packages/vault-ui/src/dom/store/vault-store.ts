@@ -4,6 +4,7 @@ import { createStore } from "zustand/vanilla";
 
 import type { Api, AuthHeaders, AuthStatus, Notify, Tab, Toast } from "../types";
 import { readJson } from "../utils/auth-hooks";
+import { PublicError, publicErrorMessage } from "../utils/public-error";
 
 export type MiniatureFilter = "ALL" | "OWNED" | "WISHLIST";
 export type PaintFilter = "ALL" | "OWNED" | "WISHLIST" | "UNTRACKED";
@@ -74,11 +75,11 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
             authError: "",
             ...(changed ? { authGeneration: generation + 1 } : {}),
           });
-        } catch (error) {
+        } catch {
           if (generation === get().authGeneration)
             set({
               authLoading: false,
-              authError: error instanceof Error ? error.message : i18n.t("shell:couldNotCheckVaultAccess"),
+              authError: i18n.t("shell:couldNotCheckVaultAccess"),
             });
         }
       })().finally(() => {
@@ -117,7 +118,7 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
         const { authHeaders, notify, refresh } = get();
         try {
           if (path.split("?")[0] === "/api/state" || path.startsWith("/api/changes"))
-            throw new Error(i18n.t("shell:legacySnapshotRequestsAreDisabled"));
+            throw new PublicError(i18n.t("shell:legacySnapshotRequestsAreDisabled"));
           const response = await fetch(path, {
             ...options,
             headers: {
@@ -127,13 +128,14 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
             },
           });
           const result = (await response.json().catch(() => ({}))) as { error?: string };
-          if (!response.ok) throw new Error(translateServerError(result));
+          if (!response.ok) throw new PublicError(translateServerError(result));
           await refresh();
           return result;
         } catch (error) {
-          notify(error instanceof Error ? error.message : i18n.t("shell:requestFailed"), "error");
+          const message = publicErrorMessage(error, i18n.t("shell:requestFailed"));
+          notify(message, "error");
           await refresh();
-          throw error;
+          throw new PublicError(message, { cause: error });
         }
       },
       toasts: [],

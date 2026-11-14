@@ -1,14 +1,15 @@
-import { translateServerError } from "@paint-vault/i18n/runtime";
-import { useTranslation } from "react-i18next";
-import { imageUrl } from "../utils/image-cache";
 import { Alert, Button } from "@mui/material";
 import Box from "@mui/material/Box";
+import { translateServerError } from "@paint-vault/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ImageMinus, ImagePlus, RotateCw } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { buttonResetSx } from "../utils/element-resets";
 import { droppedImageUrl, imageNameFromUrl, rotateImage } from "../utils/image";
+import { imageUrl } from "../utils/image-cache";
+import { PublicError, publicErrorMessage } from "../utils/public-error";
 
 // The project photo: a drop zone for an image file or image link, with a preview behind it and
 // buttons to rotate, remove, or go back to the saved photo.
@@ -69,12 +70,12 @@ export function MiniatureImageField({
       });
       if (!response.ok) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(translateServerError(result));
+        throw new PublicError(translateServerError(result));
       }
       const blob = await response.blob();
       chooseImage(new File([blob], imageNameFromUrl(url), { type: blob.type || "image/jpeg" }));
     } catch (error) {
-      setImageError(error instanceof Error ? error.message : t("couldNotImportThatImage"));
+      setImageError(publicErrorMessage(error, t("couldNotImportThatImage")));
     } finally {
       setImporting(false);
     }
@@ -232,7 +233,7 @@ export function MiniatureImageField({
               try {
                 onImageChange(await rotateImage(image ?? previewUrl, authHeaders()));
               } catch (error) {
-                setImageError(error instanceof Error ? error.message : t("couldNotRotatePhoto"));
+                setImageError(publicErrorMessage(error, t("couldNotRotatePhoto")));
               } finally {
                 setRotating(false);
               }

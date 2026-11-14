@@ -4,6 +4,7 @@ const test = require("node:test");
 
 const {
   assetPath,
+  publicErrorResult,
   shellCacheControl,
   parsedChoice,
   serverOrigin,
@@ -159,4 +160,31 @@ test("subscription cancellation covers already-aborted requests and all pending 
   assert.equal(fresh.wrap(null), null);
   streams.abortAll();
   assert.equal(fresh.signal.aborted, false);
+});
+
+test("restore IPC keeps stable codes and parameters, never raw diagnostics", () => {
+  assert.deepEqual(
+    publicErrorResult(
+      {
+        error: "private diagnostic",
+        errorCode: "INVALID_SELECTION",
+        errorParameters: { value1: "paint", count: 2, invalid: { secret: true } },
+      },
+      "localized failure",
+    ),
+    {
+      error: "localized failure",
+      errorCode: "INVALID_SELECTION",
+      errorParameters: { value1: "paint", count: 2 },
+    },
+  );
+  assert.deepEqual(publicErrorResult(null, "localized failure"), {
+    error: "localized failure",
+    errorCode: "REQUEST_FAILED",
+    errorParameters: {},
+  });
+  assert.equal(
+    publicErrorResult({ error: "legacy server diagnostic" }, "localized failure").error,
+    "localized failure",
+  );
 });

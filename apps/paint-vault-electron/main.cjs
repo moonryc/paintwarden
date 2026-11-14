@@ -12,6 +12,7 @@ const { pipeline } = require("node:stream/promises");
 const { app, BrowserWindow, dialog, ipcMain, protocol, shell, Menu } = require("electron");
 const {
   assetPath,
+  publicErrorResult,
   shellCacheControl,
   imageRequest,
   imageProxyCacheControl,
@@ -603,7 +604,7 @@ app
       );
       if (response.ok) return {};
       const body = await response.json().catch(() => null);
-      return { error: typeof body?.error === "string" ? body.error : t("errors.restoreFailed") };
+      return publicErrorResult(body, t("errors.restoreFailed"));
     });
 
     // Packaged builds update themselves; smoke tests set PAINT_VAULT_DISABLE_UPDATES=1.

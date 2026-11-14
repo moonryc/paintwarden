@@ -224,7 +224,7 @@ export type DesktopBridge = {
   restoreBackup(
     file: File,
     input: { mode: "replace" | "merge"; authorization?: string },
-  ): Promise<{ error?: string }>;
+  ): Promise<{ error?: string; errorCode?: string; errorParameters?: Record<string, string | number> }>;
   getUpdateState(): Promise<DesktopUpdateState>;
   checkForUpdates(): Promise<DesktopUpdateState>;
   installUpdate(): Promise<boolean>;

@@ -88,3 +88,46 @@ export const DeferredCreateChoices: Story = {
     await expect(body.getByText("Custom · Silver")).toBeVisible();
   },
 };
+
+export const AddErrorsAreLocalized: Story = {
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(body.getByText("Example paint source")).toBeVisible());
+    const original = window.fetch;
+    const submit = body.getByRole("button", { name: "Add plugin" });
+    await userEvent.type(body.getByLabelText("GitHub repository"), "example/other");
+    try {
+      window.fetch = async (_input, init) => {
+        if (init?.method === "POST") throw new TypeError("Failed to fetch private-host");
+        return original(_input, init);
+      };
+      await userEvent.click(submit);
+      await waitFor(() => expect(body.getByText("Could not install plugin")).toBeVisible());
+      await expect(body.queryByText("Failed to fetch private-host")).not.toBeInTheDocument();
+      window.fetch = async (_input, init) =>
+        init?.method === "POST"
+          ? Response.json({ error: "private legacy diagnostic" }, { status: 400 })
+          : original(_input, init);
+      await userEvent.click(submit);
+      await waitFor(() =>
+        expect(body.getByText("The request could not be completed. Please try again.")).toBeVisible(),
+      );
+      await expect(body.queryByText("private legacy diagnostic")).not.toBeInTheDocument();
+      window.fetch = async (_input, init) =>
+        init?.method === "POST"
+          ? Response.json(
+              {
+                error: "private legacy diagnostic",
+                errorCode: "INVALID_SELECTION",
+                errorParameters: { value1: "paint" },
+              },
+              { status: 400 },
+            )
+          : original(_input, init);
+      await userEvent.click(submit);
+      await waitFor(() => expect(body.getByText("Invalid paint selection")).toBeVisible());
+    } finally {
+      window.fetch = original;
+    }
+  },
+};

@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
+import { ServerError, CombinedGraphQLErrors } from "@apollo/client/errors";
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+
 import { createVaultStore } from "../store/vault-store";
 
 import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
@@ -235,4 +238,140 @@ void test("SSE access denial is reported once without retrying permanent auth er
   assert.deepEqual(scope.client.cache.extract(), {});
   subscription.unsubscribe();
   scope.dispose();
+});
+
+void test("network and unknown transport failures expose localized generic text, not diagnostics", async () => {
+  const previous = i18n.language;
+  await i18n.changeLanguage("de");
+  try {
+    for (const cause of [
+      new TypeError("Failed to fetch private-host"),
+      "raw server diagnostic",
+      Object.freeze(new Error("frozen diagnostic")),
+    ]) {
+      const errors: VaultGraphQLError[] = [];
+      const scope = createVaultGraphQLClient({
+        authHeaders: () => ({}),
+        onError: (error) => errors.push(error),
+        // Exercise the non-Error throw path too: network libraries may reject arbitrary values.
+        // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+        fetch: () => Promise.reject(cause),
+      });
+      try {
+        await assert.rejects(scope.client.query({ query: LibraryPageDocument }), (error: unknown) => {
+          assert.ok(error instanceof Error);
+          assert.equal(error.message, i18n.t("errors:REQUEST_FAILED"));
+          assert.equal(error.cause, cause, "retain diagnostic cause without mutating the transport error");
+          if (cause instanceof Error) assert.notEqual(cause.message, error.message);
+          return true;
+        });
+        assert.deepEqual(errors, [{ message: i18n.t("errors:REQUEST_FAILED"), accessDenied: false }]);
+      } finally {
+        scope.dispose();
+      }
+    }
+  } finally {
+    await i18n.changeLanguage(previous);
+  }
+});
+
+void test("HTTP server errors retain original class/status as cause with sanitized consumer text", async () => {
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: async () => new Response("private server diagnostic", { status: 500 }),
+  });
+  try {
+    await assert.rejects(scope.client.query({ query: LibraryPageDocument }), (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.ok(ServerError.is(error.cause));
+      assert.equal(error.cause.statusCode, 500);
+      assert.notEqual(error.cause.message, error.message);
+      assert.equal(error.message, i18n.t("errors:REQUEST_FAILED"));
+      return true;
+    });
+  } finally {
+    scope.dispose();
+  }
+});
+
+void test("all HTTP and GraphQL auth denial codes still dispose the scope", async () => {
+  for (const denial of [401, 403, 428, "UNAUTHENTICATED", "FORBIDDEN"]) {
+    const errors: VaultGraphQLError[] = [];
+    let denied = false;
+    const scope = createVaultGraphQLClient({
+      authHeaders: () => ({}),
+      onError: (error) => errors.push(error),
+      fetch: async () =>
+        !denied
+          ? json(page("private"))
+          : typeof denial === "number"
+            ? new Response("private auth diagnostic", { status: denial })
+            : Response.json({
+                errors: [{ message: "private auth diagnostic", extensions: { code: denial } }],
+              }),
+    });
+    await scope.client.query({ query: LibraryPageDocument });
+    denied = true;
+    await scope.client.query({ query: LibraryPageDocument }).catch(() => undefined);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0].accessDenied, true, String(denial));
+    assert.equal(errors[0].message, i18n.t("errors:UNAUTHENTICATED"));
+    assert.deepEqual(scope.client.cache.extract(), {});
+    scope.dispose();
+  }
+});
+
+void test("GraphQL stable codes/parameters survive localization and legacy diagnostics are hidden", async () => {
+  for (const extensions of [
+    { code: "STALE_CURSOR" },
+    { code: "BAD_USER_INPUT", errorCode: "INVALID_SELECTION", errorParameters: { value1: "paint" } },
+    { code: "UNKNOWN_LEGACY_CODE" },
+  ]) {
+    const scope = createVaultGraphQLClient({
+      authHeaders: () => ({}),
+      fetch: async () => Response.json({ errors: [{ message: "private English diagnostic", extensions }] }),
+    });
+    try {
+      await assert.rejects(scope.client.query({ query: LibraryPageDocument }), (error: unknown) => {
+        assert.ok(CombinedGraphQLErrors.is(error));
+        assert.equal(error.message, translateServerError({ extensions }));
+        assert.deepEqual(error.errors[0].extensions, extensions);
+        return true;
+      });
+    } finally {
+      scope.dispose();
+    }
+  }
+});
+
+void test("SSE terminal network failures localize only after the existing retries finish", async () => {
+  let requests = 0;
+  let retries = 0;
+  const reported = deferred<VaultGraphQLError>();
+  const delivered = deferred<unknown>();
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onError: reported.resolve,
+    sseRetry: async () => {
+      retries += 1;
+    },
+    fetch: async () => {
+      requests += 1;
+      throw new TypeError("Failed to fetch SSE private-host");
+    },
+  });
+  const subscription = scope.client
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: "0" } })
+    .subscribe({ next: (result) => delivered.resolve(result.error), error: delivered.resolve });
+  try {
+    const error = await delivered.promise;
+    assert.ok(error instanceof Error);
+    assert.equal(error.message, i18n.t("errors:REQUEST_FAILED"));
+    assert.equal((await reported.promise).accessDenied, false);
+    assert.equal(requests, 6);
+    assert.equal(retries, 5);
+  } finally {
+    subscription.unsubscribe();
+    scope.dispose();
+  }
 });

@@ -259,7 +259,25 @@ function versionMismatch(appVersion, serverVersion) {
   return { update, appVersion, serverVersion: known ? serverVersion : null, message };
 }
 
+// Preserve reviewed wire codes, never a legacy server diagnostic, across IPC.
+function publicErrorResult(body, fallback) {
+  const parameters = body?.errorParameters;
+  return {
+    error: fallback,
+    errorCode: typeof body?.errorCode === "string" ? body.errorCode : "REQUEST_FAILED",
+    errorParameters:
+      parameters && typeof parameters === "object" && !Array.isArray(parameters)
+        ? Object.fromEntries(
+            Object.entries(parameters).filter(
+              ([, value]) => typeof value === "string" || typeof value === "number",
+            ),
+          )
+        : {},
+  };
+}
+
 module.exports = {
+  publicErrorResult,
   serverOrigin,
   parsedChoice,
   assetPath,

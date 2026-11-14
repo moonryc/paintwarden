@@ -1,4 +1,5 @@
 import { i18n } from "../../i18n";
+import { publicErrorMessage } from "../../utils/public-error";
 
 // Types and helpers shared by the Sources page and its cards and dialogs.
 
@@ -69,5 +70,4 @@ const countKeys = {
 } as const;
 export const plural = (count: number, word: keyof typeof countKeys) => i18n.t(countKeys[word], { count });
 
-export const message = (cause: unknown, fallback: string) =>
-  cause instanceof Error ? cause.message : fallback;
+export const message = publicErrorMessage;

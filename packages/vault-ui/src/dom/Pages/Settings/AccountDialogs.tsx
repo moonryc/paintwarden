@@ -6,9 +6,10 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "../../Components/Modal";
 import { PasswordField } from "../../Components/PasswordField";
 import { i18n } from "../../i18n";
+import { publicErrorMessage } from "../../utils/public-error";
 
 const errorMessage = (cause: unknown) =>
-  cause instanceof Error ? cause.message : i18n.t("pages:settingsAccountUpdateError");
+  publicErrorMessage(cause, i18n.t("pages:settingsAccountUpdateError"));
 
 // Field change handlers that also clear the last attempt's error.
 const fieldEditor =

@@ -1,5 +1,6 @@
 import type { ApolloClient } from "@apollo/client";
 import type { RecipeStep } from "@paint-vault/core/recipe-steps";
+import { i18n } from "@paint-vault/i18n/runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getFragmentData } from "../graphql/generated/fragment-masking";
@@ -66,7 +67,7 @@ function useTemplateWindow<T>(
         scope,
         data: null,
         loading: false,
-        error: enabled ? new Error("The template connection is not available.") : null,
+        error: enabled ? new Error(i18n.t("shell:requestFailed")) : null,
       });
       return;
     }
@@ -103,7 +104,7 @@ function useTemplateWindow<T>(
             scope,
             data: current,
             loading: false,
-            error: error instanceof Error ? error : new Error(String(error)),
+            error: error instanceof Error ? error : new Error(i18n.t("shell:requestFailed")),
           });
       } finally {
         running = false;
@@ -332,7 +333,7 @@ export function createTemplateActions(scope: VaultGraphQLScope) {
     const ticket = scope.controller.captureCommand();
     const run = async () => {
       if (!scope.controller.isCommandCurrent(ticket))
-        throw new Error("Vault connection changed. Please try again.");
+        throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
       return work(ticket);
     };
     const result = (queues.get(id) ?? Promise.resolve()).then(run, run);
@@ -346,10 +347,10 @@ export function createTemplateActions(scope: VaultGraphQLScope) {
   };
   const committed = (payload: TemplateCommandResultFragment | null | undefined, ticket: CommandTicket) => {
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
-    if (!payload) throw new Error("Template save returned no result");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
+    if (!payload) throw new Error(i18n.t("shell:requestFailed"));
     if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     return payload.templateId;
   };
   return {
@@ -390,7 +391,7 @@ export function useTemplateActions() {
   const scope = useVaultGraphQL();
   const notify = useVaultStore((store) => store.notify);
   return useMemo(() => {
-    if (!scope) throw new Error("Template actions require the GraphQL provider");
+    if (!scope) throw new Error(i18n.t("shell:requestFailed"));
     let actions = actionScopes.get(scope);
     if (!actions) {
       actions = createTemplateActions(scope);
@@ -402,7 +403,7 @@ export function useTemplateActions() {
         return await work();
       } catch (error) {
         if (scope.controller.isCommandCurrent(ticket))
-          notify(error instanceof Error ? error.message : "Could not save template", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:requestFailed"), "error");
         throw error;
       }
     };

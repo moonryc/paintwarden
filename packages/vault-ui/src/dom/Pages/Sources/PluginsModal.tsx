@@ -19,6 +19,7 @@ import { PageSkeleton } from "../../Components/PageSkeletons";
 import { usePluginSources } from "../../graphql/sources-hooks";
 import { Extension, FileUp, Layers, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
+import { PublicError } from "../../utils/public-error";
 import { useInitialPageLoading } from "../useInitialPageLoading";
 
 import { CreateSourceDialog } from "./CreateSourceDialog";
@@ -81,7 +82,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       // Source/network operations intentionally stay REST; Apollo reads the locally
       // cached result. A GraphQL field resolver never contacts GitHub.
       const response = await fetch("/api/catalog-sources?versions=1", { headers: authHeaders() });
-      if (!response.ok) throw new Error(t("sourcesCouldNotCheckForPluginUpdates"));
+      if (!response.ok) throw new PublicError(t("sourcesCouldNotCheckForPluginUpdates"));
       const versions = await sourceRead.versions();
       setSourceVersions(Object.fromEntries(versions.map((item) => [item.id, item])));
     } catch {
@@ -101,7 +102,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       setShareable(await sourceRead.shareable());
       setCreateOpen(true);
     } catch (cause) {
-      setError(message(cause, t("sourcesCouldNotLoadShareableContent")));
+      // Apollo/local read errors are already localized at the GraphQL boundary.
+      setError(cause instanceof Error ? cause.message : t("sourcesCouldNotLoadShareableContent"));
     } finally {
       setPending(null);
     }
@@ -134,7 +136,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         body: JSON.stringify({ url: url.trim() }),
       });
       const result = (await response.json()) as { error?: string; updated?: boolean };
-      if (!response.ok) throw new Error(translateServerError(result));
+      if (!response.ok) throw new PublicError(translateServerError(result));
       setUrl("");
       await refresh();
       await loadSources();
@@ -161,7 +163,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         name?: string;
         updated?: boolean;
       };
-      if (!response.ok) throw new Error(translateServerError(result));
+      if (!response.ok) throw new PublicError(translateServerError(result));
       await refresh();
       await loadSources();
       const plugin = result.name ?? t("sourcesPlugin");
@@ -187,7 +189,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         headers: authHeaders(),
       });
       const result = (await response.json()) as { error?: string; updated?: boolean };
-      if (!response.ok || result.error) throw new Error(translateServerError(result));
+      if (!response.ok || result.error) throw new PublicError(translateServerError(result));
       await refresh();
       await loadSources();
       notify(result.updated ? t("sourcesPluginUpdated") : t("sourcesPluginIsUpToDate"));
@@ -205,7 +207,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     setError("");
     try {
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
-      if (!response.ok) throw new Error(t("sourcesCouldNotUpdatePlugins"));
+      if (!response.ok) throw new PublicError(t("sourcesCouldNotUpdatePlugins"));
       const { results } = (await response.json()) as { results: { updated?: boolean; error?: string }[] };
       await refresh();
       await loadSources();
@@ -226,7 +228,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     try {
       setRemoval(await sourceRead.removal(id));
     } catch (cause) {
-      setError(message(cause, t("sourcesCouldNotCheckPluginUsage")));
+      // Unlike REST diagnostics, this is a localized Apollo/local read error.
+      setError(cause instanceof Error ? cause.message : t("sourcesCouldNotCheckPluginUsage"));
     }
   }
 
@@ -244,7 +247,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         setRemoval(result);
         return;
       }
-      if (!response.ok) throw new Error(translateServerError(result));
+      if (!response.ok) throw new PublicError(translateServerError(result));
       setRemoval(null);
       await refresh();
       await loadSources();

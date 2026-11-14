@@ -1,5 +1,8 @@
+import { translateServerError } from "@paint-vault/i18n/runtime";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+
+import { PublicError } from "../../utils/public-error";
 
 import { ChangePasswordDialog, ChangeUsernameDialog, SignInSettingDialog } from "./AccountDialogs";
 
@@ -24,7 +27,8 @@ export const SignInError: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await userEvent.click(body.getByRole("button", { name: "Turn on" }));
     // The dialog fades in, so wait for the message to show rather than just exist.
-    await waitFor(() => expect(body.getByText("The server could not save the setting")).toBeVisible());
+    await waitFor(() => expect(body.getByText("Could not update account")).toBeVisible());
+    await expect(body.queryByText("The server could not save the setting")).not.toBeInTheDocument();
   },
 };
 
@@ -66,5 +70,19 @@ export const ChangeUsername: Story = {
     await userEvent.type(body.getByLabelText(/Current password/), "long safe password");
     await userEvent.click(submit);
     await waitFor(() => expect(args.onConfirm).toHaveBeenCalledWith("long safe password", "brush"));
+  },
+};
+
+// Stable server codes carry translated detail; legacy/network Error messages do not.
+export const StableCodeError: Story = {
+  args: {
+    onConfirm: fn(async () => {
+      throw new PublicError(translateServerError({ errorCode: "FORBIDDEN" }));
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(body.getByRole("button", { name: "Turn on" }));
+    await waitFor(() => expect(body.getByText("You do not have access to this vault.")).toBeVisible());
   },
 };

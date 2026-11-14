@@ -8,6 +8,7 @@ import { Modal } from "../../Components/Modal";
 import { formatNumber } from "../../i18n";
 import { Bookmarks, Extension, PaintDrop, Palette, Search } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
+import { PublicError } from "../../utils/public-error";
 
 import { type Shareable, KINDS, SEMVER, plural, message } from "./sources.utils";
 
@@ -141,7 +142,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
       });
       if (!response.ok) {
         const result = (await response.json()) as { error?: string };
-        throw new Error(translateServerError(result));
+        throw new PublicError(translateServerError(result));
       }
       const blob = await response.blob();
       if (window.paintVaultDesktop) {

@@ -57,3 +57,34 @@ export const PasswordDialog: Story = {
     await expect(body.getByLabelText(/^New password/)).toHaveValue("");
   },
 };
+
+export const AccountErrorsAreLocalized: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    const original = window.fetch.bind(window);
+    const isAuthRequest = (input: RequestInfo | URL) =>
+      new URL(input instanceof Request ? input.url : input, location.origin).pathname.startsWith(
+        "/api/auth/",
+      );
+    try {
+      window.fetch = async (input, init) => {
+        if (isAuthRequest(input)) throw new TypeError("Failed to fetch private-host");
+        return original(input, init);
+      };
+      await userEvent.click(canvas.getByRole("switch", { name: "Require sign-in" }));
+      await userEvent.click(await body.findByRole("button", { name: "Turn on" }));
+      await waitFor(() => expect(body.getByText("Could not update account")).toBeVisible());
+      await expect(body.queryByText("Failed to fetch private-host")).not.toBeInTheDocument();
+      window.fetch = async (input, init) =>
+        isAuthRequest(input)
+          ? Response.json({ error: "private legacy diagnostic", errorCode: "FORBIDDEN" }, { status: 403 })
+          : original(input, init);
+      await userEvent.click(body.getByRole("button", { name: "Turn on" }));
+      await waitFor(() => expect(body.getByText("You do not have access to this vault.")).toBeVisible());
+      await expect(body.queryByText("private legacy diagnostic")).not.toBeInTheDocument();
+    } finally {
+      window.fetch = original;
+    }
+  },
+};
