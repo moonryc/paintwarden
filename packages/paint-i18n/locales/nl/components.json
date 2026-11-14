@@ -488,5 +488,9 @@
   "scanAssignHint": "Kies een bestaande stap, of voeg een stap toe en kies de fase.",
   "scanRecipeStep": "Receptstap",
   "scanNewStep": "Nieuwe stap",
-  "scanStage": "Fase"
+  "scanStage": "Fase",
+  "supportChannel": "Kanaal",
+  "supportChannelBeta": "Bèta",
+  "supportChannelStable": "Stabiel",
+  "updateReleaseNotes": "Versieopmerkingen"
 }

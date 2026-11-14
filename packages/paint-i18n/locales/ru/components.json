@@ -530,5 +530,9 @@
   "scanAssignHint": "Выберите существующий шаг или добавьте новый и выберите этап.",
   "scanRecipeStep": "Шаг рецепта",
   "scanNewStep": "Новый шаг",
-  "scanStage": "Этап"
+  "scanStage": "Этап",
+  "supportChannel": "Канал",
+  "supportChannelBeta": "Бета",
+  "supportChannelStable": "Стабильный",
+  "updateReleaseNotes": "Примечания к выпуску"
 }

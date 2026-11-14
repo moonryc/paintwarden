@@ -63,7 +63,7 @@ Two sources may ship the same paint ID only when the paint's brand, range, name 
 | `version`           | Yes      | `major.minor.patch`. Increase it whenever the catalog or images change.                 |
 | `license`           | No       | Up to 100 characters, such as an SPDX identifier. Shown in Settings → Plugins.          |
 | `attribution`       | No       | Up to 1,000 characters crediting the data's authors. Shown in Settings → Plugins.       |
-| `minimumAppVersion` | No       | `major.minor.patch`. Older Paintwarden releases refuse the source with a clear message. |
+| `minimumAppVersion` | No       | `major.minor.patch` or `major.minor.patch-beta.N`. Stable versions sort after their betas. Older Paintwarden releases refuse the source with a clear message. |
 | `dependencies`      | Yes      | A list, possibly empty. Each item has `repository` and optionally `minimumVersion`.     |
 | `catalog`           | Yes      | `"catalog.json"`.                                                                       |
 | `assets`            | Yes      | `"assets.json"`.                                                                        |

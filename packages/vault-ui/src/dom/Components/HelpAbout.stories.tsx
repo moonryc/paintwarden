@@ -29,6 +29,7 @@ export const Desktop: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("macOS")).toBeInTheDocument();
+    await expect(canvas.getByText("Stable", { exact: true })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Save support bundle" }));
     const dialog = within(
       await within(document.body).findByRole("dialog", { name: "Review support bundle" }),
@@ -85,6 +86,7 @@ export const SaveFailure: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("macOS")).toBeInTheDocument();
+    await expect(canvas.getByText("Stable", { exact: true })).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Save support bundle" }));
     const dialog = within(await within(document.body).findByRole("dialog"));
     await userEvent.click(dialog.getByRole("button", { name: "Save file" }));
@@ -136,5 +138,14 @@ export const LicenseJapanese: Story = {
       "## Noncommercial Purposes",
     );
     await userEvent.keyboard("{Escape}");
+  },
+};
+
+export const BetaChannel: Story = {
+  args: { loadSummary: fn(async () => ({ ...localSummary, version: "1.0.0-beta.1" })) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("Beta", { exact: true })).toBeVisible();
+    await expect(canvas.queryByText("Stable", { exact: true })).not.toBeInTheDocument();
   },
 };

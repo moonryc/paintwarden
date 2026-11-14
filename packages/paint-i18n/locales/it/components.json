@@ -509,5 +509,9 @@
   "scanAssignHint": "Scegli un passaggio esistente, oppure aggiungine uno e scegli la fase.",
   "scanRecipeStep": "Passaggio della ricetta",
   "scanNewStep": "Nuovo passaggio",
-  "scanStage": "Fase"
+  "scanStage": "Fase",
+  "supportChannel": "Canale",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabile",
+  "updateReleaseNotes": "Note di rilascio"
 }

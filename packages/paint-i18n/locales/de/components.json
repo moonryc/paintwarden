@@ -488,5 +488,9 @@
   "scanAssignHint": "Wähle einen vorhandenen Schritt oder füge einen Schritt mit Phase hinzu.",
   "scanRecipeStep": "Rezeptschritt",
   "scanNewStep": "Neuer Schritt",
-  "scanStage": "Phase"
+  "scanStage": "Phase",
+  "supportChannel": "Kanal",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabil",
+  "updateReleaseNotes": "Versionshinweise"
 }

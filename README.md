@@ -257,40 +257,17 @@ Data & settings shows the app version and has
 
 ## Releasing
 
-The desktop app connects only to a server of exactly its own version, so the app
-and server are always released together under one version number.
+The first release is a **beta for friends and family**, hosted as GitHub Releases
+on the public `moonryc/paintwarden` repository. App and server versions must match
+exactly, including prerelease versions such as `1.0.0-beta.1`.
 
-1. Set the same `version` in the root manifest and every workspace manifest:
-   `package.json`, `apps/paintwarden/package.json`,
-   `apps/paintwarden-electron/package.json`, `apps/paintwarden-web/package.json`,
-   `apps/paintwarden-site/package.json`, `packages/paint-core/package.json`,
-   `packages/paint-i18n/package.json`, and `packages/vault-ui/package.json`.
-   The checker discovers workspaces from root `package.json`, including future packages.
-   Run `npm install --package-lock-only` with
-   the Node version in `.nvmrc` to update `package-lock.json`, then run
-   `node scripts/check-release-version.mjs v1.2.3` (using the intended tag).
-   The checker verifies every manifest and the root/workspace lockfile versions.
-   Commit the manifests and lockfile together.
-2. Push a tag such as `v1.2.3`. The Release workflow checks that the tag matches
-   every package version, then builds the macOS and Windows apps and uploads them
-   with their update files to a draft GitHub release.
-3. Review the draft and publish it. Installed apps only see published releases.
-
-Releases need the repository to be public, because installed apps download
-updates from it without credentials. macOS installs updates only for apps signed
-with an Apple Developer ID and notarized, so the workflow stops unless these
-repository secrets are set:
-
-| Secret                        | Value                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------- |
-| `MAC_CERTIFICATE_P12_BASE64`  | The Developer ID Application certificate, exported as a `.p12` file and base64-encoded. |
-| `MAC_CERTIFICATE_PASSWORD`    | The password chosen when exporting that `.p12` file.                                    |
-| `APPLE_ID`                    | The Apple ID of your Apple Developer account.                                           |
-| `APPLE_APP_SPECIFIC_PASSWORD` | An app-specific password for that Apple ID, from account.apple.com.                     |
-| `APPLE_TEAM_ID`               | Your Apple Developer Team ID.                                                           |
-
-macOS builds are for Apple silicon. Windows builds are unsigned, so Windows may
-warn when the installer first runs; automatic updates still work.
+See [the release guide](docs/releases.md) for the coordinated workspace version
+check, changelog/release-notes template, beta/stable channels, promotion, optional
+Mac/Windows signing secrets, and retention policy. The **Release** workflow's
+manual dispatch is a non-publishing dry run. Only version-tag pushes can publish;
+beta tags create GitHub prereleases and stable tags create stable releases.
+Missing or partial signing credentials intentionally produce unsigned packages,
+not a failed workflow. Unsigned Mac builds cannot auto-update.
 
 ## Plugins
 

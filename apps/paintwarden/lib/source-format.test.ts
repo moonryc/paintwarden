@@ -2,7 +2,13 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { APP_VERSION } from "./app-version.ts";
-import { parseAssets, parseCatalog, parseManifest, SourceFormatError } from "./source-format.ts";
+import {
+  parseAssets,
+  parseCatalog,
+  parseManifest,
+  SourceFormatError,
+  versionAtLeast,
+} from "./source-format.ts";
 import { testId } from "./test-ids.ts";
 
 const RED = testId("red paint"),
@@ -159,4 +165,18 @@ test("a template lists each scheme once and each paint once per step", () => {
       ),
     /paint 2 repeats a paint within the same step/,
   );
+});
+
+test("app minimums order numeric beta versions before stable and reject malformed input", () => {
+  for (const [actual, minimum, expected] of [
+    ["1.0.0-beta.1", "1.0.0-beta.1", true],
+    ["1.0.0-beta.10", "1.0.0-beta.2", true],
+    ["1.0.0-beta.2", "1.0.0-beta.10", false],
+    ["1.0.0-beta.1", "1.0.0", false],
+    ["1.0.0", "1.0.0-beta.10", true],
+    ["1.1.0-beta.1", "1.0.0", true],
+    ["1.0.0-beta.01", "1.0.0-beta.1", false],
+  ] as const)
+    assert.equal(versionAtLeast(actual, minimum), expected, `${actual} >= ${minimum}`);
+  assert.equal(parseManifest({ ...manifest, minimumAppVersion: APP_VERSION }).minimumAppVersion, APP_VERSION);
 });

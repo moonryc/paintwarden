@@ -235,12 +235,18 @@ function createSubscriptionStreams() {
   };
 }
 
-const releaseVersion = (value) => typeof value === "string" && /^\d+\.\d+\.\d+$/.test(value);
+const releaseVersion = (value) =>
+  typeof value === "string" &&
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-beta\.(0|[1-9]\d*))?$/.test(value);
 
 function olderThan(left, right) {
-  const a = left.split(".").map(Number),
-    b = right.split(".").map(Number);
-  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] < b[i];
+  const parts = (version) => {
+    const [core, beta] = version.split("-beta.");
+    return [...core.split(".").map(Number), beta === undefined ? Infinity : Number(beta)];
+  };
+  const a = parts(left),
+    b = parts(right);
+  for (let i = 0; i < 4; i++) if (a[i] !== b[i]) return a[i] < b[i];
   return false;
 }
 

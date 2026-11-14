@@ -530,5 +530,9 @@
   "scanAssignHint": "Wybierz istniejący krok lub dodaj nowy i wybierz etap.",
   "scanRecipeStep": "Krok receptury",
   "scanNewStep": "Nowy krok",
-  "scanStage": "Etap"
+  "scanStage": "Etap",
+  "supportChannel": "Kanał",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabilny",
+  "updateReleaseNotes": "Informacje o wydaniu"
 }

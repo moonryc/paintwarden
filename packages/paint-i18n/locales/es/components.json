@@ -509,5 +509,9 @@
   "scanAssignHint": "Elige un paso existente o añade uno y selecciona su etapa.",
   "scanRecipeStep": "Paso de receta",
   "scanNewStep": "Nuevo paso",
-  "scanStage": "Etapa"
+  "scanStage": "Etapa",
+  "supportChannel": "Canal",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Estable",
+  "updateReleaseNotes": "Notas de la versión"
 }

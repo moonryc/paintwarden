@@ -488,5 +488,9 @@
   "scanAssignHint": "Choose an existing step, or add a step and choose its stage.",
   "scanRecipeStep": "Recipe step",
   "scanNewStep": "New step",
-  "scanStage": "Stage"
+  "scanStage": "Stage",
+  "supportChannel": "Channel",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stable",
+  "updateReleaseNotes": "Release notes"
 }

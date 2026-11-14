@@ -467,5 +467,9 @@
   "scanAssignHint": "기존 단계를 선택하거나 새 단계를 추가하고 공정을 선택하세요.",
   "scanRecipeStep": "레시피 단계",
   "scanNewStep": "새 단계",
-  "scanStage": "공정"
+  "scanStage": "공정",
+  "supportChannel": "채널",
+  "supportChannelBeta": "베타",
+  "supportChannelStable": "안정",
+  "updateReleaseNotes": "릴리스 노트"
 }

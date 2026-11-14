@@ -1,12 +1,12 @@
 {
   "name": "paintwarden-electron",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "private": true,
   "description": "Paintwarden desktop app",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder",
+    "dist": "electron-builder --config electron-builder.cjs",
     "test": "node --test *.test.cjs"
   },
   "devDependencies": {
@@ -30,7 +30,8 @@
       "desktop-i18n.cjs",
       "desktop-preferences.cjs",
       "desktop-menu.cjs",
-      "desktop-support.cjs"
+      "desktop-support.cjs",
+      "desktop-release-notes.cjs"
     ],
     "extraResources": [
       {

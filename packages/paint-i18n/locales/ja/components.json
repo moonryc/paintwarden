@@ -467,5 +467,9 @@
   "scanAssignHint": "既存の手順を選ぶか、新しい手順を追加して工程を選んでください。",
   "scanRecipeStep": "レシピの手順",
   "scanNewStep": "新しい手順",
-  "scanStage": "工程"
+  "scanStage": "工程",
+  "supportChannel": "チャンネル",
+  "supportChannelBeta": "ベータ",
+  "supportChannelStable": "安定版",
+  "updateReleaseNotes": "リリースノート"
 }

@@ -223,6 +223,7 @@ export type DesktopUpdateState = {
     | "error";
   serverVersion?: string | null;
   consentId?: string;
+  releaseNotes?: string;
   currentVersion: string;
   version: string | null;
   progress: number | null;

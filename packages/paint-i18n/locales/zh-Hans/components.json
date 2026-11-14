@@ -467,5 +467,9 @@
   "scanAssignHint": "选择现有步骤，或添加新步骤并选择工序。",
   "scanRecipeStep": "配方步骤",
   "scanNewStep": "新步骤",
-  "scanStage": "工序"
+  "scanStage": "工序",
+  "supportChannel": "更新通道",
+  "supportChannelBeta": "测试版",
+  "supportChannelStable": "稳定版",
+  "updateReleaseNotes": "版本说明"
 }
