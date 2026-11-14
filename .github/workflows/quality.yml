@@ -16,6 +16,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run i18n:check
       - run: npm run codegen:check
       - run: npm run format:check
       - run: npm run lint:eslint

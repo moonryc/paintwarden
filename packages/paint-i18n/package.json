@@ -1,0 +1,15 @@
+{
+  "name": "@paint-vault/i18n",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./locales/*": "./locales/*",
+    "./languages": "./languages.ts",
+    "./runtime": "./runtime.ts"
+  },
+  "dependencies": {
+    "i18next": "^27.1.1",
+    "i18next-resources-to-backend": "^1.2.4"
+  }
+}

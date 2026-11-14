@@ -25,8 +25,8 @@
     "test": "npm run test:graphql && node --test scripts/*.test.mjs && node scripts/nx.mjs run-many -t test -p paint-vault @paint-vault/core @paint-vault/ui && npm run test --workspace paint-vault-electron",
     "lint": "npm run lint:eslint && npm run typecheck",
     "lint:eslint": "node scripts/nx.mjs run-many -t code-lint -p paint-vault paint-vault-web paint-vault-site @paint-vault/core @paint-vault/ui",
-    "format:check": "prettier --check .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\"",
-    "format:write": "prettier --write .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\"",
+    "format:check": "prettier --check .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
+    "format:write": "prettier --write .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
     "typecheck": "npm run typecheck:shared && node --check apps/paint-vault-electron/main.cjs && node --check apps/paint-vault-electron/preload.cjs && node --check apps/paint-vault-electron/desktop-core.cjs",
     "typecheck:shared": "node scripts/nx.mjs run-many -t lint -p paint-vault paint-vault-web paint-vault-site && node scripts/nx.mjs run-many -t typecheck -p @paint-vault/core @paint-vault/ui",
     "db:generate": "node scripts/nx.mjs db:generate paint-vault",
@@ -36,7 +36,8 @@
     "windows": "npm run desktop",
     "codegen": "graphql-codegen --config codegen.ts",
     "codegen:check": "npm run codegen && git diff --exit-code -- apps/paint-vault/graphql/generated packages/vault-ui/src/dom/graphql/generated",
-    "test:graphql": "npm run test:graphql --workspace paint-vault && node --import tsx --test packages/vault-ui/src/dom/graphql/*.test.ts"
+    "test:graphql": "npm run test:graphql --workspace paint-vault && node --import tsx --test packages/vault-ui/src/dom/graphql/*.test.ts",
+    "i18n:check": "node scripts/check-i18n.mjs"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^8.0.0",

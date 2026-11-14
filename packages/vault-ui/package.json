@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/dom/Vault.tsx",
     "./theme": "./src/dom/theme.ts",
-    "./theme-tokens": "./src/dom/theme-tokens.ts"
+    "./theme-tokens": "./src/dom/theme-tokens.ts",
+    "./i18n": "./src/dom/i18n.tsx"
   },
   "dependencies": {
     "@apollo/client": "^4.3.8",
@@ -24,8 +25,12 @@
     "fflate": "^0.8.3",
     "graphql": "^17.1.0",
     "graphql-sse": "^2.6.3",
+    "i18next": "^27.1.1",
+    "i18next-resources-to-backend": "^1.2.4",
+    "react-i18next": "^18.0.1",
     "rxjs": "^7.8.2",
-    "zustand": "^5.1.0"
+    "zustand": "^5.1.0",
+    "@paint-vault/i18n": "*"
   },
   "peerDependencies": {
     "react": "^19.2.0"

@@ -1,0 +1,961 @@
+[
+  {
+    "code": "CHOOSE_WHETHER_TO_REPLACE_OR_MERGE",
+    "pattern": "^Choose whether to replace or merge$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_A_BACKUP_FILE",
+    "pattern": "^Choose a backup file$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_SELECTION",
+    "pattern": "^Invalid (.+?) selection$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SOURCE_IMAGE_FORMAT_IS_NOT_SUPPORTED",
+    "pattern": "^Source image format is not supported$",
+    "parameters": []
+  },
+  {
+    "code": "A_SELECTED_IMAGE_IS_MISSING_FROM_THIS_VAULT",
+    "pattern": "^A selected image is missing from this vault$",
+    "parameters": []
+  },
+  {
+    "code": "A_SELECTED_SOURCE_IMAGE_IS_MISSING_FROM_THIS_VAULT",
+    "pattern": "^A selected source image is missing from this vault$",
+    "parameters": []
+  },
+  {
+    "code": "IMAGE_REQUEST_FAILED",
+    "pattern": "^Image request failed$",
+    "parameters": []
+  },
+  {
+    "code": "A_SELECTED_IMAGE_MUST_USE_A_PUBLIC_HTTPS_URL",
+    "pattern": "^A selected image must use a public HTTPS URL$",
+    "parameters": []
+  },
+  {
+    "code": "A_SELECTED_IMAGE_IS_TOO_LARGE",
+    "pattern": "^A selected image is too large$",
+    "parameters": []
+  },
+  {
+    "code": "A_SELECTED_IMAGE_COULD_NOT_BE_DOWNLOADED",
+    "pattern": "^A selected image could not be downloaded$",
+    "parameters": []
+  },
+  {
+    "code": "GIVE_THE_SOURCE_A_NAME_UP_TO_120_CHARACTERS",
+    "pattern": "^Give the source a name \\(up to 120 characters\\)$",
+    "parameters": []
+  },
+  {
+    "code": "USE_A_VERSION_LIKE_1_0_0",
+    "pattern": "^Use a version like 1\\.0\\.0$",
+    "parameters": []
+  },
+  {
+    "code": "SELECT_AT_LEAST_ONE_PAINT_SCHEME_OR_TEMPLATE",
+    "pattern": "^Select at least one paint, scheme, or template$",
+    "parameters": []
+  },
+  {
+    "code": "MISSING_SOURCE_FOR",
+    "pattern": "^Missing source for (.+?) (.+?)$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "COMES_FROM_WHICH_WAS_INSTALLED_FROM_A_ZIP_A_PLUGIN_CAN_ONLY_DEPEND_ON_PLUGINS_INSTALLED_FR",
+    "pattern": "^(.+?) comes from (.+?), which was installed from a \\.zip\\. A plugin can only depend on plugins installed from GitHub$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "PAINT_IS_MISSING",
+    "pattern": "^Paint (.+?) is missing$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "ONLY_PERSONAL_PAINTS_CAN_BE_SELECTED_FOR_SHARING",
+    "pattern": "^Only personal paints can be selected for sharing$",
+    "parameters": []
+  },
+  {
+    "code": "SCHEME_IS_MISSING",
+    "pattern": "^Scheme (.+?) is missing$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "ONLY_PERSONAL_SCHEMES_CAN_BE_SELECTED_FOR_SHARING",
+    "pattern": "^Only personal schemes can be selected for sharing$",
+    "parameters": []
+  },
+  {
+    "code": "ONLY_PERSONAL_TEMPLATES_CAN_BE_SELECTED_FOR_SHARING",
+    "pattern": "^Only personal templates can be selected for sharing$",
+    "parameters": []
+  },
+  {
+    "code": "SCHEME_NEEDS_A_COLOR_CATEGORY",
+    "pattern": "^Scheme (.+?) needs a color category$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SCHEME_HAS_A_PAINT_OUTSIDE_A_STEP",
+    "pattern": "^Scheme (.+?) has a paint outside a step$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "CATALOG_SOURCE_NOT_FOUND",
+    "pattern": "^Catalog source not found$",
+    "parameters": []
+  },
+  {
+    "code": "ENTER_A_GITHUB_REPOSITORY_URL",
+    "pattern": "^Enter a GitHub repository URL$",
+    "parameters": []
+  },
+  {
+    "code": "CATALOG_SOURCE_IS_REQUIRED",
+    "pattern": "^Catalog source is required$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_A_PLUGIN_ZIP_FILE",
+    "pattern": "^Choose a plugin \\.zip file$",
+    "parameters": []
+  },
+  {
+    "code": "THAT_IMAGE_LINK_IS_NOT_VALID",
+    "pattern": "^That image link is not valid$",
+    "parameters": []
+  },
+  {
+    "code": "THE_IMAGE_SERVER_RETURNED",
+    "pattern": "^The image server returned (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "THAT_LINK_DID_NOT_RETURN_AN_IMAGE",
+    "pattern": "^That link did not return an image$",
+    "parameters": []
+  },
+  {
+    "code": "NOT_FOUND_2",
+    "pattern": "^Not found$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_AN_IMAGE_FILE",
+    "pattern": "^Choose an image file$",
+    "parameters": []
+  },
+  {
+    "code": "IMAGE_MUST_BE_UNDER_8_MB",
+    "pattern": "^Image must be under 8 MB$",
+    "parameters": []
+  },
+  {
+    "code": "UPDATING_THE_VAULT_FAILED",
+    "pattern": "^Updating the vault failed: (.+?)\\.(.+?)$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "THE_UPDATED_VAULT_HAS_RECORDS_WITH_BROKEN_LINKS",
+    "pattern": "^The updated vault has (.+?) records with broken links \\((.+?)\\)$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "VAULT_ACCESS_ENDED",
+    "pattern": "^Vault access ended$",
+    "parameters": []
+  },
+  {
+    "code": "MUST_BE_AT_MOST_CHARACTERS",
+    "pattern": "^(.+?) must be at most (.+?) characters$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "FIRST_MUST_BE_BETWEEN_1_AND",
+    "pattern": "^first must be between 1 and (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "LIBRARY_CHANGED_RESTART_PAGINATION",
+    "pattern": "^Library changed; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_LIBRARY_CURSOR",
+    "pattern": "^Invalid Library cursor$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_LIBRARY_FILTER",
+    "pattern": "^Invalid Library filter$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_MINIATURE_SCHEME_CURSOR",
+    "pattern": "^Invalid miniature scheme cursor$",
+    "parameters": []
+  },
+  {
+    "code": "SCHEMES_CHANGED_RESTART_PAGINATION",
+    "pattern": "^Schemes changed; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "COLLECTION_CHANGED_RESTART_PAGINATION",
+    "pattern": "^Collection changed; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "SEARCH_EXPIRED_RESTART_PAGINATION",
+    "pattern": "^Search expired; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_PAINT_RANKING_CURSOR",
+    "pattern": "^Invalid paint ranking cursor$",
+    "parameters": []
+  },
+  {
+    "code": "PAINT_RANKING_CHANGED_RESTART_PAGINATION",
+    "pattern": "^Paint ranking changed; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_SCHEME_READINESS",
+    "pattern": "^Invalid scheme readiness$",
+    "parameters": []
+  },
+  {
+    "code": "SEQUENCE_MUST_BE_A_CANONICAL_NONNEGATIVE_DECIMAL_STRING_NO_GREATER_THAN_9007199254740991",
+    "pattern": "^Sequence must be a canonical nonnegative decimal string no greater than 9007199254740991$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_INTERNAL_CHANGE_LOG_SEQUENCE",
+    "pattern": "^Invalid internal change-log sequence$",
+    "parameters": []
+  },
+  {
+    "code": "UNEXPECTED_SERVER_ERROR",
+    "pattern": "^Unexpected server error$",
+    "parameters": []
+  },
+  {
+    "code": "USE_JSON_POST",
+    "pattern": "^Use JSON POST$",
+    "parameters": []
+  },
+  {
+    "code": "CONTENT_TYPE_MUST_BE_APPLICATION_JSON",
+    "pattern": "^Content-Type must be application/json$",
+    "parameters": []
+  },
+  {
+    "code": "SUBSCRIPTIONS_REQUIRE_ACCEPT_TEXT_EVENT_STREAM",
+    "pattern": "^Subscriptions require Accept: text/event-stream$",
+    "parameters": []
+  },
+  {
+    "code": "TOO_MANY_GRAPHQL_OPERATIONS",
+    "pattern": "^Too many GraphQL operations$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_JSON",
+    "pattern": "^Invalid JSON$",
+    "parameters": []
+  },
+  {
+    "code": "HTTP_BATCHING_IS_DISABLED",
+    "pattern": "^HTTP batching is disabled$",
+    "parameters": []
+  },
+  {
+    "code": "UNSUPPORTED_GRAPHQL_REQUEST_PARAMETER",
+    "pattern": "^Unsupported GraphQL request parameter$",
+    "parameters": []
+  },
+  {
+    "code": "UNEXPECTED_SERVER_ERROR_2",
+    "pattern": "^Unexpected server error \\((.+?)\\)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SOURCE_ID_IS_REQUIRED",
+    "pattern": "^Source id is required$",
+    "parameters": []
+  },
+  {
+    "code": "TEMPLATE_NOT_FOUND",
+    "pattern": "^Template not found$",
+    "parameters": []
+  },
+  {
+    "code": "TEMPLATE_CHANGED_RESTART_PAGINATION",
+    "pattern": "^Template changed; restart pagination$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_ISN_T_A_PAINT_VAULT_BACKUP",
+    "pattern": "^This isn't a Paint Vault backup$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_WAS_MADE_BY_A_DIFFERENT_VERSION_OF_PAINT_VAULT",
+    "pattern": "^This backup was made by a different version of Paint Vault$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_IS_DAMAGED",
+    "pattern": "^This backup is damaged$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_IS_INCOMPLETE_REPLACE_REQUIRES_EVERY_VAULT_SECTION",
+    "pattern": "^This backup is incomplete: Replace requires every vault section$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_FILE_IS_DAMAGED",
+    "pattern": "^This backup file is damaged$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE",
+    "pattern": "^This backup holds too many files to restore$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE",
+    "pattern": "^This backup is too large to restore$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_A_PAINT_VAULT_BACKUP_ZIP_FILE",
+    "pattern": "^Choose a Paint Vault backup \\(\\.zip\\) file$",
+    "parameters": []
+  },
+  {
+    "code": "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT",
+    "pattern": "^Older backups can only be merged into a vault$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING",
+    "pattern": "^This backup is damaged: some images its records refer to are missing$",
+    "parameters": []
+  },
+  {
+    "code": "ISN_T_VALID_JSON",
+    "pattern": "^(.+?) isn't valid JSON$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "IMAGE_CHECKSUM_DOES_NOT_MATCH",
+    "pattern": "^Image checksum does not match: (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SCHEME_NEEDS_MISSING_PAINT",
+    "pattern": "^Scheme (.+?) needs missing paint (.+?)$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "TEMPLATE_NEEDS_A_MISSING_SCHEME",
+    "pattern": "^Template (.+?) needs a missing scheme$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "TEMPLATE_NEEDS_A_MISSING_PAINT",
+    "pattern": "^Template (.+?) needs a missing paint$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "PAINT_ID_CONFLICTS_WITH_ANOTHER_SOURCE",
+    "pattern": "^Paint ID conflicts with another source: (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SCHEME_ID_CONFLICTS_WITH_ANOTHER_SOURCE",
+    "pattern": "^Scheme ID conflicts with another source: (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "TEMPLATE_ID_CONFLICTS_WITH_ANOTHER_SOURCE",
+    "pattern": "^Template ID conflicts with another source: (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "THIS_PLUGIN_ZIP_HOLDS_TOO_MANY_FILES",
+    "pattern": "^This plugin \\.zip holds too many files$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_PLUGIN_ZIP_IS_TOO_LARGE_ONCE_UNPACKED",
+    "pattern": "^This plugin \\.zip is too large once unpacked$",
+    "parameters": []
+  },
+  {
+    "code": "THE_PLUGIN_IS_MISSING",
+    "pattern": "^The plugin is missing (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "IS_TOO_LARGE",
+    "pattern": "^(.+?) is too large$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "IS_DAMAGED",
+    "pattern": "^(.+?) is damaged$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "THIS_ZIP_HAS_NO_SOURCE_JSON_CHOOSE_A_PAINT_VAULT_PLUGIN",
+    "pattern": "^This \\.zip has no source\\.json\\. Choose a Paint Vault plugin$",
+    "parameters": []
+  },
+  {
+    "code": "SOURCE_JSON_ISN_T_VALID_JSON",
+    "pattern": "^source\\.json isn't valid JSON$",
+    "parameters": []
+  },
+  {
+    "code": "GIVE_THE_PLUGIN_A_NAME_IN_SOURCE_JSON",
+    "pattern": "^Give the plugin a name in source\\.json$",
+    "parameters": []
+  },
+  {
+    "code": "NEEDS_A_NEWER_VERSION_OF",
+    "pattern": "^(.+?) needs a newer version of (.+?)$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "CIRCULAR_SOURCE_DEPENDENCY",
+    "pattern": "^Circular source dependency: (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "NOW_HAS_VERSION_OLDER_THAN_THE_INSTALLED_THE_INSTALLED_VERSION_IS_KEPT",
+    "pattern": "^(.+?) now has version (.+?), older than the installed (.+?)\\. The installed version is kept$",
+    "parameters": [
+      "value1",
+      "value2",
+      "value3"
+    ]
+  },
+  {
+    "code": "IS_INSTALLED_AND_THIS_ZIP_HAS_THE_OLDER_VERSION_REMOVE_THE_PLUGIN_FIRST_TO_INSTALL_AN_OLDE",
+    "pattern": "^(.+?) (.+?) is installed, and this \\.zip has the older version (.+?)\\. Remove the plugin first to install an older version$",
+    "parameters": [
+      "value1",
+      "value2",
+      "value3"
+    ]
+  },
+  {
+    "code": "DESKTOP_DATA_DIRECTORY_IS_NOT_CONFIGURED",
+    "pattern": "^Desktop data directory is not configured$",
+    "parameters": []
+  },
+  {
+    "code": "NOTES_MUST_BE_CHARACTERS_OR_FEWER",
+    "pattern": "^Notes must be (.+?) characters or fewer$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "THAT_PAINT_IS_ALREADY_IN_THIS_STEP_OF_THE_RECIPE",
+    "pattern": "^That paint is already in this step of the recipe$",
+    "parameters": []
+  },
+  {
+    "code": "MINIATURE_OR_PAINT_NOT_FOUND",
+    "pattern": "^Miniature or paint not found$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_REQUIREMENT_UPDATE",
+    "pattern": "^Invalid requirement update$",
+    "parameters": []
+  },
+  {
+    "code": "REQUIREMENT_NOT_FOUND",
+    "pattern": "^Requirement not found$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_RECIPE_STEPS",
+    "pattern": "^Invalid recipe steps$",
+    "parameters": []
+  },
+  {
+    "code": "MINIATURE_NOT_FOUND",
+    "pattern": "^Miniature not found$",
+    "parameters": []
+  },
+  {
+    "code": "COLOR_SCHEME_NOT_FOUND",
+    "pattern": "^Color scheme not found$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID",
+    "pattern": "^Invalid (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "MUST_BE_CHARACTERS_OR_FEWER",
+    "pattern": "^(.+?) must be (.+?) characters or fewer$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "THAT_MINIATURE_TEMPLATE_IS_NOT_AVAILABLE",
+    "pattern": "^That miniature template is not available$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_NAME",
+    "pattern": "^Invalid name$",
+    "parameters": []
+  },
+  {
+    "code": "A_MINIATURE_NAME_IS_REQUIRED",
+    "pattern": "^A miniature name is required$",
+    "parameters": []
+  },
+  {
+    "code": "ADD_AT_LEAST_ONE_INGREDIENT_PAINT",
+    "pattern": "^Add at least one ingredient paint$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_UNIQUE_INGREDIENT_PAINTS_OTHER_THAN_THE_TARGET_PAINT",
+    "pattern": "^Choose unique ingredient paints other than the target paint$",
+    "parameters": []
+  },
+  {
+    "code": "ONE_OR_MORE_INGREDIENT_PAINTS_ARE_UNAVAILABLE",
+    "pattern": "^One or more ingredient paints are unavailable$",
+    "parameters": []
+  },
+  {
+    "code": "TARGET_PAINT_AND_RECIPE_NAME_ARE_REQUIRED",
+    "pattern": "^Target paint and recipe name are required$",
+    "parameters": []
+  },
+  {
+    "code": "TARGET_PAINT_NOT_FOUND",
+    "pattern": "^Target paint not found$",
+    "parameters": []
+  },
+  {
+    "code": "CHOOSE_AN_ORIGINAL_PAINT_OR_SUBSTITUTION",
+    "pattern": "^Choose an original paint or substitution$",
+    "parameters": []
+  },
+  {
+    "code": "SUBSTITUTION_NOT_FOUND_FOR_THIS_PAINT",
+    "pattern": "^Substitution not found for this paint$",
+    "parameters": []
+  },
+  {
+    "code": "THAT_CHOICE_WOULD_CREATE_A_CIRCULAR_SUBSTITUTION",
+    "pattern": "^That choice would create a circular substitution$",
+    "parameters": []
+  },
+  {
+    "code": "SUBSTITUTION_IS_REQUIRED",
+    "pattern": "^Substitution is required$",
+    "parameters": []
+  },
+  {
+    "code": "SUBSTITUTION_NOT_FOUND",
+    "pattern": "^Substitution not found$",
+    "parameters": []
+  },
+  {
+    "code": "THAT_DEFAULT_WOULD_CREATE_A_CIRCULAR_SUBSTITUTION",
+    "pattern": "^That default would create a circular substitution$",
+    "parameters": []
+  },
+  {
+    "code": "UNSUPPORTED_SUBSTITUTION_UPDATE",
+    "pattern": "^Unsupported substitution update$",
+    "parameters": []
+  },
+  {
+    "code": "NO_PAINTS_SUPPLIED",
+    "pattern": "^No paints supplied$",
+    "parameters": []
+  },
+  {
+    "code": "IMPORTS_ARE_LIMITED_TO_2_000_PAINTS_AT_A_TIME",
+    "pattern": "^Imports are limited to 2,000 paints at a time$",
+    "parameters": []
+  },
+  {
+    "code": "EACH_PAINT_NEEDS_BRAND_AND_NAME",
+    "pattern": "^Each paint needs brand and name$",
+    "parameters": []
+  },
+  {
+    "code": "ONLY_CUSTOM_PAINTS_CAN_BE_EDITED",
+    "pattern": "^Only custom paints can be edited$",
+    "parameters": []
+  },
+  {
+    "code": "BRAND_AND_NAME_ARE_REQUIRED",
+    "pattern": "^Brand and name are required$",
+    "parameters": []
+  },
+  {
+    "code": "USE_A_COLOR_HEX_SUCH_AS_1A2B3C",
+    "pattern": "^Use a color hex such as #1a2b3c$",
+    "parameters": []
+  },
+  {
+    "code": "PAINT_NOT_FOUND",
+    "pattern": "^Paint not found$",
+    "parameters": []
+  },
+  {
+    "code": "ONLY_CUSTOM_PAINTS_CAN_BE_DELETED",
+    "pattern": "^Only custom paints can be deleted$",
+    "parameters": []
+  },
+  {
+    "code": "USE_A_PUBLIC_GITHUB_REPOSITORY_URL",
+    "pattern": "^Use a public GitHub repository URL$",
+    "parameters": []
+  },
+  {
+    "code": "SOURCE_REQUEST_FAILED",
+    "pattern": "^Source request failed \\((.+?)\\)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SOURCE_FILE_IS_TOO_LARGE",
+    "pattern": "^Source file is too large$",
+    "parameters": []
+  },
+  {
+    "code": "THE_GITHUB_REPOSITORY_MUST_BE_PUBLIC_AND_HAVE_A_DEFAULT_BRANCH",
+    "pattern": "^The GitHub repository must be public and have a default branch$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_SOURCE_REVISION_RESPONSE",
+    "pattern": "^Invalid source revision response$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_SOURCE_MANIFEST_RESPONSE",
+    "pattern": "^Invalid source manifest response$",
+    "parameters": []
+  },
+  {
+    "code": "PAINT_IS_REQUIRED",
+    "pattern": "^Paint is required$",
+    "parameters": []
+  },
+  {
+    "code": "PAINT_IDS_MUST_BE_NON_EMPTY_STRINGS",
+    "pattern": "^Paint IDs must be non-empty strings$",
+    "parameters": []
+  },
+  {
+    "code": "TOO_MANY_PASSWORD_CHECKS_ARE_WAITING",
+    "pattern": "^Too many password checks are waiting$",
+    "parameters": []
+  },
+  {
+    "code": "THE_RESPONSE_IS_TOO_LARGE",
+    "pattern": "^The response is too large$",
+    "parameters": []
+  },
+  {
+    "code": "THAT_ADDRESS_IS_NOT_PUBLIC",
+    "pattern": "^That address is not public$",
+    "parameters": []
+  },
+  {
+    "code": "TOO_MANY_REDIRECTS",
+    "pattern": "^Too many redirects$",
+    "parameters": []
+  },
+  {
+    "code": "MUST_BE_AN_OBJECT",
+    "pattern": "^(.+?) must be an object$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "HAS_AN_UNKNOWN_FIELD",
+    "pattern": "^(.+?) has an unknown field \"(.+?)\"$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "IS_MISSING",
+    "pattern": "^(.+?) is missing \"(.+?)\"$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "HAS_AN_INVALID",
+    "pattern": "^(.+?) has an invalid \"(.+?)\"$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "NEEDS_PAINT_VAULT_OR_NEWER_THIS_IS",
+    "pattern": "^(.+?) needs Paint Vault (.+?) or newer \\(this is (.+?)\\)$",
+    "parameters": [
+      "value1",
+      "value2",
+      "value3"
+    ]
+  },
+  {
+    "code": "IS_A_PAINT_OUTSIDE_A_STEP",
+    "pattern": "^(.+?) is a paint outside a STEP$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "HAS_AN_INVALID_TYPE",
+    "pattern": "^(.+?) has an invalid \"type\"$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "HAS_A_DUPLICATE_ENTRY_ID",
+    "pattern": "^(.+?) has a duplicate entry ID \"(.+?)\"$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "DUPLICATE_ID",
+    "pattern": "^Duplicate (.+?) ID \"(.+?)\"$",
+    "parameters": [
+      "value1",
+      "value2"
+    ]
+  },
+  {
+    "code": "LISTS_A_SCHEME_MORE_THAN_ONCE",
+    "pattern": "^(.+?) lists a scheme more than once$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "REPEATS_A_PAINT_WITHIN_THE_SAME_STEP",
+    "pattern": "^(.+?) repeats a paint within the same step$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "ASSETS_JSON_MUST_BE_AN_OBJECT",
+    "pattern": "^assets\\.json must be an object$",
+    "parameters": []
+  },
+  {
+    "code": "ASSETS_JSON_HAS_AN_INVALID_IMAGE_PATH",
+    "pattern": "^assets\\.json has an invalid image path \"(.+?)\"$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "ASSETS_JSON_IS_MISSING",
+    "pattern": "^assets\\.json is missing (.+?)$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "INVALID_TEMPLATE_CONTENT",
+    "pattern": "^Invalid template content$",
+    "parameters": []
+  },
+  {
+    "code": "TEMPLATE_NAME_MUST_BE_1_CHARACTERS",
+    "pattern": "^Template name must be 1–(.+?) characters$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "MANUFACTURER_AND_FACTION_MUST_BE_CHARACTERS_OR_FEWER",
+    "pattern": "^Manufacturer and faction must be (.+?) characters or fewer$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "TEMPLATE_CONTAINS_INVALID_SCHEMES",
+    "pattern": "^Template contains invalid schemes$",
+    "parameters": []
+  },
+  {
+    "code": "TEMPLATE_CONTAINS_INVALID_PAINTS",
+    "pattern": "^Template contains invalid paints$",
+    "parameters": []
+  },
+  {
+    "code": "IMAGE_URL_MUST_USE_HTTP_OR_HTTPS",
+    "pattern": "^Image URL must use http or https$",
+    "parameters": []
+  },
+  {
+    "code": "IMAGE_URL_MUST_BE_CHARACTERS_OR_FEWER",
+    "pattern": "^Image URL must be (.+?) characters or fewer$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "STEP_NOTES_MUST_BE_CHARACTERS_OR_FEWER",
+    "pattern": "^Step notes must be (.+?) characters or fewer$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "SOURCE_TEMPLATES_ARE_READ_ONLY",
+    "pattern": "^Source templates are read-only$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_ZIP_FILE_IS_DAMAGED",
+    "pattern": "^This ZIP file is damaged$",
+    "parameters": []
+  },
+  {
+    "code": "IS_TOO_LARGE_FOR_A_BACKUP",
+    "pattern": "^(.+?) is too large for a backup$",
+    "parameters": [
+      "value1"
+    ]
+  },
+  {
+    "code": "METHOD_NOT_ALLOWED",
+    "pattern": "^Method not allowed$",
+    "parameters": []
+  },
+  {
+    "code": "GRAPHQL_REQUESTS_MUST_BE_UNDER_128_KIB",
+    "pattern": "^GraphQL requests must be under 128 KiB$",
+    "parameters": []
+  },
+  {
+    "code": "THIS_REQUEST_IS_TOO_LARGE",
+    "pattern": "^This request is too large$",
+    "parameters": []
+  },
+  {
+    "code": "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB",
+    "pattern": "^The backup file must be under 16 GB$",
+    "parameters": []
+  },
+  {
+    "code": "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB",
+    "pattern": "^The plugin file must be under 250 MB$",
+    "parameters": []
+  },
+  {
+    "code": "INVALID_ORIGIN",
+    "pattern": "^Invalid origin$",
+    "parameters": []
+  }
+]
