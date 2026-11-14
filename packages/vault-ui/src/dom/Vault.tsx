@@ -19,6 +19,7 @@ import { PageSkeleton } from "./Components/PageSkeletons";
 import { PasswordField } from "./Components/PasswordField";
 import { UpdatePrompt } from "./Components/UpdatePrompt";
 import { VaultLoadError } from "./Components/VaultLoadError";
+import { dialogs } from "./dialog-preload";
 import { useMiniatureActions } from "./graphql/miniature-actions";
 import { NavigationCountsProvider, useNavigationCounts } from "./graphql/navigation";
 import { usePaintCommands } from "./graphql/paint-actions";
@@ -35,20 +36,15 @@ import { VaultStoreProvider } from "./store/VaultStoreProvider";
 import { up } from "./theme-tokens";
 import { useAuthStatus, useServerChecks } from "./utils/auth-hooks";
 import { installBaseStyles } from "./utils/base-styles";
+import { FirstScreenPreload, FirstScreenReady } from "./utils/FirstScreenPreload";
 import { PublicError, publicErrorMessage } from "./utils/public-error";
 import { truncateSx } from "./utils/truncate";
 
-// Keep the workbench eager; other screens and overlays load only when opened.
-const ColorSchemesDialog = lazy(() =>
-  import("./Modals/ColorSchemesDialog").then((module) => ({ default: module.ColorSchemesDialog })),
-);
-const MiniatureForm = lazy(() =>
-  import("./Modals/MiniatureForm").then((module) => ({ default: module.MiniatureForm })),
-);
-const PaintForm = lazy(() => import("./Modals/PaintForm").then((module) => ({ default: module.PaintForm })));
-const ProjectDrawer = lazy(() =>
-  import("./Modals/ApolloProjectDrawer").then((module) => ({ default: module.ApolloProjectDrawer })),
-);
+// Keep the workbench eager; screens stay lazy and dialogs share idle/intent preloads.
+const ColorSchemesDialog = dialogs.schemes.Component;
+const MiniatureForm = dialogs.miniature.Component;
+const PaintForm = dialogs.paint.Component;
+const ProjectDrawer = dialogs.project.Component;
 const PaintLibrary = lazy(() =>
   import("./Pages/PaintLibrary").then((module) => ({ default: module.PaintLibrary })),
 );
@@ -61,9 +57,7 @@ const ColorSchemesPage = lazy(() =>
 const SettingsScreen = lazy(() =>
   import("./Pages/Settings/SettingsScreen").then((module) => ({ default: module.SettingsScreen })),
 );
-const PluginsModal = lazy(() =>
-  import("./Pages/Sources/PluginsModal").then((module) => ({ default: module.PluginsModal })),
-);
+const PluginsModal = dialogs.plugins.Component;
 const MiniatureTemplatesPage = lazy(() =>
   import("./Pages/Templates/MiniatureTemplatesPage").then((module) => ({
     default: module.MiniatureTemplatesPage,
@@ -81,7 +75,9 @@ export default function Vault(props: { onChangeServer?: () => void } = {}) {
     <VaultStoreProvider store={store}>
       <LanguageProvider>
         <AppErrorBoundary>
-          <VaultContent {...props} />
+          <FirstScreenPreload>
+            <VaultContent {...props} />
+          </FirstScreenPreload>
         </AppErrorBoundary>
       </LanguageProvider>
     </VaultStoreProvider>
@@ -510,7 +506,10 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                           }}
                         />
                       ) : tab === "paint-tools" ? (
-                        <PaintToolsPage />
+                        <>
+                          <PaintToolsPage />
+                          <FirstScreenReady />
+                        </>
                       ) : tab === "schemes" ? (
                         <ColorSchemesPage />
                       ) : tab === "wishlist" ? (
@@ -521,7 +520,14 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                           }}
                         />
                       ) : tab === "settings" ? (
-                        <SettingsScreen auth={auth} connected={!loadError} onChangeServer={onChangeServer} />
+                        <>
+                          <SettingsScreen
+                            auth={auth}
+                            connected={!loadError}
+                            onChangeServer={onChangeServer}
+                          />
+                          <FirstScreenReady />
+                        </>
                       ) : (
                         <PaintLibrary onAddPaint={() => setShowPaintForm(true)} />
                       )}
@@ -539,17 +545,26 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
           )}
           {showPaintForm && <CreatePaintDialog onClose={() => setShowPaintForm(false)} />}
           {pluginsOpen && (
-            <DeferredDialog title={i18n.t("shell:plugins")} onClose={closePlugins}>
+            <DeferredDialog kind="plugins" title={i18n.t("shell:plugins")} onClose={closePlugins}>
               <PluginsModal onClose={closePlugins} />
             </DeferredDialog>
           )}
           {showSchemeForm && (
-            <DeferredDialog title={i18n.t("shell:addScheme")} onClose={() => setShowSchemeForm(false)}>
+            <DeferredDialog
+              kind="schemes"
+              title={i18n.t("components:colorSchemes")}
+              onClose={() => setShowSchemeForm(false)}
+            >
               <ColorSchemesDialog initialId={null} onClose={() => setShowSchemeForm(false)} />
             </DeferredDialog>
           )}
           {selectedId && (
-            <DeferredDialog key={selectedId} title={i18n.t("shell:miniature")} onClose={closeMini}>
+            <DeferredDialog
+              key={selectedId}
+              kind="project"
+              title={i18n.t("shell:miniature")}
+              onClose={closeMini}
+            >
               <ProjectDrawer miniatureId={selectedId} onClose={closeMini} />
             </DeferredDialog>
           )}
@@ -622,7 +637,7 @@ function CreateMiniatureDialog({
   const openMini = useVaultStore((store) => store.openMini);
   const notify = useVaultStore((store) => store.notify);
   return (
-    <DeferredDialog title={i18n.t("shell:addMiniature")} onClose={onClose}>
+    <DeferredDialog kind="miniature" title={i18n.t("components:addAMiniature")} onClose={onClose}>
       <MiniatureForm
         initialTemplateId={initialTemplateId}
         onClose={onClose}
@@ -641,7 +656,7 @@ function CreatePaintDialog({ onClose }: { onClose(): void }) {
   const commands = usePaintCommands();
   const notify = useVaultStore((store) => store.notify);
   return (
-    <DeferredDialog title={i18n.t("shell:addPaint")} onClose={onClose}>
+    <DeferredDialog kind="paint" title={i18n.t("shell:addPaint")} onClose={onClose}>
       <PaintForm
         onClose={onClose}
         onSave={async (paint) => {

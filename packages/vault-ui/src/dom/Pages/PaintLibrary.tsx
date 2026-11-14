@@ -8,6 +8,7 @@ import { FilterToolbar } from "../Components/FilterToolbar";
 import { LibraryPaintRow } from "../Components/LibraryPaintRow";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, useLibraryPaints } from "../graphql/library-hooks";
 import { FlaskConical, Heart, PaintDrop, Plus, SearchX } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
@@ -155,7 +156,12 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
             : t("libraryBrowseBody")
         }
         action={
-          <Button variant="contained" onClick={onAddPaint} startIcon={<Plus size={16} />}>
+          <Button
+            variant="contained"
+            {...dialogPreloadHandlers("paint")}
+            onClick={onAddPaint}
+            startIcon={<Plus size={16} />}
+          >
             {t("libraryAddPaint")}
           </Button>
         }
@@ -309,7 +315,12 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           title={t("libraryEmptyTitle")}
           body={t("libraryEmptyBody")}
           action={
-            <Button variant="contained" onClick={onAddPaint} startIcon={<Plus size={16} />}>
+            <Button
+              variant="contained"
+              {...dialogPreloadHandlers("paint")}
+              onClick={onAddPaint}
+              startIcon={<Plus size={16} />}
+            >
               {t("libraryAddAPaint")}
             </Button>
           }

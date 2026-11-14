@@ -1,9 +1,10 @@
-import { useTranslation } from "react-i18next";
 import { Card, CardActionArea, LinearProgress } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { Check } from "../icons";
 import type { Miniature, Paint } from "../types";
 import { thumbnailImageProps } from "../image-thumbnails";
@@ -58,6 +59,7 @@ export const MiniatureTile = memo(function MiniatureTile({
       ]}
     >
       <CardActionArea
+        {...dialogPreloadHandlers("project")}
         onClick={onOpen ? () => onOpen(mini.id) : onClick}
         sx={[
           {

@@ -1,15 +1,15 @@
-import { i18n } from "../i18n";
-import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import { Alert, Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { ProjectPaintSummaryView } from "../Components/ProjectPaintSummary";
 import { ProjectRecipeView } from "../Components/ProjectRecipe";
 import { StageStepper } from "../Components/StageStepper";
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { MiniatureTileFragmentDoc, type DetailPaintFragment } from "../graphql/generated/graphql";
 import { useMiniatureActions } from "../graphql/miniature-actions";
 import { useMiniatureDetail } from "../graphql/miniature-detail-hooks";
@@ -17,6 +17,7 @@ import type { MiniatureDetailView } from "../graphql/miniature-detail-loader";
 import { paintModel, schemeEntryModels } from "../graphql/miniature-scheme-model";
 import { useVaultGraphQL } from "../graphql/provider";
 import { usePaintStock } from "../graphql/stock-actions";
+import { i18n } from "../i18n";
 import { Pencil } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
@@ -28,8 +29,8 @@ import { ApolloSchemePickerDialog } from "./ApolloSchemePickerDialog";
 import { ImageViewer } from "./ImageViewer";
 import { MiniatureForm } from "./MiniatureForm";
 import { PaintDetailsOverlay } from "./PaintDetailsOverlay";
-import { ProjectHero } from "./ProjectHero";
 import { ProjectDrawerFrame } from "./ProjectDrawerFrame";
+import { ProjectHero } from "./ProjectHero";
 
 // This boundary never loads the legacy State snapshot, even when a project is
 // opened directly from a paint's Used by link.
@@ -234,6 +235,7 @@ function ProjectContent({
                 size="small"
                 variant="text"
                 startIcon={<Pencil size={13} />}
+                {...dialogPreloadHandlers("miniature")}
                 onClick={() => setEditingDetails(true)}
                 sx={{ ml: -1, color: "var(--ink-faint)" }}
               >
@@ -260,6 +262,7 @@ function ProjectContent({
               variant="outlined"
               size="small"
               startIcon={<Pencil size={14} />}
+              {...dialogPreloadHandlers("miniature")}
               onClick={() => setEditingDetails(true)}
             >
               {t("edit")}

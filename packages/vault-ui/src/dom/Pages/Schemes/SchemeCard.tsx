@@ -4,6 +4,7 @@ import { memo, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { SchemeProgressChip } from "../../Components/SchemeProgressChip";
+import { dialogPreloadHandlers } from "../../dialog-preload";
 import type { SchemeSummaryModel } from "../../graphql/miniature-scheme-model";
 import { Check, Layers } from "../../icons";
 import { thumbnailImageProps } from "../../image-thumbnails";
@@ -62,6 +63,7 @@ export const SchemeCard = memo(function SchemeCard({
   return (
     <Card sx={{ ...liftCardSx, height: "18rem" }}>
       <CardActionArea
+        {...dialogPreloadHandlers("schemes")}
         onClick={() => onOpen(scheme.id)}
         onKeyDown={(event) => onKeyDown(event, index)}
         data-scheme-index={index}

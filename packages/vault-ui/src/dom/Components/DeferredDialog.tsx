@@ -1,31 +1,51 @@
-import { useTranslation } from "react-i18next";
-import Box from "@mui/material/Box";
-import { Suspense, type ReactNode } from "react";
+import { Suspense, useEffect, useState, type ReactNode } from "react";
 
-import { Modal } from "./Modal";
+import { DialogSkeleton, type SkeletonDialog } from "./DialogSkeletons";
 
-// Keep the overlay named, keyboard-dismissible and modal while its code is loading.
+function DelayedDialogSkeleton({
+  kind,
+  title,
+  onClose,
+}: {
+  kind: SkeletonDialog;
+  title: string;
+  onClose: () => void;
+}) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
+  // There is no modal to catch Escape during the brief, invisible delay.
+  useEffect(() => {
+    if (visible) return;
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    };
+    document.addEventListener("keydown", escape, true);
+    return () => document.removeEventListener("keydown", escape, true);
+  }, [visible, onClose]);
+  return visible ? <DialogSkeleton kind={kind} title={title} onClose={onClose} /> : null;
+}
+
 // Rejected imports propagate to the app's existing recovery/error boundary.
+// Each pending mount owns its delay, so fast/preloaded imports never flash a shell.
 export function DeferredDialog({
+  kind,
   title,
   onClose,
   children,
 }: {
+  kind: SkeletonDialog;
   title: string;
   onClose: () => void;
   children: ReactNode;
 }) {
-  const { t } = useTranslation("components");
   return (
-    <Suspense
-      fallback={
-        <Modal title={title} subtitle={t("loading")} onClose={onClose}>
-          <Box role="status" aria-busy="true" sx={{ color: "var(--ink-soft)" }}>
-            {t("openingDialog", { title })}
-          </Box>
-        </Modal>
-      }
-    >
+    <Suspense fallback={<DelayedDialogSkeleton kind={kind} title={title} onClose={onClose} />}>
       {children}
     </Suspense>
   );

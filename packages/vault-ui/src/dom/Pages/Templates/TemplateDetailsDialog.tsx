@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
 import { PluginChip } from "../../Components/PluginChip";
+import { dialogPreloadHandlers } from "../../dialog-preload";
 import type { MiniatureTemplate } from "../../types";
 import { imageUrl } from "../../utils/image-cache";
 
@@ -47,7 +48,7 @@ export function TemplateDetailsDialog({
             </>
           )}
           <Button onClick={onClose}>{t("templatesClose")}</Button>
-          <Button variant="contained" onClick={onUse}>
+          <Button variant="contained" {...dialogPreloadHandlers("miniature")} onClick={onUse}>
             {t("templatesAddMiniature")}
           </Button>
         </Box>

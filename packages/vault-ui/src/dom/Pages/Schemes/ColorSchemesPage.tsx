@@ -9,6 +9,7 @@ import { FilterToolbar } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
+import { dialogPreloadHandlers } from "../../dialog-preload";
 import { schemeSummaryModel, paintModel } from "../../graphql/miniature-scheme-model";
 import { useSchemes, useSchemePaintOptions } from "../../graphql/schemes-hooks";
 import { Layers, Plus, SearchX } from "../../icons";
@@ -191,7 +192,12 @@ export function ColorSchemesPage() {
         title={t("schemesTitle")}
         body={t("schemesDescription")}
         action={
-          <Button variant="contained" onClick={() => setEditing(null)} startIcon={<Plus size={16} />}>
+          <Button
+            variant="contained"
+            {...dialogPreloadHandlers("schemes")}
+            onClick={() => setEditing(null)}
+            startIcon={<Plus size={16} />}
+          >
             {t("schemesNew")}
           </Button>
         }
@@ -417,7 +423,12 @@ export function ColorSchemesPage() {
           title={t("schemesEmptyTitle")}
           body={t("schemesEmptyBody")}
           action={
-            <Button variant="contained" onClick={() => setEditing(null)} startIcon={<Plus size={16} />}>
+            <Button
+              variant="contained"
+              {...dialogPreloadHandlers("schemes")}
+              onClick={() => setEditing(null)}
+              startIcon={<Plus size={16} />}
+            >
               {t("schemesCreateFirst")}
             </Button>
           }

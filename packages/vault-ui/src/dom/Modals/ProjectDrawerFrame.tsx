@@ -1,8 +1,8 @@
-import { useTranslation } from "react-i18next";
 import { Dialog, IconButton, SwipeableDrawer, useMediaQuery } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { X } from "../icons";
 import { up } from "../theme-tokens";
@@ -58,6 +58,8 @@ export function ProjectDrawerFrame({
       onClose={onClose}
       slotProps={{
         paper: {
+          role: "dialog",
+          "aria-modal": true,
           "aria-label": title,
           "aria-labelledby": undefined,
           sx: {
@@ -82,6 +84,8 @@ export function ProjectDrawerFrame({
       disableSwipeToOpen
       slotProps={{
         paper: {
+          role: "dialog",
+          "aria-modal": true,
           "aria-label": title,
           sx: { boxSizing: "border-box", width: "100%", maxWidth: "640px", bgcolor: "var(--canvas)" },
         },

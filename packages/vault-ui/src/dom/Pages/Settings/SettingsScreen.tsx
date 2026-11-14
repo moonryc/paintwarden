@@ -12,6 +12,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "../../Components/PageHeader";
+import { dialogPreloadHandlers } from "../../dialog-preload";
 import { Download, Extension, FileUp } from "../../icons";
 import { LanguagePicker } from "../../LanguagePicker";
 import { FALLBACK_OWNER_NAME, UserAvatar } from "../../Layout/UserAvatar";
@@ -256,7 +257,12 @@ export function SettingsScreen({
           title={t("settingsPlugins")}
           description={t("settingsPluginsDescription")}
           action={
-            <Button variant="outlined" size="small" onClick={openPlugins}>
+            <Button
+              variant="outlined"
+              size="small"
+              {...dialogPreloadHandlers("plugins")}
+              onClick={openPlugins}
+            >
               {t("settingsManagePlugins")}
             </Button>
           }

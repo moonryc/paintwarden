@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
@@ -6,11 +5,13 @@ import Box from "@mui/material/Box";
 import { isPaintOwned } from "@paint-vault/core/paint-state";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { usePaintDetail } from "../graphql/detail-hooks";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
 import { usePaintStock } from "../graphql/stock-actions";
@@ -341,6 +342,7 @@ function PaintDetailsView({
           {paint.isCustom && (
             <Button
               variant="outlined"
+              {...dialogPreloadHandlers("paint")}
               onClick={() => onEdit(paint)}
               startIcon={<Pencil size={15} />}
               sx={{
@@ -388,6 +390,7 @@ function PaintDetailsView({
                   key={m.id}
                   clickable
                   label={m.title}
+                  {...dialogPreloadHandlers("project")}
                   onClick={() => openMini(m.id)}
                   sx={{
                     boxSizing: "border-box",

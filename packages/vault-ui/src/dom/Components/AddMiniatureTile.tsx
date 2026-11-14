@@ -1,14 +1,16 @@
-import { useTranslation } from "react-i18next";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { Plus } from "../icons";
 
 export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProps<Theme> }) {
   const { t } = useTranslation("components");
   return (
     <ButtonBase
+      {...dialogPreloadHandlers("miniature")}
       onClick={onClick}
       sx={[
         {

@@ -1,9 +1,9 @@
-import { colorCategoryLabel, dividerLabel } from "./component-labels";
-import { useTranslation } from "react-i18next";
 import { Alert, Button, ButtonBase, Card, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { dialogPreloadHandlers } from "../dialog-preload";
 import type { LibraryPaintProjection } from "../graphql/library-model";
 import type { SchemeSummaryModel } from "../graphql/miniature-scheme-model";
 import { Pencil } from "../icons";
@@ -16,6 +16,7 @@ import { listResetSx } from "../utils/element-resets";
 import { thumbnailImageProps } from "../image-thumbnails";
 import { displayDividerLabel } from "../utils/scheme-order";
 
+import { colorCategoryLabel, dividerLabel } from "./component-labels";
 import { LibraryPaintRow } from "./LibraryPaintRow";
 import { Modal } from "./Modal";
 import { PluginChip } from "./PluginChip";
@@ -258,7 +259,12 @@ export function SchemePreview({
               pt: 0.5,
             }}
           >
-            <Button variant="contained" onClick={() => onEdit()} startIcon={<Pencil size={15} />}>
+            <Button
+              variant="contained"
+              {...dialogPreloadHandlers("schemes")}
+              onClick={() => onEdit()}
+              startIcon={<Pencil size={15} />}
+            >
               {t("editScheme")}
             </Button>
           </Box>

@@ -1,7 +1,8 @@
-import { useTranslation } from "react-i18next";
 import { ButtonBase, Card } from "@mui/material";
 import Box from "@mui/material/Box";
+import { useTranslation } from "react-i18next";
 
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { X } from "../icons";
 import type { Paint, SchemeOrderEntry } from "../types";
 import { truncateSx } from "../utils/truncate";
@@ -117,7 +118,11 @@ export function RecipeSchemeTileView({
           </ButtonBase>
         </>
       ) : (
-        <ButtonBase onClick={onOpen} sx={{ ...tileSx, "&:hover": { backgroundColor: "var(--sunken)" } }}>
+        <ButtonBase
+          {...dialogPreloadHandlers("schemes")}
+          onClick={onOpen}
+          sx={{ ...tileSx, "&:hover": { backgroundColor: "var(--sunken)" } }}
+        >
           {content}
           <Box component="span" sx={visuallyHiddenSx}>
             {t("openScheme")}

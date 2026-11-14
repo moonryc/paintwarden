@@ -2,6 +2,7 @@ import { Button, ButtonGroup, Menu, MenuItem } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { ChevronDown, PaintDrop, Palette, Plus } from "../icons";
 
 // The "+ Miniature" split button: the main part adds a miniature, and the arrow opens a menu to
@@ -37,6 +38,7 @@ export function AddMenuButton({
         aria-label={t("layoutAddToVault")}
       >
         <Button
+          {...dialogPreloadHandlers("miniature")}
           onClick={onAddMiniature}
           startIcon={<Plus size={18} />}
 
@@ -98,6 +100,7 @@ export function AddMenuButton({
         }}
       >
         <MenuItem
+          {...dialogPreloadHandlers("paint")}
           onClick={() => choose(onAddPaint)}
           sx={{
             boxSizing: "border-box",
@@ -107,6 +110,7 @@ export function AddMenuButton({
           <PaintDrop size={17} /> {t("layoutAddPaint")}
         </MenuItem>
         <MenuItem
+          {...dialogPreloadHandlers("schemes")}
           onClick={() => choose(onAddScheme)}
           sx={{
             boxSizing: "border-box",

@@ -10,6 +10,7 @@ import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { SectionHeader } from "../Components/SectionHeader";
+import { dialogPreloadHandlers } from "../dialog-preload";
 import { useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
 import { Archive, Plus, SearchX } from "../icons";
@@ -563,7 +564,11 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                         sx={shelfTileSx}
                       />
                     ) : (
-                      <AddMiniatureTile onClick={onAdd} sx={shelfTileSx} />
+                      <AddMiniatureTile
+                        {...dialogPreloadHandlers("miniature")}
+                        onClick={onAdd}
+                        sx={shelfTileSx}
+                      />
                     )}
                   </Box>
                 );
@@ -594,7 +599,12 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             title={workbench ? t("homeEmptyWorkbench") : t("homeEmptyShelf")}
             body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
             action={
-              <Button variant="contained" onClick={onAdd} startIcon={<Plus size={16} />}>
+              <Button
+                variant="contained"
+                {...dialogPreloadHandlers("miniature")}
+                onClick={onAdd}
+                startIcon={<Plus size={16} />}
+              >
                 {t("homeAddMiniature")}
               </Button>
             }
