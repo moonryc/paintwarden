@@ -7,6 +7,7 @@
     "./catalog-import": "./catalog-import.ts",
     "./color-categories": "./color-categories.ts",
     "./color-hex": "./color-hex.ts",
+    "./color-matching": "./color-matching.ts",
     "./fuzzy-search": "./fuzzy-search.ts",
     "./image-thumbnails": "./image-thumbnails.ts",
     "./paint-color-similarity": "./paint-color-similarity.ts",
