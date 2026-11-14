@@ -1,6 +1,7 @@
 # Code quality checks
 
-The repository uses npm and Node.js 22.13 or newer. Run these commands from the repository root:
+The repository uses npm and Node.js 22.22.2 (pinned in `.nvmrc` for local development and CI).
+Run these commands from the repository root after `npm ci`:
 
 ```sh
 npm run format:check
@@ -13,6 +14,12 @@ Generated database migrations, bundled desktop servers, desktop build output, an
 ESLint checks the server, web app, paint core, and shared UI. `npm run lint` also runs TypeScript
 checks for those projects and JavaScript syntax checks for the Electron host. CI runs shared checks
 on Linux and desktop packaging checks on macOS and Windows.
+
+The Astro site's committed `src/env.d.ts` loads `astro/client` (including Vite's `import.meta.glob`
+types). Lint and typecheck must work before `astro sync`, dev, or build has generated `.astro/`.
+To reproduce CI, use a fresh clone with `npm ci` and run the steps in
+`.github/workflows/quality.yml` in order, without copying `.astro/`, `dist/`, or `.nx/` from a
+working checkout.
 
 Shared UI styling lives in React `sx` props. Colors come from the CSS variables defined in
 `packages/vault-ui/src/dom/theme-tokens.ts`, such as `var(--ink)`, which also feeds the MUI theme,
