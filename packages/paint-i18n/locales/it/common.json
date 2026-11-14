@@ -1,0 +1,10 @@
+{
+  "language": "Lingua",
+  "languageDescription": "Scegli la lingua per questo dispositivo.",
+  "languageSaveFailed": "Non è stato possibile salvare la lingua. Riprova.",
+  "loading": "Caricamento…",
+  "cancel": "Annulla",
+  "save": "Salva",
+  "close": "Chiudi",
+  "retry": "Riprova"
+}
