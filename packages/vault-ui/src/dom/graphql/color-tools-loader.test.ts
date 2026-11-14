@@ -214,3 +214,14 @@ void test("non-stale GraphQL and transport errors reject once and preserve the a
     }
   }
 });
+
+void test("multi-cursor cycles fail closed rather than looping within one revision", async () => {
+  const scope = fixture((call) => json(page(String(call), { next: call % 2 ? "A" : "B" })));
+  try {
+    await assert.rejects(readColorIndex(scope.client));
+    assert.deepEqual(scope.afters, [null, "A", "B"]);
+    assert.deepEqual(scope.client.cache.extract(), scope.before);
+  } finally {
+    scope.dispose();
+  }
+});

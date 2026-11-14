@@ -31,6 +31,7 @@ import { MiniatureForm } from "./MiniatureForm";
 import { PaintDetailsOverlay } from "./PaintDetailsOverlay";
 import { ProjectDrawerFrame } from "./ProjectDrawerFrame";
 import { ProjectHero } from "./ProjectHero";
+import { SwatchScan } from "./SwatchScan";
 
 // This boundary never loads the legacy State snapshot, even when a project is
 // opened directly from a paint's Used by link.
@@ -149,6 +150,7 @@ function ProjectContent({
     if (paint.inventory?.state === "OWNED" || paint.inventory?.state === "WISHLIST")
       paintStates[paint.id] = paint.inventory.state;
   const [editingDetails, setEditingDetails] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
   const [openSchemeId, setOpenSchemeId] = useState<string | null>(null);
@@ -190,6 +192,12 @@ function ProjectContent({
   const content = (
     <>
       <ProjectHero miniature={miniature} paints={required} onOpenImage={() => setImageViewerOpen(true)} />
+      {miniature.imageUrl && (
+        <Button sx={{ mt: 1 }} onClick={() => setScanOpen(true)}>
+          {t("scanTitle")}
+        </Button>
+      )}
+      {scanOpen && <SwatchScan miniatureId={miniature.id} onClose={() => setScanOpen(false)} />}
 
       <Box
         component="div"

@@ -189,6 +189,25 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
           templates: [],
         },
       };
+    if (operationName === "ColorToolIndex") {
+      const start = Number(vars.after ?? 0);
+      const rows = data.catalog.slice(start, start + 100);
+      const end = start + rows.length;
+      return {
+        colorIndex: {
+          revision: revision(),
+          nodes: rows.map((paint) => ({
+            id: paint.id,
+            name: paint.name,
+            brand: paint.brand,
+            hex: paint.colorHex ?? null,
+            owned: owns(data.paintRecords[paint.id]),
+            available: isPaintAvailable(data, data.paintRecords, paint.id),
+          })),
+          pageInfo: { hasNextPage: end < data.catalog.length, endCursor: rows.length ? String(end) : null },
+        },
+      };
+    }
     const paintTools = fixturePaintToolsResponse(data, operationName, vars, revision(), projectPaint);
     if (paintTools) return paintTools;
     const template = fixtureTemplateResponse(data, operationName, vars, revision());

@@ -44,6 +44,23 @@ export type CatalogSource = {
   version: Scalars["String"]["output"];
 };
 
+export type ColorIndexPaint = {
+  __typename?: "ColorIndexPaint";
+  available: Scalars["Boolean"]["output"];
+  brand: Scalars["String"]["output"];
+  hex?: Maybe<Scalars["String"]["output"]>;
+  id: Scalars["ID"]["output"];
+  name: Scalars["String"]["output"];
+  owned: Scalars["Boolean"]["output"];
+};
+
+export type ColorIndexView = {
+  __typename?: "ColorIndexView";
+  nodes: Array<ColorIndexPaint>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
+};
+
 export type CustomPaintImportInput = {
   brand?: InputMaybe<Scalars["String"]["input"]>;
   colorHex?: InputMaybe<Scalars["String"]["input"]>;
@@ -603,6 +620,7 @@ export type PublicError = {
 
 export type Query = {
   __typename?: "Query";
+  colorIndex: ColorIndexView;
   home: HomeView;
   library: PaintConnection;
   miniature: MiniatureView;
@@ -630,6 +648,11 @@ export type Query = {
   wishlistExport: WishlistExport;
   wishlistModelOptions: WishlistModelOptionsView;
   wishlistRelatedProjects: WishlistProjectConnection;
+};
+
+export type QueryColorIndexArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
 };
 
 export type QueryHomeArgs = {
@@ -1250,6 +1273,8 @@ export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars["Boolean"]["output"]>;
   BrokenReason: BrokenReason;
   CatalogSource: ResolverTypeWrapper<CatalogSource>;
+  ColorIndexPaint: ResolverTypeWrapper<ColorIndexPaint>;
+  ColorIndexView: ResolverTypeWrapper<ColorIndexView>;
   CustomPaintImportInput: CustomPaintImportInput;
   CustomPaintInput: CustomPaintInput;
   ErrorParameter: ResolverTypeWrapper<ErrorParameter>;
@@ -1365,6 +1390,8 @@ export type ResolversParentTypes = {
   ActiveSubstitution: ActiveSubstitution;
   Boolean: Scalars["Boolean"]["output"];
   CatalogSource: CatalogSource;
+  ColorIndexPaint: ColorIndexPaint;
+  ColorIndexView: ColorIndexView;
   CustomPaintImportInput: CustomPaintImportInput;
   CustomPaintInput: CustomPaintInput;
   ErrorParameter: ErrorParameter;
@@ -1492,6 +1519,27 @@ export type CatalogSourceResolvers<
   repository?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   version?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type ColorIndexPaintResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["ColorIndexPaint"] = ResolversParentTypes["ColorIndexPaint"],
+> = {
+  available?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  brand?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  hex?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  owned?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+};
+
+export type ColorIndexViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["ColorIndexView"] = ResolversParentTypes["ColorIndexView"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["ColorIndexPaint"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
 };
 
 export type ErrorParameterResolvers<
@@ -2092,6 +2140,12 @@ export type QueryResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
 > = {
+  colorIndex?: Resolver<
+    ResolversTypes["ColorIndexView"],
+    ParentType,
+    ContextType,
+    RequireFields<QueryColorIndexArgs, "first">
+  >;
   home?: Resolver<ResolversTypes["HomeView"], ParentType, ContextType, RequireFields<QueryHomeArgs, "first">>;
   library?: Resolver<
     ResolversTypes["PaintConnection"],
@@ -2655,6 +2709,8 @@ export type WishlistViewResolvers<
 export type Resolvers<ContextType = GraphQLContext> = {
   ActiveSubstitution?: ActiveSubstitutionResolvers<ContextType>;
   CatalogSource?: CatalogSourceResolvers<ContextType>;
+  ColorIndexPaint?: ColorIndexPaintResolvers<ContextType>;
+  ColorIndexView?: ColorIndexViewResolvers<ContextType>;
   ErrorParameter?: ErrorParameterResolvers<ContextType>;
   FacetCount?: FacetCountResolvers<ContextType>;
   HomeCounts?: HomeCountsResolvers<ContextType>;

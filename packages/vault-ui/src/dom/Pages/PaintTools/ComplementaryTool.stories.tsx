@@ -239,7 +239,12 @@ export const OwnedMatchesAndSave: Story = {
     await expect(saved).toEqual({
       name: "Copper armor",
       category: "GREY",
-      entries: ["shadow", "input", "highlight", "complement"].map((paintId) => ({ type: "PAINT", paintId })),
+      entries: [
+        { type: "DIVIDER", label: "GET READY!", tone: "MILESTONE", role: "START" },
+        { type: "DIVIDER", label: "OTHER", tone: "SECTION" },
+        ...["shadow", "input", "highlight", "complement"].map((paintId) => ({ type: "PAINT", paintId })),
+        { type: "DIVIDER", label: "YOU'RE READY!", tone: "MILESTONE", role: "COMPLETE" },
+      ],
     });
     await expect(within(canvasElement.ownerDocument.body).queryByRole("dialog")).not.toBeInTheDocument();
   },

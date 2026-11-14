@@ -106,6 +106,25 @@ export type TemplatePaintInput = {
 export type VaultFamily =
   "HOME" | "LIBRARY" | "MINIATURES" | "OPTIONS" | "PAINT" | "SCHEMES" | "SOURCES" | "TEMPLATES" | "WISHLIST";
 
+export type ColorToolIndexQueryVariables = Exact<{
+  after?: string | null | undefined;
+}>;
+
+export type ColorToolIndexQuery = {
+  colorIndex: {
+    revision: { epoch: string; seq: string };
+    nodes: Array<{
+      id: string;
+      name: string;
+      brand: string;
+      hex: string | null;
+      owned: boolean;
+      available: boolean;
+    }>;
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+};
+
 export type DetailPaintFragment = {
   id: string;
   brand: string;
@@ -1580,6 +1599,86 @@ export const WishlistRowFragmentDoc = {
     },
   ],
 } as unknown as DocumentNode<WishlistRowFragment, unknown>;
+export const ColorToolIndexDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "ColorToolIndex" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "after" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "colorIndex" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "first" },
+                value: { kind: "IntValue", value: "100" },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "after" },
+                value: { kind: "Variable", name: { kind: "Name", value: "after" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "nodes" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "name" } },
+                      { kind: "Field", name: { kind: "Name", value: "brand" } },
+                      { kind: "Field", name: { kind: "Name", value: "hex" } },
+                      { kind: "Field", name: { kind: "Name", value: "owned" } },
+                      { kind: "Field", name: { kind: "Name", value: "available" } },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "pageInfo" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                      { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<ColorToolIndexQuery, ColorToolIndexQueryVariables>;
 export const PaintDetailsDocument = {
   kind: "Document",
   definitions: [

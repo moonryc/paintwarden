@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { Modal } from "../../Components/Modal";
 import { useSchemeActions, type SchemeInput } from "../../graphql/scheme-actions";
 import { useVaultStore } from "../../store/hooks";
+import { REQUIRED_MILESTONE_LABELS } from "../../utils/scheme-milestones";
 
 const categoryKeys = {
   RED: "toolsCategoryRed",
@@ -49,7 +50,16 @@ export function ComplementarySave({
     setSaving(true);
     setFailed(false);
     try {
-      await actions.create({ name: name.trim(), category, entries });
+      await actions.create({
+        name: name.trim(),
+        category,
+        entries: [
+          { type: "DIVIDER", label: REQUIRED_MILESTONE_LABELS.START, tone: "MILESTONE", role: "START" },
+          { type: "DIVIDER", label: "OTHER", tone: "SECTION" },
+          ...entries,
+          { type: "DIVIDER", label: REQUIRED_MILESTONE_LABELS.COMPLETE, tone: "MILESTONE", role: "COMPLETE" },
+        ],
+      });
       notify(t("complementarySaved"));
       onClose();
     } catch {

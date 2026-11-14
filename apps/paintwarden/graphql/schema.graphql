@@ -46,7 +46,22 @@ enum MiniatureSchemeEntryKind {
   DIVIDER
   IMAGE
 }
+type ColorIndexPaint {
+  id: ID!
+  name: String!
+  brand: String!
+  hex: String
+  owned: Boolean!
+  available: Boolean!
+}
+type ColorIndexView {
+  revision: VaultRevision!
+  nodes: [ColorIndexPaint!]!
+  pageInfo: PageInfo!
+}
+
 type Query {
+  colorIndex(first: Int! = 100, after: String): ColorIndexView!
   home(first: Int! = 48, after: String, stage: PaintingStatus, search: String): HomeView!
   miniatures(
     first: Int! = 48

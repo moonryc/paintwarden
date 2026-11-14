@@ -1,0 +1,20 @@
+query ColorToolIndex($after: String) {
+  colorIndex(first: 100, after: $after) {
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      id
+      name
+      brand
+      hex
+      owned
+      available
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}

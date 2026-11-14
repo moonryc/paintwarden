@@ -48,6 +48,7 @@ import {
   readWishlistExport,
 } from "./wishlist.ts";
 import { readSchemes, readSchemePaintOptions, schemeMutations } from "./schemes.ts";
+import { readColorIndex } from "./color-tools.ts";
 import { Sequence } from "./sequence.ts";
 import { readSources, readSourceVersions, readSourceRemoval, readSourceShareable } from "./sources.ts";
 import { templateQueries, templateMutations, templateViewResolvers } from "./templates.ts";
@@ -56,6 +57,7 @@ const resolvers: Resolvers<GraphQLContext> = {
   Sequence,
   Query: {
     ...templateQueries,
+    colorIndex: (_root, args) => readColorIndex(args),
     home: (_root, args, context) => {
       const view = readHome(args);
       if (context.metrics) context.metrics.rows += view.miniatures.nodes.length;
