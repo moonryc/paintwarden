@@ -254,6 +254,7 @@ export const ApolloLoading: Story = {
     // Query changes keep the toolbar mounted instead of returning to initial skeletons.
     await expect(search).toHaveFocus();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
-    await expect(await canvas.findByText("Fixture paint 359")).toBeInTheDocument();
+    // Search is debounced and this fixture deliberately delays each page by 750ms.
+    await expect(await canvas.findByText("Fixture paint 359", {}, { timeout: 3000 })).toBeInTheDocument();
   },
 };
