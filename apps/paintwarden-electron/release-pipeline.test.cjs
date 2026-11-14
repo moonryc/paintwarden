@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const { EventEmitter } = require("node:events");
+const { spawnSync } = require("node:child_process");
 const test = require("node:test");
 const { SemVer } = require("semver");
 const { GitHubProvider } = require("electron-updater/out/providers/GitHubProvider");
@@ -137,4 +138,141 @@ test("remote compatibility recognizes exact beta versions and reports the correc
   assert.equal(versionMismatch("1.0.0-beta.2", "1.0.0-beta.10").update, "app");
   assert.equal(versionMismatch("1.0.0", "1.0.0-beta.10").update, "server");
   assert.equal(versionMismatch("1.0.0-beta.10", "1.0.0").update, "app");
+});
+
+// Verify the actual config consumed by builder, isolated from any host credentials.
+for (const releaseVersion of ["1.0.0-beta.1", "1.0.0"]) {
+  for (const platform of ["darwin", "win32"]) {
+    for (const signed of [false, true]) {
+      test(`${releaseVersion} ${platform} builder config enforces its ${signed ? "signed" : "unsigned"} policy`, () => {
+        const env = Object.fromEntries(
+          ["PATH", "SystemRoot", "TEMP", "TMP", "HOME"]
+            .filter((key) => process.env[key])
+            .map((key) => [key, process.env[key]]),
+        );
+        Object.assign(env, {
+          CSC_NAME: "unrelated",
+          WIN_CSC_LINK: "unrelated",
+          WIN_CSC_KEY_PASSWORD: "unrelated",
+        });
+        if (signed) {
+          for (const key of [
+            "MAC_CERTIFICATE_P12_BASE64",
+            "MAC_CERTIFICATE_PASSWORD",
+            "APPLE_ID",
+            "APPLE_APP_SPECIFIC_PASSWORD",
+            "APPLE_TEAM_ID",
+            "WINDOWS_CERTIFICATE_P12_BASE64",
+            "WINDOWS_CERTIFICATE_PASSWORD",
+          ])
+            env[key] = `synthetic-${key}`;
+        }
+        const child = spawnSync(
+          process.execPath,
+          [
+            "-e",
+            `
+        Object.defineProperty(process, "platform", { value: ${JSON.stringify(platform)} });
+        require(${JSON.stringify(require.resolve("./package.json"))}).version = ${JSON.stringify(releaseVersion)};
+        const config = require(${JSON.stringify(require.resolve("./electron-builder.cjs"))});
+        console.log(JSON.stringify({ force: config.forceCodeSigning, mac: config.mac,
+          discovery: process.env.CSC_IDENTITY_AUTO_DISCOVERY, name: process.env.CSC_NAME,
+          winLink: process.env.WIN_CSC_LINK, winPassword: process.env.WIN_CSC_KEY_PASSWORD,
+          channel: config.publish[0].channel, fanout: config.generateUpdatesFilesForAllChannels }));
+      `,
+          ],
+          { env, encoding: "utf8" },
+        );
+        assert.equal(child.status, 0, child.stderr);
+        const config = JSON.parse(child.stdout.trim().split("\n").at(-1));
+        assert.equal(config.force, signed);
+        assert.equal(config.discovery, signed && platform === "darwin" ? "true" : "false");
+        assert.equal(config.name, "");
+        assert.equal(
+          config.winLink,
+          signed && platform === "win32" ? "synthetic-WINDOWS_CERTIFICATE_P12_BASE64" : "",
+        );
+        assert.equal(
+          config.winPassword,
+          signed && platform === "win32" ? "synthetic-WINDOWS_CERTIFICATE_PASSWORD" : "",
+        );
+        assert.equal(config.channel, releaseVersion.includes("-beta.") ? "beta" : "latest");
+        assert.equal(config.fanout, false);
+        if (platform === "darwin") {
+          assert.equal(config.mac.notarize, signed);
+          assert.equal(config.mac.identity, signed ? undefined : null);
+        }
+      });
+    }
+  }
+}
+
+test("locked builder can discover a supplied Mac identity only in the signed policy", async () => {
+  // Seed builder's own cached security output, not its identity-selection logic:
+  // no /usr/bin/security invocation, keychain mutation or real certificate required.
+  const signer = require("app-builder-lib/out/codeSign/macCodeSign");
+  const previousCache = signer.findIdentityRawResult;
+  const previousDiscovery = process.env.CSC_IDENTITY_AUTO_DISCOVERY;
+  const previousName = process.env.CSC_NAME;
+  const complete = Object.fromEntries(
+    [
+      "MAC_CERTIFICATE_P12_BASE64",
+      "MAC_CERTIFICATE_PASSWORD",
+      "APPLE_ID",
+      "APPLE_APP_SPECIFIC_PASSWORD",
+      "APPLE_TEAM_ID",
+    ].map((key) => [key, "synthetic"]),
+  );
+  try {
+    signer.findIdentityRawResult = Promise.resolve([
+      '0000000000000000000000000000000000000000 "Developer ID Application: Synthetic Test (SYNTHETIC)"',
+    ]);
+    delete process.env.CSC_NAME;
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY = signingConfiguration(
+      "darwin",
+      complete,
+    ).env.CSC_IDENTITY_AUTO_DISCOVERY;
+    const found = await signer.findIdentity("Developer ID Application");
+    assert.equal(found.name, "Developer ID Application: Synthetic Test (SYNTHETIC)");
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY = signingConfiguration(
+      "darwin",
+      {},
+    ).env.CSC_IDENTITY_AUTO_DISCOVERY;
+    assert.equal(await signer.findIdentity("Developer ID Application"), null);
+  } finally {
+    signer.findIdentityRawResult = previousCache;
+    for (const [key, value] of [
+      ["CSC_IDENTITY_AUTO_DISCOVERY", previousDiscovery],
+      ["CSC_NAME", previousName],
+    ]) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+});
+
+test("locked Windows builder receives the selected certificate and password, never ambient aliases", () => {
+  require("app-builder-lib"); // Initialize the library entry point before its mutually dependent packagers.
+  const { PlatformPackager } = require("app-builder-lib/out/platformPackager");
+  const { WinPackager } = require("app-builder-lib/out/winPackager");
+  const fake = { info: { config: {} }, platformSpecificBuildOptions: {} };
+  const complete = {
+    WINDOWS_CERTIFICATE_P12_BASE64: "synthetic-certificate",
+    WINDOWS_CERTIFICATE_PASSWORD: "synthetic-password",
+  };
+  const keys = Object.keys(signingConfiguration("win32", complete).env);
+  const previous = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
+  try {
+    Object.assign(process.env, signingConfiguration("win32", complete).env);
+    assert.equal(PlatformPackager.prototype.getCscLink.call(fake, "WIN_CSC_LINK"), "synthetic-certificate");
+    assert.equal(WinPackager.prototype.doGetCscPassword.call(fake), "synthetic-password");
+    Object.assign(process.env, signingConfiguration("win32", {}).env);
+    assert.equal(PlatformPackager.prototype.getCscLink.call(fake, "WIN_CSC_LINK"), "");
+    assert.equal(WinPackager.prototype.doGetCscPassword.call(fake), "");
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
 });

@@ -13,7 +13,8 @@ module.exports = {
     ...provider,
     channel: version.includes("-beta.") ? "beta" : "latest",
   })),
-  forceCodeSigning: false,
+  // Complete credentials must produce a signed build or fail, never silently unsigned.
+  forceCodeSigning: signing.signed,
   mac: { ...build.mac, notarize: signing.signed, ...(signing.signed ? {} : { identity: null }) },
   // GitHubProvider selects prereleases via its feed and stable releases via /latest.
   // Do not generate a latest.yml pointing to a beta or force a beta channel into stable builds.

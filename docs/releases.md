@@ -84,7 +84,11 @@ Windows signing opts in with `WINDOWS_CERTIFICATE_P12_BASE64` and
 `WINDOWS_CERTIFICATE_PASSWORD` (a code-signing certificate and its export password).
 Hardware/cloud-only certificates need a separately reviewed signing integration.
 No certificate/token is bundled. Local packaging uses these same environment variable
-names. Automatic discovery of unrelated local signing identities is disabled.
+names. Automatic discovery is disabled for unsigned builds. With complete Mac
+credentials, builder discovers the imported identity in its temporary keychain;
+signing is required. Ambient identity names/Windows certificate aliases are cleared
+or replaced with the selected credentials, so unrelated local credentials cannot
+silently change the chosen policy.
 The current Mac artifact targets Apple silicon; Windows targets x64.
 
 Unsigned friends-and-family builds may require macOS **Privacy & Security → Open

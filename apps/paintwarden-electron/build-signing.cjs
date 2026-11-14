@@ -17,8 +17,14 @@ function signingConfiguration(platform, env) {
   return {
     signed,
     env: {
-      CSC_IDENTITY_AUTO_DISCOVERY: "false",
+      // The imported Mac certificate is discovered inside builder's dedicated
+      // temporary keychain. Disabling discovery here also hides that certificate.
+      CSC_IDENTITY_AUTO_DISCOVERY: signed && platform === "darwin" ? "true" : "false",
+      CSC_NAME: "",
       CSC_LINK: signed ? env[certificate] : "",
+      // Builder gives these Windows-specific aliases precedence, even when empty.
+      WIN_CSC_LINK: signed && platform === "win32" ? env[certificate] : "",
+      WIN_CSC_KEY_PASSWORD: signed && platform === "win32" ? env[password] : "",
       CSC_KEY_PASSWORD: signed ? env[password] : "",
       APPLE_ID: signed && platform === "darwin" ? env.APPLE_ID : "",
       APPLE_APP_SPECIFIC_PASSWORD: signed && platform === "darwin" ? env.APPLE_APP_SPECIFIC_PASSWORD : "",
