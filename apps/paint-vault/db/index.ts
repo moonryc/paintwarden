@@ -37,16 +37,11 @@ function createDatabase() {
   try {
     migrateVault(sqlite, migrationsFolder, pending);
   } catch (error) {
+    sqlite.close();
+    rawDatabase = undefined;
     const saved = backup
-      ? ` Its contents before the update are saved at ${backup}; stop the server and copy that file over the vault database to go back.`
+      ? ` Its contents before the update are saved at ${backup}; quit Paint Vault / stop the server, keep a copy of the data directory, remove the database -wal and -shm sidecars, then copy that file over ${databasePath}. Keep images unchanged. Restart with the previous working app or a corrected update; Retry alone cannot repair a faulty migration.`
       : "";
-    if (/already exists/.test(String(error instanceof Error ? (error.cause ?? error) : error)))
-      throw new Error(
-        "This vault was created by a pre-release schema. Export a backup with the previous build, " +
-          "start with an empty data directory, reinstall catalog sources, and restore the backup." +
-          saved,
-        { cause: error },
-      );
     if (saved)
       throw new Error(
         `Updating the vault failed: ${error instanceof Error ? error.message : String(error)}.${saved}`,

@@ -65,14 +65,29 @@ test("migrations that rebuild a table keep the rows that refer to it", async (t)
     });
 
     await t.test("a migration that breaks links stops with an error", () => {
-      const sqlite = new Database(path.join(directory, "broken.sqlite"));
+      const file = path.join(directory, "broken.sqlite");
+      let sqlite = new Database(file);
       sqlite.pragma("foreign_keys = ON");
       writeMigrations(folder, [create]);
       migrateVault(sqlite, folder);
       sqlite.exec("INSERT INTO parent VALUES ('a'); INSERT INTO child VALUES ('x', 'a');");
       writeMigrations(folder, [create, rebuildParent("SELECT id FROM parent WHERE 0")]);
       const pending = pendingMigrations(sqlite, folder);
-      assert.throws(() => migrateVault(sqlite, folder, pending), /1 records with broken links \(child\)/);
+      for (let attempt = 0; attempt < 3; attempt++) {
+        assert.throws(() => migrateVault(sqlite, folder, pending), /1 records with broken links \(child\)/);
+        assert.deepEqual(sqlite.prepare("SELECT * FROM parent").all(), [{ id: "a" }]);
+        assert.deepEqual(sqlite.prepare("SELECT * FROM child").all(), [{ id: "x", parent_id: "a" }]);
+        assert.deepEqual(sqlite.pragma("foreign_key_check"), []);
+        assert.deepEqual(pendingMigrations(sqlite, folder), ["0001_step"]);
+        assert.equal(sqlite.prepare("SELECT count(*) FROM __drizzle_migrations").pluck().get(), 1);
+        sqlite.close();
+        sqlite = new Database(file);
+      }
+      // A corrected forward migration can now complete without restoring lost data.
+      writeMigrations(folder, [create, rebuildParent()]);
+      migrateVault(sqlite, folder);
+      assert.deepEqual(pendingMigrations(sqlite, folder), []);
+      assert.equal(sqlite.prepare("SELECT count(*) FROM child").pluck().get(), 1);
       assert.equal(sqlite.pragma("foreign_keys", { simple: true }), 1);
       sqlite.close();
     });
@@ -112,5 +127,40 @@ void test("up-to-date vaults skip migration SQL, foreign-key toggles and validat
   } finally {
     sqlite.close();
     rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+void test("initial migration failure rolls back the schema and migration journal together", () => {
+  const directory = mkdtempSync(path.join(tmpdir(), "paint-vault-migrate-new-"));
+  const folder = path.join(directory, "drizzle");
+  const file = path.join(directory, "vault.sqlite");
+  try {
+    writeMigrations(folder, [create, ["INSERT INTO child VALUES ('orphan', 'missing');"]]);
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const sqlite = new Database(file);
+      try {
+        assert.throws(() => migrateVault(sqlite, folder), /1 records with broken links/);
+        assert.deepEqual(sqlite.prepare("SELECT name FROM sqlite_schema WHERE type = 'table'").all(), []);
+        assert.deepEqual(pendingMigrations(sqlite, folder), ["0000_step", "0001_step"]);
+        assert.equal(sqlite.pragma("foreign_keys", { simple: true }), 1);
+      } finally {
+        sqlite.close();
+      }
+    }
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+void test("migrations cannot run inside an outer transaction where FK toggles would be ineffective", () => {
+  const sqlite = new Database(":memory:");
+  try {
+    sqlite.pragma("foreign_keys = ON");
+    sqlite.transaction(() => {
+      assert.throws(() => migrateVault(sqlite, "/unused", ["pending"]), /require their own transaction/);
+      assert.equal(sqlite.pragma("foreign_keys", { simple: true }), 1);
+    })();
+  } finally {
+    sqlite.close();
   }
 });

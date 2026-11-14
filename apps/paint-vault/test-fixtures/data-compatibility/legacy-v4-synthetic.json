@@ -1,0 +1,152 @@
+{
+  "format": "paint-vault-backup",
+  "version": 4,
+  "exportedAt": "2023-11-14T22:13:20.000Z",
+  "miniatures": [
+    {
+      "id": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "title": "Synthetic model",
+      "status": "OWNED",
+      "notes": "Fixture notes",
+      "manufacturer": "Test",
+      "faction": "Test",
+      "scale": "1:1",
+      "paintingStatus": "IN_PROGRESS",
+      "imageKey": "7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "sourceImageUrl": null,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "requirements": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "paintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "notes": "Thin coats",
+      "sortOrder": 0,
+      "step": "BASECOAT"
+    }
+  ],
+  "recipeSteps": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "step": "BASECOAT"
+    }
+  ],
+  "paintInventory": [
+    {
+      "paintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "state": "OWNED",
+      "stockLevel": "LOW",
+      "quantity": 2
+    }
+  ],
+  "customPaints": [
+    {
+      "id": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "brand": "Synthetic",
+      "range": "Test",
+      "name": "Blue",
+      "colorHex": "#123456",
+      "sourceUrl": null,
+      "sourceLabel": "Fixture",
+      "isSample": true,
+      "isCustom": true
+    }
+  ],
+  "templates": [],
+  "miniatureTemplates": [
+    {
+      "id": "user:f67f22d9-7ced-5a1c-bc66-8f809e305bf6",
+      "name": "Synthetic template",
+      "manufacturer": "Test",
+      "faction": "Test",
+      "categories": [
+        "Fixture"
+      ],
+      "imageKey": "7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "imageUrl": null,
+      "schemeIds": [
+        "custom-3aa8340f-a3ae-5864-87bc-474617ec55c9"
+      ],
+      "paints": [
+        {
+          "paintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+          "step": "BASECOAT",
+          "notes": "Fixture recipe",
+          "sortOrder": 0
+        }
+      ],
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatureTemplateImages": {
+    "user:f67f22d9-7ced-5a1c-bc66-8f809e305bf6": {
+      "data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+      "contentType": "image/png"
+    }
+  },
+  "templatePaints": [],
+  "colorSchemes": [
+    {
+      "id": "custom-3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "name": "Synthetic scheme",
+      "category": null,
+      "isSystem": false,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "colorSchemePaints": [
+    {
+      "id": null,
+      "schemeId": "custom-3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "paintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "sortOrder": 1
+    }
+  ],
+  "colorSchemeDividers": [
+    {
+      "id": "required-battle-milestone:start:custom-3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "schemeId": "custom-3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "label": "Start",
+      "tone": "MILESTONE",
+      "sortOrder": 0
+    }
+  ],
+  "colorSchemeImages": [],
+  "miniatureColorSchemes": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "schemeId": "custom-3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "sortOrder": 0
+    }
+  ],
+  "paintSubstitutions": [
+    {
+      "id": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "targetPaintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "name": "Synthetic mix",
+      "isDefault": true,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "paintSubstitutionIngredients": [
+    {
+      "substitutionId": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "paintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "parts": 2,
+      "sortOrder": 0
+    }
+  ],
+  "miniaturePaintSubstitutions": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "targetPaintId": "custom-f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "substitutionId": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "useOriginal": false
+    }
+  ]
+}

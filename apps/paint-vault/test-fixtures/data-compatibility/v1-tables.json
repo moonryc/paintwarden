@@ -1,0 +1,211 @@
+{
+  "plugins": [
+    {
+      "id": "c51631ce-1f9c-5ef8-8ce9-88d75a2ed6d9",
+      "repository": "fixture/synthetic",
+      "url": "https://example.invalid/synthetic",
+      "branch": "main",
+      "name": "Synthetic plugin",
+      "version": "1.0.0",
+      "license": "CC0-1.0",
+      "attribution": "Synthetic test data",
+      "dependencies": [],
+      "updatedAt": 1700000000000,
+      "lastError": null,
+      "logoSvg": null
+    }
+  ],
+  "paints": [
+    {
+      "id": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "brand": "Synthetic",
+      "range": "Test",
+      "name": "Blue",
+      "type": "BASE",
+      "discontinued": false,
+      "colorHex": "#123456",
+      "sourceUrl": null,
+      "sourceLabel": "Fixture",
+      "updatedAt": 1700000000000
+    },
+    {
+      "id": "1b907029-07de-510e-9841-80e03a75ba7d",
+      "brand": "Synthetic",
+      "range": "Plugin",
+      "name": "Orange",
+      "type": "LAYER",
+      "discontinued": true,
+      "colorHex": "#ab1234",
+      "sourceUrl": "https://example.invalid/paint",
+      "sourceLabel": null,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "pluginItems": [
+    {
+      "sourceId": "c51631ce-1f9c-5ef8-8ce9-88d75a2ed6d9",
+      "kind": "paint",
+      "itemId": "1b907029-07de-510e-9841-80e03a75ba7d"
+    }
+  ],
+  "pluginImages": [
+    {
+      "sourceId": "c51631ce-1f9c-5ef8-8ce9-88d75a2ed6d9",
+      "assetPath": "pixel.png",
+      "imageKey": "7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "sha256": "431ced6916a2a21a156e38701afe55bbd7f88969fbbfc56d7fe099d47f265460"
+    }
+  ],
+  "paintInventory": [
+    {
+      "paintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "state": "OWNED",
+      "stockLevel": "LOW",
+      "quantity": 2,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "schemes": [
+    {
+      "id": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "name": "Synthetic scheme",
+      "category": null,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "schemePaints": [
+    {
+      "schemeId": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "paintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "sortOrder": 1,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "schemeDividers": [
+    {
+      "id": "b0f4bc6b-69ee-5cda-8686-8e9abab19846",
+      "schemeId": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "label": "Start",
+      "tone": "MILESTONE",
+      "role": "START",
+      "sortOrder": 0,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "schemeImages": [
+    {
+      "id": "06cb1999-b3ee-5386-b23e-a3fff79720ff",
+      "schemeId": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "imageUrl": "/api/catalog-source-images/7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "thumbnailUrl": "/api/catalog-source-images/7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "imageType": "test",
+      "method": "synthetic",
+      "sortOrder": 2,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "templates": [
+    {
+      "id": "user:f67f22d9-7ced-5a1c-bc66-8f809e305bf6",
+      "name": "Synthetic template",
+      "manufacturer": "Test",
+      "faction": "Test",
+      "categories": [
+        "Fixture"
+      ],
+      "imageKey": "7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "imageUrl": null,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "templateSchemes": [
+    {
+      "templateId": "user:f67f22d9-7ced-5a1c-bc66-8f809e305bf6",
+      "schemeId": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "sortOrder": 0,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "templatePaints": [
+    {
+      "templateId": "user:f67f22d9-7ced-5a1c-bc66-8f809e305bf6",
+      "sortOrder": 0,
+      "paintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "step": "BASECOAT",
+      "notes": "Fixture recipe",
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatures": [
+    {
+      "id": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "title": "Synthetic model",
+      "status": "OWNED",
+      "notes": "Fixture notes",
+      "manufacturer": "Test",
+      "faction": "Test",
+      "scale": "1:1",
+      "paintingStatus": "IN_PROGRESS",
+      "imageKey": "7df465eb-061d-52ff-bab2-9ae446c7ece8.png",
+      "sourceImageUrl": null,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatureRecipe": [
+    {
+      "id": "86cae050-eefa-59a8-a5d8-8ad460e753da",
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "paintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "step": "BASECOAT",
+      "notes": "Thin coats",
+      "sortOrder": 0,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatureSteps": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "step": "BASECOAT",
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatureSchemes": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "schemeId": "user:3aa8340f-a3ae-5864-87bc-474617ec55c9",
+      "sortOrder": 0,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "substitutions": [
+    {
+      "id": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "targetPaintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "name": "Synthetic mix",
+      "isDefault": true,
+      "createdAt": 1700000000000,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "substitutionIngredients": [
+    {
+      "substitutionId": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "paintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "parts": 2,
+      "sortOrder": 0,
+      "updatedAt": 1700000000000
+    }
+  ],
+  "miniatureSubstitutions": [
+    {
+      "miniatureId": "119c3986-b2ac-55e4-8751-0816d3310403",
+      "targetPaintId": "user:f1c0deda-ee0b-5c20-ac2c-62edfa98b137",
+      "substitutionId": "068ae436-26a0-594a-88ac-29df4805bc68",
+      "useOriginal": false,
+      "updatedAt": 1700000000000
+    }
+  ]
+}

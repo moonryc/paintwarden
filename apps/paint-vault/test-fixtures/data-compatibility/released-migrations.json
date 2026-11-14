@@ -1,0 +1,15 @@
+{
+  "baseline": "1f1c4e9",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794346014629,
+      "tag": "0000_init",
+      "breakpoints": true,
+      "sha256": "a1c26fdd80acc37c66d7bec1e13fb8779c80e338fcfbdfffa9b0746dc95511b4",
+      "snapshot": "meta/0000_snapshot.json",
+      "snapshotSha256": "25386542a113dc9ece47f151027f6ccf07502972b88c27ed27d6b67f27208640"
+    }
+  ]
+}

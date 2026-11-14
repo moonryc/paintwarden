@@ -11,6 +11,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { after, before, test } from "node:test";
 
@@ -20,6 +21,20 @@ import { build } from "esbuild";
 import { testStartupDelayMs } from "../lib/startup-progress.ts";
 
 type Progress = { phase: string; status?: string; message?: string };
+const { createStartupProgress, waitForServer } = createRequire(import.meta.url)(
+  "../../paint-vault-electron/desktop-startup.cjs",
+) as {
+  createStartupProgress: () => {
+    accept: (chunk: string) => void;
+    state: () => { phase: string };
+    protected: () => boolean;
+  };
+  waitForServer: (options: {
+    child: ChildProcess;
+    healthy: () => Promise<boolean>;
+    progress: ReturnType<typeof createStartupProgress>;
+  }) => Promise<void>;
+};
 const prefix = "PAINT_VAULT_STARTUP ";
 const appDirectory = path.resolve(import.meta.dirname, "..");
 // Keep the bundle inside the workspace so its external dependencies resolve normally.
@@ -90,6 +105,7 @@ function launch(work: string, data: string, extraEnv: NodeJS.ProcessEnv = {}) {
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
+  const desktopProgress = createStartupProgress();
   const events: { progress: Progress; time: number }[] = [];
   let buffer = "";
   let output = "";
@@ -98,6 +114,7 @@ function launch(work: string, data: string, extraEnv: NodeJS.ProcessEnv = {}) {
   child.stderr.on("data", (chunk: string) => (output += chunk));
   child.stdout.on("data", (chunk: string) => {
     output += chunk;
+    desktopProgress.accept(chunk);
     buffer += chunk;
     let newline: number;
     while ((newline = buffer.indexOf("\n")) !== -1) {
@@ -137,7 +154,7 @@ function launch(work: string, data: string, extraEnv: NodeJS.ProcessEnv = {}) {
       if (child.exitCode !== null) exited();
     });
   }
-  return { child, events, waitFor };
+  return { child, events, waitFor, desktopProgress };
 }
 
 async function stop(child: ChildProcess) {
@@ -225,6 +242,27 @@ void test("a real migration failure reports failed rather than completed/ready a
   }
 });
 
+void test("a table-name collision is a recoverable migration error, never advice to reset user data", async () => {
+  const { work, data } = fixture();
+  const journal = JSON.parse(readFileSync(path.join(work, "drizzle/meta/_journal.json"), "utf8")) as {
+    entries: { tag: string }[];
+  };
+  writeFileSync(
+    path.join(work, "drizzle", `${journal.entries[0].tag}.sql`),
+    "CREATE TABLE fixture_notes (body text);",
+  );
+  const running = launch(work, data);
+  try {
+    await running.waitFor("failed");
+    const message = running.events.at(-1)!.progress.message!;
+    assert.match(message, /Updating the vault failed:.*already exists/);
+    assert.doesNotMatch(message, /empty data directory|pre-release schema/);
+    assert.match(message, /copy that file over/);
+  } finally {
+    await stop(running.child);
+  }
+});
+
 void test("a failed backup stops startup before migration and reports the actual failure", async () => {
   const { work, data } = fixture();
   writeFileSync(path.join(data, "backups"), "not a directory");
@@ -250,5 +288,76 @@ void test("a failed backup stops startup before migration and reports the actual
     }
   } finally {
     await stop(child);
+  }
+});
+
+void test("broken-FK migration rolls back and blocks server and desktop startup after process restarts", async () => {
+  const { work, data, database } = fixture();
+  const original = launch(work, data);
+  try {
+    await original.waitFor("ready");
+  } finally {
+    await stop(original.child);
+  }
+  const sqlite = new Database(database);
+  sqlite.exec(`CREATE TABLE synthetic_parent (id text PRIMARY KEY);
+    CREATE TABLE synthetic_child (id text PRIMARY KEY, parent_id text REFERENCES synthetic_parent(id));
+    INSERT INTO synthetic_parent VALUES ('parent');
+    INSERT INTO synthetic_child VALUES ('child', 'parent');`);
+  const originalJournal = sqlite.prepare("SELECT * FROM __drizzle_migrations").all();
+  sqlite.close();
+  const journalFile = path.join(work, "drizzle/meta/_journal.json");
+  const journal = JSON.parse(readFileSync(journalFile, "utf8")) as {
+    entries: { idx: number; version: string; when: number; tag: string; breakpoints: boolean }[];
+  };
+  const last = journal.entries.at(-1)!;
+  journal.entries.push({ ...last, idx: last.idx + 1, when: last.when + 1, tag: "9999_synthetic_broken_fk" });
+  writeFileSync(journalFile, JSON.stringify(journal));
+  writeFileSync(
+    path.join(work, "drizzle/9999_synthetic_broken_fk.sql"),
+    `
+    CREATE TABLE __new_synthetic_parent (id text PRIMARY KEY);
+    --> statement-breakpoint
+    DROP TABLE synthetic_parent;
+    --> statement-breakpoint
+    ALTER TABLE __new_synthetic_parent RENAME TO synthetic_parent;`,
+  );
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const running = launch(work, data);
+    try {
+      await running.waitFor("failed");
+      assert.equal(running.desktopProgress.state().phase, "failed");
+      await assert.rejects(
+        waitForServer({
+          child: running.child,
+          progress: running.desktopProgress,
+          healthy: async () => assert.fail("desktop must not accept a failed server as healthy"),
+        }),
+        /server-(failed|exited)/,
+      );
+      assert.ok(!running.events.some(({ progress }) => progress.phase === "ready"));
+      const message = running.events.at(-1)!.progress.message!;
+      assert.match(message, /1 records with broken links \(synthetic_child\)/);
+      assert.match(message, /remove the database -wal and -shm sidecars/);
+      assert.match(message, /Restart with the previous working app or a corrected update/);
+      if (running.child.exitCode === null)
+        await once(running.child, "exit", { signal: AbortSignal.timeout(5_000) });
+      assert.equal(running.child.exitCode, 1);
+      const checked = new Database(database, { readonly: true });
+      assert.deepEqual(checked.prepare("SELECT * FROM __drizzle_migrations").all(), originalJournal);
+      assert.deepEqual(checked.pragma("foreign_key_check"), []);
+      assert.deepEqual(checked.prepare("SELECT * FROM synthetic_parent").all(), [{ id: "parent" }]);
+      checked.close();
+      const backups = readdirSync(path.join(data, "backups")).filter((file) =>
+        file.includes("9999_synthetic_broken_fk"),
+      );
+      assert.ok(backups.length > 0);
+      const backup = new Database(path.join(data, "backups", backups.at(-1)!), { readonly: true });
+      assert.deepEqual(backup.prepare("SELECT * FROM __drizzle_migrations").all(), originalJournal);
+      assert.deepEqual(backup.pragma("foreign_key_check"), []);
+      backup.close();
+    } finally {
+      await stop(running.child);
+    }
   }
 });
