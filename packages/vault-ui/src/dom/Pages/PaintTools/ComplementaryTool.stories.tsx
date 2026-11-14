@@ -1,10 +1,10 @@
 import { ApolloClient, ApolloLink } from "@apollo/client";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { derivePaintRoles } from "@paintwarden/core/color-matching";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useState, type ReactNode } from "react";
 import { Observable } from "rxjs";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { createVaultCache } from "../../graphql/cache";
 import { VaultInvalidationController } from "../../graphql/invalidation";
@@ -41,13 +41,14 @@ function Connection({
   failSave = false,
 }: {
   children: ReactNode;
-  mode?: "normal" | "empty" | "far" | "error";
+  mode?: "normal" | "empty" | "far" | "error" | "stock";
   delay?: number;
   failSave?: boolean;
 }) {
   const [saved, setSaved] = useState<SchemeInput | null>(null);
   const [scope] = useState(() => {
     let seq = 1;
+    let stockChanged = false;
     let failed = false;
     let saveFailed = false;
     const controller = new VaultInvalidationController();
@@ -76,7 +77,15 @@ function Connection({
                       : paints;
                 observer.next({
                   data: {
-                    colorIndex: { revision, nodes, pageInfo: { hasNextPage: false, endCursor: null } },
+                    colorIndex: {
+                      revision,
+                      nodes: stockChanged
+                        ? nodes.map((paint) =>
+                            paint.id === "highlight" ? { ...paint, owned: false, available: false } : paint,
+                          )
+                        : nodes,
+                      pageInfo: { hasNextPage: false, endCursor: null },
+                    },
                   },
                 });
               } else if (operation.operationName === "PaintPickerOptions") {
@@ -141,6 +150,11 @@ function Connection({
     return {
       client,
       controller,
+      refresh() {
+        stockChanged = true;
+        seq++;
+        controller.committed({ epoch: "complementary-story", seq: String(seq) }, ["PAINT"]);
+      },
       dispose() {
         controller.dispose();
         client.stop();
@@ -150,6 +164,7 @@ function Connection({
   useEffect(() => () => scope.dispose(), [scope]);
   return (
     <VaultGraphQLContext.Provider value={scope}>
+      {mode === "stock" && <Button onClick={scope.refresh}>Simulate stock change</Button>}
       {children}
       {saved && (
         <Box
@@ -401,3 +416,44 @@ export const PolishPhone: Story = {
   decorators: phoneDecorators,
   play: ({ canvasElement }) => localizedPhone(canvasElement),
 };
+
+export const LiveStockRefresh: Story = {
+  parameters: { mode: "stock" },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await selectInput(canvasElement);
+    const highlight = within(await canvas.findByRole("region", { name: "Highlight" }));
+    await expect(highlight.getByRole("button", { name: /Pale highlight/ })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await userEvent.click(canvas.getByRole("button", { name: "Simulate stock change" }));
+    await waitFor(() => expect(canvas.queryAllByRole("button", { name: /Pale highlight/ })).toHaveLength(0));
+    await expect(canvas.getByRole("combobox", { name: "Paint" })).toHaveValue("Copper base");
+    await expect(canvas.getAllByRole("region")).toHaveLength(3);
+  },
+};
+export const RememberedStrength: Story = {
+  beforeEach: () => {
+    localStorage.setItem("paintwarden.complementary.strength", "73");
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole("slider", { name: "Highlight and shadow strength" }),
+    ).toHaveValue("73");
+  },
+};
+const translatedPhone = (locale: string): Story => ({
+  parameters: { locale },
+  decorators: phoneDecorators,
+  play: ({ canvasElement }) => localizedPhone(canvasElement),
+});
+export const SpanishPhone = translatedPhone("es");
+export const FrenchPhone = translatedPhone("fr");
+export const ItalianPhone = translatedPhone("it");
+export const PortuguesePhone = translatedPhone("pt-BR");
+export const DutchPhone = translatedPhone("nl");
+export const RussianPhone = translatedPhone("ru");
+export const KoreanPhone = translatedPhone("ko");
+export const SimplifiedChinesePhone = translatedPhone("zh-Hans");
+export const TraditionalChinesePhone = translatedPhone("zh-Hant");

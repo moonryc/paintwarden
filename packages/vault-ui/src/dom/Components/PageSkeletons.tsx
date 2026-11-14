@@ -421,7 +421,11 @@ function PaintTools() {
   return (
     <>
       <Header page="paint-tools" />
-      <Shape height={64} sx={{ mb: 2.5 }} />
+      <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: 0.5, mb: 2.5 }}>
+        {items(3).map((key) => (
+          <Shape key={key} height={64} />
+        ))}
+      </Box>
       <Card sx={{ p: { xs: 2, sm: 4 } }}>
         <Shape height={56} />
         <Box
