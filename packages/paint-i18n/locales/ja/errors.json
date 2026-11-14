@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "バックアップ内のファイル数が多すぎるため復元できません",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "バックアップが大きすぎるため復元できません",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Paintwardenのバックアップ（.zip）ファイルを選んでください",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "旧形式のバックアップは保管庫への統合のみ可能です",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "バックアップが破損しています。記録が参照する画像の一部がありません",
   "ISN_T_VALID_JSON": "{{value1}}は有効なJSONではありません",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "画像のチェックサムが一致しません：{{value1}}",

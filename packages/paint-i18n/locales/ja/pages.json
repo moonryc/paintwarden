@@ -156,7 +156,6 @@
   "settingsMergeVault": "保管庫に統合",
   "settingsExportDateUnknown": "書き出し日時不明",
   "settingsNoRecords": "記録なし",
-  "settingsLegacyBackup": "このバックアップは旧バージョンのPaintwardenで作成されています。プラグインや写真が含まれないため、統合のみ可能です。使用されているプラグインを先にインストールしてください。",
   "settingsHowToRestore": "復元方法",
   "settingsReplacingWarning": "置き換えは取り消せません。現在の内容が必要になる可能性がある場合は、先にこの保管庫のバックアップを書き出してください。",
   "settingsExportedAt": "書き出し日時：{{date}}",

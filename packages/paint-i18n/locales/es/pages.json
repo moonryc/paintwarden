@@ -160,7 +160,6 @@
   "settingsMergeVault": "Fusionar con el almacén",
   "settingsExportDateUnknown": "Fecha de exportación desconocida",
   "settingsNoRecords": "Sin registros",
-  "settingsLegacyBackup": "Esta copia de seguridad es de una versión anterior de Paintwarden. No incluye plugins ni fotos, así que solo se puede fusionar. Instala primero los plugins que utiliza.",
   "settingsHowToRestore": "Cómo restaurar",
   "settingsReplacingWarning": "El reemplazo no se puede deshacer. Exporta primero una copia de seguridad de este almacén si pudieras necesitar su contenido actual.",
   "settingsExportedAt": "Exportada el {{date}}",

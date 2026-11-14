@@ -13,7 +13,6 @@ function localServer() {
   const startupEvents = [];
   let probes = 0;
   const context = vm.createContext({
-    profileMigration: { ok: true },
     t: desktopTranslate,
     console,
     ...require("./desktop-startup.cjs"),
@@ -172,7 +171,6 @@ function remoteVersions() {
   const requests = [];
   const updaterChanges = [];
   const context = vm.createContext({
-    profileMigration: { ok: true },
     t: desktopTranslate,
     changingConnection: 0,
     connection: { mode: "remote", serverUrl: "https://fixture.invalid" },
@@ -258,7 +256,6 @@ test("static shell responses cache only hashed assets and preserve errors and se
   ]);
   let reads = 0;
   const context = vm.createContext({
-    profileMigration: { ok: true },
     t: desktopTranslate,
     path,
     Response,
@@ -312,7 +309,6 @@ function imageProxy() {
   const calls = [];
   let pending;
   const context = vm.createContext({
-    profileMigration: { ok: true },
     t: desktopTranslate,
     console,
     URL,
@@ -529,7 +525,6 @@ async function subscriptionProxy(t, mode, handler) {
     setConnection: (next) => updaterChanges.push({ ...next }),
   };
   const context = vm.createContext({
-    profileMigration: { ok: true },
     t: desktopTranslate,
     updater,
     console,
@@ -808,44 +803,4 @@ test("an installation already in progress prevents connection validation and sel
   assert.equal(result.mode, "local");
   assert.deepEqual(proxy.calls, []);
   assert.deepEqual(proxy.updaterChanges, []);
-});
-
-test("failed profile migration blocks server/connection access and Retry never opens an empty vault", () => {
-  let attempts = 0;
-  let relaunched = 0;
-  let exited = 0;
-  const context = vm.createContext({
-    profileMigration: { ok: false },
-    profile: { root: "/synthetic/Paintwarden", legacyPaths: [] },
-    migrateProfile: () => {
-      attempts++;
-      return { ok: attempts > 1, code: "PROFILE_CONFLICT" };
-    },
-    t: desktopTranslate,
-    console: { error() {} },
-    startupChanged: () => {},
-    app: {
-      relaunch() {
-        relaunched++;
-      },
-      exit(code) {
-        assert.equal(code, 0);
-        exited++;
-      },
-    },
-  });
-  vm.runInContext(
-    source.slice(
-      source.indexOf("function requireProfile()"),
-      source.indexOf("async function setConnection("),
-    ),
-    context,
-  );
-  assert.throws(() => context.requireProfile(), /vault could not/);
-  assert.throws(() => context.retryProfileMigration(), /vault could not/);
-  assert.equal(relaunched, 0);
-  assert.throws(() => context.requireProfile(), /vault could not/);
-  assert.throws(() => context.retryProfileMigration(), /vault could not/);
-  assert.equal(relaunched, 1);
-  assert.equal(exited, 1);
 });

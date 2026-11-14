@@ -376,11 +376,6 @@
     "parameters": []
   },
   {
-    "code": "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT",
-    "pattern": "^Older backups can only be merged into a vault$",
-    "parameters": []
-  },
-  {
     "code": "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING",
     "pattern": "^This backup is damaged: some images its records refer to are missing$",
     "parameters": []

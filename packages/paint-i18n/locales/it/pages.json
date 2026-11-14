@@ -160,7 +160,6 @@
   "settingsMergeVault": "Unisci all'archivio",
   "settingsExportDateUnknown": "Data di esportazione sconosciuta",
   "settingsNoRecords": "Nessun record",
-  "settingsLegacyBackup": "Questo backup proviene da una versione precedente di Paintwarden. Non include plugin né foto, quindi può solo essere unito. Installa prima i plugin che utilizza.",
   "settingsHowToRestore": "Come ripristinare",
   "settingsReplacingWarning": "La sostituzione non può essere annullata. Esporta prima un backup di questo archivio se potresti volerne conservare il contenuto attuale.",
   "settingsExportedAt": "Esportato il {{date}}",

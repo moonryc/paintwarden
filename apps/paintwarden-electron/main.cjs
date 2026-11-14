@@ -1,6 +1,6 @@
 const { spawn } = require("node:child_process");
 const { randomBytes } = require("node:crypto");
-const { createReadStream, createWriteStream, existsSync, mkdirSync, mkdtempSync } = require("node:fs");
+const { createReadStream, createWriteStream, existsSync, mkdirSync } = require("node:fs");
 const { readFile, rename, rm, stat, writeFile } = require("node:fs/promises");
 const http = require("node:http");
 const https = require("node:https");
@@ -26,7 +26,6 @@ const {
 const { createServerLog, createStartupProgress, waitForServer } = require("./desktop-startup.cjs");
 const { createUpdater } = require("./desktop-update.cjs");
 const { t, setLanguage, getLanguage, resolveLanguage } = require("./desktop-i18n.cjs");
-const { resolveProfile, migrateProfile } = require("./desktop-profile.cjs");
 const { createPreferences } = require("./desktop-preferences.cjs");
 const { menuTemplate } = require("./desktop-menu.cjs");
 const { supportSummary, createSupportBundle, openBugReport } = require("./desktop-support.cjs");
@@ -59,24 +58,20 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 let mainWindow;
-// Resolve and migrate before Electron opens Chromium storage or the server opens SQLite.
-// A failed migration uses ONLY an ephemeral renderer profile for the recovery UI.
-const profile = resolveProfile({
-  appData: app.getPath("appData"),
-  localAppData: process.env.LOCALAPPDATA,
-  home: os.homedir(),
-  platform: process.platform,
-  override: process.env.PAINTWARDEN_DESKTOP_DATA_DIR,
-});
-let profileMigration = migrateProfile(profile.root, profile.legacyPaths);
-const dataDirectory = profile.root;
-const rendererProfile = profileMigration.ok
-  ? profile.userData
-  : mkdtempSync(path.join(os.tmpdir(), "paintwarden-recovery-"));
-mkdirSync(rendererProfile, { recursive: true });
-app.setPath("userData", rendererProfile);
-// Always keep logs in the new (or isolated recovery) profile, not the old bundle domain.
-app.setAppLogsPath(path.join(rendererProfile, "logs"));
+const dataOverride = process.env.PAINTWARDEN_DESKTOP_DATA_DIR;
+if (dataOverride && !path.isAbsolute(dataOverride))
+  throw new Error("PAINTWARDEN_DESKTOP_DATA_DIR must be an absolute path");
+const dataDirectory = dataOverride
+  ? path.normalize(dataOverride)
+  : process.platform === "win32"
+    ? path.join(process.env.LOCALAPPDATA || app.getPath("appData"), "Paintwarden")
+    : process.platform === "darwin"
+      ? path.join(os.homedir(), "Library", "Application Support", "Paintwarden")
+      : path.join(app.getPath("appData"), "Paintwarden");
+const userData = path.join(dataDirectory, "electron");
+mkdirSync(userData, { recursive: true });
+app.setPath("userData", userData);
+app.setAppLogsPath(path.join(userData, "logs"));
 // Retain bounded desktop failures alongside the child server log. These private logs
 // are projected through the strict support redactor before they can be exported.
 const desktopLog = createServerLog(app.getPath("logs"), { filename: "vault-desktop.log" });
@@ -95,9 +90,7 @@ let localUrl;
 let serverProcess;
 let readyServer;
 let startingServer;
-let startupState = { phase: profileMigration.ok ? "idle" : "failed" };
-if (!profileMigration.ok)
-  console.error("Profile migration stopped:", profileMigration.code, profileMigration.error);
+let startupState = { phase: "idle" };
 let serverProgress;
 let stopWhenSafe = false;
 let quitWhenSafe = false;
@@ -184,7 +177,6 @@ async function serverHealthy() {
 }
 
 async function launchLocalServer() {
-  requireProfile();
   if (serverProgress?.state().phase === "failed") stopLocalServer();
   // Retrying a slow start joins the same child: never replace a server that may be
   // inside VACUUM or a migration. This also makes retries after the cap safe.
@@ -333,27 +325,7 @@ function updaterConnection() {
     : connection;
 }
 
-function requireProfile() {
-  if (!profileMigration.ok) throw new Error(t("startup.failure"));
-}
-
-function retryProfileMigration() {
-  if (profileMigration.ok) return;
-  profileMigration = migrateProfile(profile.root, profile.legacyPaths);
-  if (!profileMigration.ok) {
-    console.error("Profile migration retry stopped:", profileMigration.code, profileMigration.error);
-    startupChanged({ phase: "failed" });
-    throw new Error(t("startup.failure"));
-  }
-  // No server or preferences were opened in recovery. Relaunch to initialize
-  // Chromium against the correct userData; never reuse the temporary session.
-  app.relaunch();
-  app.exit(0);
-  throw new Error(t("startup.failure"));
-}
-
 async function setConnection(input) {
-  retryProfileMigration();
   if (updater?.isInstalling()) return connection;
   // Fail closed while a connection choice is being validated or persisted.
   changingConnection++;
@@ -639,10 +611,8 @@ app
   .then(async () => {
     if (devIcon) app.dock?.setIcon(devIcon);
     localUrl = `http://127.0.0.1:${explicitPort ?? (await freeLoopbackPort())}`;
-    if (profileMigration.ok) {
-      preferences = createPreferences(connectionPath(), resolveLanguage(app.getLocale()));
-      connection = await readConnection();
-    } else setLanguage(resolveLanguage(app.getLocale()));
+    preferences = createPreferences(connectionPath(), resolveLanguage(app.getLocale()));
+    connection = await readConnection();
     updateMenu();
     ipcMain.handle("language:get", (event) => {
       allowRenderer(event);
@@ -652,7 +622,6 @@ app
       allowRenderer(event);
       if (!require("./desktop-i18n.cjs").supportedLanguages.includes(language))
         throw new Error(t("errors.invalidLanguage"));
-      requireProfile();
       await preferences.setLanguage(language);
       setLanguage(language);
       versionChecks.clear();
@@ -711,7 +680,6 @@ app
     });
     ipcMain.handle("connection:get", async (event) => {
       allowRenderer(event);
-      requireProfile();
       if (connection.mode === "local") await ensureLocalServer();
       if (connection.mode !== "remote") return connection;
       // An unreachable server isn't a version problem; the vault reports it when it loads.

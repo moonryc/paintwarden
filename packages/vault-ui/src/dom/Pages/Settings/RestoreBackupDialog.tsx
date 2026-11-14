@@ -91,41 +91,37 @@ export function RestoreBackupDialog({
             )}
           </Box>
         </Box>
-        {summary.legacy ? (
-          <Alert severity="info">{t("settingsLegacyBackup")}</Alert>
-        ) : (
-          <RadioGroup
-            aria-label={t("settingsHowToRestore")}
-            value={mode}
-            onChange={(event) => onModeChange(event.target.value as RestoreMode)}
-            sx={{ display: "grid", gap: 1 }}
-          >
-            {RESTORE_MODES.map((option) => (
-              <FormControlLabel
-                key={option.value}
-                value={option.value}
-                disabled={busy}
-                control={<Radio size="small" />}
-                label={
-                  <Box sx={{ py: 0.5 }}>
-                    <Box sx={{ fontSize: 14, fontWeight: 650 }}>{t(option.label)}</Box>
-                    <Box sx={{ fontSize: 12, color: "var(--ink-soft)" }}>{t(option.description)}</Box>
-                  </Box>
-                }
-                sx={{
-                  m: 0,
-                  pr: 1.5,
-                  alignItems: "flex-start",
-                  borderRadius: 2,
-                  border: "1px solid",
-                  borderColor: mode === option.value ? "var(--gold)" : "var(--line)",
-                  bgcolor: mode === option.value ? "var(--sunken)" : "transparent",
-                  "& .MuiRadio-root": { mt: 0.25 },
-                }}
-              />
-            ))}
-          </RadioGroup>
-        )}
+        <RadioGroup
+          aria-label={t("settingsHowToRestore")}
+          value={mode}
+          onChange={(event) => onModeChange(event.target.value as RestoreMode)}
+          sx={{ display: "grid", gap: 1 }}
+        >
+          {RESTORE_MODES.map((option) => (
+            <FormControlLabel
+              key={option.value}
+              value={option.value}
+              disabled={busy}
+              control={<Radio size="small" />}
+              label={
+                <Box sx={{ py: 0.5 }}>
+                  <Box sx={{ fontSize: 14, fontWeight: 650 }}>{t(option.label)}</Box>
+                  <Box sx={{ fontSize: 12, color: "var(--ink-soft)" }}>{t(option.description)}</Box>
+                </Box>
+              }
+              sx={{
+                m: 0,
+                pr: 1.5,
+                alignItems: "flex-start",
+                borderRadius: 2,
+                border: "1px solid",
+                borderColor: mode === option.value ? "var(--gold)" : "var(--line)",
+                bgcolor: mode === option.value ? "var(--sunken)" : "transparent",
+                "& .MuiRadio-root": { mt: 0.25 },
+              }}
+            />
+          ))}
+        </RadioGroup>
         {replacing && <Alert severity="warning">{t("settingsReplacingWarning")}</Alert>}
       </Box>
     </Modal>

@@ -160,7 +160,6 @@
   "settingsMergeVault": "Mit Tresor zusammenführen",
   "settingsExportDateUnknown": "Exportdatum unbekannt",
   "settingsNoRecords": "Keine Datensätze",
-  "settingsLegacyBackup": "Diese Sicherung stammt aus einer älteren Version von Paintwarden. Sie enthält keine Plugins oder Fotos und kann daher nur zusammengeführt werden. Installiere zuerst die darin verwendeten Plugins.",
   "settingsHowToRestore": "Art der Wiederherstellung",
   "settingsReplacingWarning": "Das Ersetzen kann nicht rückgängig gemacht werden. Exportiere zuerst eine Sicherung dieses Tresors, falls du seinen aktuellen Inhalt später noch brauchst.",
   "settingsExportedAt": "Exportiert am {{date}}",

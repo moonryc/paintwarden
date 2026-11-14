@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "Deze back-up bevat te veel bestanden om te herstellen",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Deze back-up is te groot om te herstellen",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Kies een Paintwarden-back-upbestand (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "Oudere back-ups kunnen alleen met een kluis worden samengevoegd",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Deze back-up is beschadigd: sommige afbeeldingen waarnaar de records verwijzen ontbreken",
   "ISN_T_VALID_JSON": "{{value1}} is geen geldige JSON",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "De controlesom van de afbeelding komt niet overeen: {{value1}}",

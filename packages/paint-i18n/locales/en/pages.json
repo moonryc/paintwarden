@@ -160,7 +160,6 @@
   "settingsMergeVault": "Merge into vault",
   "settingsExportDateUnknown": "Export date unknown",
   "settingsNoRecords": "No records",
-  "settingsLegacyBackup": "This backup is from an earlier version of Paintwarden. It doesn't include plugins or photos, so it can only be merged. Install the plugins it uses first.",
   "settingsHowToRestore": "How to restore",
   "settingsReplacingWarning": "Replacing can't be undone. Export a backup of this vault first if you might want its current contents.",
   "settingsExportedAt": "Exported {{date}}",

@@ -4,7 +4,6 @@ import path from "node:path";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 
-import { databaseFile } from "./database-path.ts";
 import { installChangeLog } from "./change-log.ts";
 import { migrateVault, reclaimSpace } from "./migrate.ts";
 import { backupBeforeMigrating, pendingMigrations } from "./migration-backup.ts";
@@ -14,7 +13,7 @@ function createDatabase() {
   const dataDir = process.env.DATA_DIR || path.resolve(process.cwd(), "../../data");
   mkdirSync(dataDir, { recursive: true });
 
-  const databasePath = databaseFile(dataDir, process.env.DATABASE_PATH);
+  const databasePath = process.env.DATABASE_PATH || path.join(dataDir, "paintwarden.sqlite");
   const sqlite = new Database(databasePath);
   rawDatabase = sqlite;
   // Freed pages can be returned to the file system only when auto_vacuum is chosen before the

@@ -742,96 +742,23 @@ test("backup", async (t) => {
         }
     });
 
-    await t.test(
-      "merges a pre-release JSON backup with UUIDs, row IDs, roles and template rows",
-      async () => {
-        clearVault();
-        const legacy = JSON.stringify({
-          format: "paintwarden-backup",
-          version: 4,
-          customPaints: [
-            { id: "custom-p1", brand: "Mine", range: "Base", name: "Mud", colorHex: "ABC", isCustom: true },
-          ],
-          colorSchemes: [
-            { id: "s-old", name: "Mine", isSystem: false, createdAt: 1, updatedAt: 1 },
-            { id: "source-scheme", name: "Theirs", isSystem: true, createdAt: 1, updatedAt: 1 },
-          ],
-          colorSchemePaints: [{ schemeId: "s-old", paintId: "custom-p1", sortOrder: 1 }],
-          // Required milestones were marked by an ID prefix.
-          colorSchemeDividers: [
-            {
-              id: "required-battle-milestone:start:abc",
-              schemeId: "s-old",
-              label: "GET READY!",
-              tone: "MILESTONE",
-              sortOrder: 0,
-            },
-          ],
-          miniatures: [{ id: "m-old", title: "Old", status: "OWNED", createdAt: 1, updatedAt: 1 }],
-          requirements: [{ miniatureId: "m-old", paintId: "custom-p1", step: "BASECOAT", sortOrder: 0 }],
-          miniatureTemplates: [
-            {
-              id: "user:t1",
-              name: "Template",
-              createdAt: 1,
-              updatedAt: 1,
-              // Older files could repeat a scheme or a paint within a step; the first one is kept.
-              schemeIds: ["s-old", "s-old"],
-              paints: [
-                { paintId: "custom-p1", step: "LAYER", notes: "thin", sortOrder: 0 },
-                { paintId: "custom-p1", step: "LAYER", notes: "again", sortOrder: 1 },
-              ],
-            },
-          ],
-          // A choice of neither the original paint nor a substitution is dropped.
-          miniaturePaintSubstitutions: [
-            { miniatureId: "m-old", targetPaintId: "custom-p1", useOriginal: false },
-          ],
-          miniatureTemplateImages: { "user:t1": { data: "iVBORw==", contentType: "image/png" } },
-        });
-        assert.match(await errorOf(await restore(legacy, "replace")), /only be merged/);
-        assert.equal((await restore(legacy, "merge")).status, 200);
-        const { manifest } = await exportZip();
-        const userId = /^user:[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
-        const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
-        // Every old ID is replaced with a UUID, and every reference follows it.
-        const [paint] = manifest.tables.paints;
-        const [scheme] = manifest.tables.schemes;
-        const [template] = manifest.tables.templates;
-        const [miniature] = manifest.tables.miniatures;
-        assert.equal(manifest.tables.paints.length, 1);
-        assert.equal(manifest.tables.schemes.length, 1);
-        for (const row of [paint, scheme, template]) assert.match(String(row.id), userId);
-        assert.match(String(miniature.id), uuid);
-        assert.equal(paint.colorHex, "#aabbcc");
-        assert.deepEqual(manifest.tables.miniatureSubstitutions, []);
-        assert.equal(manifest.tables.schemePaints[0].schemeId, scheme.id);
-        assert.equal(manifest.tables.schemePaints[0].paintId, paint.id);
-        const [divider] = manifest.tables.schemeDividers;
-        assert.match(String(divider.id), uuid);
-        assert.equal(divider.role, "START");
-        const [requirement] = manifest.tables.miniatureRecipe;
-        assert.equal(requirement.paintId, paint.id);
-        assert.equal(requirement.miniatureId, miniature.id);
-        assert.match(String(requirement.id), uuid);
-        assert.deepEqual(
-          manifest.tables.templatePaints.map(({ templateId, paintId, step, notes }) => ({
-            templateId,
-            paintId,
-            step,
-            notes,
-          })),
-          [{ templateId: template.id, paintId: paint.id, step: "LAYER", notes: "thin" }],
-        );
-        assert.deepEqual(
-          manifest.tables.templateSchemes.map(({ templateId, schemeId }) => ({ templateId, schemeId })),
-          [{ templateId: template.id, schemeId: scheme.id }],
-        );
-        // The template's embedded image follows it to its new ID.
-        assert.ok(template.imageKey);
-        assert.equal(manifest.images.length, 1);
-      },
-    );
+    await t.test("non-ZIP uploads are refused without changing vault data or images", async () => {
+      const before = (await exportZip()).manifest.tables;
+      const images = readdirSync(path.join(directory, "images")).sort();
+      for (const body of [
+        JSON.stringify({ format: "paintwarden-backup", version: 1, tables: before, images: [] }),
+        "not a ZIP",
+      ]) {
+        for (const mode of ["merge", "replace"]) {
+          const response = await restore(body, mode);
+          assert.equal(response.status, 400);
+          assert.match(await errorOf(response), /Choose a Paintwarden backup \(\.zip\) file/);
+          assert.deepEqual((await exportZip()).manifest.tables, before);
+          assert.deepEqual(readdirSync(path.join(directory, "images")).sort(), images);
+          assert.deepEqual(readdirSync(path.join(directory, "restore-uploads")), []);
+        }
+      }
+    });
   } finally {
     getSqlite().close();
     rmSync(directory, { recursive: true, force: true });

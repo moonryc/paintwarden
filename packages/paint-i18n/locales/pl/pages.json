@@ -168,7 +168,6 @@
   "settingsMergeVault": "Scal ze skarbcem",
   "settingsExportDateUnknown": "Nieznana data eksportu",
   "settingsNoRecords": "Brak wpisów",
-  "settingsLegacyBackup": "Ta kopia zapasowa pochodzi ze starszej wersji Paintwarden. Nie zawiera wtyczek ani zdjęć, więc można ją tylko scalić. Najpierw zainstaluj używane przez nią wtyczki.",
   "settingsHowToRestore": "Sposób przywracania",
   "settingsReplacingWarning": "Zastąpienia nie można cofnąć. Najpierw wyeksportuj kopię zapasową, jeśli możesz potrzebować obecnej zawartości skarbca.",
   "settingsExportedAt": "Wyeksportowano {{date}}",

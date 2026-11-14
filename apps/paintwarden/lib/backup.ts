@@ -42,10 +42,8 @@ import {
   keepImage,
   loadImage,
   releaseImages,
-  saveImage,
   writeImage,
 } from "./image-store.ts";
-import { convertLegacyBackup, isLegacyBackup } from "./legacy-backup.ts";
 import { readZipEntry } from "./zip-entry.ts";
 import { writeZip, type ZipFile } from "./zip-writer.ts";
 
@@ -187,9 +185,7 @@ function readManifest(value: unknown, mode: RestoreMode): BackupTables {
   if (!value || typeof value !== "object" || Array.isArray(value))
     throw new BackupError("This isn't a Paintwarden backup");
   const manifest = value as Record<string, unknown>;
-  // Read pre-rename backups without rewriting their immutable format identifier.
-  if (manifest.format !== BACKUP_FORMAT && manifest.format !== "paint-vault-backup")
-    throw new BackupError("This isn't a Paintwarden backup");
+  if (manifest.format !== BACKUP_FORMAT) throw new BackupError("This isn't a Paintwarden backup");
   if (manifest.version !== BACKUP_VERSION)
     throw new BackupError("This backup was made by a different version of Paintwarden");
   const tables = manifest.tables;
@@ -383,31 +379,6 @@ function fileSource(handle: FileHandle, size: number): ZipSource {
   };
 }
 
-async function readLegacyBackup(handle: FileHandle, mode: RestoreMode, written: string[]) {
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(await handle.readFile("utf8")) as Record<string, unknown>;
-  } catch {
-    throw new BackupError("Choose a Paintwarden backup (.zip) file");
-  }
-  if (!parsed || !isLegacyBackup(parsed)) throw new BackupError("Choose a Paintwarden backup (.zip) file");
-  // Pre-release backups held only the owner's items, so they can only be merged.
-  if (mode !== "merge") throw new BackupError("Older backups can only be merged into a vault");
-  const legacy = convertLegacyBackup(parsed);
-  const tables = legacy.tables;
-  for (const template of tables.templates ?? []) {
-    const image = legacy.templateImages.get(template.id as string);
-    if (!image?.contentType.startsWith("image/")) continue;
-    const data = Buffer.from(image.data, "base64");
-    if (data.byteLength > MAX_IMAGE_BYTES) continue;
-    template.imageKey = await saveImage(
-      new File([new Uint8Array(data)], "template", { type: image.contentType }),
-    );
-    written.push(template.imageKey as string);
-  }
-  return tables;
-}
-
 // Files are written before the transaction because better-sqlite3 transactions are synchronous.
 // Keys are unique names, so an image that already exists is the same image; it is claimed so an
 // export that held it can't delete it before the restore refers to it again.
@@ -416,11 +387,8 @@ async function readBackupFile(handle: FileHandle, mode: RestoreMode, written: st
   if (!size) throw new BackupError("Choose a backup file");
   const source = fileSource(handle, size);
   const signature = await source.read(0, 2);
-  if (signature[0] !== 0x50 || signature[1] !== 0x4b) {
-    // Older backups are one JSON document, read whole.
-    if (size > MAX_MANIFEST_BYTES) throw new BackupError("Choose a Paintwarden backup (.zip) file");
-    return readLegacyBackup(handle, mode, written);
-  }
+  if (signature[0] !== 0x50 || signature[1] !== 0x4b)
+    throw new BackupError("Choose a Paintwarden backup (.zip) file");
   const { tables, images } = await readZip(source, mode);
   for (const key of imageRefs(tables))
     if (!images.has(key))

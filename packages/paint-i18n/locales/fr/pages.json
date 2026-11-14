@@ -160,7 +160,6 @@
   "settingsMergeVault": "Fusionner avec le coffre",
   "settingsExportDateUnknown": "Date d’export inconnue",
   "settingsNoRecords": "Aucune fiche",
-  "settingsLegacyBackup": "Cette sauvegarde provient d’une ancienne version de Paintwarden. Elle ne contient ni extensions ni photos et peut uniquement être fusionnée. Installez d’abord les extensions qu’elle utilise.",
   "settingsHowToRestore": "Mode de restauration",
   "settingsReplacingWarning": "Le remplacement est irréversible. Exportez d’abord une sauvegarde de ce coffre si vous souhaitez conserver son contenu actuel.",
   "settingsExportedAt": "Export du {{date}}",

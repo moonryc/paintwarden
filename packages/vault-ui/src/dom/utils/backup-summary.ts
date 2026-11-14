@@ -19,8 +19,6 @@ export type BackupSummary =
           | "backupImage"
           | "backupPlugin";
       }[];
-      // Pre-release JSON backups hold only the owner's items and can only be merged.
-      legacy: boolean;
     }
   | { ok: false; error: string };
 
@@ -63,47 +61,33 @@ export async function summarizeBackup(file: Blob): Promise<BackupSummary> {
     size: file.size,
     read: async (offset, length) => new Uint8Array(await file.slice(offset, offset + length).arrayBuffer()),
   };
-  let zip = false;
   let body: unknown;
   try {
     const signature = await source.read(0, 2);
-    zip = signature[0] === 0x50 && signature[1] === 0x4b;
-    body = zip ? await readManifest(source) : JSON.parse(await file.text());
+    if (signature[0] !== 0x50 || signature[1] !== 0x4b) throw new Error("not a ZIP");
+    body = await readManifest(source);
   } catch {
     return { ok: false, error: i18n.t("shell:backupChooseZip") };
   }
   if (!body || typeof body !== "object" || Array.isArray(body))
     return { ok: false, error: i18n.t("shell:backupInvalid") };
   const record = body as Record<string, unknown>;
-  // Migration compatibility: old backups retain their original on-disk identifier.
-  if (record.format !== "paintwarden-backup" && record.format !== "paint-vault-backup")
-    return { ok: false, error: i18n.t("shell:backupInvalid") };
-  const legacy = !zip && (record.version === 3 || record.version === 4);
-  if (!legacy && !(zip && record.version === 1)) return { ok: false, error: i18n.t("shell:backupVersion") };
+  if (record.format !== "paintwarden-backup") return { ok: false, error: i18n.t("shell:backupInvalid") };
+  if (record.version !== 1) return { ok: false, error: i18n.t("shell:backupVersion") };
   const exported = typeof record.exportedAt === "string" ? new Date(record.exportedAt) : null;
-  const tables = (legacy ? record : (record.tables ?? {})) as Record<string, unknown>;
-  const counts = legacy
-    ? [
-        plural(rows(tables.miniatures).length, "backupMiniature"),
-        plural(rows(tables.customPaints).length, "backupCustomPaint"),
-        plural(rows(tables.paintInventory).length, "backupPaintRecord"),
-        // These backups marked source schemes instead of using `user:` IDs.
-        plural(rows(tables.colorSchemes).filter((row) => row.isSystem !== true).length, "backupScheme"),
-        plural(own(rows(tables.miniatureTemplates)), "backupTemplate"),
-      ]
-    : [
-        plural(rows(tables.miniatures).length, "backupMiniature"),
-        plural(Array.isArray(record.images) ? record.images.length : 0, "backupImage"),
-        plural(rows(tables.plugins).length, "backupPlugin"),
-        plural(own(rows(tables.paints)), "backupCustomPaint"),
-        plural(rows(tables.paintInventory).length, "backupPaintRecord"),
-        plural(own(rows(tables.schemes)), "backupScheme"),
-        plural(own(rows(tables.templates)), "backupTemplate"),
-      ];
+  const tables = (record.tables ?? {}) as Record<string, unknown>;
+  const counts = [
+    plural(rows(tables.miniatures).length, "backupMiniature"),
+    plural(Array.isArray(record.images) ? record.images.length : 0, "backupImage"),
+    plural(rows(tables.plugins).length, "backupPlugin"),
+    plural(own(rows(tables.paints)), "backupCustomPaint"),
+    plural(rows(tables.paintInventory).length, "backupPaintRecord"),
+    plural(own(rows(tables.schemes)), "backupScheme"),
+    plural(own(rows(tables.templates)), "backupTemplate"),
+  ];
   return {
     ok: true,
     exportedAt: exported && !Number.isNaN(exported.getTime()) ? exported : null,
     counts: counts.filter(({ count }) => count > 0),
-    legacy,
   };
 }

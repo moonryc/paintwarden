@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "Diese Sicherung enthält zu viele Dateien für eine Wiederherstellung",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Diese Sicherung ist zu groß für eine Wiederherstellung",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Wähle eine Paintwarden-Sicherungsdatei (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "Ältere Sicherungen können nur mit einem Tresor zusammengeführt werden",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Diese Sicherung ist beschädigt: Einige Bilder, auf die ihre Datensätze verweisen, fehlen",
   "ISN_T_VALID_JSON": "{{value1}} ist kein gültiges JSON",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "Bildprüfsumme stimmt nicht überein: {{value1}}",

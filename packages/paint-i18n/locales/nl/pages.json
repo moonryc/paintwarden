@@ -160,7 +160,6 @@
   "settingsMergeVault": "Met kluis samenvoegen",
   "settingsExportDateUnknown": "Exportdatum onbekend",
   "settingsNoRecords": "Geen records",
-  "settingsLegacyBackup": "Deze back-up is van een eerdere versie van Paintwarden. Plugins en foto's ontbreken, dus je kunt deze alleen samenvoegen. Installeer eerst de plugins die erin worden gebruikt.",
   "settingsHowToRestore": "Manier van herstellen",
   "settingsReplacingWarning": "Vervangen kan niet ongedaan worden gemaakt. Exporteer eerst een back-up van deze kluis als je de huidige inhoud misschien wilt behouden.",
   "settingsExportedAt": "Geëxporteerd op {{date}}",

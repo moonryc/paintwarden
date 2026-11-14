@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "此備份的檔案數量過多，無法還原",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "此備份過大，無法還原",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "請選擇 Paintwarden 備份（.zip）檔案",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "舊版備份只能合併至資料庫",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "此備份已損毀：缺少部分記錄所參照的圖片",
   "ISN_T_VALID_JSON": "{{value1}} 不是有效的 JSON",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "圖片檢查碼不符：{{value1}}",

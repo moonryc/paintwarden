@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "Cette sauvegarde contient trop de fichiers pour être restaurée",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Cette sauvegarde est trop volumineuse pour être restaurée",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Choisissez un fichier de sauvegarde Paintwarden (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "Les anciennes sauvegardes peuvent uniquement être fusionnées avec un coffre",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Cette sauvegarde est endommagée : certaines images référencées dans ses fiches sont manquantes",
   "ISN_T_VALID_JSON": "{{value1}} n’est pas un JSON valide",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "La somme de contrôle de l’image ne correspond pas : {{value1}}",

@@ -156,7 +156,6 @@
   "settingsMergeVault": "合併至資料庫",
   "settingsExportDateUnknown": "匯出日期不明",
   "settingsNoRecords": "沒有記錄",
-  "settingsLegacyBackup": "此備份來自較舊版本的 Paintwarden，不含外掛程式或照片，因此只能合併。請先安裝其使用的外掛程式。",
   "settingsHowToRestore": "還原方式",
   "settingsReplacingWarning": "取代後無法復原。如可能需要目前內容，請先匯出此資料庫的備份。",
   "settingsExportedAt": "匯出於 {{date}}",

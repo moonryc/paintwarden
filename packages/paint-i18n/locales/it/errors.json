@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "Questo backup contiene troppi file da ripristinare",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Questo backup è troppo grande per essere ripristinato",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Scegli un file di backup di Paintwarden (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "I backup precedenti possono solo essere uniti a un archivio",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Questo backup è danneggiato: mancano alcune immagini a cui fanno riferimento i record",
   "ISN_T_VALID_JSON": "{{value1}} non è un JSON valido",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "Il checksum dell'immagine non corrisponde: {{value1}}",

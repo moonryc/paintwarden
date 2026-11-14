@@ -1,21 +1,19 @@
 {
+  "kind": "synthetic-pre-release-rebrand",
+  "description": "New-brand synthetic baseline SQLite and ZIP1 contract fixtures; not authentic historical exporter output or evidence of a published release",
   "fixtureClock": "2023-11-14T22:13:20.000Z",
   "baseline": "1f1c4e9",
-  "sources": [
-    {
-      "revision": "47aa2781b1827ad92285fcb0fc73e39d232fcfa1",
-      "path": "apps/paint-vault/app/api/backup/route.ts",
-      "sha256": "aac13fbeb8c1171a28d5227fd46fbaedaac108cb39e67cf490574a0b5ef23bc8",
-      "getSha256": "7d493729ad312abe53b13718f8b904dc91c5d2fd5f83b072e9ad21742387fde2"
-    }
-  ],
-  "legacyV4": "Synthetic compatibility derivative of the v3 export; no historical v4 writer found",
+  "sources": {
+    "scripts/generate-data-compatibility-fixtures.mjs": "6e3fbce071f6ed7ca3a6746439f4f3d54fa28c4b1df5e844d81b59358377fc8d",
+    "apps/paintwarden/lib/test-ids.ts": "b5bca3e4ef1c413ce20150ac2a3e75a2f61d33899e0cc353310e11ad8b41261e",
+    "apps/paintwarden/lib/backup-format.ts": "33760baf023b0c7eac54ab3c158d98eb1c5956565a0329e2427a199c50036552",
+    "apps/paintwarden/lib/zip-writer.ts": "3b50f7a05224dfc6cfb763456ef45ab572a7f9d50a2e43d7c1ff469d54bcd7ff",
+    "apps/paintwarden/db/schema.ts": "35a6883efae3c055e106cfde4c0b4de181587a341b424a5711c2201e4c9a781a"
+  },
   "files": {
     "v1.sqlite": "dfe59d077adb3de0f2ed3aab0bb5077357e161bf50ab083603e77d8f20852b44",
-    "zip-v1.zip": "d40d1ae204e52950459d31e917d49eff1463231cb1f0b19c66ecbc8eee08fef0",
+    "zip-v1.zip": "dd539a53e5000bb65b8055064b1370cc730613a1fef77b0129886a3d9df7c67c",
     "v1-tables.json": "b9f803c147e938c6ffe3040b75fd0cb5f17c81a0bd699557adc46a667aed472b",
-    "legacy-v3.json": "2dfac30f3b8fd501bc5d8ec9d20df50db57c5893253cc520c850915cbcb2a632",
-    "legacy-v4-synthetic.json": "e38126a414de77c6afa1ba7eb391cb0f843c3688afbba15c01adef57b688edf4",
     "pixel.png": "431ced6916a2a21a156e38701afe55bbd7f88969fbbfc56d7fe099d47f265460",
     "released-migrations.json": "f841b0e4707fa1afcabe76b31d355eea93c0a77e265006f0e53072b9ad9ba2f2"
   }

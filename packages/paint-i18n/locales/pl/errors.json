@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "Ta kopia zapasowa zawiera zbyt wiele plików do przywrócenia",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Ta kopia zapasowa jest zbyt duża do przywrócenia",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Wybierz plik kopii zapasowej Paintwarden (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "Starsze kopie zapasowe można tylko scalać ze skarbcem",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Ta kopia zapasowa jest uszkodzona: brakuje niektórych obrazów wskazanych we wpisach",
   "ISN_T_VALID_JSON": "{{value1}} nie jest poprawnym plikiem JSON",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "Suma kontrolna obrazu nie zgadza się: {{value1}}",

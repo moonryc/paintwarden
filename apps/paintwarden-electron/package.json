@@ -30,8 +30,7 @@
       "desktop-i18n.cjs",
       "desktop-preferences.cjs",
       "desktop-menu.cjs",
-      "desktop-support.cjs",
-      "desktop-profile.cjs"
+      "desktop-support.cjs"
     ],
     "extraResources": [
       {

@@ -156,7 +156,6 @@
   "settingsMergeVault": "合并到资料库",
   "settingsExportDateUnknown": "导出日期未知",
   "settingsNoRecords": "暂无记录",
-  "settingsLegacyBackup": "此备份来自旧版 Paintwarden，不包含插件或照片，因此只能合并。请先安装它使用的插件。",
   "settingsHowToRestore": "恢复方式",
   "settingsReplacingWarning": "替换操作无法撤销。如果可能还需要当前内容，请先导出此资料库的备份。",
   "settingsExportedAt": "导出于 {{date}}",

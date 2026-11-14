@@ -30,7 +30,6 @@ test("summarizes the contents of a zip backup", async () => {
     ),
   );
   assert.equal(summary.ok, true);
-  assert.equal(summary.legacy, false);
   assert.equal(summary.exportedAt?.toISOString(), "2026-10-01T12:00:00.000Z");
   assert.deepEqual(summary.counts, [
     { label: "miniatures", count: 2, key: "backupMiniature" },
@@ -38,28 +37,6 @@ test("summarizes the contents of a zip backup", async () => {
     { label: "plugin", count: 1, key: "backupPlugin" },
     { label: "custom paint", count: 1, key: "backupCustomPaint" },
     { label: "paint record", count: 1, key: "backupPaintRecord" },
-    { label: "scheme", count: 1, key: "backupScheme" },
-  ]);
-});
-
-test("recognizes pre-release JSON backups, which can only be merged", async () => {
-  const summary = await summarize(
-    strToU8(
-      JSON.stringify({
-        format: "paintwarden-backup",
-        version: 4,
-        miniatures: [{}],
-        colorSchemes: [
-          { id: "abc", isSystem: false },
-          { id: "source", isSystem: true },
-        ],
-      }),
-    ),
-  );
-  assert.equal(summary.ok, true);
-  assert.equal(summary.legacy, true);
-  assert.deepEqual(summary.counts, [
-    { label: "miniature", count: 1, key: "backupMiniature" },
     { label: "scheme", count: 1, key: "backupScheme" },
   ]);
 });
@@ -78,14 +55,10 @@ test("rejects other files and versions", async () => {
   assert.equal((await summarize(zipBackup({ format: "something-else", version: 1 }))).ok, false);
 });
 
-test("migration preview accepts original JSON and ZIP format identifiers", async () => {
-  for (const version of [3, 4])
+test("rejects JSON backups even when they use the current brand", async () => {
+  for (const version of [1, 3, 4])
     assert.equal(
-      (await summarize(strToU8(JSON.stringify({ format: "paint-vault-backup", version })))).ok,
-      true,
+      (await summarize(strToU8(JSON.stringify({ format: "paintwarden-backup", version })))).ok,
+      false,
     );
-  assert.equal(
-    (await summarize(zipBackup({ format: "paint-vault-backup", version: 1, tables: {} }))).ok,
-    true,
-  );
 });

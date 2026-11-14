@@ -134,7 +134,7 @@ export function SettingsScreen({
   }
   async function restoreBackup() {
     if (!pendingBackup) return;
-    const mode = pendingBackup.summary.legacy ? "merge" : restoreMode;
+    const mode = restoreMode;
     setBusy(true);
     try {
       if (window.paintwardenDesktop) {
@@ -150,7 +150,7 @@ export function SettingsScreen({
         await api(`/api/backup?mode=${mode}`, {
           method: "POST",
           body: pendingBackup.file,
-          headers: { "content-type": pendingBackup.summary.legacy ? "application/json" : "application/zip" },
+          headers: { "content-type": "application/zip" },
         });
       setPendingBackup(null);
       // A restore can change any part of the vault, so it is reloaded in full.
@@ -387,7 +387,7 @@ export function SettingsScreen({
           ref={inputRef}
           hidden
           type="file"
-          accept=".zip,application/zip,.json,application/json"
+          accept=".zip,application/zip"
           onChange={(event) => {
             const file = event.target.files?.[0];
             event.target.value = "";
@@ -398,7 +398,7 @@ export function SettingsScreen({
       {pendingBackup && (
         <RestoreBackupDialog
           pending={pendingBackup}
-          mode={pendingBackup.summary.legacy ? "merge" : restoreMode}
+          mode={restoreMode}
           busy={busy}
           onModeChange={setRestoreMode}
           onRestore={() => void restoreBackup()}

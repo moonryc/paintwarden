@@ -1,51 +1,52 @@
-// Maintainer-only: node --import tsx scripts/generate-data-compatibility-fixtures.mjs /path/to/archive
-// Reads source via git show only. Never opens the archive's data directories.
+// Maintainer-only: node --import tsx scripts/generate-data-compatibility-fixtures.mjs /tmp/new-fixtures
+// Synthetic pre-release fixtures, not historical exporter artifacts. Never overwrites checked-in goldens.
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
-  copyFileSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
+  realpathSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+import {
+  BACKUP_FORMAT,
+  BACKUP_IMAGE_FOLDER,
+  BACKUP_MANIFEST,
+  BACKUP_SECTIONS,
+  BACKUP_VERSION,
+  SECTION_KEYS,
+} from "../apps/paintwarden/lib/backup-format.ts";
+import { testId as id, testUserId as user } from "../apps/paintwarden/lib/test-ids.ts";
+import { writeZip } from "../apps/paintwarden/lib/zip-writer.ts";
+
+const root = realpathSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."));
 const app = path.join(root, "apps/paintwarden");
-const output = path.join(app, "test-fixtures/data-compatibility");
-const archive = process.argv[2];
-assert.ok(archive, "Pass the historical archive repository path");
+assert.ok(process.argv[2], "Pass an empty output directory outside this repository");
+mkdirSync(path.resolve(process.argv[2]), { recursive: true });
+const output = realpathSync(path.resolve(process.argv[2]));
+assert.ok(
+  output !== root && !output.startsWith(`${root}${path.sep}`),
+  "Never regenerate fixtures inside the repository",
+);
+assert.deepEqual(
+  readdirSync(output),
+  [],
+  "Output directory must be empty; never overwrite existing fixtures",
+);
 const temporary = mkdtempSync(path.join(tmpdir(), "paintwarden-golden-generate-"));
-process.env.DATA_DIR = path.join(temporary, "vault");
-delete process.env.DATABASE_PATH;
-mkdirSync(process.env.DATA_DIR);
-symlinkSync(path.join(root, "node_modules"), path.join(temporary, "node_modules"));
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const historical = (revision, file) => execFileSync("git", ["-C", archive, "show", `${revision}:${file}`]);
-const baseline = "1f1c4e9";
-const historicalRevision = "47aa2781b1827ad92285fcb0fc73e39d232fcfa1";
 const stamp = 1700000000000;
-const NativeDate = Date;
-globalThis.Date = class extends NativeDate {
-  constructor(...args) {
-    super(...(args.length ? args : [stamp]));
-  }
-  static now() {
-    return stamp;
-  }
-};
-const { testId: id, testUserId: user } = await import("../apps/paintwarden/lib/test-ids.ts");
-const { BACKUP_SECTIONS, SECTION_KEYS } = await import("../apps/paintwarden/lib/backup-format.ts");
 const plugin = id("golden-plugin"),
   paint = user("golden-paint"),
   scheme = user("golden-scheme");
@@ -205,7 +206,7 @@ const seed = {
     },
   ],
 };
-const sources = [];
+
 function write(file, bytes) {
   writeFileSync(path.join(output, file), bytes);
 }
@@ -213,173 +214,87 @@ function json(file, value) {
   write(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 try {
-  mkdirSync(output, { recursive: true });
+  const ledgerBytes = readFileSync(
+    path.join(app, "test-fixtures/data-compatibility/released-migrations.json"),
+  );
+  const ledger = JSON.parse(ledgerBytes);
+  const { sha256: sqlHash, snapshot, snapshotSha256, ...entry } = ledger.entries[0];
+  assert.equal(entry.tag, "0000_init");
+  const sql = readFileSync(path.join(app, "drizzle", `${entry.tag}.sql`));
+  const snapshotBytes = readFileSync(path.join(app, "drizzle", snapshot));
+  assert.equal(sha256(sql), sqlHash, "Frozen baseline SQL changed; append a migration instead");
+  assert.equal(sha256(snapshotBytes), snapshotSha256, "Frozen baseline snapshot changed");
+  const journal = JSON.parse(readFileSync(path.join(app, "drizzle/meta/_journal.json")));
+  assert.deepEqual(journal.entries[0], entry, "Frozen baseline journal entry changed");
   const migrations = path.join(temporary, "baseline");
   mkdirSync(path.join(migrations, "meta"), { recursive: true });
-  const sql = execFileSync("git", ["-C", root, "show", `${baseline}:apps/paint-vault/drizzle/0000_init.sql`]);
-  const journalBytes = execFileSync("git", [
-    "-C",
-    root,
-    "show",
-    `${baseline}:apps/paint-vault/drizzle/meta/_journal.json`,
-  ]);
-  writeFileSync(path.join(migrations, "0000_init.sql"), sql);
-  writeFileSync(path.join(migrations, "meta/_journal.json"), journalBytes);
-  const sqlite = new Database(path.join(process.env.DATA_DIR, "paint-vault.sqlite"));
-  migrate(drizzle(sqlite), { migrationsFolder: migrations });
-  const db = drizzle(sqlite);
-  for (const section of SECTION_KEYS) db.insert(BACKUP_SECTIONS[section].table).values(seed[section]).run();
-  sqlite
-    .prepare("INSERT INTO vault_account VALUES (1, ?, ?, 1, ?)")
-    .run("synthetic-owner", "not-a-real-password-hash", stamp);
-  sqlite.prepare("INSERT INTO vault_sessions VALUES (?, ?)").run("synthetic-token-hash", stamp + 100000);
-  sqlite.close();
-  copyFileSync(path.join(process.env.DATA_DIR, "paint-vault.sqlite"), path.join(output, "v1.sqlite"));
-  mkdirSync(path.join(process.env.DATA_DIR, "images"));
-  writeFileSync(path.join(process.env.DATA_DIR, "images", imageKey), image);
+  writeFileSync(path.join(migrations, `${entry.tag}.sql`), sql);
+  writeFileSync(
+    path.join(migrations, "meta/_journal.json"),
+    JSON.stringify({ ...journal, entries: [entry] }),
+  );
+  assert.equal(BACKUP_FORMAT, "paintwarden-backup");
+  assert.equal(BACKUP_VERSION, 1, "A new backup version needs new fixtures, not a baseline refresh");
+  assert.deepEqual(Object.keys(seed), SECTION_KEYS);
+  for (const section of SECTION_KEYS)
+    for (const row of seed[section])
+      assert.deepEqual(Object.keys(row).sort(), [...BACKUP_SECTIONS[section].fields].sort(), section);
+  const sqlite = new Database(path.join(output, "v1.sqlite"));
+  try {
+    migrate(drizzle(sqlite), { migrationsFolder: migrations });
+    const db = drizzle(sqlite);
+    for (const section of SECTION_KEYS) db.insert(BACKUP_SECTIONS[section].table).values(seed[section]).run();
+    sqlite
+      .prepare("INSERT INTO vault_account VALUES (1, ?, ?, 1, ?)")
+      .run("synthetic-owner", "not-a-real-password-hash", stamp);
+    sqlite.prepare("INSERT INTO vault_sessions VALUES (?, ?)").run("synthetic-token-hash", stamp + 100000);
+    assert.deepEqual(sqlite.pragma("foreign_key_check"), []);
+    assert.equal(sqlite.pragma("integrity_check", { simple: true }), "ok");
+  } finally {
+    sqlite.close();
+  }
   write("pixel.png", image);
   json("v1-tables.json", seed);
-  json("released-migrations.json", {
-    baseline,
-    entries: JSON.parse(journalBytes).entries.map((entry) => ({
-      ...entry,
-      sha256: sha256(sql),
-      snapshot: "meta/0000_snapshot.json",
-      snapshotSha256: sha256(
-        execFileSync("git", [
-          "-C",
-          root,
-          "show",
-          `${baseline}:apps/paint-vault/drizzle/meta/0000_snapshot.json`,
-        ]),
-      ),
-    })),
-  });
-  process.chdir(app);
-  for (const file of ["lib/backup.ts", "lib/backup-format.ts"]) {
-    assert.equal(
-      sha256(readFileSync(path.join(app, file))),
-      sha256(execFileSync("git", ["-C", root, "show", `${baseline}:apps/paint-vault/${file}`])),
-      `Regenerate baseline fixtures only with the ${baseline} backup implementation`,
-    );
+  // Copy the immutable ledger byte-for-byte; never derive replacement hashes from changed SQL.
+  write("released-migrations.json", ledgerBytes);
+  const fixtureClock = new Date(stamp).toISOString();
+  const manifest = {
+    format: BACKUP_FORMAT,
+    version: BACKUP_VERSION,
+    appVersion: "1.0.0",
+    exportedAt: fixtureClock,
+    tables: seed,
+    images: [imageKey],
+  };
+  async function* files() {
+    yield { name: `${BACKUP_IMAGE_FOLDER}${imageKey}`, data: image };
+    yield { name: BACKUP_MANIFEST, data: Buffer.from(JSON.stringify(manifest)), compress: true };
   }
-  const { APP_VERSION } = await import("../apps/paintwarden/lib/app-version.ts");
-  assert.equal(APP_VERSION, "1.0.0", "Regenerate with the baseline app version");
-  const { createBackup } = await import("../apps/paintwarden/lib/backup.ts");
-  write("zip-v1.zip", Buffer.from(await new Response(createBackup()).arrayBuffer()));
-  const { getSqlite } = await import("../apps/paintwarden/db/index.ts");
-  getSqlite().close();
-
-  // Execute the exact historical GET body against its real historical application schema.
-  const old = path.join(temporary, "legacy");
-  mkdirSync(old);
-  const route = historical(historicalRevision, "apps/paint-vault/app/api/backup/route.ts").toString();
-  const get = route.slice(
-    route.indexOf("export async function GET()"),
-    route.indexOf("export async function POST("),
-  );
-  sources.push({
-    revision: historicalRevision,
-    path: "apps/paint-vault/app/api/backup/route.ts",
-    sha256: sha256(route),
-    getSha256: sha256(get),
-  });
-  writeFileSync(path.join(old, "schema.ts"), historical(historicalRevision, "apps/paint-vault/db/schema.ts"));
-  const oldFiles = execFileSync(
-    "git",
-    ["-C", archive, "ls-tree", "-r", "--name-only", historicalRevision, "apps/paint-vault/drizzle"],
-    { encoding: "utf8" },
-  )
-    .trim()
-    .split("\n");
-  for (const file of oldFiles.filter((name) => name.endsWith(".sql") || name.endsWith("_journal.json"))) {
-    const destination = path.join(old, file.replace("apps/paint-vault/", ""));
-    mkdirSync(path.dirname(destination), { recursive: true });
-    writeFileSync(destination, historical(historicalRevision, file));
-  }
-  const legacySqlite = new Database(path.join(old, "legacy.sqlite"));
-  migrate(drizzle(legacySqlite), { migrationsFolder: path.join(old, "drizzle") });
-  const oldSchema = await import(pathToFileURL(path.join(old, "schema.ts")).href);
-  const oldDb = drizzle(legacySqlite);
-  const oldPaint = `custom-${paint.slice(5)}`;
-  const oldScheme = `custom-${scheme.slice(5)}`;
-  for (const [key, tableName] of Object.entries({
-    paints: "paintCatalog",
-    paintInventory: "paintInventory",
-    schemes: "colorSchemes",
-    schemePaints: "colorSchemePaints",
-    schemeDividers: "colorSchemeDividers",
-    miniatures: "miniatures",
-    miniatureRecipe: "miniatureRequiredPaints",
-    miniatureSteps: "miniatureRecipeSteps",
-    miniatureSchemes: "miniatureColorSchemes",
-    substitutions: "paintSubstitutions",
-    substitutionIngredients: "paintSubstitutionIngredients",
-    miniatureSubstitutions: "miniaturePaintSubstitutions",
-  })) {
-    const rows = seed[key].map((row) =>
-      Object.fromEntries(
-        Object.entries(row).map(([field, value]) => [
-          field,
-          value === paint ? oldPaint : value === scheme ? oldScheme : value,
-        ]),
-      ),
-    );
-    if (key === "paints") rows[0].isCustom = true;
-    if (key === "schemeDividers") rows[0].id = `required-battle-milestone:start:${oldScheme}`;
-    oldDb.insert(oldSchema[tableName]).values(rows).run();
-  }
-  oldDb
-    .insert(oldSchema.miniatureTemplates)
-    .values({
-      ...seed.templates[0],
-      schemeIds: [oldScheme],
-      paints: [{ paintId: oldPaint, step: "BASECOAT", notes: "Fixture recipe", sortOrder: 0 }],
-    })
-    .run();
-  globalThis.__goldenLegacyDb = oldDb;
-  globalThis.__goldenImage = { bytes: image, contentType: "image/png" };
-  writeFileSync(path.join(old, "db.ts"), "export const getDb = () => globalThis.__goldenLegacyDb;\n");
-  writeFileSync(
-    path.join(old, "images.ts"),
-    "export const loadImage = async () => globalThis.__goldenImage;\n",
-  );
-  const imports = route
-    .slice(0, route.indexOf("export async function GET()"))
-    .replace('"../../../db"', '"./db.ts"')
-    .replace('"../../../db/schema"', '"./schema.ts"')
-    .replace(/import \{ planSchemePaintRestore \}[^;]+;\n/, "")
-    .replace(
-      'import { loadImage, saveImage } from "../../../lib/image-store";',
-      'import { loadImage } from "./images.ts";',
-    );
-  writeFileSync(path.join(old, "exporter.ts"), `${imports}${get}`);
-  const exporter = await import(pathToFileURL(path.join(old, "exporter.ts")).href);
-  const legacy = await (await exporter.GET()).json();
-  assert.equal(legacy.version, 3);
-  json("legacy-v3.json", legacy);
-  // No v4 writer exists in any archive ref. Do not misrepresent a modified v3 as a genuine v4 export.
-  json("legacy-v4-synthetic.json", { ...legacy, version: 4 });
-  legacySqlite.close();
-  const files = [
-    "v1.sqlite",
-    "zip-v1.zip",
-    "v1-tables.json",
-    "legacy-v3.json",
-    "legacy-v4-synthetic.json",
-    "pixel.png",
-    "released-migrations.json",
+  const chunks = [];
+  // ZIP timestamps are supplied explicitly; generation is independent of wall clock and local TZ.
+  for await (const chunk of writeZip(files(), new Date(2023, 10, 14, 22, 13, 20))) chunks.push(chunk);
+  write("zip-v1.zip", Buffer.concat(chunks));
+  const fixtureFiles = ["v1.sqlite", "zip-v1.zip", "v1-tables.json", "pixel.png", "released-migrations.json"];
+  const sourceFiles = [
+    "scripts/generate-data-compatibility-fixtures.mjs",
+    "apps/paintwarden/lib/test-ids.ts",
+    "apps/paintwarden/lib/backup-format.ts",
+    "apps/paintwarden/lib/zip-writer.ts",
+    "apps/paintwarden/db/schema.ts",
   ];
   json("provenance.json", {
-    fixtureClock: new Date().toISOString(),
-    baseline,
-    sources,
-    legacyV4: "Synthetic compatibility derivative of the v3 export; no historical v4 writer found",
-    files: Object.fromEntries(files.map((file) => [file, sha256(readFileSync(path.join(output, file)))])),
+    kind: "synthetic-pre-release-rebrand",
+    description:
+      "New-brand synthetic baseline SQLite and ZIP1 contract fixtures; not authentic historical exporter output or evidence of a published release",
+    fixtureClock,
+    baseline: ledger.baseline,
+    sources: Object.fromEntries(
+      sourceFiles.map((file) => [file, sha256(readFileSync(path.join(root, file)))]),
+    ),
+    files: Object.fromEntries(
+      fixtureFiles.map((file) => [file, sha256(readFileSync(path.join(output, file)))]),
+    ),
   });
 } finally {
-  globalThis.Date = NativeDate;
-  delete globalThis.__goldenLegacyDb;
-  delete globalThis.__goldenImage;
   rmSync(temporary, { recursive: true, force: true });
 }

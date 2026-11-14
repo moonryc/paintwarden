@@ -362,15 +362,7 @@ docker compose config
 ### Uploaded photos are missing after a restore
 
 A `.zip` backup from Data & settings includes photos and plugin images, so
-restoring one brings them back. Older `.json` backups from before v1 include
-template images but not miniature photos. To recover those photos, or after
-restoring a volume archive without them, restore the complete volume backup,
+restoring one brings them back. Only ZIP backups are supported. If you restore
+a volume archive without its photos, restore the complete volume backup,
 including the `images/` directory.
-
-## Upgrading from Paint Vault
-
-The desktop app is now **Paintwarden** (`com.moonryc.paintwarden`). Quit the old app
-before launching the new one. Its complete legacy profile is moved atomically to
-`Paintwarden` on first launch; conflicting profiles or filesystem errors stop startup
-and show recovery controls, never a new empty vault. See [rename migration](docs/paintwarden-migration.md).
 

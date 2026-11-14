@@ -78,7 +78,6 @@
   "THIS_BACKUP_HOLDS_TOO_MANY_FILES_TO_RESTORE": "В резервной копии слишком много файлов для восстановления",
   "THIS_BACKUP_IS_TOO_LARGE_TO_RESTORE": "Резервная копия слишком большая для восстановления",
   "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE": "Выберите файл резервной копии Paintwarden (.zip)",
-  "OLDER_BACKUPS_CAN_ONLY_BE_MERGED_INTO_A_VAULT": "Старые резервные копии можно только объединять с хранилищем",
   "THIS_BACKUP_IS_DAMAGED_SOME_IMAGES_ITS_RECORDS_REFER_TO_ARE_MISSING": "Резервная копия повреждена: отсутствуют некоторые изображения, на которые ссылаются записи",
   "ISN_T_VALID_JSON": "{{value1}} не является корректным JSON",
   "IMAGE_CHECKSUM_DOES_NOT_MATCH": "Контрольная сумма изображения не совпадает: {{value1}}",
