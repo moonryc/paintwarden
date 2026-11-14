@@ -104,6 +104,8 @@ if (mode === "seed") {
   assert.ok(/^[a-z-]+$/.test(label));
   const dist = path.resolve(process.argv[4]);
   const port = Number(process.argv[5]);
+  const deviceScaleFactor = Number(process.env.THUMBNAILS_DPR || 1);
+  assert.ok([1, 2, 3].includes(deviceScaleFactor));
   assert.ok(port > 3200 && port < 65535, "Never use normal development ports");
   const fixture = JSON.parse(await readFile(fixturePath, "utf8"));
   assert.ok(fixture.dataDir.startsWith(path.join(tmpdir(), "paint-vault-startup-")));
@@ -141,6 +143,7 @@ if (mode === "seed") {
     measuredAt: new Date().toISOString(),
     node: process.version,
     label,
+    deviceScaleFactor,
     base,
     dataDir,
     server: await identity(path.join(dist, "server.mjs")),
@@ -169,6 +172,7 @@ if (mode === "seed") {
         for (const view of ["home", "miniatures"]) {
           const context = await browser.newContext({
             viewport: { width, height: 1000 },
+            deviceScaleFactor,
             serviceWorkers: "block",
           });
           await context.addCookies([
@@ -311,6 +315,7 @@ if (mode === "seed") {
         "Production Chromium interactive checks at 1440×1000 in a fresh context. Normal navigation opens cards, drawer/detail previews and lightboxes. Grid currentSrc and decoded responses must be fixed-width thumbnails; original response bytes must match the fixture SHA-256 and the active top dialog must decode 2400×1600 without w. Separate fixture copy; no edits to user data. Not a packaged Electron smoke pass.";
       const context = await browser.newContext({
         viewport: { width: 1440, height: 1000 },
+        deviceScaleFactor,
         serviceWorkers: "block",
       });
       await context.addCookies([
