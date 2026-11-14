@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -38,7 +39,7 @@ export async function readLibraryPage(
     variables: { ...variables, first: LIBRARY_PAGE_SIZE, after },
     fetchPolicy: "no-cache",
   });
-  if (!data) throw new Error("Library response was empty");
+  if (!data) throw new Error(i18n.t("shell:libraryResponseWasEmpty"));
   return data;
 }
 
@@ -71,9 +72,9 @@ export async function readLibraryWindow(
       combined = combined ? appendLibraryPage(combined, data) : data;
       after = data.library.pageInfo.endCursor;
       if (!data.library.pageInfo.hasNextPage) break;
-      if (!after) throw new Error("Library returned an invalid page cursor");
+      if (!after) throw new Error(i18n.t("shell:libraryReturnedAnInvalidPageCursor"));
     }
     if (combined) return combined;
   }
-  throw new Error("Library changed repeatedly while refreshing. Try again.");
+  throw new Error(i18n.t("shell:libraryChangedRepeatedlyWhileRefreshingTryAgain"));
 }

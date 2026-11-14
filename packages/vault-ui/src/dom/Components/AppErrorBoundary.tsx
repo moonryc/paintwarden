@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Card } from "@mui/material";
 import { Component, type ReactNode, useState } from "react";
 
@@ -20,6 +21,7 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, { error
 }
 
 export function CrashScreen({ error }: { error: Error }) {
+  const { t } = useTranslation("components");
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const [exporting, setExporting] = useState(false);
   const [exportResult, setExportResult] = useState<"saved" | "failed" | null>(null);
@@ -44,11 +46,10 @@ export function CrashScreen({ error }: { error: Error }) {
           component="h1"
           sx={{ m: 0, fontFamily: "var(--font-serif)", fontSize: "1.5rem", letterSpacing: "-0.02em" }}
         >
-          Something went wrong
+          {t("crashTitle")}
         </Box>
         <Box component="p" sx={{ m: 0, color: "var(--ink-faint)", fontSize: 14, lineHeight: 1.5 }}>
-          Paint Vault hit an error and couldn&rsquo;t show this screen. Your vault is saved on the server.
-          Reload to carry on, or export a backup first if you want a copy.
+          {t("crashBody")}
         </Box>
         <Box
           component="pre"
@@ -67,12 +68,8 @@ export function CrashScreen({ error }: { error: Error }) {
         >
           {error.message || String(error)}
         </Box>
-        {exportResult === "saved" && <Alert severity="success">Backup exported.</Alert>}
-        {exportResult === "failed" && (
-          <Alert severity="error">
-            The backup couldn&rsquo;t be exported. Reload and try from Data &amp; settings.
-          </Alert>
-        )}
+        {exportResult === "saved" && <Alert severity="success">{t("backupExported")}</Alert>}
+        {exportResult === "failed" && <Alert severity="error">{t("backupExportFailed")}</Alert>}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "flex-end" }}>
           <Button
             variant="outlined"
@@ -80,14 +77,14 @@ export function CrashScreen({ error }: { error: Error }) {
             loading={exporting}
             onClick={() => void exportBackup()}
           >
-            Export backup
+            {t("exportBackup")}
           </Button>
           <Button
             variant="contained"
             startIcon={<RotateCw size={16} />}
             onClick={() => window.location.reload()}
           >
-            Reload
+            {t("reload")}
           </Button>
         </Box>
       </Card>

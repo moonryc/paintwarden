@@ -1,3 +1,4 @@
+import { publicError } from "../lib/public-errors.ts";
 import { GraphQLError } from "graphql";
 
 import { getSqlite } from "../db/index.ts";
@@ -41,6 +42,15 @@ export function readSources() {
       revision: readRevision(),
       sources: rows.map(({ dependencies, logoSvg, paints, schemes, templates, ...source }) => ({
         ...source,
+        lastErrorInfo: source.lastError
+          ? (() => {
+              const error = publicError(source.lastError);
+              return {
+                code: error.errorCode,
+                parameters: Object.entries(error.errorParameters).map(([name, value]) => ({ name, value })),
+              };
+            })()
+          : null,
         dependencies: JSON.parse(dependencies) as { repository: string; minimumVersion?: string }[],
         logoUrl: sourceLogoUrl(source.id, logoSvg),
         counts: { paints, schemes, templates },

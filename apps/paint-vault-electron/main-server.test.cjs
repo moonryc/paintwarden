@@ -4,6 +4,7 @@ const { readFileSync } = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 const vm = require("node:vm");
+const { t: desktopTranslate } = require("./desktop-i18n.cjs");
 
 // Exercise the main-process lifecycle without starting Electron or opening a vault.
 const source = readFileSync(path.join(__dirname, "main.cjs"), "utf8");
@@ -11,6 +12,7 @@ function localServer() {
   const children = [];
   let probes = 0;
   const context = vm.createContext({
+    t: desktopTranslate,
     console,
     URL,
     AbortSignal,
@@ -86,6 +88,7 @@ function remoteVersions() {
   let now = 0;
   const requests = [];
   const context = vm.createContext({
+    t: desktopTranslate,
     app: { getVersion: () => "1.0.0" },
     Date: { now: () => now },
     versionMismatch: (_app, server) => (server === "1.0.0" ? null : { serverVersion: server }),
@@ -155,6 +158,7 @@ test("static shell responses cache only hashed assets and preserve errors and se
   ]);
   let reads = 0;
   const context = vm.createContext({
+    t: desktopTranslate,
     path,
     Response,
     assetPath,
@@ -207,6 +211,7 @@ function imageProxy() {
   const calls = [];
   let pending;
   const context = vm.createContext({
+    t: desktopTranslate,
     console,
     URL,
     Headers,
@@ -416,6 +421,7 @@ async function subscriptionProxy(t, mode, handler) {
   const timeouts = [],
     calls = [];
   const context = vm.createContext({
+    t: desktopTranslate,
     console,
     URL,
     Headers,

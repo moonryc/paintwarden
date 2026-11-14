@@ -91,11 +91,13 @@ void test("queued scheme saves do not overtake and a failed command does not poi
   const second = fixture.actions.update("scheme", { ...input, name: "Last wins" });
   await turn();
   assert.equal(calls, 1);
-  release(Response.json({ errors: [{ message: "Scheme rejected" }] }));
-  await assert.rejects(first, /Scheme rejected/);
+  release(
+    Response.json({ errors: [{ message: "Scheme rejected", extensions: { errorCode: "BAD_USER_INPUT" } }] }),
+  );
+  await assert.rejects(first, /Check the entered information and try again/);
   await second;
   assert.equal(calls, 2);
-  assert.deepEqual(fixture.errors, ["Scheme rejected"]);
+  assert.deepEqual(fixture.errors, ["Check the entered information and try again."]);
   fixture.dispose();
 });
 void test("a late scheme response from an old connection cannot commit", async () => {

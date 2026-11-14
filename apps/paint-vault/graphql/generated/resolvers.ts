@@ -35,6 +35,7 @@ export type CatalogSource = {
   dependencies: Array<SourceDependency>;
   id: Scalars["ID"]["output"];
   lastError?: Maybe<Scalars["String"]["output"]>;
+  lastErrorInfo?: Maybe<PublicError>;
   license?: Maybe<Scalars["String"]["output"]>;
   logoUrl?: Maybe<Scalars["String"]["output"]>;
   name: Scalars["String"]["output"];
@@ -58,6 +59,12 @@ export type CustomPaintInput = {
   name: Scalars["String"]["input"];
   range?: InputMaybe<Scalars["String"]["input"]>;
   sourceUrl?: InputMaybe<Scalars["String"]["input"]>;
+};
+
+export type ErrorParameter = {
+  __typename?: "ErrorParameter";
+  name: Scalars["String"]["output"];
+  value: Scalars["String"]["output"];
 };
 
 export type FacetCount = {
@@ -585,6 +592,12 @@ export type PaintViewUsedByArgs = {
 };
 
 export type PaintingStatus = "ASSEMBLED" | "COMPLETE" | "IN_PROGRESS" | "NOT_STARTED" | "PRIMED";
+
+export type PublicError = {
+  __typename?: "PublicError";
+  code: Scalars["String"]["output"];
+  parameters: Array<ErrorParameter>;
+};
 
 export type Query = {
   __typename?: "Query";
@@ -1236,6 +1249,7 @@ export type ResolversTypes = {
   CatalogSource: ResolverTypeWrapper<CatalogSource>;
   CustomPaintImportInput: CustomPaintImportInput;
   CustomPaintInput: CustomPaintInput;
+  ErrorParameter: ResolverTypeWrapper<ErrorParameter>;
   FacetCount: ResolverTypeWrapper<FacetCount>;
   Float: ResolverTypeWrapper<Scalars["Float"]["output"]>;
   HomeCounts: ResolverTypeWrapper<HomeCounts>;
@@ -1283,6 +1297,7 @@ export type ResolversTypes = {
   PaintUsageConnection: ResolverTypeWrapper<PaintUsageConnection>;
   PaintView: ResolverTypeWrapper<PaintViewRead>;
   PaintingStatus: PaintingStatus;
+  PublicError: ResolverTypeWrapper<PublicError>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RankedPaint: ResolverTypeWrapper<RankedPaint>;
   Readiness: ResolverTypeWrapper<Readiness>;
@@ -1349,6 +1364,7 @@ export type ResolversParentTypes = {
   CatalogSource: CatalogSource;
   CustomPaintImportInput: CustomPaintImportInput;
   CustomPaintInput: CustomPaintInput;
+  ErrorParameter: ErrorParameter;
   FacetCount: FacetCount;
   Float: Scalars["Float"]["output"];
   HomeCounts: HomeCounts;
@@ -1392,6 +1408,7 @@ export type ResolversParentTypes = {
   PaintUsage: PaintUsage;
   PaintUsageConnection: PaintUsageConnection;
   PaintView: PaintViewRead;
+  PublicError: PublicError;
   Query: Record<PropertyKey, never>;
   RankedPaint: RankedPaint;
   Readiness: Readiness;
@@ -1465,12 +1482,21 @@ export type CatalogSourceResolvers<
   dependencies?: Resolver<Array<ResolversTypes["SourceDependency"]>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   lastError?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  lastErrorInfo?: Resolver<Maybe<ResolversTypes["PublicError"]>, ParentType, ContextType>;
   license?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   logoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   repository?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   url?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   version?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type ErrorParameterResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["ErrorParameter"] = ResolversParentTypes["ErrorParameter"],
+> = {
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
 };
 
 export type FacetCountResolvers<
@@ -2049,6 +2075,14 @@ export type PaintViewResolvers<
   >;
 };
 
+export type PublicErrorResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PublicError"] = ResolversParentTypes["PublicError"],
+> = {
+  code?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  parameters?: Resolver<Array<ResolversTypes["ErrorParameter"]>, ParentType, ContextType>;
+};
+
 export type QueryResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Query"] = ResolversParentTypes["Query"],
@@ -2615,6 +2649,7 @@ export type WishlistViewResolvers<
 export type Resolvers<ContextType = GraphQLContext> = {
   ActiveSubstitution?: ActiveSubstitutionResolvers<ContextType>;
   CatalogSource?: CatalogSourceResolvers<ContextType>;
+  ErrorParameter?: ErrorParameterResolvers<ContextType>;
   FacetCount?: FacetCountResolvers<ContextType>;
   HomeCounts?: HomeCountsResolvers<ContextType>;
   HomeView?: HomeViewResolvers<ContextType>;
@@ -2653,6 +2688,7 @@ export type Resolvers<ContextType = GraphQLContext> = {
   PaintUsage?: PaintUsageResolvers<ContextType>;
   PaintUsageConnection?: PaintUsageConnectionResolvers<ContextType>;
   PaintView?: PaintViewResolvers<ContextType>;
+  PublicError?: PublicErrorResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RankedPaint?: RankedPaintResolvers<ContextType>;
   Readiness?: ReadinessResolvers<ContextType>;

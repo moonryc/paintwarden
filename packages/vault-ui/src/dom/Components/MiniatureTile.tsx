@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardActionArea, LinearProgress } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -26,6 +27,7 @@ export const MiniatureTile = memo(function MiniatureTile({
   missing: number;
   sx?: SxProps<Theme>;
 } & ({ onClick: () => void; onOpen?: never } | { onOpen: (id: string) => void; onClick?: never })) {
+  const { t } = useTranslation("components");
   const ready = total > 0 && missing === 0,
     pct = total ? ((total - missing) / total) * 100 : 0;
   return (
@@ -130,7 +132,7 @@ export const MiniatureTile = memo(function MiniatureTile({
                   },
             ]}
           >
-            {mini.status === "OWNED" ? "Owned" : "Wishlist"}
+            {mini.status === "OWNED" ? t("owned") : t("wishlist")}
           </Box>
           {ready && (
             <Box
@@ -148,7 +150,7 @@ export const MiniatureTile = memo(function MiniatureTile({
                 color: "var(--ok-soft)",
                 boxShadow: "var(--shadow-sm)",
               }}
-              title="All paints ready"
+              title={t("allPaintsReady")}
             >
               <Check size={13} strokeWidth={3} />
             </Box>
@@ -192,14 +194,18 @@ export const MiniatureTile = memo(function MiniatureTile({
                 color: "color-mix(in oklab, var(--on-scrim) 75%, transparent)",
               }}
             >
-              {total === 0 ? "No recipe yet" : ready ? "Ready to paint" : `${missing} of ${total} missing`}
+              {total === 0
+                ? t("noRecipeYet")
+                : ready
+                  ? t("readyToPaint")
+                  : t("miniaturePaintsMissing", { missing, total })}
             </Box>
           </Box>
         </Box>
         <LinearProgress
           variant="determinate"
           value={pct}
-          aria-label="Paints owned"
+          aria-label={t("paintsOwned")}
           color={ready ? "success" : "secondary"}
           sx={{
             boxSizing: "border-box",

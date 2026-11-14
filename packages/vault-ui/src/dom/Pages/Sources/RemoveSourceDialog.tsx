@@ -1,9 +1,22 @@
 import { Alert, Box, Button } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
+import { formatNumber } from "../../i18n";
 import { Trash2 } from "../../icons";
 
 import { type SourceRemoval, KINDS } from "./sources.utils";
+
+const blockerKeys = {
+  "Miniature paint requirements": "sourcesBlockerMiniaturePaintRequirements",
+  "Miniature schemes": "sourcesBlockerMiniatureSchemes",
+  "Paint inventory or wishlist entries": "sourcesBlockerPaintInventoryOrWishlistEntries",
+  "Other templates": "sourcesBlockerOtherTemplates",
+  "Other schemes": "sourcesBlockerOtherSchemes",
+  "Paint substitutions": "sourcesBlockerPaintSubstitutions",
+  "Miniature substitution choices": "sourcesBlockerMiniatureSubstitutionChoices",
+  "Other catalog sources": "sourcesBlockerOtherCatalogSources",
+} as const;
 
 export function RemoveSourceDialog({
   removal,
@@ -16,17 +29,18 @@ export function RemoveSourceDialog({
   onClose(): void;
   onRemove(): void;
 }) {
+  const { t } = useTranslation("pages");
   const nothing = !removal.removes.paints && !removal.removes.schemes && !removal.removes.templates;
   return (
     <Modal
-      title={`Remove ${removal.source.name}?`}
-      subtitle={`Version ${removal.source.version}`}
+      title={t("sourcesRemoveTitle", { name: removal.source.name })}
+      subtitle={t("sourcesRemovalVersion", { version: removal.source.version })}
       onClose={onClose}
     >
       <Box component="p" sx={{ m: 0, fontSize: 14, color: "var(--ink-soft)" }}>
         {nothing
-          ? "Nothing will be deleted. Everything from this plugin is also provided by another plugin."
-          : "These items will be deleted from your vault. Items also provided by another plugin are kept."}
+          ? t("sourcesNothingWillBeDeletedEverythingFromThisPluginIs")
+          : t("sourcesTheseItemsWillBeDeletedFromYourVaultItems")}
       </Box>
       {!nothing && (
         <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1, mt: 2 }}>
@@ -36,29 +50,42 @@ export function RemoveSourceDialog({
               sx={{ p: 1.5, borderRadius: "12px", bgcolor: "var(--sunken)", textAlign: "center" }}
             >
               <Box sx={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-                {removal.removes[kind].toLocaleString()}
+                {formatNumber(removal.removes[kind])}
               </Box>
-              <Box sx={{ fontSize: 12, color: "var(--ink-faint)", textTransform: "capitalize" }}>{kind}</Box>
+              <Box sx={{ fontSize: 12, color: "var(--ink-faint)", textTransform: "capitalize" }}>
+                {t(
+                  (
+                    {
+                      paints: "sourcesPaintsText",
+                      schemes: "sourcesSchemesText",
+                      templates: "sourcesTemplatesText",
+                    } as const
+                  )[kind],
+                )}
+              </Box>
             </Box>
           ))}
         </Box>
       )}
       {removal.blockers.length > 0 && (
         <Alert severity="warning" sx={{ mt: 2 }}>
-          <Box sx={{ fontWeight: 650 }}>This plugin is still in use</Box>
+          <Box sx={{ fontWeight: 650 }}>{t("sourcesThisPluginIsStillInUse")}</Box>
           <Box component="ul" sx={{ m: 0, mt: 0.5, pl: 2.5 }}>
             {removal.blockers.map((item) => (
               <li key={item.label}>
-                {item.count.toLocaleString()} {item.label.charAt(0).toLowerCase() + item.label.slice(1)}
+                {formatNumber(item.count)}{" "}
+                {item.label in blockerKeys
+                  ? t(blockerKeys[item.label as keyof typeof blockerKeys])
+                  : item.label}
               </li>
             ))}
           </Box>
-          <Box sx={{ mt: 0.5 }}>Remove or change those first, then try again.</Box>
+          <Box sx={{ mt: 0.5 }}>{t("sourcesRemoveOrChangeThoseFirstThenTryAgain")}</Box>
         </Alert>
       )}
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2.5 }}>
         <Button onClick={onClose} disabled={removing}>
-          {removal.canRemove ? "Cancel" : "Close"}
+          {removal.canRemove ? t("sourcesCancel") : t("sourcesClose")}
         </Button>
         <Button
           color="error"
@@ -68,7 +95,7 @@ export function RemoveSourceDialog({
           disabled={!removal.canRemove}
           onClick={onRemove}
         >
-          Remove plugin
+          {t("sourcesRemovePlugin")}
         </Button>
       </Box>
     </Modal>

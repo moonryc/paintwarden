@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { NumberField } from "@base-ui/react/number-field";
 import Box from "@mui/material/Box";
 import { useEffect, useState } from "react";
@@ -15,10 +16,12 @@ export function QuantityCounter({
   value: number;
   onChange(value: number): void;
 }) {
+  const { t, i18n } = useTranslation("components");
   const [draft, setDraft] = useState<number | null>(value);
   useEffect(() => setDraft(value), [value]);
   return (
     <NumberField.Root
+      locale={i18n.language === "en-XA" ? "en" : i18n.language}
       value={draft}
       min={0}
       max={999}
@@ -32,7 +35,7 @@ export function QuantityCounter({
     >
       <Box
         component={NumberField.Group}
-        aria-label={`Quantity of ${name}`}
+        aria-label={t("quantityOfPaint", { name })}
         sx={{
           boxSizing: "border-box",
           display: "flex",
@@ -50,7 +53,7 @@ export function QuantityCounter({
       >
         <Box
           component={NumberField.Decrement}
-          aria-label={`Decrease ${name} quantity`}
+          aria-label={t("decreasePaintQuantity", { name })}
           sx={{
             ...buttonResetSx,
             display: "grid",
@@ -76,7 +79,7 @@ export function QuantityCounter({
         </Box>
         <Box
           component={NumberField.Input}
-          aria-label={`${name} quantity`}
+          aria-label={t("paintQuantity", { name })}
           sx={[
             {
               boxSizing: "border-box",
@@ -105,7 +108,7 @@ export function QuantityCounter({
         />
         <Box
           component={NumberField.Increment}
-          aria-label={`Increase ${name} quantity`}
+          aria-label={t("increasePaintQuantity", { name })}
           sx={{
             ...buttonResetSx,
             display: "grid",

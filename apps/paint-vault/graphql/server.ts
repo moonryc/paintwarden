@@ -1,3 +1,4 @@
+import { publicError } from "../lib/public-errors.ts";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 
@@ -174,9 +175,24 @@ function makeYoga(endpoint: string) {
           const correlationId = randomUUID();
           process.stderr.write(JSON.stringify({ event: "graphql.error", correlationId }) + "\n");
           return new GraphQLError("Unexpected server error", {
-            extensions: { code: "INTERNAL_SERVER_ERROR", correlationId },
+            extensions: { code: "INTERNAL_SERVER_ERROR", correlationId, errorCode: "INTERNAL_SERVER_ERROR" },
           });
         }
+        if (masked instanceof GraphQLError)
+          return new GraphQLError(masked.message, {
+            nodes: masked.nodes,
+            source: masked.source,
+            positions: masked.positions,
+            path: masked.path,
+            originalError: masked.originalError,
+            extensions: {
+              ...masked.extensions,
+              ...publicError(
+                masked.message,
+                typeof masked.extensions.code === "string" ? masked.extensions.code : "REQUEST_FAILED",
+              ),
+            },
+          });
         return masked;
       },
     },
@@ -187,7 +203,7 @@ const streamYoga = makeYoga("/api/graphql/stream");
 
 const failure = (message: string, status: number, code = "BAD_REQUEST") =>
   Response.json(
-    { errors: [{ message, extensions: { code } }] },
+    { errors: [{ message, extensions: { code, ...publicError(message, code) } }] },
     { status, headers: { "cache-control": "no-store" } },
   );
 

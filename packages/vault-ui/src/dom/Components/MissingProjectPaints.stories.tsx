@@ -60,7 +60,7 @@ export const LargeList: Story = {
     const mountedRows = () => [...list.querySelectorAll<HTMLElement>("[data-checklist-index]")];
     await waitFor(() => expect(mountedRows().length).toBeGreaterThan(2));
     await expect(mountedRows().length).toBeLessThan(80);
-    await userEvent.click(canvas.getByRole("button", { name: "Add all 5001" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Add all 5,001" }));
     await expect(args.onAddAll).toHaveBeenCalled();
 
     // Tab through the end of the mounted window and back across its beginning.

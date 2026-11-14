@@ -1,12 +1,13 @@
 const path = require("node:path");
+const { t } = require("./desktop-i18n.cjs");
 
 function serverOrigin(input) {
-  if (typeof input !== "string") throw new Error("Enter a server URL");
+  if (typeof input !== "string") throw new Error(t("errors.enterUrl"));
   let url;
   try {
     url = new URL(input.trim());
   } catch {
-    throw new Error("Enter a server origin such as https://vault.example.com");
+    throw new Error(t("errors.serverOrigin"));
   }
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -16,7 +17,7 @@ function serverOrigin(input) {
     url.search ||
     url.hash
   )
-    throw new Error("Enter a server origin such as https://vault.example.com");
+    throw new Error(t("errors.serverOrigin"));
   return url.origin;
 }
 
@@ -251,10 +252,10 @@ function versionMismatch(appVersion, serverVersion) {
   const known = releaseVersion(serverVersion);
   const update = !known || olderThan(serverVersion, appVersion) ? "server" : "app";
   const message = !known
-    ? `This server runs an older version of Paint Vault. Update the server to ${appVersion} to connect.`
+    ? t("errors.olderServer", { appVersion })
     : update === "server"
-      ? `This server runs Paint Vault ${serverVersion}, and this app is ${appVersion}. Update the server to ${appVersion} to connect.`
-      : `This server runs Paint Vault ${serverVersion}, and this app is ${appVersion}. Update this app to ${serverVersion} to connect.`;
+      ? t("errors.updateServer", { serverVersion, appVersion })
+      : t("errors.updateApp", { serverVersion, appVersion });
   return { update, appVersion, serverVersion: known ? serverVersion : null, message };
 }
 

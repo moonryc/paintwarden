@@ -1,15 +1,16 @@
 // Keeps the packaged desktop app current. Updates download in the background; the app then asks
 // to restart, and installs on the next quit if the user waits. The updater object is passed in so
 // the behavior can be tested without real releases.
+const { t } = require("./desktop-i18n.cjs");
 const FIRST_CHECK_DELAY_MS = 10_000;
 const CHECK_INTERVAL_MS = 6 * 60 * 60_000;
 
 // Updater errors can include whole HTTP responses; the app keeps only the first line.
 const summary = (error) =>
-  ((error instanceof Error ? error.message : "") || "Update check failed")
+  ((error instanceof Error ? error.message : "") || t("updater.checkFailed"))
     .split("\n")[0]
     .trim()
-    .slice(0, 200) || "Update check failed";
+    .slice(0, 200) || t("updater.checkFailed");
 
 function createUpdater({ autoUpdater, currentVersion, enabled, onChange, log = () => {} }) {
   let state = {

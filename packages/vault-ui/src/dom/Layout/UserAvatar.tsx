@@ -1,7 +1,7 @@
 import { Avatar } from "@mui/material";
 
-// Shown while the server hasn't said who owns the vault yet.
-export const FALLBACK_OWNER_NAME = "Painter";
+// Translate this key at render while the server hasn't said who owns the vault yet.
+export const FALLBACK_OWNER_NAME = "layoutPainter" as const;
 
 // The owner's initial on a gold disc, used in the navigation and in Settings.
 export function UserAvatar({ name, size = 36 }: { name: string; size?: number }) {

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
@@ -26,6 +27,7 @@ type DetailProps = {
 };
 
 export function PaintDetailsModal(props: DetailProps) {
+  const { t } = useTranslation("components");
   const detail = usePaintDetail(props.paint.id);
   const { setPaintState } = usePaintStock();
   const stock = useFragment({
@@ -43,11 +45,11 @@ export function PaintDetailsModal(props: DetailProps) {
         onClose={props.onClose}
       >
         {detail.error ? (
-          <Alert severity="error" action={<Button onClick={detail.refresh}>Retry</Button>}>
+          <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
             {detail.error.message}
           </Alert>
         ) : detail.data ? (
-          <Alert severity="info">This paint is no longer available.</Alert>
+          <Alert severity="info">{t("thisPaintIsNoLongerAvailable")}</Alert>
         ) : (
           <PageSkeleton page="paint-detail" />
         )}
@@ -117,6 +119,7 @@ function PaintDetailsView({
   hasMoreUsedBy?: boolean;
   loadMoreUsedBy?(): void;
 }) {
+  const { t } = useTranslation("components");
   const [showSubstitutions, setShowSubstitutions] = useState(false);
   const state = isPaintOwned(rec?.state ?? null, rec?.stockLevel ?? null, rec?.quantity ?? 0)
     ? "OWNED"
@@ -131,17 +134,17 @@ function PaintDetailsView({
   ][] = [
     [
       "OWNED",
-      "Owned",
+      t("owned"),
       <Check key="o" size={18} strokeWidth={3} />,
       { bgcolor: "var(--ok-soft)", color: "var(--ok)" },
     ],
     [
       "WISHLIST",
-      "Wishlist",
+      t("wishlist"),
       <Heart key="w" size={18} />,
       { bgcolor: "var(--rust-soft)", color: "var(--rust)" },
     ],
-    ["UNTRACKED", "Not owned", <Minus key="u" size={18} />, undefined],
+    ["UNTRACKED", t("notOwned"), <Minus key="u" size={18} />, undefined],
   ];
   return (
     <Modal
@@ -203,7 +206,7 @@ function PaintDetailsView({
           )}
         </Box>
         {error && (
-          <Alert severity="error" action={<Button onClick={refresh}>Retry</Button>}>
+          <Alert severity="error" action={<Button onClick={refresh}>{t("retry")}</Button>}>
             {error.message}
           </Alert>
         )}
@@ -221,7 +224,7 @@ function PaintDetailsView({
               v === "OWNED" ? Math.max(1, rec?.quantity ?? 0) : undefined,
             );
           }}
-          aria-label={`State for ${paint.name}`}
+          aria-label={t("paintStateLabel", { name: paint.name })}
         >
           {options.map(([key, label, icon, active]) => (
             <ToggleButton
@@ -270,7 +273,7 @@ function PaintDetailsView({
                   lineHeight: 10 / 7,
                 }}
               >
-                Bottles on hand
+                {t("bottlesOnHand")}
               </Box>
               <Box
                 component="small"
@@ -278,7 +281,7 @@ function PaintDetailsView({
                   color: "var(--ink-faint)",
                 }}
               >
-                {rec.stockLevel === "LOW" ? "Running low" : "In stock"}
+                {rec.stockLevel === "LOW" ? t("runningLow") : t("inStock")}
               </Box>
             </span>
             <QuantityCounter
@@ -293,12 +296,14 @@ function PaintDetailsView({
         {activeSubstitution && (
           <Alert severity={brokenReason ? "error" : available ? "success" : "warning"} variant="outlined">
             {brokenReason
-              ? `Broken substitution: ${brokenReason === "empty" ? "empty recipe" : "circular recipe"}.`
+              ? brokenReason === "empty"
+                ? t("brokenEmptySubstitution")
+                : t("brokenCircularSubstitution")
               : blocked
-                ? "Unavailable: a substitution ingredient has a broken recipe."
+                ? t("unavailableASubstitutionIngredientHasABrokenRecipe")
                 : available
-                  ? `Available through ${activeSubstitution.name}. All substitution paints are on hand.`
-                  : `${activeSubstitution.name} is active, but at least one substitution paint is missing.`}
+                  ? t("substitutionAllPaintsAvailable", { name: activeSubstitution.name })
+                  : t("activeSubstitutionMissingPaint", { name: activeSubstitution.name })}
           </Alert>
         )}
         {/* All actions share one row of equal-width buttons; they stack on phones. */}
@@ -315,7 +320,7 @@ function PaintDetailsView({
               width: "100%",
             }}
           >
-            Paint substitutions ({substitutionCount})
+            {t("paintSubstitutionCount", { count: substitutionCount })}
           </Button>
           {paint.sourceUrl && (
             <Button
@@ -329,7 +334,7 @@ function PaintDetailsView({
                 width: "100%",
               }}
             >
-              Product page
+              {t("productPage")}
             </Button>
           )}
           {paint.isCustom && (
@@ -342,7 +347,7 @@ function PaintDetailsView({
                 width: "100%",
               }}
             >
-              Edit paint
+              {t("editPaint")}
             </Button>
           )}
         </Box>
@@ -366,7 +371,7 @@ function PaintDetailsView({
               color: "var(--ink-faint)",
             }}
           >
-            Used in
+            {t("usedIn")}
           </Box>
           {usedBy.length ? (
             <Box
@@ -401,12 +406,12 @@ function PaintDetailsView({
                 color: "var(--ink-faint)",
               }}
             >
-              Not part of any project recipe yet.
+              {t("notPartOfAnyProjectRecipeYet")}
             </Box>
           )}
           {hasMoreUsedBy && (
             <Button onClick={loadMoreUsedBy} disabled={loading}>
-              Load more projects
+              {t("loadMoreProjects")}
             </Button>
           )}
         </Box>

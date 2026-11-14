@@ -68,10 +68,14 @@ test("stock writes serialize per resource and failed older edits never undo newe
   assert.equal(quantity(), 3);
   await turn();
   assert.equal(variables.length, 1);
-  first.resolve(Response.json({ errors: [{ message: "first save failed" }] }));
+  first.resolve(
+    Response.json({
+      errors: [{ message: "first save failed", extensions: { errorCode: "BAD_USER_INPUT" } }],
+    }),
+  );
   await beganSecond.promise;
   assert.equal(quantity(), 3);
-  assert.deepEqual(errors, ["first save failed"]);
+  assert.deepEqual(errors, ["Check the entered information and try again."]);
   second.resolve(response(3, "2"));
   await turn();
   await turn();

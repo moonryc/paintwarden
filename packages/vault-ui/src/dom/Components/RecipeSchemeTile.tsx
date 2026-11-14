@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ButtonBase, Card } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -50,6 +51,7 @@ export function RecipeSchemeTileView({
   entries: SchemeOrderEntry[];
   paints: Paint[];
 }) {
+  const { t } = useTranslation("components");
   const content = (
     <>
       <SchemeSwatchView entries={entries} paints={paints} size="lg" />
@@ -62,7 +64,7 @@ export function RecipeSchemeTileView({
           {scheme.name}
         </Box>
         <Box component="span" sx={{ display: "block", fontSize: 12, color: "var(--ink-faint)" }}>
-          {paintCount} paint{paintCount === 1 ? "" : "s"}
+          {t("paintCount", { count: paintCount })}
         </Box>
       </Box>
     </>
@@ -88,8 +90,8 @@ export function RecipeSchemeTileView({
           <ButtonBase
             className="scheme-remove"
             onClick={onRemove}
-            aria-label={`Remove ${scheme.name} from miniature`}
-            title="Remove from miniature"
+            aria-label={t("removeSchemeFromMiniature", { name: scheme.name })}
+            title={t("removeFromMiniature")}
             sx={{
               position: "absolute",
               top: -8,
@@ -118,7 +120,7 @@ export function RecipeSchemeTileView({
         <ButtonBase onClick={onOpen} sx={{ ...tileSx, "&:hover": { backgroundColor: "var(--sunken)" } }}>
           {content}
           <Box component="span" sx={visuallyHiddenSx}>
-            , open scheme
+            {t("openScheme")}
           </Box>
         </ButtonBase>
       )}

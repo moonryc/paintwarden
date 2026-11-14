@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
@@ -57,7 +58,7 @@ export function useOwnedPaintOptions(search: string) {
         variables: { search },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Owned paints response was empty");
+      if (!data) throw new Error(i18n.t("shell:ownedPaintsResponseWasEmpty"));
       return data.ownedPaintOptions;
     },
     [search],

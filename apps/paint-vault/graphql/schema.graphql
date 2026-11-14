@@ -404,6 +404,14 @@ type SourceDependency {
   repository: String!
   minimumVersion: String
 }
+type ErrorParameter {
+  name: String!
+  value: String!
+}
+type PublicError {
+  code: String!
+  parameters: [ErrorParameter!]!
+}
 type CatalogSource {
   id: ID!
   repository: String!
@@ -414,6 +422,7 @@ type CatalogSource {
   attribution: String
   dependencies: [SourceDependency!]!
   lastError: String
+  lastErrorInfo: PublicError
   logoUrl: String
   counts: SourceItemCounts!
 }

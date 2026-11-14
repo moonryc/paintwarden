@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { imageUrl } from "../utils/image-cache";
 import { Avatar, Chip, Tooltip } from "@mui/material";
 
@@ -6,7 +7,8 @@ import { CHIP_HEIGHT } from "../utils/chip-sizes";
 // Gold chip naming the plugin an item was installed from, led by the plugin's logo.svg (or
 // its first letter when it has none); hover shows the full name.
 export function PluginChip({ name, logoUrl }: { name?: string; logoUrl?: string | null }) {
-  const label = name || "Catalog source";
+  const { t } = useTranslation("components");
+  const label = name || t("catalogSource");
   return (
     <Tooltip title={label} describeChild>
       <Chip

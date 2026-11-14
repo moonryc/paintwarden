@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Autocomplete, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -40,6 +41,7 @@ function PaintAutocompleteView<T extends PaintOption>({
   loading,
   error,
 }: PickerProps<T> & { matches: T[]; loading?: boolean; error?: Error | null }) {
+  const { t } = useTranslation("components");
   return (
     <Autocomplete
       fullWidth
@@ -53,7 +55,7 @@ function PaintAutocompleteView<T extends PaintOption>({
       getOptionLabel={(paint) => paint.name}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       loading={loading}
-      noOptionsText={error ? "Could not load paints. Try changing the search." : "No more paints match."}
+      noOptionsText={error ? t("couldNotLoadPaintsTryChangingTheSearch") : t("noMorePaintsMatch")}
       onInputChange={(_, value, reason) => {
         if (reason === "input" || reason === "clear") onQueryChange(value);
       }}
@@ -63,8 +65,8 @@ function PaintAutocompleteView<T extends PaintOption>({
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Add paint"
-          placeholder="Search paint, brand, or range…"
+          label={t("addPaint")}
+          placeholder={t("searchPaintBrandOrRange")}
           sx={{ "& .MuiInputLabel-root.Mui-focused:not(.Mui-error)": { color: "var(--brand-text)" } }}
           error={Boolean(error)}
           helperText={error?.message}

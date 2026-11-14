@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import type { TextFieldProps } from "@mui/material";
@@ -5,6 +6,7 @@ import { IconButton, InputAdornment, TextField } from "@mui/material";
 import { useState } from "react";
 
 export function PasswordField(props: Omit<TextFieldProps, "type" | "slotProps">) {
+  const { t } = useTranslation("components");
   const [visible, setVisible] = useState(false);
   return (
     <TextField
@@ -18,7 +20,7 @@ export function PasswordField(props: Omit<TextFieldProps, "type" | "slotProps">)
               <IconButton
                 type="button"
                 edge="end"
-                aria-label={visible ? "Hide password" : "Show password"}
+                aria-label={visible ? t("hidePassword") : t("showPassword")}
                 aria-pressed={visible}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => setVisible((current) => !current)}

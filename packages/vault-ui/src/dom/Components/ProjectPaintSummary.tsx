@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Box, Button } from "@mui/material";
 import { useState } from "react";
 
@@ -34,6 +35,7 @@ export function ProjectPaintSummaryView({
   paintStates,
   onSetPaintState,
 }: ProjectPaintSummaryViewProps) {
+  const { t } = useTranslation("components");
   const [fixPaint, setFixPaint] = useState<Paint | null>(null);
   const broken = missing.some((paint) => issues?.get(paint.id)?.has("brokenSubstitution"));
   const needsStock = (paint: Paint) => (issues ? Boolean(issues.get(paint.id)?.has("missingStock")) : true);
@@ -47,16 +49,20 @@ export function ProjectPaintSummaryView({
       <ProgressSummaryCard
         title={
           ready
-            ? "Palette ready — go paint!"
-            : `${missing.length} paint${missing.length === 1 ? "" : "s"} ${broken ? (missing.length === 1 ? "needs attention" : "need attention") : "to gather"}`
+            ? t("paletteReadyGoPaint")
+            : broken
+              ? t("paintsNeedAttention", { count: missing.length })
+              : t("paintsToGather", { count: missing.length })
         }
-        subtitle={`${have} of ${total} ${broken ? "ready to use" : "on hand"}`}
+        subtitle={broken ? t("paintReadyRatio", { have, total }) : t("paintOnHandRatio", { have, total })}
         progress={(have / total) * 100}
-        progressLabel={`${have} of ${total} paints ${broken ? "ready to use" : "on hand"}`}
+        progressLabel={
+          broken ? t("paintsReadyRatio", { have, total }) : t("paintsOnHandRatio", { have, total })
+        }
         hint={
           broken
-            ? "Fix broken substitutions; buying the original paint won’t repair them."
-            : "Select a paint to view details or update your wishlist."
+            ? t("fixBrokenSubstitutionsBuyingTheOriginalPaintWonT")
+            : t("selectAPaintToViewDetailsOrUpdateYour")
         }
         action={
           <Button
@@ -66,7 +72,7 @@ export function ProjectPaintSummaryView({
             disabled={notWishlisted.length === 0}
             onClick={() => onAddAllToWishlist(notWishlisted)}
           >
-            Wishlist all
+            {t("wishlistAll")}
           </Button>
         }
         complete={ready}
@@ -78,20 +84,20 @@ export function ProjectPaintSummaryView({
             <PaintChecklistItem
               key={paint.id}
               paint={paint}
-              subtitle={wished ? "On your wishlist" : paint.range}
+              subtitle={wished ? t("onYourWishlist") : paint.range}
               wishlisted={wished}
-              selectAction="open details"
+              selectAction={t("openDetails2")}
               onSelect={() => onOpenPaint(paint.id)}
               actions={
                 <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-                  {isBroken && <StatusChip tone="rust">Broken substitution</StatusChip>}
+                  {isBroken && <StatusChip tone="rust">{t("brokenSubstitution")}</StatusChip>}
                   {isBroken && (
                     <Button
                       size="small"
-                      aria-label={`Fix substitution for ${paint.name}`}
+                      aria-label={t("fixPaintSubstitution", { name: paint.name })}
                       onClick={() => setFixPaint(paint)}
                     >
-                      Fix substitution
+                      {t("fixSubstitution")}
                     </Button>
                   )}
                   {needsStock(paint) && (
@@ -99,9 +105,9 @@ export function ProjectPaintSummaryView({
                       wishlist={{
                         active: wished,
                         label: wished
-                          ? `Remove ${paint.name} from wishlist`
-                          : `Add ${paint.name} to wishlist`,
-                        title: wished ? "Remove from wishlist" : "Add to wishlist",
+                          ? t("removePaintFromWishlist", { name: paint.name })
+                          : t("addPaintToWishlist", { name: paint.name }),
+                        title: wished ? t("removeFromWishlist") : t("addToWishlist"),
                         onClick: () => onSetPaintState(paint.id, wished ? null : "WISHLIST"),
                       }}
                     />

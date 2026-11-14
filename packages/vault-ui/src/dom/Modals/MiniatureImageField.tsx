@@ -1,3 +1,5 @@
+import { translateServerError } from "@paint-vault/i18n/runtime";
+import { useTranslation } from "react-i18next";
 import { imageUrl } from "../utils/image-cache";
 import { Alert, Button } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -28,6 +30,7 @@ export function MiniatureImageField({
   // The photo of the mini-template being added from.
   templateImageUrl: string;
 }) {
+  const { t } = useTranslation("components");
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const [importing, setImporting] = useState(false),
     [rotating, setRotating] = useState(false),
@@ -53,7 +56,7 @@ export function MiniatureImageField({
       onImageChange(file);
       onRemoveImageChange(false);
       setImageError("");
-    } else if (file) setImageError("Choose an image file");
+    } else if (file) setImageError(t("chooseAnImageFile"));
   };
   const importImageUrl = async (url: string) => {
     setImporting(true);
@@ -66,12 +69,12 @@ export function MiniatureImageField({
       });
       if (!response.ok) {
         const result = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(result.error || "Could not import that image");
+        throw new Error(translateServerError(result));
       }
       const blob = await response.blob();
       chooseImage(new File([blob], imageNameFromUrl(url), { type: blob.type || "image/jpeg" }));
     } catch (error) {
-      setImageError(error instanceof Error ? error.message : "Could not import that image");
+      setImageError(error instanceof Error ? error.message : t("couldNotImportThatImage"));
     } finally {
       setImporting(false);
     }
@@ -125,7 +128,7 @@ export function MiniatureImageField({
           else {
             const url = droppedImageUrl(e.dataTransfer);
             if (url) void importImageUrl(url);
-            else setImageError("Drop an image file or a direct image link");
+            else setImageError(t("dropAnImageFileOrADirectImageLink"));
           }
         }}
       >
@@ -133,7 +136,7 @@ export function MiniatureImageField({
           <Box
             component="img"
             src={imageUrl(previewUrl)}
-            alt="Project preview"
+            alt={t("projectPreview")}
             draggable={false}
             sx={{
               pointerEvents: "none",
@@ -196,14 +199,14 @@ export function MiniatureImageField({
             }}
           >
             {rotating
-              ? "Rotating photo…"
+              ? t("rotatingPhoto")
               : importing
-                ? "Importing photo…"
+                ? t("importingPhoto")
                 : dragging
-                  ? "Drop photo here"
+                  ? t("dropPhotoHere")
                   : previewUrl
-                    ? "Drop a replacement photo"
-                    : "Drag and drop a project photo"}
+                    ? t("dropAReplacementPhoto")
+                    : t("dragAndDropAProjectPhoto")}
           </Box>
           <Box
             component="span"
@@ -213,7 +216,7 @@ export function MiniatureImageField({
               color: "var(--ink-faint)",
             }}
           >
-            Drop an image file or image link, or click to choose
+            {t("dropAnImageFileOrImageLinkOrClick")}
           </Box>
         </Box>
         {previewUrl && (
@@ -229,7 +232,7 @@ export function MiniatureImageField({
               try {
                 onImageChange(await rotateImage(image ?? previewUrl, authHeaders()));
               } catch (error) {
-                setImageError(error instanceof Error ? error.message : "Could not rotate photo");
+                setImageError(error instanceof Error ? error.message : t("couldNotRotatePhoto"));
               } finally {
                 setRotating(false);
               }
@@ -241,7 +244,7 @@ export function MiniatureImageField({
               left: "0.75rem",
             }}
           >
-            Rotate
+            {t("rotate")}
           </Button>
         )}
         {image && savedImageUrl && (
@@ -260,7 +263,7 @@ export function MiniatureImageField({
               bottom: "0.75rem",
             }}
           >
-            Use current photo
+            {t("useCurrentPhoto")}
           </Button>
         )}
         {previewUrl && (!image || !savedImageUrl) && (
@@ -281,7 +284,7 @@ export function MiniatureImageField({
               color: "var(--rust)",
             }}
           >
-            Remove photo
+            {t("removePhoto")}
           </Button>
         )}
         {removeImage && savedImageUrl && (
@@ -297,7 +300,7 @@ export function MiniatureImageField({
               bottom: "0.75rem",
             }}
           >
-            Keep current photo
+            {t("keepCurrentPhoto")}
           </Button>
         )}
         <input

@@ -216,9 +216,9 @@ type Story = StoryObj<typeof meta>;
 
 export const FullyPagedDraftSurvivesRefresh: Story = {
   play: async ({ args, userEvent }) => {
-    await waitFor(() => expect(screen.getByText("LEGACY CUSTOM STAGE")).toBeVisible());
+    await waitFor(() => expect(screen.getByText("Legacy custom stage")).toBeVisible());
     await expect(screen.getByText(paint.name)).toBeVisible();
-    await expect(screen.getByRole("img", { name: "Projected scheme finished example" })).toBeVisible();
+    await expect(screen.getByRole("img", { name: "Projected scheme FINISHED example" })).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "Edit scheme" }));
     const name = screen.getByRole("textbox", { name: "Scheme name" });
     await userEvent.clear(name);
@@ -260,7 +260,7 @@ export const ReadFailureAndRetry: Story = {
     await expect(await screen.findByRole("alert")).toHaveTextContent("Scheme refresh interrupted");
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(screen.getByText(paint.name)).toBeVisible());
-    await waitFor(() => expect(screen.getByText("LEGACY CUSTOM STAGE")).toBeVisible());
+    await waitFor(() => expect(screen.getByText("Legacy custom stage")).toBeVisible());
     await expect(rest).not.toHaveBeenCalled();
   },
 };

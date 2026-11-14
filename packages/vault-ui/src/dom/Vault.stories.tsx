@@ -49,7 +49,7 @@ export const Paints = page("Paints", /Paints/);
 export const Wishlist = page("Wishlist", /Wishlist/);
 export const Schemes = page("Schemes", /Schemes/);
 export const Templates = page("Templates", /Templates/);
-export const PaintTools = page("Paint Tools", /Paint Tools/);
+export const PaintTools = page("Paint Tools", /Paint tools/i);
 export const Settings = page("Data & settings", /Data & settings/);
 
 export const Plugins: Story = {

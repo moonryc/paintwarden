@@ -1,16 +1,18 @@
 import { Alert, Autocomplete, Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
+import { isColorCategory } from "@paint-vault/core/color-categories";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
+import { schemeSummaryModel, paintModel } from "../../graphql/miniature-scheme-model";
+import { useSchemes, useSchemePaintOptions } from "../../graphql/schemes-hooks";
 import { Layers, Plus, SearchX } from "../../icons";
 import { ColorSchemesDialog } from "../../Modals/ColorSchemesDialog";
-import { useSchemes, useSchemePaintOptions } from "../../graphql/schemes-hooks";
-import { schemeSummaryModel, paintModel } from "../../graphql/miniature-scheme-model";
 import { breakpoints, up } from "../../theme-tokens";
 import type { Paint } from "../../types";
 import { schemeGridWindow } from "../../utils/scheme-grid-window";
@@ -18,15 +20,36 @@ import { useInitialPageLoading } from "../useInitialPageLoading";
 
 import { SchemeCard } from "./SchemeCard";
 
+const categoryKeys = {
+  RED: "schemesCategoryRed",
+  PINK: "schemesCategoryPink",
+  ORANGE: "schemesCategoryOrange",
+  YELLOW: "schemesCategoryYellow",
+  GREEN: "schemesCategoryGreen",
+  TURQUOISE: "schemesCategoryTurquoise",
+  BLUE: "schemesCategoryBlue",
+  PURPLE: "schemesCategoryPurple",
+  BROWN: "schemesCategoryBrown",
+  BLACK: "schemesCategoryBlack",
+  GREY: "schemesCategoryGrey",
+  WHITE: "schemesCategoryWhite",
+  GOLD: "schemesCategoryGold",
+  SILVER: "schemesCategorySilver",
+  BONE: "schemesCategoryBone",
+  FLESH: "schemesCategoryFlesh",
+} as const;
+
 type Readiness = "ALL" | "READY" | "MISSING";
 
-const readinessOptions: [Readiness, string][] = [
-  ["ALL", "All"],
-  ["READY", "Ready to paint"],
-  ["MISSING", "Missing paints"],
-];
+const readinessOptions = [
+  ["ALL", "schemesAll"],
+  ["READY", "schemesReady"],
+  ["MISSING", "schemesMissing"],
+] as const;
 
 export function ColorSchemesPage() {
+  const { t, i18n } = useTranslation("pages");
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
   const [search, setSearch] = useState(""),
     [categoryFilter, setCategoryFilter] = useState("ALL"),
@@ -164,12 +187,12 @@ export function ColorSchemesPage() {
   return (
     <Box sx={{ "& .MuiFormLabel-root.Mui-focused": { color: "var(--ink)" } }}>
       <PageHeader
-        eyebrow="Reusable palettes"
-        title="Schemes"
-        body="Ordered groups of paints you can add to any miniature in one tap."
+        eyebrow={t("schemesEyebrow")}
+        title={t("schemesTitle")}
+        body={t("schemesDescription")}
         action={
           <Button variant="contained" onClick={() => setEditing(null)} startIcon={<Plus size={16} />}>
-            New scheme
+            {t("schemesNew")}
           </Button>
         }
       />
@@ -184,7 +207,7 @@ export function ColorSchemesPage() {
           <FilterToolbar
             search={search}
             setSearch={setSearch}
-            placeholder="Search schemes…"
+            placeholder={t("schemesSearch")}
             singleLineFilters
           >
             <Box
@@ -214,31 +237,38 @@ export function ColorSchemesPage() {
                   select
                   fullWidth
                   size="small"
-                  label="Plugin"
+                  label={t("schemesPlugin")}
                   value={sourceFilter}
                   onChange={(event) => setSourceFilter(event.target.value)}
                 >
-                  <MenuItem value="ALL">All plugins</MenuItem>
+                  <MenuItem value="ALL">{t("schemesAllPlugins")}</MenuItem>
                   {sourceOptions.map((source) => (
                     <MenuItem key={source.key} value={source.key}>
                       {source.label}
                     </MenuItem>
                   ))}
-                  <MenuItem value="NONE">Not from a plugin</MenuItem>
+                  <MenuItem value="NONE">{t("schemesNoPlugin")}</MenuItem>
                 </TextField>
               )}
               <TextField
                 select
                 fullWidth
                 size="small"
-                label="Color category"
+                label={t("schemesColorCategory")}
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
-                <MenuItem value="ALL">All ({globalCount})</MenuItem>
+                <MenuItem value="ALL">{t("schemesAllCount", { count: number.format(globalCount) })}</MenuItem>
                 {usedCategories.map((category) => (
                   <MenuItem key={category.key} value={category.key || "UNCATEGORIZED"}>
-                    {category.label} ({category.count})
+                    {t("schemesFilterCount", {
+                      label: isColorCategory(category.key)
+                        ? t(categoryKeys[category.key])
+                        : category.key === ""
+                          ? t("schemesUncategorized")
+                          : category.label,
+                      count: number.format(category.count),
+                    })}
                   </MenuItem>
                 ))}
               </TextField>
@@ -246,13 +276,16 @@ export function ColorSchemesPage() {
                 select
                 fullWidth
                 size="small"
-                label="Status"
+                label={t("schemesStatus")}
                 value={readiness}
                 onChange={(e) => setReadiness(e.target.value as Readiness)}
               >
                 {readinessOptions.map(([value, label]) => (
                   <MenuItem key={value} value={value}>
-                    {label} ({readinessCount(value)})
+                    {t("schemesFilterCount", {
+                      label: t(label),
+                      count: number.format(readinessCount(value)),
+                    })}
                   </MenuItem>
                 ))}
               </TextField>
@@ -264,9 +297,7 @@ export function ColorSchemesPage() {
                 filterSelectedOptions
                 options={paintMatches}
                 loading={paintOptions.loading || paintQuery !== debouncedPaintQuery}
-                noOptionsText={
-                  paintOptions.error ? "Could not load paints. Try again." : "No more paints match."
-                }
+                noOptionsText={paintOptions.error ? t("schemesPaintsLoadError") : t("schemesNoPaintMatches")}
                 inputValue={paintQuery}
                 onInputChange={(_, value) => setPaintQuery(value)}
                 value={selectedPaints}
@@ -277,8 +308,8 @@ export function ColorSchemesPage() {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Uses paints"
-                    placeholder="Search paints…"
+                    label={t("schemesUsesPaints")}
+                    placeholder={t("schemesSearchPaints")}
                     error={Boolean(paintOptions.error)}
                     helperText={paintOptions.error?.message}
                   />
@@ -311,13 +342,13 @@ export function ColorSchemesPage() {
             </Box>
           </FilterToolbar>
           {result.error && (
-            <Alert severity="error" action={<Button onClick={result.refetch}>Retry</Button>}>
+            <Alert severity="error" action={<Button onClick={result.refetch}>{t("schemesRetry")}</Button>}>
               {result.error.message}
             </Alert>
           )}
           {result.loading && (
             <Box role="status" sx={{ mb: 2 }}>
-              Loading schemes…
+              {t("schemesLoading")}
             </Box>
           )}
           {schemes.length ? (
@@ -372,15 +403,15 @@ export function ColorSchemesPage() {
           ) : !result.loading && !result.error ? (
             <EmptyState
               icon={<SearchX size={27} />}
-              title="No color schemes match"
+              title={t("schemesNoMatches")}
               body={
                 readiness === "READY" && !q && categoryFilter === "ALL"
-                  ? "No scheme has every paint marked as owned yet. Mark paints as owned on the Paints page."
-                  : "Try another name, color category, or paint filter."
+                  ? t("schemesNoReady")
+                  : t("schemesTryFilters")
               }
               action={
                 <Button variant="outlined" onClick={clearFilters}>
-                  Clear filters
+                  {t("schemesClearFilters")}
                 </Button>
               }
             />
@@ -388,7 +419,7 @@ export function ColorSchemesPage() {
           {result.hasNextPage && (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Button onClick={result.loadMore} disabled={result.loading}>
-                Load more schemes
+                {t("schemesLoadMore")}
               </Button>
             </Box>
           )}
@@ -396,11 +427,11 @@ export function ColorSchemesPage() {
       ) : (
         <EmptyState
           icon={<Layers size={27} />}
-          title="No color schemes yet"
-          body="Install a plugin with ready-made schemes from Data & settings → Plugins, or create a named palette and arrange its paints in the order you use them."
+          title={t("schemesEmptyTitle")}
+          body={t("schemesEmptyBody")}
           action={
             <Button variant="contained" onClick={() => setEditing(null)} startIcon={<Plus size={16} />}>
-              Create your first scheme
+              {t("schemesCreateFirst")}
             </Button>
           }
         />

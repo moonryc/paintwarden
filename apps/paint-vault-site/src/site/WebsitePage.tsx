@@ -4,10 +4,21 @@ import DownloadIcon from "@mui/icons-material/Download";
 import GitHub from "@mui/icons-material/GitHub";
 import MenuIcon from "@mui/icons-material/Menu";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, Button, Container, CssBaseline, IconButton, ThemeProvider, Typography } from "@mui/material";
-import { useState } from "react";
+import {
+  Box,
+  Button,
+  Container,
+  CssBaseline,
+  IconButton,
+  MenuItem,
+  TextField,
+  ThemeProvider,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 
 import { Wordmark } from "./components/primitives";
+import { siteT as t, useSiteLanguage, languages } from "./i18n";
 import { koFi, releases, repository } from "./links";
 import { DocsPage } from "./pages/DocsPage";
 import { DownloadPage } from "./pages/DownloadPage";
@@ -17,18 +28,26 @@ import { theme } from "./theme";
 
 export type Page = "home" | "docs" | "faq" | "download";
 
-const nav: { label: string; href: string; page: Page }[] = [
-  { label: "Overview", href: "/", page: "home" },
-  { label: "How to use", href: "/docs/", page: "docs" },
-  { label: "FAQ", href: "/faq/", page: "faq" },
-  { label: "Download", href: "/download/", page: "download" },
+const nav = (): { label: string; href: string; page: Page }[] => [
+  { label: t("website.overview"), href: "/", page: "home" },
+  { label: t("website.howToUse"), href: "/docs/", page: "docs" },
+  { label: t("website.faq"), href: "/faq/", page: "faq" },
+  { label: t("website.download"), href: "/download/", page: "download" },
 ];
 
 const focusRing = {
   "&:focus-visible": { outline: "2px solid var(--brand-text)", outlineOffset: 2 },
 };
 
-function Header({ page }: { page: Page }) {
+function Header({
+  page,
+  language,
+  setLanguage,
+}: {
+  page: Page;
+  language: string;
+  setLanguage: (language: string) => Promise<void>;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   return (
     <Box
@@ -46,17 +65,17 @@ function Header({ page }: { page: Page }) {
         <Box
           component="a"
           href="/"
-          aria-label="Paint Vault home"
+          aria-label={t("website.paintVaultHome")}
           sx={{ textDecoration: "none", borderRadius: "12px", mr: "auto", ...focusRing }}
         >
           <Wordmark />
         </Box>
         <Box
           component="nav"
-          aria-label="Main navigation"
+          aria-label={t("website.mainNavigation")}
           sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}
         >
-          {nav.map((item) => {
+          {nav().map((item) => {
             const current = page === item.page;
             return (
               <Box
@@ -92,10 +111,26 @@ function Header({ page }: { page: Page }) {
           startIcon={<DownloadIcon />}
           sx={{ display: { xs: "none", md: "inline-flex" }, ml: 1.5 }}
         >
-          Get the app
+          {t("website.getTheApp")}
         </Button>
+        <TextField
+          select
+          size="small"
+          label={t("website.language")}
+          value={language}
+          onChange={(event) => {
+            void setLanguage(event.target.value);
+          }}
+          sx={{ minWidth: 108, maxWidth: { xs: 140, md: 180 } }}
+        >
+          {languages.map(({ code, name }) => (
+            <MenuItem key={code} value={code}>
+              {name}
+            </MenuItem>
+          ))}
+        </TextField>
         <IconButton
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
+          aria-label={menuOpen ? t("website.closeMenu") : t("website.openMenu")}
           aria-expanded={menuOpen}
           aria-controls="mobile-navigation"
           onClick={() => setMenuOpen(!menuOpen)}
@@ -114,11 +149,11 @@ function Header({ page }: { page: Page }) {
         <Box
           component="nav"
           id="mobile-navigation"
-          aria-label="Mobile navigation"
+          aria-label={t("website.mobileNavigation")}
           sx={{ display: { md: "none" }, px: 2, pb: 2, pt: 1, borderTop: "1px solid var(--line)" }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
-            {nav.map((item) => {
+            {nav().map((item) => {
               const current = page === item.page;
               return (
                 <Box
@@ -150,7 +185,7 @@ function Header({ page }: { page: Page }) {
             startIcon={<DownloadIcon />}
             sx={{ mt: 1.5 }}
           >
-            Get the app
+            {t("website.getTheApp")}
           </Button>
         </Box>
       )}
@@ -188,7 +223,7 @@ function Footer() {
         <Box sx={{ gridColumn: { sm: "1 / -1", md: "auto" } }}>
           <Wordmark />
           <Typography sx={{ color: "var(--ink-faint)", fontSize: 14, mt: 2, maxWidth: 320, lineHeight: 1.6 }}>
-            Your paints, projects, and recipes in one quiet place, on your desktop or your own server.
+            {t("website.yourPaintsProjectsAndRecipesInOneQuietPlaceOn")}
           </Typography>
         </Box>
         <Box>
@@ -202,10 +237,10 @@ function Footer() {
               mb: 1.5,
             }}
           >
-            Product
+            {t("website.product")}
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1.25 }}>
-            {nav.map((item) => (
+            {nav().map((item) => (
               <li key={item.href}>
                 <Box component="a" href={item.href} sx={footerLink}>
                   {item.label}
@@ -225,22 +260,22 @@ function Footer() {
               mb: 1.5,
             }}
           >
-            Project
+            {t("website.project")}
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1.25 }}>
             <li>
               <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
-                <GitHub sx={{ fontSize: 17 }} /> Source code
+                <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}
               </Box>
             </li>
             <li>
               <Box component="a" href={releases} target="_blank" rel="noreferrer" sx={footerLink}>
-                <OpenInNewIcon sx={{ fontSize: 17 }} /> Releases
+                <OpenInNewIcon sx={{ fontSize: 17 }} /> {t("website.releases")}
               </Box>
             </li>
             <li>
               <Box component="a" href={koFi} target="_blank" rel="noopener noreferrer" sx={footerLink}>
-                <CoffeeOutlined sx={{ fontSize: 17 }} /> Support on Ko-fi
+                <CoffeeOutlined sx={{ fontSize: 17 }} /> {t("website.supportOnKoFi")}
               </Box>
             </li>
           </Box>
@@ -248,8 +283,7 @@ function Footer() {
       </Container>
       <Box sx={{ borderTop: "1px solid var(--line)" }}>
         <Container maxWidth="lg" sx={{ py: 2.5, color: "var(--ink-faint)", fontSize: 12 }}>
-          Paint Vault is an independent project and is not affiliated with any paint or miniature maker. Brand
-          and paint names in plugins belong to their owners.
+          {t("website.paintVaultIsAnIndependentProjectAndIsNotAffiliated")}
         </Container>
       </Box>
     </Box>
@@ -257,6 +291,14 @@ function Footer() {
 }
 
 export default function WebsitePage({ page }: { page: Page }) {
+  const { language, setLanguage } = useSiteLanguage();
+  useEffect(() => {
+    document.title = t(`meta.${page}Title`);
+    const description = t(`meta.${page}Description`);
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    document.querySelector('meta[property="og:title"]')?.setAttribute("content", document.title);
+    document.querySelector('meta[property="og:description"]')?.setAttribute("content", description);
+  }, [page, language]);
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -279,9 +321,9 @@ export default function WebsitePage({ page }: { page: Page }) {
             "&:focus": { top: 12 },
           }}
         >
-          Skip to content
+          {t("website.skipToContent")}
         </Box>
-        <Header page={page} />
+        <Header page={page} language={language} setLanguage={setLanguage} />
         <Box component="main" id="main">
           {page === "home" && <HomePage />}
           {page === "docs" && <DocsPage />}

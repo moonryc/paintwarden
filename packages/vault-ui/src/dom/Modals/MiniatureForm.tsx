@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import {
   Alert,
   Autocomplete,
@@ -23,7 +24,7 @@ import type {
   PaintStatus,
   PaintingStatus,
 } from "../types";
-import { STAGES } from "../utils/constants";
+import { getStages } from "../utils/constants";
 
 import { MiniatureImageField } from "./MiniatureImageField";
 
@@ -40,6 +41,7 @@ export function MiniatureForm({
   initial?: Miniature;
   initialTemplateId?: string | null;
 }) {
+  const { t } = useTranslation("components");
   const [busy, setBusy] = useState(false),
     [deleting, setDeleting] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
@@ -92,12 +94,8 @@ export function MiniatureForm({
   const templateMatches = templateCatalog?.templates ?? [];
   return (
     <Modal
-      title={initial ? "Edit miniature" : "Add a miniature"}
-      subtitle={
-        initial
-          ? "Keep the project details current."
-          : "Start from a mini-template or build your own project."
-      }
+      title={initial ? t("editMiniature") : t("addAMiniature")}
+      subtitle={initial ? t("keepTheProjectDetailsCurrent") : t("startFromAMiniTemplateOrBuildYourOwn")}
       onClose={onClose}
     >
       <Box
@@ -165,7 +163,7 @@ export function MiniatureForm({
                     color: "var(--ink-faint)",
                   }}
                 >
-                  Mini-template
+                  {t("miniTemplate")}
                 </Box>
                 <Box
                   component="p"
@@ -177,11 +175,11 @@ export function MiniatureForm({
                     color: "var(--ink-soft)",
                   }}
                 >
-                  Choose a source or personal template to add its name, image, schemes, and paints.
+                  {t("chooseASourceOrPersonalTemplateToAddIts")}
                 </Box>
               </div>
               {!templateCatalog && !templateError && (
-                <CircularProgress size={18} aria-label="Loading templates" />
+                <CircularProgress size={18} aria-label={t("loadingTemplates")} />
               )}
             </Box>
             <Box
@@ -198,7 +196,7 @@ export function MiniatureForm({
                 select
                 fullWidth
                 size="small"
-                label="Category"
+                label={t("category")}
                 value={templateCategory}
                 disabled={!templateCatalog}
                 onChange={(e) => {
@@ -211,7 +209,7 @@ export function MiniatureForm({
                   setFaction("");
                 }}
               >
-                <MenuItem value="ALL">All categories</MenuItem>
+                <MenuItem value="ALL">{t("allCategories")}</MenuItem>
                 {catalogQuery.categories.map((category) => (
                   <MenuItem key={category} value={category}>
                     {category}
@@ -243,13 +241,18 @@ export function MiniatureForm({
                   setTemplateImageUrl(template.imageUrl);
                 }}
                 renderInput={(params) => (
-                  <TextField {...params} size="small" label="Model" placeholder="Search every model…" />
+                  <TextField
+                    {...params}
+                    size="small"
+                    label={t("model")}
+                    placeholder={t("searchEveryModel")}
+                  />
                 )}
               />
             </Box>
             {templateCatalog?.hasNextPage && (
               <Button disabled={catalogQuery.loading} onClick={catalogQuery.loadMore}>
-                Load more models
+                {t("loadMoreModels")}
               </Button>
             )}
             {templateError && (
@@ -262,7 +265,7 @@ export function MiniatureForm({
                       selectedQuery.refetch();
                     }}
                   >
-                    Retry
+                    {t("retry")}
                   </Button>
                 }
                 sx={{
@@ -270,7 +273,7 @@ export function MiniatureForm({
                   marginTop: "0.75rem",
                 }}
               >
-                {templateError}. You can still create a miniature manually.
+                {t("manualMiniatureAfterError", { message: templateError })}
               </Alert>
             )}
             {selectedTemplate && (
@@ -283,8 +286,8 @@ export function MiniatureForm({
                   gap: 0.75,
                 }}
               >
-                <Chip size="small" label={`${selectedTemplate.schemeCount} schemes`} />
-                <Chip size="small" label={`${selectedTemplate.paintCount} paints`} />
+                <Chip size="small" label={t("schemeCount", { count: selectedTemplate.schemeCount })} />
+                <Chip size="small" label={t("paintCount", { count: selectedTemplate.paintCount })} />
                 {selectedTemplate.faction && (
                   <Chip size="small" variant="outlined" label={selectedTemplate.faction} />
                 )}
@@ -303,10 +306,10 @@ export function MiniatureForm({
         <TextField
           required
           fullWidth
-          label="Name"
+          label={t("name")}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Space Marine Captain"
+          placeholder={t("eGSpaceMarineCaptain")}
         />
         <Box
           component="div"
@@ -326,14 +329,14 @@ export function MiniatureForm({
               color: "var(--ink-faint)",
             }}
           >
-            Collection
+            {t("collection")}
           </Box>
           <ToggleButtonGroup
             exclusive
             fullWidth
             value={status}
             onChange={(_, v: PaintStatus | null) => v && setStatus(v)}
-            aria-label="Collection"
+            aria-label={t("collection")}
           >
             <ToggleButton
               value="OWNED"
@@ -353,7 +356,8 @@ export function MiniatureForm({
                 },
               ]}
             >
-              {status === "OWNED" ? <Check size={16} strokeWidth={3} /> : <Archive size={16} />} On my shelf
+              {status === "OWNED" ? <Check size={16} strokeWidth={3} /> : <Archive size={16} />}{" "}
+              {t("onMyShelf")}
             </ToggleButton>
             <ToggleButton
               value="WISHLIST"
@@ -373,19 +377,19 @@ export function MiniatureForm({
                 },
               ]}
             >
-              {status === "WISHLIST" ? <Check size={16} strokeWidth={3} /> : <Heart size={16} />} On my
-              wishlist
+              {status === "WISHLIST" ? <Check size={16} strokeWidth={3} /> : <Heart size={16} />}{" "}
+              {t("onMyWishlist")}
             </ToggleButton>
           </ToggleButtonGroup>
         </Box>
         <TextField
           fullWidth
           select
-          label="Painting stage"
+          label={t("paintingStage")}
           value={paintingStatus}
           onChange={(e) => setPaintingStatus(e.target.value as PaintingStatus)}
         >
-          {STAGES.map(([v, l]) => (
+          {getStages().map(([v, l]) => (
             <MenuItem key={v} value={v}>
               {l}
             </MenuItem>
@@ -395,10 +399,10 @@ export function MiniatureForm({
           fullWidth
           multiline
           minRows={3}
-          label="Notes (optional)"
+          label={t("notesOptional")}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Scheme, army, project notes…"
+          placeholder={t("schemeArmyProjectNotes")}
         />
         <Button
           type="submit"
@@ -408,7 +412,7 @@ export function MiniatureForm({
           startIcon={<Save size={15} />}
           fullWidth
         >
-          Save
+          {t("save")}
         </Button>
         {initial && onDelete && (
           <Button
@@ -430,7 +434,7 @@ export function MiniatureForm({
               });
             }}
           >
-            {confirmDelete ? "Tap again to delete miniature" : "Delete miniature"}
+            {confirmDelete ? t("tapAgainToDeleteMiniature") : t("deleteMiniature")}
           </Button>
         )}
       </Box>

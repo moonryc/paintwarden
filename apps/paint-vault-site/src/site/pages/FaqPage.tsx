@@ -16,74 +16,66 @@ import {
 import type { ReactNode } from "react";
 
 import { IconTile, PageIntro, Surface, serif } from "../components/primitives";
+import { siteT as t } from "../i18n";
 
 type Group = "data" | "desktop" | "tools";
 
-const groups: { id: Group; title: string; icon: ReactNode }[] = [
-  { id: "data", title: "Your data & account", icon: <StorageOutlined /> },
-  { id: "desktop", title: "Desktop app", icon: <DesktopWindowsOutlined /> },
-  { id: "tools", title: "Paints & Paint Tools", icon: <SwapHoriz /> },
+const groups = (): { id: Group; title: string; icon: ReactNode }[] => [
+  { id: "data", title: t("faq.yourDataAccount"), icon: <StorageOutlined /> },
+  { id: "desktop", title: t("faq.desktopApp"), icon: <DesktopWindowsOutlined /> },
+  { id: "tools", title: t("faq.paintsPaintTools"), icon: <SwapHoriz /> },
 ];
 
-const questions: { question: string; answer: string; group: Group }[] = [
+const questions = (): { question: string; answer: string; group: Group }[] => [
   {
-    question: "Where is my vault data stored?",
+    question: t("faq.whereIsMyVaultDataStored"),
     group: "data",
-    answer:
-      "The self-hosted server stores app records in SQLite and uploaded images as files in its data directory. The desktop app uses its own application-data folder on your computer. Your desktop and web vaults are separate unless the desktop app connects to that web server.",
+    answer: t("faq.theSelfHostedServerStoresAppRecordsInSQLiteAnd"),
   },
   {
-    question: "Do I need an account?",
+    question: t("faq.doINeedAnAccount"),
     group: "data",
-    answer:
-      "Each vault has one owner account, created on first use. A server asks for a one-time setup code from its log, so only the person running it can create the owner. The owner can require sign-in, and change the username or password, in Data & settings. If sign-in is turned off, only expose the server on a trusted network or behind an authenticated proxy.",
+    answer: t("faq.eachVaultHasOneOwnerAccountCreatedOnFirstUse"),
   },
   {
-    question: "Can the desktop app connect to my server?",
+    question: t("faq.canTheDesktopAppConnectToMyServer"),
     group: "desktop",
-    answer:
-      "Yes. At first launch, choose the bundled local server or connect to an existing Paint Vault server. You can switch that choice later in Data & settings.",
+    answer: t("faq.yesAtFirstLaunchChooseTheBundledLocalServerOr"),
   },
   {
-    question: "Does the app work offline?",
+    question: t("faq.doesTheAppWorkOffline"),
     group: "desktop",
-    answer:
-      "A desktop vault running on your computer can be used without a separate remote server. A desktop app connected to a remote server needs that server to be reachable. The self-hosted web app needs its server running.",
+    answer: t("faq.aDesktopVaultRunningOnYourComputerCanBeUsed"),
   },
   {
-    question: "Does a backup include my photos?",
+    question: t("faq.doesABackupIncludeMyPhotos"),
     group: "data",
-    answer:
-      "Yes. Export in Data & settings saves one .zip with your records, miniature photos, and installed plugins. Restoring it lets you merge into the current vault or replace it. Your account and password are not included.",
+    answer: t("faq.yesExportInDataSettingsSavesOneZipWithYour"),
   },
   {
-    question: "Where do the paints come from?",
+    question: t("faq.whereDoThePaintsComeFrom"),
     group: "tools",
-    answer:
-      "From plugins. Paint Vault doesn't bundle a catalog, so a new vault starts empty. Open Data & settings → Plugins and add a public GitHub repository or upload a plugin .zip to install its paints, color schemes, and miniature templates.",
+    answer: t("faq.fromPluginsPaintVaultDoesnTBundleACatalogSo"),
   },
   {
-    question: "Can I share my own schemes and paints?",
+    question: t("faq.canIShareMyOwnSchemesAndPaints"),
     group: "tools",
-    answer:
-      "Yes. Create plugin in the Plugins dialog packages your own paints, schemes, and templates as a .zip. Publish it as a public GitHub repository, or send the .zip so others can upload it.",
+    answer: t("faq.yesCreatePluginInThePluginsDialogPackagesYourOwn"),
   },
   {
-    question: "How accurate is Paint Compare?",
+    question: t("faq.howAccurateIsPaintCompare"),
     group: "tools",
-    answer:
-      "It compares the catalog's screen colors. A high score does not guarantee two paints look identical on a model. Finish, opacity, primer, and lighting can change the result.",
+    answer: t("faq.itComparesTheCatalogSScreenColorsAHighScore"),
   },
   {
-    question: "Does the Recipe converter replace my original scheme?",
+    question: t("faq.doesTheRecipeConverterReplaceMyOriginalScheme"),
     group: "tools",
-    answer:
-      "No. It saves a new reusable scheme with your reviewed paint choices. The original scheme remains available.",
+    answer: t("faq.noItSavesANewReusableSchemeWithYourReviewed"),
   },
   {
-    question: "Can I add paints that no plugin includes?",
+    question: t("faq.canIAddPaintsThatNoPluginIncludes"),
     group: "tools",
-    answer: "Yes. Use Add paint in the Paints library to create a custom color entry.",
+    answer: t("faq.yesUseAddPaintInThePaintsLibraryToCreate"),
   },
 ];
 
@@ -91,9 +83,9 @@ export function FaqPage() {
   return (
     <Container maxWidth="lg">
       <PageIntro
-        eyebrow="Frequently asked questions"
-        title="The little details matter."
-        description="Answers about setup, storage, desktop use, and the paint planning tools."
+        eyebrow={t("faq.frequentlyAskedQuestions")}
+        title={t("faq.theLittleDetailsMatter")}
+        description={t("faq.answersAboutSetupStorageDesktopUseAndThePaintPlanning")}
       />
       <Box
         sx={{
@@ -104,7 +96,7 @@ export function FaqPage() {
         }}
       >
         <Box sx={{ display: "grid", gap: { xs: 5, md: 6 } }}>
-          {groups.map((group) => (
+          {groups().map((group) => (
             <Box key={group.id} component="section" aria-labelledby={`faq-${group.id}`}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                 <IconTile>{group.icon}</IconTile>
@@ -117,7 +109,7 @@ export function FaqPage() {
                 </Typography>
               </Box>
               <Box sx={{ display: "grid", gap: 1.25 }}>
-                {questions
+                {questions()
                   .filter((item) => item.group === group.id)
                   .map((item) => (
                     <Accordion
@@ -169,14 +161,13 @@ export function FaqPage() {
             component="h2"
             sx={{ fontFamily: serif, fontWeight: 600, fontSize: 22, mt: 2.5, mb: 1, color: "#ececec" }}
           >
-            Still figuring it out?
+            {t("faq.stillFiguringItOut")}
           </Typography>
           <Typography sx={{ color: "var(--ink-soft)", lineHeight: 1.65, fontSize: 14.5, mb: 2.5 }}>
-            The getting started guide walks through the core workflow, from your first paint to your first
-            finished recipe.
+            {t("faq.theGettingStartedGuideWalksThroughTheCoreWorkflowFrom")}
           </Typography>
           <Button href="/docs/" variant="outlined" fullWidth endIcon={<ArrowForwardIcon />}>
-            Read the guide
+            {t("faq.readTheGuide")}
           </Button>
         </Surface>
       </Box>

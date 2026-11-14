@@ -1,6 +1,7 @@
 import { Alert, Button, ButtonBase, Card, CircularProgress, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { AddMiniatureTile } from "../Components/AddMiniatureTile";
 import { EmptyState } from "../Components/EmptyState";
@@ -15,7 +16,7 @@ import { Archive, Plus, SearchX } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { PaintingStatus } from "../types";
-import { STAGES } from "../utils/constants";
+import { getStages } from "../utils/constants";
 import { greeting } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { visuallyHiddenSx } from "../utils/visually-hidden";
@@ -25,6 +26,9 @@ import { useInitialPageLoading } from "./useInitialPageLoading";
 const shelfTileSx = { width: "100%", height: "100%" };
 
 export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(): void }) {
+  const { t, i18n } = useTranslation("pages");
+  const number = (value: number) =>
+    new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language).format(value);
   const filter = useVaultStore((s) => s.miniatureFilter);
   const setFilter = useVaultStore((s) => s.setMiniatureFilter);
   const goTab = useVaultStore((s) => s.go);
@@ -181,20 +185,13 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
       }}
     >
       <PageHeader
-        eyebrow={workbench ? greeting() : "COLLECTION"}
-        title={workbench ? "Workbench" : "Miniatures"}
-        body={
-          workbench
-            ? "See which projects are ready to paint and what's left to gather."
-            : "Browse your owned and wishlisted miniatures."
-        }
+        eyebrow={workbench ? greeting() : t("homeCollectionEyebrow")}
+        title={workbench ? t("homeWorkbenchTitle") : t("homeMiniaturesTitle")}
+        body={workbench ? t("homeWorkbenchBody") : t("homeMiniaturesBody")}
       />
       {workbench && !loading && !list.error && list.catalogCount === 0 && (
         // A new vault has no catalog until a plugin is installed, so point there first.
-        <Alert severity="info">
-          Your paint library is empty. Install a plugin from Data &amp; settings → Plugins to add paints,
-          color schemes, and miniature templates.
-        </Alert>
+        <Alert severity="info">{t("homeEmptyLibrary")}</Alert>
       )}
       {workbench && (
         <Card
@@ -258,7 +255,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                 size="100%"
                 thickness={4.5}
                 color={ready && ready === list.owned ? "success" : "secondary"}
-                aria-label={`${ready} of ${list.collectionCount} projects ready to paint`}
+                aria-label={t("homeReadyProjectsAria", { ready, total: list.collectionCount })}
                 sx={[
                   {
                     boxSizing: "border-box",
@@ -284,7 +281,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   },
                 }}
               >
-                {ready}
+                {number(ready)}
                 <Box
                   component="span"
                   sx={{
@@ -293,7 +290,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                     color: "var(--ink-faint)",
                   }}
                 >
-                  /{list.collectionCount}
+                  /{number(list.collectionCount)}
                 </Box>
               </Box>
             </Box>
@@ -321,9 +318,9 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
               >
                 {list.collectionCount
                   ? ready === list.collectionCount
-                    ? "Everything's ready to paint"
-                    : `${ready} of ${list.collectionCount} ready to paint`
-                  : "Start your first project"}
+                    ? t("homeAllReady")
+                    : t("homeReadyProjects", { ready, total: list.collectionCount })
+                  : t("homeStartFirstProject")}
               </Box>
               <Box
                 component="span"
@@ -337,9 +334,9 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
               >
                 {list.collectionCount
                   ? missingProjectPaints
-                    ? `${missingProjectPaints} paint${missingProjectPaints === 1 ? "" : "s"} missing from projects`
-                    : "Every project paint is ready"
-                  : "Add a miniature to plan its paints"}
+                    ? t("homeMissingPaints", { count: missingProjectPaints })
+                    : t("homeEveryPaintReady")
+                  : t("homeAddMiniaturePlan")}
               </Box>
             </Box>
           </Box>
@@ -395,7 +392,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   },
                 }}
               >
-                {wishlistedMissingPaints}
+                {number(wishlistedMissingPaints)}
                 <Box
                   component="span"
                   sx={{
@@ -403,7 +400,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   }}
                 >
                   {" "}
-                  / {missingProjectPaints}
+                  / {number(missingProjectPaints)}
                 </Box>
               </Box>
               <Box
@@ -417,10 +414,10 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   textTransform: "uppercase",
                 }}
               >
-                Missing paints on wishlist
+                {t("homeMissingWishlist")}
               </Box>
               <Box component="span" sx={visuallyHiddenSx}>
-                , open wishlist
+                {t("homeOpenWishlist")}
               </Box>
             </ButtonBase>
           </Box>
@@ -435,13 +432,18 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
           scrollMarginTop: "6rem",
         }}
       >
-        {workbench && <SectionHeader title="What can you paint?" />}
-        <FilterToolbar search={search} setSearch={setSearch} placeholder="Search miniatures…" wideSearch>
+        {workbench && <SectionHeader title={t("homePaintQuestion")} />}
+        <FilterToolbar
+          search={search}
+          setSearch={setSearch}
+          placeholder={t("homeSearchMiniatures")}
+          wideSearch
+        >
           <TextField
             select
             fullWidth
             size="small"
-            label={workbench ? "Step" : "Collection"}
+            label={workbench ? t("homeStepLabel") : t("homeCollectionLabel")}
             value={workbench ? stageFilter : filter}
             onChange={(event) =>
               workbench
@@ -452,23 +454,23 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             {workbench
               ? [
                   <MenuItem key="ALL" value="ALL">
-                    All ({stageCounts.ALL})
+                    {t("homeAllCount", { count: stageCounts.ALL })}
                   </MenuItem>,
-                  ...STAGES.map(([stage, label]) => (
+                  ...getStages().map(([stage, label]) => (
                     <MenuItem key={stage} value={stage}>
-                      {label} ({stageCounts[stage]})
+                      {label} ({number(stageCounts[stage])})
                     </MenuItem>
                   )),
                 ]
               : [
                   <MenuItem key="ALL" value="ALL">
-                    All ({statusCounts.ALL})
+                    {t("homeAllCount", { count: statusCounts.ALL })}
                   </MenuItem>,
                   <MenuItem key="OWNED" value="OWNED">
-                    Owned ({statusCounts.OWNED})
+                    {t("homeOwnedCount", { count: statusCounts.OWNED })}
                   </MenuItem>,
                   <MenuItem key="WISHLIST" value="WISHLIST">
-                    Wishlist ({statusCounts.WISHLIST})
+                    {t("homeWishlistCount", { count: statusCounts.WISHLIST })}
                   </MenuItem>,
                 ]}
           </TextField>
@@ -478,7 +480,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             severity="error"
             action={
               <Button color="inherit" onClick={list.retry}>
-                Retry
+                {t("homeRetry")}
               </Button>
             }
           >
@@ -487,7 +489,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
         )}
         {(loading || refreshing) && (
           <Box role="status" sx={{ py: 1, color: "var(--ink-faint)" }}>
-            {loading ? "Loading miniatures…" : "Updating miniatures…"}
+            {loading ? t("homeLoadingMiniatures") : t("homeUpdatingMiniatures")}
           </Box>
         )}
         {hasShelf ? (
@@ -495,7 +497,7 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
             component="div"
             ref={shelfRef}
             role="list"
-            aria-label="Miniature shelf"
+            aria-label={t("homeMiniatureShelf")}
             aria-busy={loading || refreshing}
             data-loaded-count={visibleProjects.length}
             data-total-count={list.totalCount}
@@ -571,8 +573,8 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
         ) : loading || list.error ? null : list.collectionCount ? (
           <EmptyState
             icon={<SearchX size={26} />}
-            title="No miniatures match"
-            body="Try a different search or filter."
+            title={t("homeNoMatches")}
+            body={t("homeTryDifferentSearch")}
             action={
               <Button
                 variant="outlined"
@@ -582,29 +584,25 @@ export function Home({ view, onAdd }: { view: "dashboard" | "miniatures"; onAdd(
                   else setFilter("ALL");
                 }}
               >
-                Clear filters
+                {t("homeClearFilters")}
               </Button>
             }
           />
         ) : (
           <EmptyState
             icon={<Archive size={26} />}
-            title={workbench ? "Your workbench is empty" : "Your shelf is empty"}
-            body={
-              workbench
-                ? "Add an owned miniature, then build the paint recipe it needs."
-                : "Add your first miniature, then build the paint recipe it needs."
-            }
+            title={workbench ? t("homeEmptyWorkbench") : t("homeEmptyShelf")}
+            body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
             action={
               <Button variant="contained" onClick={onAdd} startIcon={<Plus size={16} />}>
-                Add a miniature
+                {t("homeAddMiniature")}
               </Button>
             }
           />
         )}
         {hasNextPage && (
           <Button onClick={loadMore} disabled={loading || refreshing} sx={{ mt: 2 }}>
-            Load more miniatures
+            {t("homeLoadMoreMiniatures")}
           </Button>
         )}
       </Box>

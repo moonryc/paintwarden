@@ -1,17 +1,23 @@
 import CloudDownloadOutlinedIcon from "@mui/icons-material/CloudDownloadOutlined";
 import { Alert, Box, Button, Checkbox, InputAdornment, TextField, Tooltip } from "@mui/material";
+import { translateServerError } from "@paint-vault/i18n/runtime";
 import { type ReactNode, useId, useMemo, useState } from "react";
+import { Trans, useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
+import { formatNumber } from "../../i18n";
 import { Bookmarks, Extension, PaintDrop, Palette, Search } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
 
 import { type Shareable, KINDS, SEMVER, plural, message } from "./sources.utils";
 
-const KIND_META: Record<keyof Shareable, { label: string; icon: ReactNode }> = {
-  paints: { label: "Paints", icon: <PaintDrop size={18} /> },
-  schemes: { label: "Schemes", icon: <Palette size={18} /> },
-  templates: { label: "Templates", icon: <Bookmarks size={18} /> },
+const KIND_META: Record<
+  keyof Shareable,
+  { label: "sourcesPaintsText" | "sourcesSchemesText" | "sourcesTemplatesText"; icon: ReactNode }
+> = {
+  paints: { label: "sourcesPaintsText" as const, icon: <PaintDrop size={18} /> },
+  schemes: { label: "sourcesSchemesText" as const, icon: <Palette size={18} /> },
+  templates: { label: "sourcesTemplatesText" as const, icon: <Bookmarks size={18} /> },
 };
 
 const slugify = (value: string) =>
@@ -50,7 +56,7 @@ function StepSection({
             flexShrink: 0,
           }}
         >
-          {step}
+          {formatNumber(step)}
         </Box>
         <Box component="h3" sx={{ m: 0, fontSize: 14, fontWeight: 650, flex: 1, minWidth: 0 }}>
           {title}
@@ -63,6 +69,7 @@ function StepSection({
 }
 
 export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareable; onClose(): void }) {
+  const { t } = useTranslation("pages");
   const notify = useVaultStore((s) => s.notify);
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const [name, setName] = useState("");
@@ -95,11 +102,11 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
     .map((kind) => plural(chosen(kind), kind))
     .join(" · ");
   const blocker = !selected.size
-    ? "Choose at least one item"
+    ? t("sourcesChooseAtLeastOneItem")
     : nameMissing
-      ? "Name your plugin to export"
+      ? t("sourcesNameYourPluginToExport")
       : !versionValid
-        ? "Fix the version number"
+        ? t("sourcesFixTheVersionNumber")
         : "";
 
   function setKeys(keys: string[], on: boolean) {
@@ -134,7 +141,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
       });
       if (!response.ok) {
         const result = (await response.json()) as { error?: string };
-        throw new Error(result.error || "Could not export plugin");
+        throw new Error(translateServerError(result));
       }
       const blob = await response.blob();
       if (window.paintVaultDesktop) {
@@ -143,7 +150,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
           !(await window.paintVaultDesktop.saveBinary({
             bytes,
             filename,
-            title: "Export Paint Vault plugin",
+            title: t("sourcesExportPaintVaultPlugin"),
           }))
         )
           return;
@@ -155,10 +162,10 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
         anchor.click();
         URL.revokeObjectURL(objectUrl);
       }
-      notify(`Exported ${filename}`);
+      notify(t("sourcesExportedFile", { filename }));
       onClose();
     } catch (cause) {
-      setExportError(message(cause, "Could not export plugin"));
+      setExportError(message(cause, t("sourcesCouldNotExportPlugin")));
     } finally {
       setExporting(false);
     }
@@ -167,7 +174,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
   const footer =
     total === 0 ? (
       <Button onClick={onClose} sx={{ ml: "auto" }}>
-        Close
+        {t("sourcesClose")}
       </Button>
     ) : (
       <>
@@ -181,11 +188,11 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
             color: selected.size ? "var(--ink)" : "var(--ink-faint)",
           }}
         >
-          {summary || "Nothing selected"}
+          {summary || t("sourcesNothingSelected")}
         </Box>
         <Box sx={{ display: "flex", gap: 1, ml: "auto" }}>
           <Button disabled={exporting} onClick={onClose}>
-            Cancel
+            {t("sourcesCancel")}
           </Button>
           <Tooltip title={blocker} disableHoverListener={!blocker} disableFocusListener={!blocker}>
             <span>
@@ -198,7 +205,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                 loading={exporting}
                 disabled={!selected.size}
               >
-                Export ZIP
+                {t("sourcesExportZIP")}
               </Button>
             </span>
           </Tooltip>
@@ -207,8 +214,8 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
     );
   return (
     <Modal
-      title="Create plugin"
-      subtitle="Package your own paints, schemes, and templates to share on GitHub."
+      title={t("sourcesCreatePlugin")}
+      subtitle={t("sourcesPackageYourOwnPaintsSchemesAndTemplatesToShare")}
       onClose={() => !exporting && onClose()}
       footer={footer}
     >
@@ -230,10 +237,9 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
             >
               <Extension size={26} />
             </Box>
-            <Box sx={{ fontWeight: 650, fontSize: 16 }}>Nothing to share yet</Box>
+            <Box sx={{ fontWeight: 650, fontSize: 16 }}>{t("sourcesNothingToShareYet")}</Box>
             <Box sx={{ mt: 0.5, maxWidth: 360, fontSize: 14, color: "var(--ink-faint)" }}>
-              Add your own paints, schemes, or templates first. Items installed from other plugins can&rsquo;t
-              be re-exported.
+              {t("sourcesAddYourOwnPaintsSchemesOrTemplatesFirstItems")}
             </Box>
           </Box>
         </>
@@ -249,11 +255,15 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
         >
           <StepSection
             step={1}
-            title="Choose what to include"
+            title={t("sourcesChooseWhatToInclude")}
             aside={
               visible.length > 0 && (
                 <Button size="small" onClick={() => setKeys(visible, !allVisibleOn)}>
-                  {allVisibleOn ? "Clear all" : query.trim() ? "Select matches" : "Select all"}
+                  {allVisibleOn
+                    ? t("sourcesClearAll")
+                    : query.trim()
+                      ? t("sourcesSelectMatches")
+                      : t("sourcesSelectAll")}
                 </Button>
               )
             }
@@ -262,7 +272,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
               <TextField
                 size="small"
                 fullWidth
-                placeholder={`Search ${plural(total, "items")}`}
+                placeholder={t("sourcesSearchItems", { count: total })}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
@@ -276,7 +286,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                       </InputAdornment>
                     ),
                   },
-                  htmlInput: { "aria-label": "Search items to include" },
+                  htmlInput: { "aria-label": t("sourcesSearchItemsAria") },
                 }}
                 sx={{ mb: 1.5 }}
               />
@@ -291,7 +301,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
             >
               {visible.length === 0 ? (
                 <Box sx={{ p: 3, textAlign: "center", fontSize: 14, color: "var(--ink-faint)" }}>
-                  Nothing matches &ldquo;{query.trim()}&rdquo;.
+                  {t("sourcesNoMatches", { query: query.trim() })}
                 </Box>
               ) : (
                 kinds.map((kind) => {
@@ -303,7 +313,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                     <Box
                       key={kind}
                       role="group"
-                      aria-label={KIND_META[kind].label}
+                      aria-label={t(KIND_META[kind].label)}
                       sx={{ "& + &": { borderTop: "1px solid var(--line)" } }}
                     >
                       <Box
@@ -326,13 +336,17 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                           checked={on === keys.length}
                           indeterminate={on > 0 && on < keys.length}
                           onChange={() => setKeys(keys, on < keys.length)}
-                          slotProps={{ input: { "aria-label": `Select all ${kind}` } }}
+                          slotProps={{
+                            input: {
+                              "aria-label": t("sourcesSelectAllKind", { kind: t(KIND_META[kind].label) }),
+                            },
+                          }}
                         />
                         <Box component="span" sx={{ display: "flex", color: "var(--ink-faint)" }}>
                           {KIND_META[kind].icon}
                         </Box>
                         <Box component="span" sx={{ flex: 1 }}>
-                          {KIND_META[kind].label}
+                          {t(KIND_META[kind].label)}
                         </Box>
                         <Box
                           component="span"
@@ -343,7 +357,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                             fontVariantNumeric: "tabular-nums",
                           }}
                         >
-                          {chosen(kind)} / {shareable[kind].length}
+                          {formatNumber(chosen(kind))} / {formatNumber(shareable[kind].length)}
                         </Box>
                       </Box>
                       {items.map((item) => {
@@ -389,30 +403,34 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
               }}
             >
               {attempted && !selected.size
-                ? "Choose at least one item to export."
-                : "Images and any of your items these depend on are added automatically."}
+                ? t("sourcesChooseAtLeastOneItemToExport")
+                : t("sourcesImagesAndAnyOfYourItemsTheseDependOn")}
             </Box>
           </StepSection>
 
-          <StepSection step={2} title="Name and version">
+          <StepSection step={2} title={t("sourcesNameAndVersion")}>
             <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 2 }}>
               <TextField
                 size="small"
-                label="Plugin name"
-                placeholder="My grimdark schemes"
+                label={t("sourcesPluginName")}
+                placeholder={t("sourcesMyGrimdarkSchemes")}
                 value={name}
                 error={attempted && nameMissing}
-                helperText={attempted && nameMissing ? "Give your plugin a name" : `Saves as ${filename}`}
+                helperText={
+                  attempted && nameMissing
+                    ? t("sourcesGiveYourPluginAName")
+                    : t("sourcesSaveFilename", { filename })
+                }
                 onChange={(event) => setName(event.target.value)}
                 slotProps={{ inputLabel: { shrink: true } }}
                 sx={{ flex: "1 1 240px" }}
               />
               <TextField
                 size="small"
-                label="Version"
+                label={t("sourcesVersion")}
                 value={version}
                 error={!versionValid}
-                helperText={versionValid ? "major.minor.patch" : "Use a format like 1.0.0"}
+                helperText={versionValid ? t("sourcesMajorMinorPatch") : t("sourcesUseAFormatLike100")}
                 onChange={(event) => setVersion(event.target.value)}
                 slotProps={{ htmlInput: { inputMode: "decimal", spellCheck: false } }}
                 sx={{ flex: "0 1 160px" }}
@@ -420,7 +438,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
             </Box>
           </StepSection>
 
-          <StepSection step={3} title="Publish on GitHub">
+          <StepSection step={3} title={t("sourcesPublishOnGitHub")}>
             <Box
               component="ol"
               sx={{
@@ -433,21 +451,21 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
                 "& li::marker": { color: "var(--ink-faint)" },
               }}
             >
-              <li>Unzip the export and upload its contents to a public GitHub repository.</li>
+              <li>{t("sourcesUnzipTheExportAndUploadItsContentsToA")}</li>
               <li>
-                Share the repository as{" "}
-                <Box component="code" sx={{ fontSize: 12 }}>
-                  owner/repository
-                </Box>
-                . Anyone can paste it into <b>Add a plugin</b>.
+                <Trans
+                  t={t}
+                  i18nKey="sourcesShareInstructions"
+                  components={{ repository: <Box component="code" sx={{ fontSize: 12 }} />, add: <b /> }}
+                />
               </li>
-              <li>Required plugins are listed in the ZIP and install automatically.</li>
+              <li>{t("sourcesRequiredPluginsAreListedInTheZIPAndInstall")}</li>
               <li>
-                Optional: add a{" "}
-                <Box component="code" sx={{ fontSize: 12 }}>
-                  logo.svg
-                </Box>{" "}
-                to the repository root to give your plugin its own icon.
+                <Trans
+                  t={t}
+                  i18nKey="sourcesLogoInstructions"
+                  components={{ filename: <Box component="code" sx={{ fontSize: 12 }} /> }}
+                />
               </li>
             </Box>
           </StepSection>

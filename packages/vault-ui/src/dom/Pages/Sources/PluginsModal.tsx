@@ -9,7 +9,9 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
+import { translateServerError } from "@paint-vault/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
@@ -46,6 +48,7 @@ const sectionTitleSx = {
 
 /** Installs, updates, removes and packages catalog sources ("plugins"). Opened from Settings. */
 export function PluginsModal({ onClose }: { onClose(): void }) {
+  const { t } = useTranslation("pages");
   const notify = useVaultStore((s) => s.notify);
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const refresh = useVaultStore((s) => s.refresh);
@@ -78,7 +81,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       // Source/network operations intentionally stay REST; Apollo reads the locally
       // cached result. A GraphQL field resolver never contacts GitHub.
       const response = await fetch("/api/catalog-sources?versions=1", { headers: authHeaders() });
-      if (!response.ok) throw new Error("Could not check for plugin updates");
+      if (!response.ok) throw new Error(t("sourcesCouldNotCheckForPluginUpdates"));
       const versions = await sourceRead.versions();
       setSourceVersions(Object.fromEntries(versions.map((item) => [item.id, item])));
     } catch {
@@ -98,7 +101,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       setShareable(await sourceRead.shareable());
       setCreateOpen(true);
     } catch (cause) {
-      setError(message(cause, "Could not load shareable content"));
+      setError(message(cause, t("sourcesCouldNotLoadShareableContent")));
     } finally {
       setPending(null);
     }
@@ -131,13 +134,13 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         body: JSON.stringify({ url: url.trim() }),
       });
       const result = (await response.json()) as { error?: string; updated?: boolean };
-      if (!response.ok) throw new Error(result.error || "Could not install plugin");
+      if (!response.ok) throw new Error(translateServerError(result));
       setUrl("");
       await refresh();
       await loadSources();
-      notify(result.updated ? "Plugin installed" : "Plugin is already installed and up to date");
+      notify(result.updated ? t("sourcesPluginInstalled") : t("sourcesPluginIsAlreadyInstalledAndUpToDate"));
     } catch (cause) {
-      setAddError(message(cause, "Could not install plugin"));
+      setAddError(message(cause, t("sourcesCouldNotInstallPlugin")));
     } finally {
       setPending(null);
     }
@@ -158,15 +161,17 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         name?: string;
         updated?: boolean;
       };
-      if (!response.ok) throw new Error(result.error || "Could not install plugin");
+      if (!response.ok) throw new Error(translateServerError(result));
       await refresh();
       await loadSources();
-      const plugin = result.name ?? "Plugin";
+      const plugin = result.name ?? t("sourcesPlugin");
       notify(
-        result.updated === false ? `${plugin} is already installed at this version` : `${plugin} installed`,
+        result.updated === false
+          ? t("sourcesAlreadyInstalledNamed", { name: plugin })
+          : t("sourcesInstalledNamed", { name: plugin }),
       );
     } catch (cause) {
-      setError(message(cause, "Could not install plugin"));
+      setError(message(cause, t("sourcesCouldNotInstallPlugin")));
     } finally {
       setPending(null);
     }
@@ -182,12 +187,12 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         headers: authHeaders(),
       });
       const result = (await response.json()) as { error?: string; updated?: boolean };
-      if (!response.ok || result.error) throw new Error(result.error || "Could not update plugin");
+      if (!response.ok || result.error) throw new Error(translateServerError(result));
       await refresh();
       await loadSources();
-      notify(result.updated ? "Plugin updated" : "Plugin is up to date");
+      notify(result.updated ? t("sourcesPluginUpdated") : t("sourcesPluginIsUpToDate"));
     } catch (cause) {
-      setError(message(cause, "Could not update plugin"));
+      setError(message(cause, t("sourcesCouldNotUpdatePlugin")));
       await loadSources().catch(() => undefined);
     } finally {
       setPending(null);
@@ -200,17 +205,17 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     setError("");
     try {
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
-      if (!response.ok) throw new Error("Could not update plugins");
+      if (!response.ok) throw new Error(t("sourcesCouldNotUpdatePlugins"));
       const { results } = (await response.json()) as { results: { updated?: boolean; error?: string }[] };
       await refresh();
       await loadSources();
       const updated = results.filter((result) => result.updated).length;
       const failed = results.filter((result) => result.error).length;
-      if (failed) setError(`${plural(failed, "plugins")} could not be updated`);
-      if (updated) notify(`${plural(updated, "plugins")} updated`);
-      else if (!failed) notify("All plugins are up to date");
+      if (failed) setError(t("sourcesUpdatesFailed", { count: failed }));
+      if (updated) notify(t("sourcesUpdatedCount", { count: updated }));
+      else if (!failed) notify(t("sourcesAllPluginsAreUpToDate"));
     } catch (cause) {
-      setError(message(cause, "Could not update plugins"));
+      setError(message(cause, t("sourcesCouldNotUpdatePlugins")));
     } finally {
       setPending(null);
     }
@@ -221,7 +226,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     try {
       setRemoval(await sourceRead.removal(id));
     } catch (cause) {
-      setError(message(cause, "Could not check plugin usage"));
+      setError(message(cause, t("sourcesCouldNotCheckPluginUsage")));
     }
   }
 
@@ -239,13 +244,13 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         setRemoval(result);
         return;
       }
-      if (!response.ok) throw new Error(result.error || "Could not remove plugin");
+      if (!response.ok) throw new Error(translateServerError(result));
       setRemoval(null);
       await refresh();
       await loadSources();
-      notify("Plugin removed");
+      notify(t("sourcesPluginRemoved"));
     } catch (cause) {
-      setError(message(cause, "Could not remove plugin"));
+      setError(message(cause, t("sourcesCouldNotRemovePlugin")));
     } finally {
       setPending(null);
     }
@@ -263,9 +268,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const nameByKey = new Map(sources.map((source) => [sourceKey(source.url), source.name]));
 
   const modalProps = {
-    title: "Plugins",
-    subtitle:
-      "Install public catalogs of paints, schemes, and templates from GitHub, or package your own to share.",
+    title: t("sourcesPlugins"),
+    subtitle: t("sourcesInstallPublicCatalogsOfPaintsSchemesAndTemplatesFrom"),
     onClose,
     footer: (
       <Button
@@ -274,7 +278,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         onClick={() => void openCreate()}
         disabled={busy}
       >
-        Create plugin
+        {t("sourcesCreatePlugin")}
       </Button>
     ),
   };
@@ -288,11 +292,10 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     <Modal {...modalProps}>
       <Box component="section" sx={{ mb: 3 }}>
         <Box component="h3" sx={sectionTitleSx}>
-          Add a plugin
+          {t("sourcesAddAPlugin")}
         </Box>
         <Box component="p" sx={{ color: "var(--ink-faint)", fontSize: 13, mt: 0.5, mb: 2 }}>
-          Paste a GitHub repository or upload a plugin .zip. Required plugins install automatically, and
-          everything stays available offline.
+          {t("sourcesPasteAGitHubRepositoryOrUploadAPluginZip")}
         </Box>
         <Box
           component="form"
@@ -304,12 +307,12 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         >
           <TextField
             size="small"
-            label="GitHub repository"
-            placeholder="owner/repository"
+            label={t("sourcesGitHubRepository")}
+            placeholder={t("sourcesOwnerRepository")}
             value={url}
             disabled={pending === "add"}
             error={!!addError}
-            helperText={addError || "A full URL or owner/repository both work."}
+            helperText={addError || t("sourcesAFullURLOrOwnerRepositoryBothWork")}
             onChange={(event) => {
               setUrl(event.target.value);
               if (addError) setAddError("");
@@ -332,7 +335,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
             disabled={!url.trim() || (busy && pending !== "add")}
             sx={{ minWidth: 120, height: 40 }}
           >
-            Add plugin
+            {t("sourcesAddPlugin")}
           </Button>
           <Button
             variant="outlined"
@@ -342,7 +345,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
             onClick={() => fileInputRef.current?.click()}
             sx={{ height: 40 }}
           >
-            Upload .zip
+            {t("sourcesUploadZip")}
           </Button>
           <input
             ref={fileInputRef}
@@ -370,7 +373,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       >
         <Box sx={{ minWidth: 0 }}>
           <Box component="h3" sx={sectionTitleSx}>
-            Installed
+            {t("sourcesInstalled")}
           </Box>
           {sources.length > 0 && (
             <Box sx={{ color: "var(--ink-faint)", fontSize: 13, mt: 0.5 }}>
@@ -385,16 +388,16 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         </Box>
         {sources.some((source) => !isUploadedSource(source)) && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Tooltip title="Check for updates">
+            <Tooltip title={t("sourcesCheckForUpdates")}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label="Check for updates"
+                  aria-label={t("sourcesCheckForUpdates")}
                   disabled={versionsChecking || busy}
                   onClick={() => void loadVersions()}
                 >
                   {versionsChecking ? (
-                    <CircularProgress size={16} aria-label="Checking plugin updates" />
+                    <CircularProgress size={16} aria-label={t("sourcesCheckingPluginUpdates")} />
                   ) : (
                     <RotateCw size={18} />
                   )}
@@ -408,7 +411,9 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
               disabled={busy && pending !== "update-all"}
               onClick={() => void updateAllSources()}
             >
-              {updatesAvailable ? `Update all (${updatesAvailable})` : "Update all"}
+              {updatesAvailable
+                ? t("sourcesUpdateAllCount", { count: updatesAvailable })
+                : t("sourcesUpdateAll")}
             </Button>
           </Box>
         )}
@@ -421,7 +426,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
           action={
             sourceRead.error ? (
               <Button color="inherit" onClick={() => void loadSources()}>
-                Retry
+                {t("sourcesRetry")}
               </Button>
             ) : undefined
           }
@@ -434,8 +439,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       {!sources.length && !sourceRead.error ? (
         <EmptyState
           icon={<Layers size={26} />}
-          title="No plugins yet"
-          body="Add a GitHub repository above to bring its paints, color schemes, and miniature templates into your vault."
+          title={t("sourcesNoPluginsYet")}
+          body={t("sourcesAddAGitHubRepositoryAboveToBringItsPaints")}
         />
       ) : (
         <Box sx={{ display: "grid", gap: 1.5 }}>

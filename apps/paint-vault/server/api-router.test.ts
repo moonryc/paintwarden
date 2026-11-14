@@ -121,7 +121,11 @@ test("setup, authentication and data routes retain their API contract", async (t
         for (const method of ["GET", "POST", "PUT", "PATCH", "DELETE"]) {
           const response = await request(endpoint, method, undefined, { cookie });
           assert.equal(response.status, 404, `${method} ${endpoint}`);
-          assert.deepEqual(await response.json(), { error: "Not found" });
+          assert.deepEqual(await response.json(), {
+            error: "Not found",
+            errorCode: "NOT_FOUND_2",
+            errorParameters: {},
+          });
         }
       }
       // Template commands still exist, but the unbounded listing no longer does.
@@ -489,7 +493,11 @@ test("setup, authentication and data routes retain their API contract", async (t
         }),
       );
       assert.equal(declared.status, 413);
-      assert.deepEqual(await declared.json(), { error: "The plugin file must be under 250 MB" });
+      assert.deepEqual(await declared.json(), {
+        error: "The plugin file must be under 250 MB",
+        errorCode: "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB",
+        errorParameters: {},
+      });
       // A JSON body only names a repository, so it doesn't get the upload limit.
       const json = await routeApi(
         new Request(base + "/api/catalog-sources", {
@@ -613,7 +621,11 @@ test("setup, authentication and data routes retain their API contract", async (t
           { paints: [{ name: "Missing brand" }] },
           { cookie },
         );
-        assert.deepEqual(await response.json(), { error: "Each paint needs brand and name" });
+        assert.deepEqual(await response.json(), {
+          error: "Each paint needs brand and name",
+          errorCode: "EACH_PAINT_NEEDS_BRAND_AND_NAME",
+          errorParameters: {},
+        });
       },
     );
 

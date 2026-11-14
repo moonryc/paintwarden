@@ -1,3 +1,5 @@
+import { colorCategoryLabel } from "../Components/component-labels";
+import { useTranslation } from "react-i18next";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   closestCenter,
@@ -11,7 +13,7 @@ import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrate
 import { Alert, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { ColorCategory } from "@paint-vault/core/color-categories";
-import { COLOR_CATEGORIES, COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORIES } from "@paint-vault/core/color-categories";
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";
@@ -56,6 +58,7 @@ export function ProjectSchemeEditor({
   onRefresh?(): void;
   onClose: () => void;
 }) {
+  const { t } = useTranslation("components");
   const actions = useSchemeActions();
   const notify = useVaultStore((s) => s.notify);
   const [name, setName] = useState(scheme.name),
@@ -174,12 +177,12 @@ export function ProjectSchemeEditor({
       const input = { name, category, entries: payloadEntries };
       if (mode === "create") await actions.create(input);
       else await actions.update(scheme.id, input);
-      notify(mode === "create" ? "Color scheme created" : "Color scheme updated");
+      notify(mode === "create" ? t("colorSchemeCreated") : t("colorSchemeUpdated"));
       onClose();
     } catch (cause) {
       setError({
         operation: "save",
-        message: cause instanceof Error ? cause.message : "Could not save color scheme.",
+        message: cause instanceof Error ? cause.message : t("couldNotSaveColorScheme"),
       });
     } finally {
       setBusy(false);
@@ -191,12 +194,12 @@ export function ProjectSchemeEditor({
     setError(null);
     try {
       await actions.remove(scheme.id);
-      notify("Color scheme deleted");
+      notify(t("colorSchemeDeleted"));
       onClose();
     } catch (cause) {
       setError({
         operation: "delete",
-        message: cause instanceof Error ? cause.message : "Could not delete color scheme.",
+        message: cause instanceof Error ? cause.message : t("couldNotDeleteColorScheme"),
       });
     } finally {
       setBusy(false);
@@ -204,30 +207,38 @@ export function ProjectSchemeEditor({
   };
   if (scheme.isSystem)
     return (
-      <Modal title="Color schemes" subtitle="Catalog palettes are read-only." onClose={onClose}>
-        <Chip color="secondary" size="small" label={`${scheme.sourceName || "Catalog source"} · read-only`} />
+      <Modal title={t("colorSchemes")} subtitle={t("catalogPalettesAreReadOnly")} onClose={onClose}>
+        <Chip
+          color="secondary"
+          size="small"
+          label={t("readOnlyCatalogSource", { name: scheme.sourceName || t("catalogSource") })}
+        />
         <Alert severity="info" sx={{ mt: 2 }}>
-          Catalog color schemes cannot be edited.
+          {t("catalogColorSchemesCannotBeEdited")}
         </Alert>
       </Modal>
     );
   return (
-    <Modal title="Color schemes" subtitle="Group paints into reusable, ordered palettes." onClose={onClose}>
+    <Modal title={t("colorSchemes")} subtitle={t("groupPaintsIntoReusableOrderedPalettes")} onClose={onClose}>
       {refreshError && (
-        <Alert severity="error" sx={{ mb: 2 }} action={<Button onClick={onRefresh}>Retry refresh</Button>}>
-          {refreshError.message} Your unsaved changes are kept.
+        <Alert
+          severity="error"
+          sx={{ mb: 2 }}
+          action={<Button onClick={onRefresh}>{t("retryRefresh")}</Button>}
+        >
+          {t("schemeRefreshError", { message: refreshError.message })}
         </Alert>
       )}
       {refreshing && (
         <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
-          Refreshing scheme…
+          {t("refreshingScheme")}
         </Box>
       )}
       <Box
         component="fieldset"
         disabled={busy}
         inert={busy}
-        aria-label="Color scheme editor"
+        aria-label={t("colorSchemeEditor")}
         aria-busy={busy}
         sx={{
           border: 0,
@@ -249,22 +260,22 @@ export function ProjectSchemeEditor({
         >
           <TextField
             fullWidth
-            label="Scheme name"
+            label={t("schemeName")}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Ultramarines armour"
+            placeholder={t("eGUltramarinesArmour")}
           />
           <TextField
             fullWidth
             required
             select
-            label="Color category"
+            label={t("colorCategory")}
             value={category}
             onChange={(e) => setCategory(e.target.value as ColorCategory)}
           >
             {COLOR_CATEGORIES.map((value) => (
               <MenuItem key={value} value={value}>
-                {COLOR_CATEGORY_LABELS[value]}
+                {colorCategoryLabel(value)}
               </MenuItem>
             ))}
           </TextField>
@@ -278,13 +289,13 @@ export function ProjectSchemeEditor({
           }}
         >
           <Button variant="outlined" startIcon={<Plus size={16} />} onClick={() => setAddItem("STEP")}>
-            Step
+            {t("step")}
           </Button>
           <Button variant="outlined" startIcon={<Plus size={16} />} onClick={() => setAddItem("MILESTONE")}>
-            Milestone
+            {t("milestone")}
           </Button>
           <Button variant="outlined" startIcon={<Plus size={16} />} onClick={() => setAddItem("IMAGE")}>
-            Image
+            {t("image")}
           </Button>
         </Box>
         <div>
@@ -309,7 +320,7 @@ export function ProjectSchemeEditor({
                 color: "var(--ink-faint)",
               }}
             >
-              Scheme order
+              {t("schemeOrder")}
             </Box>
             <Box
               component="span"
@@ -319,7 +330,7 @@ export function ProjectSchemeEditor({
                 color: "var(--ink-faint)",
               }}
             >
-              Add paints inside a step; drag items to reorder
+              {t("addPaintsInsideAStepDragItemsToReorder")}
             </Box>
           </Box>
           {entries.length ? (
@@ -394,7 +405,7 @@ export function ProjectSchemeEditor({
                 color: "var(--ink-faint)",
               }}
             >
-              Use the buttons above to add paints, dividers, and images.
+              {t("useTheButtonsAboveToAddPaintsDividersAnd")}
             </Box>
           )}
         </div>
@@ -420,7 +431,7 @@ export function ProjectSchemeEditor({
               }}
               startIcon={<Trash2 size={15} />}
             >
-              {confirmDelete ? "Confirm delete" : "Delete"}
+              {confirmDelete ? t("confirmDelete") : t("delete")}
             </Button>
           )}
           <Button
@@ -431,11 +442,11 @@ export function ProjectSchemeEditor({
             startIcon={<Save size={15} />}
             fullWidth
           >
-            Save
+            {t("save")}
           </Button>
           {!validPaintSteps && (
             <Box sx={{ color: "var(--rust)", fontSize: 12 }}>
-              Place every paint beneath a step before saving.
+              {t("placeEveryPaintBeneathAStepBeforeSaving")}
             </Box>
           )}
         </Box>
@@ -449,7 +460,7 @@ export function ProjectSchemeEditor({
               disabled={busy || (error.operation === "save" && !canSave)}
               onClick={error.operation === "save" ? save : deleteScheme}
             >
-              Retry
+              {t("retry")}
             </Button>
           }
         >

@@ -44,8 +44,9 @@ const cssName = (name: string) => `--${name.replace(/[A-Z]/g, (letter) => `-${le
 
 export const themeVars: Record<string, string> = {
   "--font-sans":
-    '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  "--font-serif": '"Fraunces", Georgia, "Times New Roman", serif',
+    '"Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Malgun Gothic", "Microsoft YaHei", "PingFang SC", "PingFang TC", sans-serif',
+  "--font-serif":
+    '"Fraunces", Georgia, "Times New Roman", "Noto Serif CJK JP", "Songti SC", "Songti TC", serif',
   ...Object.fromEntries(Object.entries(colors).map(([name, value]) => [cssName(name), value])),
   // RGB channels for shadows, used as rgb(var(--shadow-color) / 10%).
   "--shadow-color": "0 0 0",

@@ -117,11 +117,15 @@ void test("default switches are serialized across mix ids and failures do not po
   const next = fixture.commands.setSubstitutionDefault("next", true);
   await turn();
   assert.equal(fixture.requests.length, 1);
-  release(Response.json({ errors: [{ message: "Mix is unavailable" }] }));
-  await assert.rejects(first, /Mix is unavailable/);
+  release(
+    Response.json({
+      errors: [{ message: "Mix is unavailable", extensions: { errorCode: "BAD_USER_INPUT" } }],
+    }),
+  );
+  await assert.rejects(first, /Check the entered information and try again/);
   await next;
   assert.equal(fixture.requests.length, 2);
-  assert.deepEqual(fixture.errors, ["Mix is unavailable"]);
+  assert.deepEqual(fixture.errors, ["Check the entered information and try again."]);
   fixture.dispose();
 });
 
@@ -144,16 +148,18 @@ void test("disposed identity discards old command results and never sends queued
 });
 
 void test("failed creates report errors without automatically retrying", async () => {
-  const fixture = setup(async () => Response.json({ errors: [{ message: "Create rejected" }] }));
+  const fixture = setup(async () =>
+    Response.json({ errors: [{ message: "Create rejected", extensions: { errorCode: "BAD_USER_INPUT" } }] }),
+  );
   await assert.rejects(
     fixture.commands.createSubstitution({
       targetPaintId: "target",
       name: "Mix",
       ingredients: [{ paintId: "ingredient", parts: 1 }],
     }),
-    /Create rejected/,
+    /Check the entered information and try again/,
   );
   assert.equal(fixture.requests.length, 1);
-  assert.deepEqual(fixture.errors, ["Create rejected"]);
+  assert.deepEqual(fixture.errors, ["Check the entered information and try again."]);
   fixture.dispose();
 });

@@ -1,3 +1,4 @@
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import {
   Alert,
   Button,
@@ -9,7 +10,8 @@ import {
   useScrollTrigger,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import { ThemeProvider } from "@mui/material/styles";
+import { LanguageProvider } from "./i18n";
+import { useTranslation } from "react-i18next";
 import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
 
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
@@ -30,7 +32,6 @@ import { Home } from "./Pages/Home";
 import { useVaultStore } from "./store/hooks";
 import { createVaultStore } from "./store/vault-store";
 import { VaultStoreProvider } from "./store/VaultStoreProvider";
-import { theme } from "./theme";
 import { up } from "./theme-tokens";
 import { useAuthStatus, useServerChecks } from "./utils/auth-hooks";
 import { installBaseStyles } from "./utils/base-styles";
@@ -77,16 +78,17 @@ export default function Vault(props: { onChangeServer?: () => void } = {}) {
   const [store] = useState(() => createVaultStore());
   return (
     <VaultStoreProvider store={store}>
-      <ThemeProvider theme={theme}>
+      <LanguageProvider>
         <AppErrorBoundary>
           <VaultContent {...props} />
         </AppErrorBoundary>
-      </ThemeProvider>
+      </LanguageProvider>
     </VaultStoreProvider>
   );
 }
 
 function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
+  const { t: pagesT } = useTranslation("pages");
   const [authError, setError] = useState("");
   const [username, setUsername] = useState(""),
     [password, setPassword] = useState(""),
@@ -113,7 +115,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   const checkServer = useVaultStore((s) => s.checkServer);
   const { auth, loading, loadError, loadFailed } = useAuthStatus();
   useServerChecks(checkServer);
-  const displayName = auth?.username || FALLBACK_OWNER_NAME;
+  const displayName = auth?.username || pagesT(FALLBACK_OWNER_NAME);
   const error = authError || loadError;
 
   async function submitAuth(event: FormEvent) {
@@ -128,13 +130,13 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
         body: JSON.stringify({ username, password, ...(auth?.setupCodeRequired ? { setupCode } : {}) }),
       });
       const result = (await response.json()) as { token?: string; error?: string };
-      if (!response.ok) throw new Error(result.error || "Could not sign in");
+      if (!response.ok) throw new Error(translateServerError(result));
       setToken(result.token ?? "");
       setPassword("");
       setSetupCode("");
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Could not sign in");
+      setError(cause instanceof Error ? cause.message : i18n.t("shell:couldNotSignIn"));
     } finally {
       setAuthBusy(false);
     }
@@ -199,7 +201,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                 fontWeight: 600,
               }}
             >
-              {auth.setupRequired ? "Set up Paint Vault" : "Sign in to Paint Vault"}
+              {auth.setupRequired ? i18n.t("shell:setUpPaintVault") : i18n.t("shell:signInToPaintVault")}
             </Box>
             <Box
               component="p"
@@ -211,23 +213,23 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
               }}
             >
               {auth.setupRequired
-                ? "Create the owner account for this server. Existing vault data will be preserved."
-                : `Sign in as ${auth.username}.`}
+                ? i18n.t("shell:createTheOwnerAccountForThisServerExistingVault")
+                : i18n.t("shell:signInAs", { value1: auth.username })}
             </Box>
             {auth.setupCodeRequired && (
               <TextField
                 required
-                label="Setup code"
+                label={i18n.t("shell:setupCode")}
                 autoComplete="off"
                 slotProps={{ htmlInput: { autoCapitalize: "none", autoCorrect: "off", spellCheck: false } }}
                 value={setupCode}
                 onChange={(event) => setSetupCode(event.target.value)}
-                helperText="Printed in the server log. With Docker, run: docker compose logs paint-vault"
+                helperText={i18n.t("shell:printedInTheServerLogWithDockerRunDocker")}
               />
             )}
             <TextField
               required
-              label="Username"
+              label={i18n.t("shell:username")}
               autoComplete="username"
               slotProps={{ htmlInput: { autoCapitalize: "none", autoCorrect: "off", spellCheck: false } }}
               value={username}
@@ -235,17 +237,17 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
             />
             <PasswordField
               required
-              label="Password"
+              label={i18n.t("shell:password")}
               autoComplete={auth.setupRequired ? "new-password" : "current-password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              helperText={auth.setupRequired ? "Use at least 12 characters." : undefined}
+              helperText={auth.setupRequired ? i18n.t("shell:useAtLeastCharacters") : undefined}
             />
             {error && <Alert severity="error">{error}</Alert>}
             <Button type="submit" variant="contained" disabled={authBusy}>
-              {auth.setupRequired ? "Create account" : "Sign in"}
+              {auth.setupRequired ? i18n.t("shell:createAccount") : i18n.t("shell:signIn")}
             </Button>
-            {onChangeServer && <Button onClick={onChangeServer}>Change server</Button>}
+            {onChangeServer && <Button onClick={onChangeServer}>{i18n.t("shell:changeServer")}</Button>}
           </Box>
         </Card>
       </Box>
@@ -317,7 +319,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                     width: "100%",
                     bgcolor: "var(--surface)",
                   },
-                  "aria-label": "Navigation",
+                  "aria-label": i18n.t("shell:navigation"),
                 },
               }}
             >
@@ -391,7 +393,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                   >
                     <IconButton
                       onClick={() => setNavOpen(true)}
-                      aria-label="Open navigation"
+                      aria-label={i18n.t("shell:openNavigation")}
                       aria-expanded={navOpen}
                       sx={{
                         boxSizing: "border-box",
@@ -431,7 +433,9 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                             },
                       ]}
                     >
-                      {tab === "settings" ? "Data & settings" : NAV.find(([key]) => key === tab)![2]}
+                      {tab === "settings"
+                        ? i18n.t("shell:dataSettings")
+                        : pagesT(NAV.find(([key]) => key === tab)![2])}
                     </Box>
                   </Box>
                 </Box>
@@ -464,11 +468,11 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                     }}
                     action={
                       <Button color="inherit" size="small" onClick={() => void refresh()}>
-                        Retry
+                        {i18n.t("shell:retry")}
                       </Button>
                     }
                   >
-                    Could not refresh your vault. Showing the last loaded data.
+                    {i18n.t("shell:couldNotRefreshYourVaultShowingTheLastLoaded")}
                   </Alert>
                 )}
                 {loading ? (
@@ -534,17 +538,17 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
           )}
           {showPaintForm && <CreatePaintDialog onClose={() => setShowPaintForm(false)} />}
           {pluginsOpen && (
-            <DeferredDialog title="Plugins" onClose={closePlugins}>
+            <DeferredDialog title={i18n.t("shell:plugins")} onClose={closePlugins}>
               <PluginsModal onClose={closePlugins} />
             </DeferredDialog>
           )}
           {showSchemeForm && (
-            <DeferredDialog title="Add scheme" onClose={() => setShowSchemeForm(false)}>
+            <DeferredDialog title={i18n.t("shell:addScheme")} onClose={() => setShowSchemeForm(false)}>
               <ColorSchemesDialog initialId={null} onClose={() => setShowSchemeForm(false)} />
             </DeferredDialog>
           )}
           {selectedId && (
-            <DeferredDialog key={selectedId} title="Miniature" onClose={closeMini}>
+            <DeferredDialog key={selectedId} title={i18n.t("shell:miniature")} onClose={closeMini}>
               <ProjectDrawer miniatureId={selectedId} onClose={closeMini} />
             </DeferredDialog>
           )}
@@ -617,14 +621,14 @@ function CreateMiniatureDialog({
   const openMini = useVaultStore((store) => store.openMini);
   const notify = useVaultStore((store) => store.notify);
   return (
-    <DeferredDialog title="Add miniature" onClose={onClose}>
+    <DeferredDialog title={i18n.t("shell:addMiniature")} onClose={onClose}>
       <MiniatureForm
         initialTemplateId={initialTemplateId}
         onClose={onClose}
         onSubmit={async (values) => {
           const id = await actions.create(values);
           onClose();
-          notify(`Added ${values.title}`);
+          notify(i18n.t("shell:added", { value1: values.title }));
           openMini(id);
         }}
       />
@@ -636,13 +640,13 @@ function CreatePaintDialog({ onClose }: { onClose(): void }) {
   const commands = usePaintCommands();
   const notify = useVaultStore((store) => store.notify);
   return (
-    <DeferredDialog title="Add paint" onClose={onClose}>
+    <DeferredDialog title={i18n.t("shell:addPaint")} onClose={onClose}>
       <PaintForm
         onClose={onClose}
         onSave={async (paint) => {
           await commands.importPaints([paint]);
           onClose();
-          notify(`Added ${paint.name}`);
+          notify(i18n.t("shell:added", { value1: paint.name }));
         }}
       />
     </DeferredDialog>

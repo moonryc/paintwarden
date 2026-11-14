@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -24,6 +25,7 @@ export function PaintForm({
   // Required when editing.
   onDelete?(): Promise<void>;
 }) {
+  const { t } = useTranslation("components");
   const [values, setValues] = useState({
       brand: paint?.brand ?? "",
       range: paint?.range ?? "Other",
@@ -53,16 +55,16 @@ export function PaintForm({
       startIcon={<Save size={15} />}
       fullWidth
     >
-      Save
+      {t("save")}
     </Button>
   );
   return (
     <Modal
-      title={paint ? "Edit custom paint" : "Add paint"}
+      title={paint ? t("editCustomPaint") : t("addPaint")}
       subtitle={
         paint
-          ? "Update imported catalog details or remove this custom entry."
-          : "Add a custom color to your paint library."
+          ? t("updateImportedCatalogDetailsOrRemoveThisCustomEntry")
+          : t("addACustomColorToYourPaintLibrary")
       }
       onClose={onClose}
     >
@@ -93,15 +95,15 @@ export function PaintForm({
             [up.sm]: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))" },
           }}
         >
-          {field("brand", "Brand", true)}
-          {field("range", "Range / type")}
+          {field("brand", t("brand"), true)}
+          {field("range", t("rangeType"))}
         </Box>
-        {field("name", "Paint name", true)}
+        {field("name", t("paintName"), true)}
         <ColorHexField
           value={values.colorHex}
           onChange={(colorHex) => setValues((current) => ({ ...current, colorHex }))}
         />
-        {field("sourceUrl", "Product page URL")}
+        {field("sourceUrl", t("productPageUrl"))}
         {paint && onDelete ? (
           <Box
             sx={{
@@ -122,7 +124,7 @@ export function PaintForm({
               onClick={() => (confirmDelete ? onDelete() : setConfirmDelete(true))}
               sx={confirmDelete ? undefined : { color: "var(--rust)" }}
             >
-              {confirmDelete ? "Confirm delete" : "Delete"}
+              {confirmDelete ? t("confirmDelete") : t("delete")}
             </Button>
             {saveButton}
           </Box>

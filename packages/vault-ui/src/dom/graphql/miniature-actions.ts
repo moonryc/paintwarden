@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { useMemo } from "react";
 
 import { useVaultStore } from "../store/hooks";
@@ -41,7 +42,7 @@ function input(values: Values): MiniatureInput {
     includeTemplateImage,
   } = values;
   if (status != null && status !== "OWNED" && status !== "WISHLIST")
-    throw new Error("Invalid miniature collection");
+    throw new Error(i18n.t("shell:invalidMiniatureCollection"));
   return {
     title,
     status,
@@ -64,12 +65,12 @@ export function createMiniatureActions(scope: VaultGraphQLScope, api: Api, notif
     const ticket = scope.controller.captureCommand();
     const task = async () => {
       if (!scope.controller.isCommandCurrent(ticket))
-        throw new Error("Vault connection changed. Please try again.");
+        throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
       try {
         return await work(ticket);
       } catch (error) {
         if (scope.controller.isCommandCurrent(ticket))
-          notify(error instanceof Error ? error.message : "Could not save miniature", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:couldNotSaveMiniature"), "error");
         throw error;
       }
     };
@@ -90,17 +91,17 @@ export function createMiniatureActions(scope: VaultGraphQLScope, api: Api, notif
     ticket: CommandTicket,
   ) => {
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
-    if (!payload) throw new Error("Miniature save returned no result");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
+    if (!payload) throw new Error(i18n.t("shell:miniatureSaveReturnedNoResult"));
     if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     return payload.miniatureId;
   };
   const saveImage = async (id: string, values: Values, ticket: CommandTicket) => {
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     if (!("image" in values)) return;
     if (values.removeImage)
       await api(`/api/miniatures/${encodeURIComponent(id)}/image`, { method: "DELETE" });
@@ -110,7 +111,7 @@ export function createMiniatureActions(scope: VaultGraphQLScope, api: Api, notif
         body: await imageFormData(values.image),
       });
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
   };
   return {
     create: (values) =>
@@ -129,10 +130,7 @@ export function createMiniatureActions(scope: VaultGraphQLScope, api: Api, notif
         } catch (error) {
           if (!scope.controller.isCommandCurrent(ticket)) throw error;
           // The record exists already. Do not invite a duplicate create on retry.
-          notify(
-            "Miniature created, but its image could not be saved. Reopen Edit to retry the image.",
-            "error",
-          );
+          notify(i18n.t("shell:miniatureCreatedButItsImageCouldNotBeSaved"), "error");
         }
         return id;
       }),
@@ -205,7 +203,7 @@ export function useMiniatureActions(): MiniatureActions {
   const api = useVaultStore((store) => store.api);
   const notify = useVaultStore((store) => store.notify);
   return useMemo(() => {
-    if (!scope) throw new Error("Miniature actions require the GraphQL provider");
+    if (!scope) throw new Error(i18n.t("shell:miniatureActionsRequireTheGraphqlProvider"));
     let actions = scopes.get(scope);
     if (!actions) {
       actions = createMiniatureActions(scope, api, notify);

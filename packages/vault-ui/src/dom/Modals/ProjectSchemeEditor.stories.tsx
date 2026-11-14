@@ -108,7 +108,7 @@ export const EditAndSave: Story = {
   play: async ({ args, userEvent }) => {
     await expect(screen.queryByRole("button", { name: "Reorder START" })).not.toBeInTheDocument();
     await expect(screen.queryByRole("button", { name: "Remove COMPLETE milestone" })).not.toBeInTheDocument();
-    await expect(screen.getByRole("button", { name: "Remove BASECOAT step" })).toBeDisabled();
+    await expect(screen.getByRole("button", { name: "Remove Basecoat step" })).toBeDisabled();
     const save = screen.getByRole("button", { name: "Save" });
     await userEvent.clear(screen.getByRole("textbox", { name: "Scheme name" }));
     await expect(save).toBeDisabled();

@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import { getFragmentData } from "./generated/fragment-masking";
@@ -45,7 +46,7 @@ export async function readSchemes(
           variables: { ...variables, after },
           fetchPolicy: "no-cache",
         });
-        if (!data) throw new Error("Schemes response was empty");
+        if (!data) throw new Error(i18n.t("shell:schemesResponseWasEmpty"));
         const next = unpack(data.schemes);
         if (
           combined &&
@@ -57,7 +58,7 @@ export async function readSchemes(
         combined = combined ? { ...next, nodes: [...combined.nodes, ...next.nodes] } : next;
         if (!next.pageInfo.hasNextPage) break;
         const cursor = next.pageInfo.endCursor;
-        if (!cursor || cursor === after) throw new Error("Schemes returned an invalid page cursor");
+        if (!cursor || cursor === after) throw new Error(i18n.t("shell:schemesReturnedAnInvalidPageCursor"));
         after = cursor;
       }
       if (combined) return combined;
@@ -65,5 +66,5 @@ export async function readSchemes(
       if (!isStaleLibraryCursor(error)) throw error;
     }
   }
-  throw new Error("Schemes changed while refreshing. Try again.");
+  throw new Error(i18n.t("shell:schemesChangedWhileRefreshingTryAgain"));
 }

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Button } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -41,6 +42,7 @@ export function WishlistPaintRow({
   onRemove(): void;
   onOpenPaint(): void;
 }) {
+  const { t } = useTranslation("components");
   const bought = quantity !== undefined;
   return (
     <Box
@@ -65,23 +67,23 @@ export function WishlistPaintRow({
       <PaintRowLabel
         paint={paint}
         onClick={onOpenPaint}
-        accessory={restock && <StatusChip tone="gold">Restock</StatusChip>}
+        accessory={restock && <StatusChip tone="gold">{t("restock")}</StatusChip>}
       />
       {Boolean(projectCount) && onProjects && (
         <Button
           size="small"
-          aria-label={`View all ${projectCount} ${projectCount === 1 ? "project" : "projects"} for ${paint.name}`}
+          aria-label={t("viewPaintProjects", { count: projectCount, name: paint.name })}
           onClick={onProjects}
           sx={{ flexShrink: 0 }}
         >
-          {projectCount} {projectCount === 1 ? "project" : "projects"}
+          {t("projectCount", { count: projectCount })}
         </Button>
       )}
       {reasons?.includes("brokenSubstitution") && (
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
-          <StatusChip tone="rust">Broken substitution</StatusChip>
-          <Button size="small" aria-label={`Fix substitution for ${paint.name}`} onClick={onFix}>
-            Fix substitution
+          <StatusChip tone="rust">{t("brokenSubstitution")}</StatusChip>
+          <Button size="small" aria-label={t("fixPaintSubstitution", { name: paint.name })} onClick={onFix}>
+            {t("fixSubstitution")}
           </Button>
         </Box>
       )}
@@ -89,10 +91,14 @@ export function WishlistPaintRow({
         <PaintRowActions quantity={{ paintName: paint.name, value: quantity, onChange: onQuantityChange }} />
       ) : (
         <PaintRowActions
-          add={{ label: `Mark ${paint.name} as bought`, title: "Mark as bought", onClick: onBought }}
+          add={{
+            label: t("markPaintBought", { name: paint.name }),
+            title: t("markAsBought"),
+            onClick: onBought,
+          }}
           remove={{
-            label: `Remove ${paint.name} from wishlist`,
-            title: "Remove from wishlist",
+            label: t("removePaintFromWishlist", { name: paint.name }),
+            title: t("removeFromWishlist"),
             onClick: onRemove,
           }}
         />

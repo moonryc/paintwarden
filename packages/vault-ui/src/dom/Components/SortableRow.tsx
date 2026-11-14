@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Box from "@mui/material/Box";
@@ -22,6 +23,7 @@ export function SortableRow({
   nested?: boolean;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("components");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   return (
     <Box
@@ -52,7 +54,12 @@ export function SortableRow({
         ...(Array.isArray(sx) ? sx : [sx]),
       ]}
     >
-      <DragHandle label={`Reorder ${label}`} attributes={attributes} listeners={listeners} sx={handleSx} />
+      <DragHandle
+        label={t("reorderItem", { name: label })}
+        attributes={attributes}
+        listeners={listeners}
+        sx={handleSx}
+      />
       {children}
     </Box>
   );

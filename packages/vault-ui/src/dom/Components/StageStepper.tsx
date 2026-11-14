@@ -1,7 +1,8 @@
+import { useTranslation } from "react-i18next";
 import { Step, StepButton, Stepper } from "@mui/material";
 
 import type { PaintingStatus } from "../types";
-import { STAGES } from "../utils/constants";
+import { getStages } from "../utils/constants";
 
 export function StageStepper({
   value,
@@ -10,7 +11,8 @@ export function StageStepper({
   value: PaintingStatus;
   onChange(stage: PaintingStatus): void;
 }) {
-  const current = STAGES.findIndex(([stage]) => stage === value);
+  const { t } = useTranslation("components");
+  const current = getStages().findIndex(([stage]) => stage === value);
   const complete = value === "COMPLETE";
   const progressColor = complete ? "var(--ok)" : "var(--gold)";
 
@@ -19,7 +21,7 @@ export function StageStepper({
       alternativeLabel
       nonLinear
       activeStep={current}
-      aria-label="Painting stage"
+      aria-label={t("paintingStage")}
       sx={{
         width: "100%",
         height: 64,
@@ -33,7 +35,7 @@ export function StageStepper({
           { borderColor: progressColor },
       }}
     >
-      {STAGES.map(([stage, label], index) => {
+      {getStages().map(([stage, label], index) => {
         const active = index === current;
         return (
           <Step key={stage} completed={index < current}>

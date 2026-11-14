@@ -304,7 +304,7 @@ export const CopyMiniatureOnDemandAndReset: Story = {
     await expect(await body.findByRole("combobox", { name: "Required paints" })).toBeVisible();
     await userEvent.type(picker, "knight");
     await userEvent.click(await body.findByRole("option", { name: miniatures.knight.title }));
-    await expect(await body.findByText(/Copies 1 schemes and 1 paint steps/)).toBeVisible();
+    await expect(await body.findByText(/Copies 1 scheme and 1 paint step/)).toBeVisible();
     await userEvent.click(body.getByRole("button", { name: "Save template" }));
     await waitFor(() => expect(args.onSaved).toHaveBeenCalled());
     await expect(fixture.mutation).toHaveBeenCalledWith(

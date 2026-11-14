@@ -1,3 +1,4 @@
+import { withPublicError } from "../lib/public-errors";
 import * as backup from "../app/api/backup/route";
 import * as catalogItem from "../app/api/catalog/[id]/route";
 import * as catalog from "../app/api/catalog/route";
@@ -82,6 +83,10 @@ function bodyLimit(path: string, method: string, contentType: string): BodyLimit
 }
 
 export async function routeApi(incoming: Request): Promise<Response> {
+  return withPublicError(await routeApiInternal(incoming));
+}
+
+async function routeApiInternal(incoming: Request): Promise<Response> {
   const path = new URL(incoming.url).pathname.replace(/^\/api\/?/, "").replace(/\/+$/, "");
   const method = incoming.method.toUpperCase();
   const contentType = incoming.headers.get("content-type")?.split(";")[0].trim().toLowerCase() ?? "";

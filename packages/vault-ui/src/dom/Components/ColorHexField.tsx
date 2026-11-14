@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import { PaintBottle } from "./PaintBottle";
 
 export function ColorHexField({ value, onChange }: { value: string; onChange(value: string): void }) {
+  const { t } = useTranslation("components");
   const colorHex = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim()) ? value.trim() : null;
   return (
     <Box
@@ -17,8 +19,8 @@ export function ColorHexField({ value, onChange }: { value: string; onChange(val
       <PaintBottle paint={{ colorHex }} />
       <TextField
         fullWidth
-        label="Color hex"
-        placeholder="e.g. #445566"
+        label={t("colorHex")}
+        placeholder={t("eG445566")}
         slotProps={{ inputLabel: { shrink: true } }}
         value={value}
         onChange={(event) => onChange(event.target.value)}

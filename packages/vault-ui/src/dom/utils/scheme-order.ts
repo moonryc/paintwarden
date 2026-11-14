@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { arrayMove } from "@dnd-kit/sortable";
 
 import type { DividerRole, PinnedStartMilestone, SchemeOrderEntry, State } from "../types";
@@ -9,7 +10,7 @@ export { REQUIRED_MILESTONE_LABELS };
 export { insertIntoSchemeStep, reorderSchemeEntries, schemePaintsHaveSteps } from "./scheme-step-placement";
 
 export const displayDividerLabel = (role: DividerRole | null | undefined, label: string) =>
-  role ? REQUIRED_MILESTONE_LABELS[role] : label.toUpperCase();
+  role ? i18n.t(role === "START" ? "shell:milestoneStart" : "shell:milestoneComplete") : label;
 
 export const customSchemeMilestones = (): SchemeOrderEntry[] => [
   {

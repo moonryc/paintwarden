@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Paint, State } from "../types";
@@ -124,7 +125,11 @@ export function useWishlist(miniatureId: string | null) {
   useEffect(() => {
     if (fixture) return;
     if (!scope) {
-      setState({ loading: false, refreshing: false, error: "The wishlist connection is not available." });
+      setState({
+        loading: false,
+        refreshing: false,
+        error: i18n.t("shell:theWishlistConnectionIsNotAvailable"),
+      });
       return;
     }
     const abort = new AbortController();
@@ -167,7 +172,7 @@ export function useWishlist(miniatureId: string | null) {
         if (active)
           setState((previous) => ({
             ...previous,
-            error: error instanceof Error ? error.message : "Wishlist refresh failed",
+            error: error instanceof Error ? error.message : i18n.t("shell:wishlistRefreshFailed"),
           }));
       } finally {
         running = false;
@@ -211,7 +216,7 @@ export function useWishlist(miniatureId: string | null) {
   }, [scope, miniatureId, fixture]);
   const exportList = useCallback(async (): Promise<WishlistExport> => {
     if (fixture) return fixture.exportList(miniatureId);
-    if (!scope) throw new Error("The wishlist connection is not available.");
+    if (!scope) throw new Error(i18n.t("shell:theWishlistConnectionIsNotAvailable"));
     const ticket = scope.controller.capture();
     const { data } = await scope.client.query({
       query: WishlistExportDocument,
@@ -219,9 +224,9 @@ export function useWishlist(miniatureId: string | null) {
       fetchPolicy: "no-cache",
     });
     if (!data || !scope.controller.accepts(ticket, data.wishlistExport.revision, ["WISHLIST"]))
-      throw new Error("Wishlist changed while exporting. Try again.");
+      throw new Error(i18n.t("shell:wishlistChangedWhileExportingTryAgain"));
     return {
-      title: data.wishlistExport.text.split("\n", 1)[0] || "Paint shopping list",
+      title: data.wishlistExport.text.split("\n", 1)[0] || i18n.t("shell:paintShoppingList"),
       text: data.wishlistExport.text,
       totalCount: data.wishlistExport.totalCount,
     };
@@ -229,7 +234,7 @@ export function useWishlist(miniatureId: string | null) {
   const relatedProjects = useCallback(
     async (paintId: string, after: string | null = null): Promise<WishlistProjects> => {
       if (fixture) return fixture.relatedProjects(paintId, after);
-      if (!scope) throw new Error("The wishlist connection is not available.");
+      if (!scope) throw new Error(i18n.t("shell:theWishlistConnectionIsNotAvailable"));
       const ticket = scope.controller.capture();
       const { data } = await scope.client.query({
         query: WishlistRelatedProjectsDocument,
@@ -237,7 +242,7 @@ export function useWishlist(miniatureId: string | null) {
         fetchPolicy: "no-cache",
       });
       if (!data || !scope.controller.accepts(ticket, data.wishlistRelatedProjects.revision, ["WISHLIST"]))
-        throw new Error("Project associations changed. Reopen the list.");
+        throw new Error(i18n.t("shell:projectAssociationsChangedReopenTheList"));
       return {
         nodes: data.wishlistRelatedProjects.nodes,
         totalCount: data.wishlistRelatedProjects.totalCount,
@@ -288,7 +293,7 @@ export function useWishlistModelOptions(search: string) {
         key,
         options: [],
         loading: false,
-        error: "The miniature connection is not available.",
+        error: i18n.t("shell:theMiniatureConnectionIsNotAvailable"),
         hasNextPage: false,
       });
       return;
@@ -324,7 +329,7 @@ export function useWishlistModelOptions(search: string) {
             continue;
           }
           if (!active) return;
-          if (!data) throw new Error("Miniature options response was empty");
+          if (!data) throw new Error(i18n.t("shell:miniatureOptionsResponseWasEmpty"));
           const next = data.wishlistModelOptions;
           if (!controller.accepts(ticket, next.revision, ["WISHLIST"])) {
             more = false;
@@ -351,12 +356,12 @@ export function useWishlistModelOptions(search: string) {
           });
           return;
         }
-        throw new Error("Miniature options changed repeatedly. Try again.");
+        throw new Error(i18n.t("shell:miniatureOptionsChangedRepeatedlyTryAgain"));
       } catch (error) {
         if (active)
           setState((previous) => ({
             ...previous,
-            error: error instanceof Error ? error.message : "Miniature search failed",
+            error: error instanceof Error ? error.message : i18n.t("shell:miniatureSearchFailed"),
           }));
       } finally {
         running = false;

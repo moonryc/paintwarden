@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import { getFragmentData } from "./generated/fragment-masking";
@@ -40,7 +41,7 @@ type Connection = { pageInfo: { hasNextPage: boolean; endCursor?: string | null 
 function nextCursor(connection: Connection, previous: string | null) {
   if (!connection.pageInfo.hasNextPage) return null;
   const next = connection.pageInfo.endCursor;
-  if (!next || next === previous) throw new Error("Schemes returned an invalid page cursor");
+  if (!next || next === previous) throw new Error(i18n.t("shell:schemesReturnedAnInvalidPageCursor"));
   return next;
 }
 
@@ -53,7 +54,7 @@ async function readStableWindow<T>(read: () => Promise<T | undefined>, descripti
       if (!isStaleLibraryCursor(error)) throw error;
     }
   }
-  throw new Error(`${description} changed while refreshing. Try again.`);
+  throw new Error(i18n.t("shell:changedWhileRefreshingTryAgain", { value1: description }));
 }
 
 // The editor requires every entry, not just the first page. No page may normalize
@@ -68,7 +69,7 @@ export function readMiniatureScheme(client: ApolloClient, id: string): Promise<M
         variables: { id, after },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Scheme details response was empty");
+      if (!data) throw new Error(i18n.t("shell:schemeDetailsResponseWasEmpty"));
       const next = unpackScheme(data.miniatureScheme);
       if (combined && !sameRevision(combined.revision, next.revision)) return undefined;
       combined = combined
@@ -96,7 +97,7 @@ export function readSchemeOptions(
         variables: { ...variables, after },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Scheme options response was empty");
+      if (!data) throw new Error(i18n.t("shell:schemeOptionsResponseWasEmpty"));
       const next = unpackOptions(data.schemeOptions);
       if (combined && !sameRevision(combined.revision, next.revision)) return undefined;
       combined = combined ? { ...next, nodes: [...combined.nodes, ...next.nodes] } : next;
@@ -104,5 +105,5 @@ export function readSchemeOptions(
       if (!after) break;
     }
     return combined;
-  }, "Scheme options");
+  }, i18n.t("shell:schemeOptions"));
 }

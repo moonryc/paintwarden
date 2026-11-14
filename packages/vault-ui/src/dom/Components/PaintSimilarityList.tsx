@@ -1,3 +1,5 @@
+import { i18n, formatNumber } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { Box } from "@mui/material";
 import type { RankedPaint } from "@paint-vault/core/paint-color-similarity";
 import { useState } from "react";
@@ -13,20 +15,35 @@ const VIEW_HEIGHT = 448;
 
 function differenceLabel(value: number, kind: "lightness" | "intensity") {
   const amount = Math.round(Math.abs(value));
-  if (amount === 0) return kind === "lightness" ? "→ 0 lightness" : "→ 0 vividness";
-  const direction =
-    kind === "lightness" ? (value > 0 ? "lighter" : "darker") : value > 0 ? "more vivid" : "less vivid";
-  return `${value > 0 ? "↑" : "↓"} ${amount} ${direction}`;
+  if (amount === 0)
+    return i18n.t(
+      kind === "lightness"
+        ? "components:similarityNoLightnessChange"
+        : "components:similarityNoVividnessChange",
+    );
+  const key =
+    kind === "lightness"
+      ? value > 0
+        ? "components:similarityLighter"
+        : "components:similarityDarker"
+      : value > 0
+        ? "components:similarityMoreVivid"
+        : "components:similarityLessVivid";
+  return i18n.t(key, { amount });
 }
 
 function hueLabel(value: number | null) {
-  if (value === null) return "↔ n/a hue";
+  if (value === null) return i18n.t("components:similarityHueUnavailable");
   const amount = Math.round(Math.abs(value));
-  if (amount === 0) return "→ 0° hue";
-  return `${value > 0 ? "↺" : "↻"} ${amount}° hue`;
+  if (amount === 0) return i18n.t("components:similarityNoHueChange");
+  return i18n.t(
+    value > 0 ? "components:similarityHueCounterclockwise" : "components:similarityHueClockwise",
+    { amount },
+  );
 }
 
 export function PaintSimilarityList({ ranked }: { ranked: RankedPaint<Paint>[] }) {
+  const { t } = useTranslation("components");
   const [scrollTop, setScrollTop] = useState(0);
   const listWindow = schemeGridWindow({
     itemCount: ranked.length,
@@ -50,15 +67,17 @@ export function PaintSimilarityList({ ranked }: { ranked: RankedPaint<Paint>[] }
           gap: 1,
         }}
       >
-        <Box sx={{ fontWeight: 700 }}>Closest paints</Box>
-        <Box sx={{ color: "text.secondary", fontSize: 12 }}>{ranked.length} ranked</Box>
+        <Box sx={{ fontWeight: 700 }}>{t("closestPaints")}</Box>
+        <Box sx={{ color: "text.secondary", fontSize: 12 }}>
+          {t("similarityRankedCount", { count: ranked.length })}
+        </Box>
       </Box>
       <Box sx={{ color: "text.secondary", fontSize: 12, mt: 0.5, mb: 1.5 }}>
-        Scores compare catalog screen colors; paint finish and primer can change the result.
+        {t("scoresCompareCatalogScreenColorsPaintFinishAndPrimer")}
       </Box>
       <Box
         role="list"
-        aria-label="Paints ranked by color similarity"
+        aria-label={t("paintsRankedByColorSimilarity")}
         // Focusable so keyboard users can scroll the list.
         tabIndex={0}
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
@@ -146,8 +165,10 @@ export function PaintSimilarityList({ ranked }: { ranked: RankedPaint<Paint>[] }
                   <Box component="span">{differenceLabel(match.intensityDelta, "intensity")}</Box>
                 </Box>
                 <Box sx={{ textAlign: "right", flexShrink: 0, lineHeight: 1.1 }}>
-                  <Box sx={{ fontWeight: 800, fontSize: 19 }}>{match.score}%</Box>
-                  <Box sx={{ color: "text.secondary", fontSize: 10 }}>match</Box>
+                  <Box sx={{ fontWeight: 800, fontSize: 19 }}>
+                    {formatNumber(match.score / 100, { style: "percent", maximumFractionDigits: 2 })}
+                  </Box>
+                  <Box sx={{ color: "text.secondary", fontSize: 10 }}>{t("match")}</Box>
                 </Box>
               </Box>
             </Box>

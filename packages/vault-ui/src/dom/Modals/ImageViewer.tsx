@@ -1,3 +1,5 @@
+import { formatNumber } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { imageUrl } from "../utils/image-cache";
 import { Dialog, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -9,6 +11,7 @@ import { up } from "../theme-tokens";
 import { truncateSx } from "../utils/truncate";
 
 export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; onClose(): void }) {
+  const { t } = useTranslation("components");
   const MIN_SCALE = 1,
     MAX_SCALE = 5,
     SCALE_STEP = 0.5;
@@ -130,13 +133,13 @@ export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; o
                 color: "color-mix(in oklab, var(--on-scrim) 65%, transparent)",
               }}
             >
-              Scroll or use controls to zoom · drag to pan
+              {t("scrollOrUseControlsToZoomDragToPan")}
             </Box>
           </Box>
           <IconButton
             color="overlay"
             onClick={onClose}
-            aria-label="Close image viewer"
+            aria-label={t("closeImageViewer")}
             sx={{
               boxSizing: "border-box",
               flexShrink: "0",
@@ -235,7 +238,7 @@ export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; o
             color="overlay"
             onClick={() => setZoom(scale - SCALE_STEP)}
             disabled={scale <= MIN_SCALE}
-            aria-label="Zoom out"
+            aria-label={t("zoomOut")}
             sx={{
               boxSizing: "border-box",
             }}
@@ -253,13 +256,13 @@ export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; o
               fontVariantNumeric: "tabular-nums",
             }}
           >
-            {Math.round(scale * 100)}%
+            {formatNumber(scale, { style: "percent", maximumFractionDigits: 0 })}
           </Box>
           <IconButton
             color="overlay"
             onClick={() => setZoom(scale + SCALE_STEP)}
             disabled={scale >= MAX_SCALE}
-            aria-label="Zoom in"
+            aria-label={t("zoomIn")}
             sx={{
               boxSizing: "border-box",
             }}
@@ -279,7 +282,7 @@ export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; o
             color="overlay"
             onClick={reset}
             disabled={scale === MIN_SCALE && offset.x === 0 && offset.y === 0}
-            aria-label="Reset image view"
+            aria-label={t("resetImageView")}
             sx={{
               boxSizing: "border-box",
             }}
@@ -301,7 +304,7 @@ export function ImageViewer({ src, alt, onClose }: { src: string; alt: string; o
           <IconButton
             color="overlay"
             onClick={onClose}
-            aria-label="Close image viewer"
+            aria-label={t("closeImageViewer")}
             sx={{
               boxSizing: "border-box",
               [up.md]: {

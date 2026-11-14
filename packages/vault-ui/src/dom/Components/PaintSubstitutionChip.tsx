@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 import { Chip } from "@mui/material";
@@ -5,6 +6,7 @@ import { Chip } from "@mui/material";
 import { truncateSx } from "../utils/truncate";
 
 export function PaintSubstitutionChip({ name, broken = false }: { name: string; broken?: boolean }) {
+  const { t } = useTranslation("components");
   return (
     <Chip
       size="small"
@@ -16,12 +18,8 @@ export function PaintSubstitutionChip({ name, broken = false }: { name: string; 
           <ScienceOutlinedIcon sx={{ fontSize: 15 }} />
         )
       }
-      label={broken ? `Broken: ${name}` : name}
-      title={
-        broken
-          ? `Broken substitution: ${name}. Check the recipe ingredients or circular references.`
-          : `Using ${name} as a substitution`
-      }
+      label={broken ? t("brokenSubstitutionName", { name }) : name}
+      title={broken ? t("brokenSubstitutionHelp", { name }) : t("usingSubstitution", { name })}
       sx={{
         height: 24,
         maxWidth: "55%",

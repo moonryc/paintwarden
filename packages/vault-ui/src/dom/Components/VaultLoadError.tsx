@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Box, Button, Card } from "@mui/material";
 
 import { RotateCw } from "../icons";
@@ -13,6 +14,7 @@ export function VaultLoadError({
   onRetry: () => void;
   onChangeServer?: () => void;
 }) {
+  const { t } = useTranslation("components");
   return (
     <Box
       component="main"
@@ -23,20 +25,19 @@ export function VaultLoadError({
           component="h1"
           sx={{ m: 0, fontFamily: "var(--font-serif)", fontSize: "1.5rem", letterSpacing: "-0.02em" }}
         >
-          Can&rsquo;t open your vault
+          {t("vaultOpenErrorTitle")}
         </Box>
         <Box component="p" sx={{ m: 0, color: "var(--ink-soft)", fontSize: 14, lineHeight: 1.5 }}>
-          {message}. Paint Vault couldn&rsquo;t get your data from the server. Nothing has been changed or
-          deleted.
+          {t("vaultOpenErrorBody", { message })}
         </Box>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "flex-end" }}>
           {onChangeServer && (
             <Button variant="outlined" onClick={onChangeServer}>
-              Change server
+              {t("changeServer")}
             </Button>
           )}
           <Button variant="contained" startIcon={<RotateCw size={16} />} onClick={onRetry}>
-            Try again
+            {t("tryAgain")}
           </Button>
         </Box>
       </Card>

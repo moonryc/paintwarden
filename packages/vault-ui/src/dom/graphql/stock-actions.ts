@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { createContext, useContext, useMemo } from "react";
 
 import { useVaultStore } from "../store/hooks";
@@ -66,7 +67,7 @@ export function createPaintStockActions(scope: VaultGraphQLScope, notify: Notify
           fetchPolicy: "no-cache",
         });
         const payload = result.data?.setPaintStock;
-        if (!payload) throw new Error("Stock save returned no result");
+        if (!payload) throw new Error(i18n.t("shell:stockSaveReturnedNoResult"));
         if (!scope.controller.isCommandCurrent(ticket)) return;
         if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies)) return;
         // Write only while this envelope is fresh. Global counts/availability are never
@@ -80,7 +81,7 @@ export function createPaintStockActions(scope: VaultGraphQLScope, notify: Notify
         }
       } catch (error) {
         if (scope.controller.isCommandCurrent(ticket)) {
-          notify(error instanceof Error ? error.message : "Could not save stock", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:couldNotSaveStock"), "error");
           const cursor = scope.controller.getCursor();
           if (cursor) scope.controller.committed(cursor, ["LIBRARY", "PAINT", "OPTIONS"]);
         }
@@ -105,13 +106,19 @@ export function createPaintStockActions(scope: VaultGraphQLScope, notify: Notify
         "FULL",
         owned ? undefined : Math.max(1, previous?.quantity ?? 0),
       );
-      notify(owned ? `${paint.name} unmarked` : `${paint.name} marked as owned`, "ok", {
-        label: "Undo",
-        onClick: () =>
-          previous
-            ? setPaintState(paint.id, previous.state, previous.stockLevel, previous.quantity)
-            : setPaintState(paint.id, null),
-      });
+      notify(
+        owned
+          ? i18n.t("shell:unmarked", { value1: paint.name })
+          : i18n.t("shell:markedAsOwned", { value1: paint.name }),
+        "ok",
+        {
+          label: i18n.t("shell:undo"),
+          onClick: () =>
+            previous
+              ? setPaintState(paint.id, previous.state, previous.stockLevel, previous.quantity)
+              : setPaintState(paint.id, null),
+        },
+      );
     },
   };
 }
@@ -123,7 +130,7 @@ export function usePaintStock(): Actions {
   return useMemo(() => {
     if (!scope) {
       if (fixture) return fixture;
-      throw new Error("Paint stock actions require a GraphQL scope");
+      throw new Error(i18n.t("shell:paintStockActionsRequireAGraphqlScope"));
     }
     let actions = actionsByScope.get(scope);
     if (!actions) {

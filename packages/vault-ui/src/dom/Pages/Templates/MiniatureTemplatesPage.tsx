@@ -1,6 +1,7 @@
 import { Alert, Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar } from "../../Components/FilterToolbar";
@@ -21,6 +22,7 @@ import { TemplateEditorDialog } from "./TemplateEditorDialog";
 const CARD_BORDER = 1;
 
 export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
+  const { t, i18n } = useTranslation("pages");
   const actions = useTemplateActions();
   const notify = useVaultStore((s) => s.notify);
   const [search, setSearch] = useState("");
@@ -137,7 +139,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
     try {
       await actions.remove(template.id);
       setSelected(null);
-      notify("Template deleted");
+      notify(t("templatesDeleted"));
     } catch {
       /* actions report the error */
     }
@@ -146,12 +148,12 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   return (
     <>
       <PageHeader
-        eyebrow="Library"
-        title="Miniature templates"
-        body="Browse templates from your catalog sources or save a reusable setup of your own."
+        eyebrow={t("templatesLibrary")}
+        title={t("templatesPageTitle")}
+        body={t("templatesPageBody")}
         action={
           <Button variant="contained" startIcon={<Plus size={17} />} onClick={() => setEditing(null)}>
-            New template
+            {t("templatesNewTemplate")}
           </Button>
         }
       />
@@ -159,7 +161,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         <Alert
           severity="error"
           sx={{ mb: 2 }}
-          action={<Button onClick={() => void catalogQuery.refetch()}>Retry</Button>}
+          action={<Button onClick={() => void catalogQuery.refetch()}>{t("templatesRetry")}</Button>}
         >
           {error}
         </Alert>
@@ -169,7 +171,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         setSearch={(value) => {
           setSearch(value);
         }}
-        placeholder="Search templates…"
+        placeholder={t("templatesSearchPlaceholder")}
       >
         <Box
           sx={{
@@ -187,11 +189,11 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
               select
               fullWidth
               size="small"
-              label="Plugin"
+              label={t("templatesPlugin")}
               value={plugin}
               onChange={(event) => setPlugin(event.target.value)}
             >
-              <MenuItem value="ALL">All plugins</MenuItem>
+              <MenuItem value="ALL">{t("templatesAllPlugins")}</MenuItem>
               {catalogQuery.sourceCounts
                 .filter((facet) => facet.key)
                 .map((facet) => (
@@ -199,20 +201,20 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
                     {facet.label}
                   </MenuItem>
                 ))}
-              <MenuItem value="NONE">Not from a plugin</MenuItem>
+              <MenuItem value="NONE">{t("templatesNoPlugin")}</MenuItem>
             </TextField>
           )}
           <TextField
             select
             fullWidth
             size="small"
-            label="Category"
+            label={t("templatesCategory")}
             value={category}
             onChange={(event) => {
               setCategory(event.target.value);
             }}
           >
-            <MenuItem value="ALL">All categories</MenuItem>
+            <MenuItem value="ALL">{t("templatesAllCategories")}</MenuItem>
             {catalogQuery.categories.map((item) => (
               <MenuItem key={item} value={item}>
                 {item}
@@ -224,8 +226,8 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       {!hasGrid ? (
         <EmptyState
           icon={<TemplateCopy size={26} />}
-          title="No templates yet"
-          body="Install a plugin with miniature templates from Data & settings → Plugins, or use New template to save a reusable setup of your own."
+          title={t("templatesEmptyTitle")}
+          body={t("templatesEmptyBody")}
         />
       ) : (
         <>
@@ -239,7 +241,10 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
               color: "var(--ink-faint)",
             }}
           >
-            {(catalog?.totalCount ?? 0).toLocaleString()} templates
+            {t("templatesTotalCount", {
+              count: catalog?.totalCount ?? 0,
+              formattedCount: new Intl.NumberFormat(i18n.language).format(catalog?.totalCount ?? 0),
+            })}
           </Box>
           <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
             <Box
@@ -275,10 +280,10 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       <Box ref={loadMoreRef} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         {catalog?.hasNextPage && (
           <Button onClick={catalogQuery.loadMore} disabled={catalogQuery.loading}>
-            Load more templates
+            {t("templatesLoadMoreTemplates")}
           </Button>
         )}
-        {catalogQuery.loading && <Box role="status">Loading templates…</Box>}
+        {catalogQuery.loading && <Box role="status">{t("templatesLoadingTemplates")}</Box>}
       </Box>
       {selected && (
         <TemplateDetailsDialog
@@ -303,7 +308,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           template={editing}
           onSaved={async () => {
             setEditing(undefined);
-            notify(editing ? "Template updated" : "Template created");
+            notify(editing ? t("templatesUpdated") : t("templatesCreated"));
           }}
           onClose={() => setEditing(undefined)}
         />

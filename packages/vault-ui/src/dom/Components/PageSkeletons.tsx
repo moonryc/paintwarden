@@ -1,3 +1,5 @@
+import { i18n } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { Box, Card, Skeleton, useMediaQuery } from "@mui/material";
 import type { SkeletonProps, SxProps, Theme } from "@mui/material";
 import { createContext, useContext } from "react";
@@ -17,19 +19,21 @@ export type SkeletonPage =
   | "miniature-detail"
   | "paint-detail";
 
-const titles: Record<SkeletonPage, string> = {
-  home: "Workbench",
-  miniatures: "Miniatures",
-  paints: "Paints",
-  wishlist: "Wishlist",
-  schemes: "Schemes",
-  templates: "Miniature templates",
-  settings: "Data & settings",
-  plugins: "Plugins",
-  "paint-tools": "Paint Tools",
-  "miniature-detail": "Miniature details",
-  "paint-detail": "Paint details",
-};
+function pageTitles(): Record<SkeletonPage, string> {
+  return {
+    home: i18n.t("components:workbench"),
+    miniatures: i18n.t("components:miniatures"),
+    paints: i18n.t("components:paints"),
+    wishlist: i18n.t("components:wishlist"),
+    schemes: i18n.t("components:schemes"),
+    templates: i18n.t("components:miniatureTemplates"),
+    settings: i18n.t("components:dataSettings"),
+    plugins: i18n.t("components:plugins"),
+    "paint-tools": i18n.t("components:paintTools"),
+    "miniature-detail": i18n.t("components:miniatureDetails"),
+    "paint-detail": i18n.t("components:paintDetails"),
+  };
+}
 
 const ReducedMotionContext = createContext(false);
 const items = (count: number) => Array.from({ length: count }, (_, index) => index);
@@ -68,16 +72,18 @@ function Lines({ wide = false }: { wide?: boolean }) {
 }
 
 // Hidden text measures the real typography/wrapping; only its skeleton is drawn.
-const headerBodies: Partial<Record<SkeletonPage, string>> = {
-  home: "See which projects are ready to paint and what's left to gather.",
-  miniatures: "Browse your owned and wishlisted miniatures.",
-  paints: "Paints available · paints on your wishlist · colors in the library.",
-  wishlist: "Paints to buy for your projects. Tick one off when it’s on your shelf.",
-  schemes: "Ordered groups of paints you can add to any miniature in one tap.",
-  templates: "Browse templates from your catalog sources or save a reusable setup of your own.",
-  settings: "Manage your vault, account, and backups.",
-  "paint-tools": "Compare paints and convert recipes with your collection.",
-};
+function pageBodies(): Partial<Record<SkeletonPage, string>> {
+  return {
+    home: i18n.t("components:seeWhichProjectsAreReadyToPaintAndWhat"),
+    miniatures: i18n.t("components:browseYourOwnedAndWishlistedMiniatures"),
+    paints: i18n.t("components:paintsAvailablePaintsOnYourWishlistColorsInThe"),
+    wishlist: i18n.t("components:paintsToBuyForYourProjectsTickOneOff"),
+    schemes: i18n.t("components:orderedGroupsOfPaintsYouCanAddToAny"),
+    templates: i18n.t("components:browseTemplatesFromYourCatalogSourcesOrSaveA"),
+    settings: i18n.t("components:manageYourVaultAccountAndBackups"),
+    "paint-tools": i18n.t("components:comparePaintsAndConvertRecipesWithYourCollection"),
+  };
+}
 function Header({ page, action = false }: { page: SkeletonPage; action?: boolean }) {
   const actionWidth = page === "templates" ? 147 : page === "schemes" ? 139 : 124;
   return (
@@ -105,13 +111,13 @@ function Header({ page, action = false }: { page: SkeletonPage; action?: boolean
             letterSpacing: "-0.025em",
           }}
         >
-          <Box sx={{ visibility: "hidden" }}>{titles[page]}</Box>
+          <Box sx={{ visibility: "hidden" }}>{pageTitles()[page]}</Box>
           <Shape sx={{ position: "absolute", inset: 0, height: "100%", width: "100%", maxWidth: 300 }} />
         </Box>
         <Box
           sx={{ mt: 1, position: "relative", maxWidth: "42rem", fontSize: "0.875rem", lineHeight: 10 / 7 }}
         >
-          <Box sx={{ visibility: "hidden" }}>{headerBodies[page]}</Box>
+          <Box sx={{ visibility: "hidden" }}>{pageBodies()[page]}</Box>
           <Shape sx={{ position: "absolute", inset: 0, height: "100%", width: "100%", maxWidth: 480 }} />
         </Box>
       </Box>
@@ -514,12 +520,13 @@ function Content({ page, miniatureImage }: { page: SkeletonPage; miniatureImage?
 
 /** Initial reads only; keep already-loaded content mounted during background refreshes. */
 export function PageSkeleton({ page, miniatureImage }: { page: SkeletonPage; miniatureImage?: boolean }) {
+  const { t } = useTranslation("components");
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
   return (
     <ReducedMotionContext.Provider value={reducedMotion}>
       <Box data-skeleton={page} aria-busy="true" sx={{ width: "100%", minWidth: 0 }}>
         <Box role="status" aria-live="polite" sx={visuallyHiddenSx}>
-          Loading {titles[page]}…
+          {t("loadingPage", { title: pageTitles()[page] })}
         </Box>
         <Box aria-hidden="true">
           <Content page={page} miniatureImage={miniatureImage} />

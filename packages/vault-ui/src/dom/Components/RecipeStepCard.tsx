@@ -1,3 +1,5 @@
+import { formatNumber } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { Button, Card, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { RecipeStep } from "@paint-vault/core/recipe-steps";
@@ -56,6 +58,7 @@ export function RecipeStepCardView({
   onSetPaintState,
   renderSchemeChip,
 }: RecipeStepCardViewProps) {
+  const { t } = useTranslation("components");
   return (
     <Card sx={{ overflow: "visible" }}>
       <Box
@@ -89,7 +92,7 @@ export function RecipeStepCardView({
             color: "var(--ink-soft)",
           }}
         >
-          {number}
+          {formatNumber(number)}
         </Box>
         <Box component="b" sx={{ fontSize: 14 }}>
           {label}
@@ -101,17 +104,17 @@ export function RecipeStepCardView({
             variant="text"
             startIcon={adding ? <X size={14} /> : <Plus size={14} />}
             aria-expanded={adding}
-            aria-label={adding ? `Close adding to ${label}` : `Add paint to ${label}`}
+            aria-label={adding ? t("closeAddingToStep", { label }) : t("addPaintToStep", { label })}
             onClick={onToggleAdd}
             sx={{ color: "var(--ink-soft)", minWidth: 0 }}
           >
-            {adding ? "Close" : "Add"}
+            {adding ? t("close") : t("add")}
           </Button>
         )}
         {editMode && rows.length === 0 && (
           <IconButton
             size="small"
-            aria-label={`Remove empty ${label} step`}
+            aria-label={t("removeEmptyStep", { label })}
             onClick={onRemoveStep}
             sx={{ color: "var(--ink-soft)" }}
           >
@@ -156,8 +159,8 @@ export function RecipeStepCardView({
       ) : editMode && !adding ? (
         <Box sx={{ p: 1 }}>
           <DashedAddButton
-            label="Add the first paint"
-            ariaLabel={`Add the first paint to ${label}`}
+            label={t("addTheFirstPaint")}
+            ariaLabel={t("addFirstPaintToStep", { label })}
             onClick={onToggleAdd}
           />
         </Box>
@@ -172,7 +175,7 @@ export function RecipeStepCardView({
             fontSize: 12,
           }}
         >
-          No paints in this step yet.
+          {t("noPaintsInThisStepYet")}
         </Box>
       ) : null}
       {adding && addPanel}

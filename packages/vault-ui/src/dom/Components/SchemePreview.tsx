@@ -1,6 +1,7 @@
+import { colorCategoryLabel, dividerLabel } from "./component-labels";
+import { useTranslation } from "react-i18next";
 import { Alert, Button, ButtonBase, Card, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
-import { COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
 import { useState } from "react";
 
 import type { LibraryPaintProjection } from "../graphql/library-model";
@@ -45,19 +46,20 @@ export function SchemePreview({
   loading?: boolean;
   onRetry?(): void;
 }) {
+  const { t } = useTranslation("components");
   const openMini = useVaultStore((s) => s.openMini);
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
   const [openImage, setOpenImage] = useState<{ src: string; alt: string } | null>(null);
   return (
-    <Modal title={active.name} subtitle="Ordered paint recipe and reference images." onClose={onClose}>
+    <Modal title={active.name} subtitle={t("orderedPaintRecipeAndReferenceImages")} onClose={onClose}>
       {error && (
-        <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
+        <Alert severity="error" action={<Button onClick={onRetry}>{t("retry")}</Button>}>
           {error.message}
         </Alert>
       )}
       {loading && (
         <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
-          Refreshing scheme…
+          {t("refreshingScheme")}
         </Box>
       )}
       <Box
@@ -78,7 +80,7 @@ export function SchemePreview({
           <Chip
             size="small"
             variant="outlined"
-            label={active.category ? COLOR_CATEGORY_LABELS[active.category] : "Uncategorized"}
+            label={active.category ? colorCategoryLabel(active.category) : t("uncategorized")}
             sx={{ ...schemePreviewChipSize, fontSize: 11, fontWeight: 700 }}
           />
           {active.isSystem && <PluginChip name={active.sourceName} logoUrl={active.sourceLogoUrl} />}
@@ -92,7 +94,7 @@ export function SchemePreview({
               color: "var(--ink-faint)",
             }}
           >
-            {paintCount} paint{paintCount === 1 ? "" : "s"}
+            {t("paintCount", { count: paintCount })}
           </Box>
         </Box>
         <Card
@@ -138,7 +140,7 @@ export function SchemePreview({
                         },
                   ]}
                 >
-                  {displayDividerLabel(entry.role, entry.label)}
+                  {dividerLabel(displayDividerLabel(entry.role, entry.label))}
                 </Box>
               );
             if (entry.type === "IMAGE")
@@ -156,11 +158,13 @@ export function SchemePreview({
                   }}
                 >
                   <ButtonBase
-                    aria-label={`View ${active.name} reference image`}
+                    aria-label={t("schemeReferenceImage", { name: active.name })}
                     onClick={() =>
                       setOpenImage({
                         src: entry.imageUrl,
-                        alt: `${active.name} ${entry.imageType?.toLowerCase() ?? "recipe"} example`,
+                        alt: entry.imageType
+                          ? t("schemeExampleForType", { name: active.name, type: entry.imageType })
+                          : t("schemeRecipeExample", { name: active.name }),
                       })
                     }
                     sx={{ display: "block", width: "100%" }}
@@ -168,7 +172,11 @@ export function SchemePreview({
                     <Box
                       component="img"
                       src={imageUrl(entry.imageUrl)}
-                      alt={`${active.name} ${entry.imageType?.toLowerCase() ?? "recipe"} example`}
+                      alt={
+                        entry.imageType
+                          ? t("schemeExampleForType", { name: active.name, type: entry.imageType })
+                          : t("schemeRecipeExample", { name: active.name })
+                      }
                       sx={{
                         marginInline: "auto",
                         maxHeight: "34rem",
@@ -180,7 +188,7 @@ export function SchemePreview({
                   {entry.imageType && (
                     <Chip
                       size="small"
-                      label={`${entry.imageType.toLowerCase()} ready`}
+                      label={t("schemeImageTypeReady", { type: entry.imageType })}
                       sx={{
                         boxSizing: "border-box",
                         position: "absolute",
@@ -220,7 +228,7 @@ export function SchemePreview({
                   color: "var(--rust)",
                 }}
               >
-                Paint unavailable
+                {t("paintUnavailable")}
               </Box>
             );
           })}
@@ -236,7 +244,7 @@ export function SchemePreview({
             }}
           >
             <Button variant="contained" onClick={() => onEdit()} startIcon={<Pencil size={15} />}>
-              Edit scheme
+              {t("editScheme")}
             </Button>
           </Box>
         )}

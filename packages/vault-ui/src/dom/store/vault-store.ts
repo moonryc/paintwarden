@@ -1,3 +1,4 @@
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 // Zustand contains credentials, actions and screen state only. Apollo owns server data.
 import { createStore } from "zustand/vanilla";
 
@@ -57,7 +58,7 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
         try {
           const auth = await readJson<AuthStatus>(
             await fetch("/api/auth/status", { cache: "no-store", headers }),
-            "Could not check vault access",
+            i18n.t("shell:couldNotCheckVaultAccess"),
           );
           if (generation !== get().authGeneration) return;
           const previous = get().auth;
@@ -77,7 +78,7 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
           if (generation === get().authGeneration)
             set({
               authLoading: false,
-              authError: error instanceof Error ? error.message : "Could not check vault access",
+              authError: error instanceof Error ? error.message : i18n.t("shell:couldNotCheckVaultAccess"),
             });
         }
       })().finally(() => {
@@ -116,7 +117,7 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
         const { authHeaders, notify, refresh } = get();
         try {
           if (path.split("?")[0] === "/api/state" || path.startsWith("/api/changes"))
-            throw new Error("Legacy snapshot requests are disabled");
+            throw new Error(i18n.t("shell:legacySnapshotRequestsAreDisabled"));
           const response = await fetch(path, {
             ...options,
             headers: {
@@ -126,11 +127,11 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
             },
           });
           const result = (await response.json().catch(() => ({}))) as { error?: string };
-          if (!response.ok) throw new Error(result.error || "Request failed");
+          if (!response.ok) throw new Error(translateServerError(result));
           await refresh();
           return result;
         } catch (error) {
-          notify(error instanceof Error ? error.message : "Request failed", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:requestFailed"), "error");
           await refresh();
           throw error;
         }

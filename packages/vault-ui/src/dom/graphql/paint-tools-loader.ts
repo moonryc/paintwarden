@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import { getFragmentData, makeFragmentData } from "./generated/fragment-masking";
@@ -32,7 +33,7 @@ async function stableRead<T>(read: () => Promise<T | undefined>): Promise<T> {
       if (!isStaleLibraryCursor(error)) throw error;
     }
   }
-  throw new Error("Paints changed while refreshing. Try again.");
+  throw new Error(i18n.t("shell:paintsChangedWhileRefreshingTryAgain"));
 }
 
 // Only the explicitly loaded ranking window is read. A refresh rebuilds that
@@ -47,13 +48,13 @@ export function readPaintRankingWindow(client: ApolloClient, id: string, ownedOn
         variables: { id, ownedOnly, after },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Paint ranking response was empty");
+      if (!data) throw new Error(i18n.t("shell:paintRankingResponseWasEmpty"));
       const next = unpack(data.paintRanking);
       if (result && !sameRevision(result.revision, next.revision)) return undefined;
       result = result ? { ...next, nodes: [...result.nodes, ...next.nodes] } : next;
       if (!next.pageInfo.hasNextPage) break;
       const cursor = next.pageInfo.endCursor;
-      if (!cursor || cursor === after) throw new Error("Paint ranking returned an invalid cursor");
+      if (!cursor || cursor === after) throw new Error(i18n.t("shell:paintRankingReturnedAnInvalidCursor"));
       after = cursor;
     }
     return result;
@@ -87,7 +88,7 @@ async function readChoice(client: ApolloClient, id: string) {
     variables: { id },
     fetchPolicy: "no-cache",
   });
-  if (!data) throw new Error("Selected paint response was empty");
+  if (!data) throw new Error(i18n.t("shell:selectedPaintResponseWasEmpty"));
   return { ...data.paint, id, paint: getFragmentData(DetailPaintFragmentDoc, data.paint.paint) };
 }
 export type PaintConversionRead = {
@@ -118,7 +119,7 @@ export function readPaintConversion(client: ApolloClient, ids: string[], choiceI
     }
     if (!revision) {
       const { data } = await client.query({ query: VaultRevisionDocument, fetchPolicy: "no-cache" });
-      if (!data) throw new Error("Paint revision response was empty");
+      if (!data) throw new Error(i18n.t("shell:paintRevisionResponseWasEmpty"));
       revision = data.vaultRevision;
     }
     return { revision, rows, choices };

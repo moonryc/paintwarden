@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { createContext, useContext, useMemo } from "react";
 
 import type { PaintFormValues } from "../Modals/PaintForm";
@@ -39,12 +40,12 @@ export function createPaintCommands(scope: VaultGraphQLScope, notify: Notify): P
     const ticket = scope.controller.captureCommand();
     const result = queue.then(async () => {
       if (!scope.controller.isCommandCurrent(ticket))
-        throw new Error("Vault connection changed. Please try again.");
+        throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
       try {
         return await work(ticket);
       } catch (error) {
         if (scope.controller.isCommandCurrent(ticket))
-          notify(error instanceof Error ? error.message : "Could not save paint", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:couldNotSavePaint"), "error");
         throw error;
       }
     });
@@ -53,12 +54,12 @@ export function createPaintCommands(scope: VaultGraphQLScope, notify: Notify): P
   };
   const committed = async <T extends Envelope>(payload: T | null | undefined, ticket: CommandTicket) => {
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
-    if (!payload) throw new Error("Paint command returned no result");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
+    if (!payload) throw new Error(i18n.t("shell:paintCommandReturnedNoResult"));
     if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     return payload;
   };
   const mutationId = () => `paint:${++serial}`;
@@ -114,7 +115,7 @@ export function createPaintCommands(scope: VaultGraphQLScope, notify: Notify): P
           fetchPolicy: "no-cache",
         });
         const payload = await committed(result.data?.createSubstitution, ticket);
-        if (!payload.substitutionId) throw new Error("Substitution save returned no id");
+        if (!payload.substitutionId) throw new Error(i18n.t("shell:substitutionSaveReturnedNoId"));
         return payload.substitutionId;
       }),
     setSubstitutionDefault: (id, enabled) =>
@@ -148,7 +149,7 @@ export function usePaintCommands(): PaintCommands {
   return useMemo(() => {
     if (!scope) {
       if (fixture) return fixture;
-      throw new Error("Paint commands require the GraphQL provider");
+      throw new Error(i18n.t("shell:paintCommandsRequireTheGraphqlProvider"));
     }
     let commands = scopes.get(scope);
     if (!commands) {

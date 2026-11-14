@@ -212,7 +212,7 @@ export const AttachedSchemePreviewAndImages: Story = {
   play: async ({ canvasElement }) => {
     const screen = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(screen.getByText("Projected copper")).toBeVisible());
-    await expect(screen.getByText("LEGACY GLAZE")).toBeVisible();
+    await expect(screen.getByText("Legacy glaze")).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: `View ${first.name} reference image` }));
     await userEvent.click(await screen.findByRole("button", { name: "Zoom in" }));
     await userEvent.click(screen.getByRole("button", { name: "Reset image view" }));

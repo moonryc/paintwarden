@@ -1,5 +1,6 @@
 import { Box, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "../../Components/PageHeader";
 import { ArrowLeftRight, Layers } from "../../icons";
@@ -9,16 +10,13 @@ import { PaintComparison } from "./PaintComparison";
 import { RecipeConverter } from "./RecipeConverter";
 
 export function PaintToolsPage() {
+  const { t } = useTranslation("pages");
   const [tool, setTool] = useState<"compare" | "convert">("compare");
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
 
   return (
     <div>
-      <PageHeader
-        eyebrow="Color tools"
-        title="Paint Tools"
-        body="Compare colors and adapt recipes to the paints you own."
-      />
+      <PageHeader eyebrow={t("toolsEyebrow")} title={t("toolsTitle")} body={t("toolsDescription")} />
       <ToggleButtonGroup
         exclusive
         fullWidth
@@ -26,7 +24,7 @@ export function PaintToolsPage() {
         onChange={(_, value: "compare" | "convert" | null) => {
           if (value) setTool(value);
         }}
-        aria-label="Choose a paint tool"
+        aria-label={t("toolsChooseTool")}
         sx={{ mb: 2.5 }}
       >
         <ToggleButton
@@ -50,7 +48,7 @@ export function PaintToolsPage() {
           ]}
         >
           <ArrowLeftRight size={18} />
-          Paint compare
+          {t("toolsCompare")}
         </ToggleButton>
         <ToggleButton
           id="paint-tool-convert"
@@ -73,7 +71,7 @@ export function PaintToolsPage() {
           ]}
         >
           <Layers size={18} />
-          Recipe converter
+          {t("toolsConverter")}
         </ToggleButton>
       </ToggleButtonGroup>
       <Box

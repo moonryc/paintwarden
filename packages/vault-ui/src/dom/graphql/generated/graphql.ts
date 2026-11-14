@@ -763,6 +763,7 @@ export type InstalledSourcesQuery = {
       attribution: string | null;
       lastError: string | null;
       logoUrl: string | null;
+      lastErrorInfo: { code: string; parameters: Array<{ name: string; value: string }> } | null;
       dependencies: Array<{ repository: string; minimumVersion: string | null }>;
       counts: { paints: number; schemes: number; templates: number };
     }>;
@@ -5500,6 +5501,27 @@ export const InstalledSourcesDocument = {
                       { kind: "Field", name: { kind: "Name", value: "license" } },
                       { kind: "Field", name: { kind: "Name", value: "attribution" } },
                       { kind: "Field", name: { kind: "Name", value: "lastError" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "lastErrorInfo" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "code" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "parameters" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "Field", name: { kind: "Name", value: "name" } },
+                                  { kind: "Field", name: { kind: "Name", value: "value" } },
+                                ],
+                              },
+                            },
+                          ],
+                        },
+                      },
                       { kind: "Field", name: { kind: "Name", value: "logoUrl" } },
                       {
                         kind: "Field",

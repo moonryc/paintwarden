@@ -1,3 +1,5 @@
+import { i18n } from "../i18n";
+
 export async function preprocessImage(file: File): Promise<File> {
   const bitmap = await createImageBitmap(file),
     max = 1600,
@@ -21,7 +23,11 @@ export async function preprocessImage(file: File): Promise<File> {
   canvas.getContext("2d")!.drawImage(bitmap, sx, sy, sw, sh, 0, 0, width, height);
   bitmap.close();
   const blob = await new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((v) => (v ? resolve(v) : reject(new Error("Could not process image"))), "image/webp", 0.84),
+    canvas.toBlob(
+      (v) => (v ? resolve(v) : reject(new Error(i18n.t("components:couldNotImportThatImage")))),
+      "image/webp",
+      0.84,
+    ),
   );
   return new File([blob], "miniature.webp", { type: "image/webp" });
 }
@@ -73,7 +79,7 @@ export async function rotateImage(
   bitmap.close();
   const out = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (value) => (value ? resolve(value) : reject(new Error("Could not rotate image"))),
+      (value) => (value ? resolve(value) : reject(new Error(i18n.t("components:couldNotRotatePhoto")))),
       "image/webp",
       0.84,
     ),

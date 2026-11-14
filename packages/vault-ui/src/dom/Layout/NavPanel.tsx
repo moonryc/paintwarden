@@ -11,7 +11,9 @@ import {
   ListSubheader,
 } from "@mui/material";
 import Box from "@mui/material/Box";
+import { useTranslation } from "react-i18next";
 
+import { formatNumber } from "../i18n";
 import { Settings, X } from "../icons";
 import type { Tab } from "../types";
 import { linkResetSx } from "../utils/element-resets";
@@ -44,6 +46,7 @@ export function NavPanel({
   onAccount(): void;
   onClose?(): void;
 }) {
+  const { t } = useTranslation("pages");
   const then = (fn: () => void) => () => {
     onClose?.();
     fn();
@@ -101,7 +104,7 @@ export function NavPanel({
                 fontWeight: 600,
               }}
             >
-              Paint Vault
+              {t("layoutBrand")}
             </Box>
             <Box
               component="span"
@@ -115,14 +118,14 @@ export function NavPanel({
                 textTransform: "uppercase",
               }}
             >
-              Miniature studio
+              {t("layoutStudio")}
             </Box>
           </span>
         </ButtonBase>
         {onClose && (
           <IconButton
             onClick={onClose}
-            aria-label="Close navigation"
+            aria-label={t("layoutCloseNavigation")}
             sx={{
               boxSizing: "border-box",
               borderRadius: "calc(infinity * 1px)",
@@ -141,12 +144,16 @@ export function NavPanel({
         onAddPaint={() => chooseAddAction(onAddPaint)}
         onAddScheme={() => chooseAddAction(onAddScheme)}
       />
-      <Box component="nav" aria-label="Primary" sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <Box
+        component="nav"
+        aria-label={t("layoutPrimary")}
+        sx={{ display: "flex", flexDirection: "column", gap: "4px" }}
+      >
         {NAV_SECTIONS.map((section, index) => (
           <List
             key={section.label ?? index}
             disablePadding
-            aria-label={section.label}
+            aria-label={section.label ? t(section.label) : undefined}
             subheader={
               section.label ? (
                 <ListSubheader
@@ -165,7 +172,7 @@ export function NavPanel({
                     textTransform: "uppercase",
                   }}
                 >
-                  {section.label}
+                  {t(section.label)}
                 </ListSubheader>
               ) : undefined
             }
@@ -201,7 +208,7 @@ export function NavPanel({
                       <Icon size={onClose ? 20 : 18} />
                     </ListItemIcon>
                     <ListItemText
-                      primary={label}
+                      primary={t(label)}
                       slotProps={{
                         primary: {
                           sx: [
@@ -256,7 +263,7 @@ export function NavPanel({
                             : {},
                         ]}
                       >
-                        {count}
+                        {formatNumber(count)}
                       </Box>
                     ) : null}
                   </ListItemButton>
@@ -334,7 +341,7 @@ export function NavPanel({
                 color: "var(--ink)",
               }}
             >
-              Support on Ko-fi
+              {t("layoutSupport")}
             </Box>
             <Box
               component="span"
@@ -346,7 +353,7 @@ export function NavPanel({
                 color: "var(--ink-soft)",
               }}
             >
-              Buy me a coffee
+              {t("layoutCoffee")}
             </Box>
           </Box>
           <OpenInNewIcon
@@ -410,7 +417,7 @@ export function NavPanel({
                 color: "var(--ink-faint)",
               }}
             >
-              Data & settings
+              {t("layoutSettings")}
             </Box>
           </Box>
           <Settings size={16} style={{ color: "var(--ink-faint)" }} />

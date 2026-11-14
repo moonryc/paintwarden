@@ -4,6 +4,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import { useId, useState } from "react";
 
+import { formatNumber } from "../i18n";
 import { ChevronDown } from "../icons";
 import { listResetSx } from "../utils/element-resets";
 
@@ -96,7 +97,7 @@ export function ProgressSummaryCard({
             sx={{ position: "absolute", "& circle": { strokeLinecap: "round" } }}
           />
           <Box component="span" sx={{ fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-            {Math.round(progress)}%
+            {formatNumber(progress / 100, { style: "percent", maximumFractionDigits: 0 })}
           </Box>
         </Box>
         <Box sx={{ minWidth: 0, flex: "1 1 auto" }}>

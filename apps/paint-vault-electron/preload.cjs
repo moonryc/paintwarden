@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("paintVaultDesktop", {
+  getLanguage: () => ipcRenderer.invoke("language:get"),
+  setLanguage: (language) => ipcRenderer.invoke("language:set", language),
   getConnection: () => ipcRenderer.invoke("connection:get"),
   setConnection: (choice) => ipcRenderer.invoke("connection:set", choice),
   saveBinary: (input) => ipcRenderer.invoke("file:save-binary", input),

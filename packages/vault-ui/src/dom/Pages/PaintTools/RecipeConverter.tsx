@@ -1,11 +1,8 @@
 import { Alert, Autocomplete, Box, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
-import {
-  COLOR_CATEGORIES,
-  COLOR_CATEGORY_LABELS,
-  type ColorCategory,
-} from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORIES, type ColorCategory } from "@paint-vault/core/color-categories";
 import { paintType, rankOwnedPaintMatches } from "@paint-vault/core/recipe-converter";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PaintBottle } from "../../Components/PaintBottle";
 import { PaintDetailsButton } from "../../Components/PaintDetailsButton";
@@ -25,7 +22,38 @@ import { createClientId } from "../../utils/client-id";
 import { convertedSchemeEntries } from "../../utils/converted-scheme-entries";
 import { truncateSx } from "../../utils/truncate";
 
+const categoryKeys = {
+  RED: "toolsCategoryRed",
+  PINK: "toolsCategoryPink",
+  ORANGE: "toolsCategoryOrange",
+  YELLOW: "toolsCategoryYellow",
+  GREEN: "toolsCategoryGreen",
+  TURQUOISE: "toolsCategoryTurquoise",
+  BLUE: "toolsCategoryBlue",
+  PURPLE: "toolsCategoryPurple",
+  BROWN: "toolsCategoryBrown",
+  BLACK: "toolsCategoryBlack",
+  GREY: "toolsCategoryGrey",
+  WHITE: "toolsCategoryWhite",
+  GOLD: "toolsCategoryGold",
+  SILVER: "toolsCategorySilver",
+  BONE: "toolsCategoryBone",
+  FLESH: "toolsCategoryFlesh",
+} as const;
+
+const paintTypeKeys = {
+  "Primer or spray": "toolsTypePrimer",
+  "Shade or wash": "toolsTypeShade",
+  "Transparent color": "toolsTypeTransparent",
+  Metallic: "toolsTypeMetallic",
+  "Effect or texture": "toolsTypeEffect",
+  Airbrush: "toolsTypeAirbrush",
+  "Standard color": "toolsTypeStandard",
+} as const;
+
 export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void }) {
+  const { t, i18n } = useTranslation("pages");
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
   const actions = useSchemeActions();
   const notify = useVaultStore((s) => s.notify);
   const [schemeQuery, setSchemeQuery] = useState("");
@@ -78,7 +106,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
 
   const selectScheme = (next: SchemeSummaryModel | null) => {
     setSelectedScheme(next);
-    setName(next ? `${next.name} · My paints` : "");
+    setName(next ? t("toolsConvertedName", { name: next.name }) : "");
     setCategory(next?.category ?? "");
     setChoices({});
     setSavedSignature(null);
@@ -93,7 +121,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
         entries: convertedSchemeEntries(entries, resolvedChoices, createClientId),
       });
       setSavedSignature(signature);
-      notify("Converted scheme saved");
+      notify(t("toolsConvertedSaved"));
     } catch {
       // Scoped actions report command failures and leave the draft retryable.
     } finally {
@@ -103,11 +131,14 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
 
   return (
     <Card sx={{ p: { xs: 2, sm: 4 } }}>
-      <Box sx={{ fontWeight: 700, fontSize: 18, mb: 0.5 }}>Recipe converter</Box>
-      <Box sx={{ color: "text.secondary", fontSize: 13, mb: 3 }}>
-        Choose a scheme to make a new version using paints you have on hand.
-      </Box>
+      <Box sx={{ fontWeight: 700, fontSize: 18, mb: 0.5 }}>{t("toolsConverter")}</Box>
+      <Box sx={{ color: "text.secondary", fontSize: 13, mb: 3 }}>{t("toolsConverterDescription")}</Box>
       <Autocomplete<SchemeSummaryModel>
+        noOptionsText={t("toolsNoOptions")}
+        loadingText={t("toolsLoadingOptions")}
+        clearText={t("toolsClear")}
+        openText={t("toolsOpen")}
+        closeText={t("toolsClose")}
         options={schemeMatches}
         loading={schemeOptions.loading}
         inputValue={schemeQuery}
@@ -117,31 +148,31 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         filterOptions={(options) => options}
-        renderInput={(params) => <TextField {...params} label="Source scheme" placeholder="Find a scheme…" />}
+        renderInput={(params) => (
+          <TextField {...params} label={t("toolsSourceScheme")} placeholder={t("toolsFindScheme")} />
+        )}
         fullWidth
       />
       {schemeOptions.error && (
         <Alert
           severity="error"
           sx={{ mt: 2 }}
-          action={<Button onClick={schemeOptions.refetch}>Retry</Button>}
+          action={<Button onClick={schemeOptions.refetch}>{t("toolsRetry")}</Button>}
         >
           {schemeOptions.error.message}
         </Alert>
       )}
       {schemeOptions.hasNextPage && (
         <Button onClick={schemeOptions.loadMore} disabled={schemeOptions.loading}>
-          Load more schemes
+          {t("toolsMoreSchemes")}
         </Button>
       )}
       {!scheme && (
-        <Box sx={{ mt: 3, color: "text.secondary", fontSize: 13 }}>
-          Your original scheme stays unchanged. You can review every replacement before saving a copy.
-        </Box>
+        <Box sx={{ mt: 3, color: "text.secondary", fontSize: 13 }}>{t("toolsOriginalUnchanged")}</Box>
       )}
       {scheme && loading && (
         <Box role="status" sx={{ mt: 2 }}>
-          Loading scheme conversions…
+          {t("toolsLoadingConversions")}
         </Box>
       )}
       {scheme && error && (
@@ -155,7 +186,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
                 conversion.refetch();
               }}
             >
-              Retry
+              {t("toolsRetry")}
             </Button>
           }
         >
@@ -164,35 +195,43 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
       )}
       {scheme && !loading && !error && !detail.data?.scheme && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          This scheme is no longer available.
+          {t("toolsSchemeUnavailable")}
         </Alert>
       )}
       {scheme && detail.data?.scheme && conversion.data && (
         <>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 3, mb: 1.5 }}>
-            <Chip size="small" color="success" variant="outlined" label={`${alreadyOwned} already owned`} />
+            <Chip
+              size="small"
+              color="success"
+              variant="outlined"
+              label={t("toolsAlreadyOwned", {
+                count: alreadyOwned,
+                formattedCount: number.format(alreadyOwned),
+              })}
+            />
             <Chip
               size="small"
               color="primary"
               variant="outlined"
-              label={`${swapped} replacements`}
+              label={t("toolsReplacements", { count: swapped, formattedCount: number.format(swapped) })}
               sx={{ color: "var(--brand-text)" }}
             />
             <Chip
               size="small"
               color={stillMissing ? "warning" : "success"}
               variant="outlined"
-              label={`${stillMissing} still missing`}
+              label={t("toolsStillMissing", {
+                count: stillMissing,
+                formattedCount: number.format(stillMissing),
+              })}
             />
           </Box>
-          <Box sx={{ color: "text.secondary", fontSize: 12, mb: 2.5 }}>
-            Matches compare catalog screen colors. Paint type is inferred from the range name; check finish,
-            coverage, and primer before using a replacement.
-          </Box>
+          <Box sx={{ color: "text.secondary", fontSize: 12, mb: 2.5 }}>{t("toolsMatchDisclaimer")}</Box>
           {rows.length ? (
             <Box
               role="list"
-              aria-label="Scheme paint conversions"
+              aria-label={t("toolsPaintConversions")}
               sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, overflow: "hidden" }}
             >
               {rows.map((row, index) => {
@@ -252,7 +291,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
                       </PaintDetailsButton>
                       {row.owned ? (
                         <Box sx={{ color: "success.main", fontWeight: 700, fontSize: 13 }}>
-                          On hand · keep original
+                          {t("toolsKeepOwned")}
                         </Box>
                       ) : (
                         <ConversionPaintPicker
@@ -274,10 +313,19 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
                         }}
                       >
                         {chosenId === row.original.id
-                          ? "Original paint remains in the copy."
+                          ? t("toolsOriginalRemains")
                           : chosenMatch
-                            ? `${chosenMatch.match.score}% screen-color match · ${chosenMatch.sameType ? "same range type" : `different type (${paintType(chosen.range)})`}`
-                            : "No catalog color available to score this choice."}
+                            ? t("toolsColorMatch", {
+                                score: number.format(chosenMatch.match.score),
+                                type: chosenMatch.sameType
+                                  ? t("toolsSameRangeType")
+                                  : t("toolsDifferentType", {
+                                      type: t(
+                                        paintTypeKeys[paintType(chosen.range) as keyof typeof paintTypeKeys],
+                                      ),
+                                    }),
+                              })
+                            : t("toolsNoColorScore")}
                       </Box>
                     )}
                   </Box>
@@ -285,7 +333,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
               })}
             </Box>
           ) : (
-            <Box sx={{ color: "text.secondary", py: 3 }}>This scheme has no available paints to convert.</Box>
+            <Box sx={{ color: "text.secondary", py: 3 }}>{t("toolsNoPaintsToConvert")}</Box>
           )}
           {rows.length > 0 && (
             <Box
@@ -297,21 +345,21 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
               }}
             >
               <TextField
-                label="New scheme name"
+                label={t("toolsNewSchemeName")}
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 fullWidth
               />
               <TextField
                 select
-                label="Category"
+                label={t("toolsCategory")}
                 value={category}
                 onChange={(event) => setCategory(event.target.value as ColorCategory)}
                 fullWidth
               >
                 {COLOR_CATEGORIES.map((item) => (
                   <MenuItem key={item} value={item}>
-                    {COLOR_CATEGORY_LABELS[item]}
+                    {t(categoryKeys[item])}
                   </MenuItem>
                 ))}
               </TextField>
@@ -329,9 +377,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
               }}
             >
               <Box sx={{ color: "text.secondary", fontSize: 12 }}>
-                {swapped
-                  ? "Saving creates a new reusable scheme. The source is unchanged."
-                  : "Choose at least one replacement to save a converted scheme."}
+                {swapped ? t("toolsSaveHint") : t("toolsChooseReplacement")}
               </Box>
               <Button
                 variant="contained"
@@ -346,7 +392,11 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
                 }
                 onClick={() => void save()}
               >
-                {saving ? "Saving…" : savedSignature === signature ? "Saved" : "Save converted scheme"}
+                {saving
+                  ? t("toolsSaving")
+                  : savedSignature === signature
+                    ? t("toolsSaved")
+                    : t("toolsSaveConverted")}
               </Button>
             </Box>
           )}
@@ -365,14 +415,19 @@ function ConversionPaintPicker({
   chosen: Paint;
   onChoose(paintId: string): void;
 }) {
+  const { t } = useTranslation("pages");
   const [query, setQuery] = useState("");
   const options = useOwnedPaintOptions(query.trim());
   const matches = [original, ...options.items.map(paintModel).filter((paint) => paint.id !== original.id)];
   return (
     <Autocomplete<Paint>
+      loadingText={t("toolsLoadingOptions")}
+      clearText={t("toolsClear")}
+      openText={t("toolsOpen")}
+      closeText={t("toolsClose")}
       options={matches}
       loading={options.loading}
-      noOptionsText={options.error ? options.error.message : "No owned paints match"}
+      noOptionsText={options.error ? options.error.message : t("toolsNoOwnedMatches")}
       inputValue={query}
       onInputChange={(_, value) => setQuery(value)}
       value={chosen}
@@ -380,7 +435,7 @@ function ConversionPaintPicker({
       getOptionLabel={(paint) => `${paint.name} · ${paint.brand} · ${paint.range}`}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       filterOptions={(options) => options}
-      renderInput={(params) => <TextField {...params} size="small" label="Use paint" />}
+      renderInput={(params) => <TextField {...params} size="small" label={t("toolsUsePaint")} />}
       renderOption={(props, paint) => {
         const { key, ...optionProps } = props;
         return (
@@ -392,7 +447,7 @@ function ConversionPaintPicker({
               </Box>
               <Box component="span" sx={{ display: "block", color: "text.secondary", fontSize: 12 }}>
                 {paint.brand} · {paint.range}
-                {paint.id === original.id ? " · Keep original" : ""}
+                {paint.id === original.id ? t("toolsKeepOriginal") : ""}
               </Box>
             </Box>
           </Box>

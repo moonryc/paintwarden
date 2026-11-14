@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { AuthHeaders } from "../types";
 
 // Downloads a backup .zip of the whole vault: through the desktop save dialog in the desktop app,
@@ -8,7 +9,7 @@ export async function exportBackupFile(authHeaders: AuthHeaders) {
   if (window.paintVaultDesktop)
     return window.paintVaultDesktop.saveBackup({ filename, authorization: headers.authorization });
   const response = await fetch("/api/backup", { headers });
-  if (!response.ok) throw new Error("Export failed");
+  if (!response.ok) throw new Error(i18n.t("shell:exportFailed"));
   const blob = await response.blob();
   const url = URL.createObjectURL(blob),
     anchor = document.createElement("a");

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Alert, Button } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -25,20 +26,21 @@ export function ApolloProjectSchemeDialog(props: SchemeDialogProps) {
 }
 
 function ProjectSchemeContent({ schemeId, toggleOwned, markOwnedOnly = true, onClose }: SchemeDialogProps) {
+  const { t } = useTranslation("components");
   const result = useMiniatureScheme(schemeId);
   const [editing, setEditing] = useState(false);
   const { setPaintState } = usePaintStock();
   const data = result.data;
   if (!data?.scheme)
     return (
-      <Modal title="Color scheme" subtitle="Ordered paint recipe and reference images." onClose={onClose}>
+      <Modal title={t("colorScheme")} subtitle={t("orderedPaintRecipeAndReferenceImages")} onClose={onClose}>
         {result.error ? (
-          <Alert severity="error" action={<Button onClick={result.refetch}>Retry</Button>}>
+          <Alert severity="error" action={<Button onClick={result.refetch}>{t("retry")}</Button>}>
             {result.error.message}
           </Alert>
         ) : (
           <Box role="status">
-            {result.loading ? "Loading color scheme…" : "This color scheme is no longer available."}
+            {result.loading ? t("loadingColorScheme") : t("thisColorSchemeIsNoLongerAvailable")}
           </Box>
         )}
       </Modal>

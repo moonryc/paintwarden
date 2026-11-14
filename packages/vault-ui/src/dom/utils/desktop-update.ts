@@ -1,3 +1,4 @@
+import { i18n, formatNumber } from "@paint-vault/i18n/runtime";
 import { useCallback, useEffect, useState } from "react";
 
 import type { DesktopUpdateState } from "../types";
@@ -31,22 +32,30 @@ export function useDesktopUpdate() {
 }
 
 export function describeUpdate(state: DesktopUpdateState) {
-  const current = `Version ${state.currentVersion}`;
+  const current = i18n.t("shell:version", { value1: state.currentVersion });
   switch (state.status) {
     case "disabled":
-      return `${current} · Automatic updates are off in this build`;
+      return i18n.t("shell:automaticUpdatesAreOffInThisBuild", { value1: current });
     case "checking":
-      return `${current} · Checking for updates…`;
+      return i18n.t("shell:checkingForUpdates", { value1: current });
     case "up-to-date":
-      return `${current} · Up to date`;
+      return i18n.t("shell:upToDate", { value1: current });
     case "downloading":
-      return `${current} · Downloading ${state.version ?? "an update"}${
-        state.progress === null ? "" : ` (${state.progress}%)`
-      }`;
+      return i18n.t("shell:downloading", {
+        value1: current,
+        value2: state.version ?? i18n.t("shell:anUpdate"),
+        value3:
+          state.progress === null
+            ? ""
+            : ` (${formatNumber(state.progress / 100, { style: "percent", maximumFractionDigits: 0 })})`,
+      });
     case "ready":
-      return `${current} · Version ${state.version ?? "update"} is ready to install`;
+      return i18n.t("shell:versionIsReadyToInstall", {
+        value1: current,
+        value2: state.version ?? i18n.t("shell:anUpdate"),
+      });
     case "error":
-      return `${current} · Couldn't check for updates`;
+      return i18n.t("shell:couldnTCheckForUpdates", { value1: current });
     default:
       return current;
   }

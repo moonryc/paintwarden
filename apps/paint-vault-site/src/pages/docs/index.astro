@@ -1,9 +1,10 @@
 ---
+import { siteT as t } from "../../site/i18n";
 import SiteLayout from "../../layouts/SiteLayout.astro";
 ---
 
 <SiteLayout
   page="docs"
-  title="How to use Paint Vault"
-  description="Set up Paint Vault and learn the paint library, workbench, schemes, Paint Tools, wishlist, and backups."
+  title={t("meta.docsTitle")}
+  description={t("meta.docsDescription")}
 />

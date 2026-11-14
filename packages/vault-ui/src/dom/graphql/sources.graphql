@@ -2,7 +2,7 @@ query InstalledSources {
   sources {
     revision { epoch seq }
     sources {
-      id repository url name version license attribution lastError logoUrl
+      id repository url name version license attribution lastError lastErrorInfo { code parameters { name value } } logoUrl
       dependencies { repository minimumVersion }
       counts { paints schemes templates }
     }

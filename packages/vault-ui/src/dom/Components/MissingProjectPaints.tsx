@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Box, Button } from "@mui/material";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -36,6 +37,7 @@ export function MissingProjectPaints({
   onAddAll(paints: Paint[]): void;
   onFix?(paint: Paint): void;
 }) {
+  const { t } = useTranslation("components");
   if (!(totalCount ?? items.length)) return null;
   const count = totalCount ?? items.length;
   const stockItems = items.filter(({ reasons = ["missingStock"] }) => reasons.includes("missingStock"));
@@ -46,27 +48,26 @@ export function MissingProjectPaints({
   const totalNeeded = listedCount + stockCount;
   return (
     <ProgressSummaryCard
-      title={
-        broken
-          ? `${count} project paint${count === 1 ? "" : "s"} need${count === 1 ? "s" : ""} attention`
-          : `${count} paint${count === 1 ? "" : "s"} your projects need ${count === 1 ? "isn’t" : "aren’t"} on this list`
-      }
+      title={broken ? t("projectPaintsNeedAttention", { count }) : t("missingPaintsNotListed", { count })}
       subtitle={
         broken
-          ? `${stockCount} paint${stockCount === 1 ? "" : "s"} need stock; ${brokenCount} broken substitution${brokenCount === 1 ? "" : "s"} need fixing.`
-          : "Only bottles marked Owned cross off a project checklist."
+          ? t("stockAndSubstitutionSummary", {
+              stockSummary: t("paintsNeedStock", { count: stockCount }),
+              brokenSummary: t("brokenSubstitutionsNeedFixing", { count: brokenCount }),
+            })
+          : t("onlyBottlesMarkedOwnedCrossOffAProjectChecklist")
       }
       progress={totalNeeded ? (listedCount / totalNeeded) * 100 : 100}
       progressLabel={
         broken
-          ? `${listedCount} of ${totalNeeded} stock-needed project paints on the wishlist; ${brokenCount} broken substitutions need fixing`
-          : `${listedCount} of ${totalNeeded} missing project paints on the wishlist`
+          ? t("wishlistStockAndBrokenSummary", {
+              listed: listedCount,
+              total: totalNeeded,
+              brokenSummary: t("brokenSubstitutionsNeedFixing", { count: brokenCount }),
+            })
+          : t("wishlistMissingSummary", { listed: listedCount, total: totalNeeded })
       }
-      hint={
-        broken
-          ? "Buying a paint won’t fix a broken substitution. Choose Fix substitution to repair it."
-          : "Most-needed first. Select a paint to add it to your wishlist."
-      }
+      hint={broken ? t("buyingAPaintWonTFixABrokenSubstitution") : t("mostNeededFirstSelectAPaintToAddIt")}
       action={
         stockItems.length > 0 && (
           <Button
@@ -75,12 +76,9 @@ export function MissingProjectPaints({
             onClick={() => onAddAll(stockItems.map(({ paint }) => paint))}
             startIcon={<Heart size={14} />}
           >
-            Add{" "}
             {hasMore
-              ? `loaded ${stockItems.length}`
-              : stockItems.length === 1
-                ? "it"
-                : `all ${stockItems.length}`}
+              ? t("addLoadedPaints", { count: stockItems.length })
+              : t("addAllPaints", { count: stockItems.length })}
           </Button>
         )
       }
@@ -101,6 +99,7 @@ function MissingPaintChecklist({
   onAdd: (paint: Paint) => void;
   onFix?: (paint: Paint) => void;
 }) {
+  const { t } = useTranslation("components");
   const listRef = useRef<HTMLUListElement>(null);
   const [viewport, setViewport] = useState({ width: 0, height: 360, scrollTop: 0, rowHeight: 52 });
   const [pendingFocus, setPendingFocus] = useState<{ index: number; reverse: boolean } | null>(null);
@@ -189,7 +188,7 @@ function MissingPaintChecklist({
     <Box
       component="ul"
       ref={listRef}
-      aria-label="Missing project paints"
+      aria-label={t("missingProjectPaints")}
       tabIndex={0}
       onKeyDownCapture={(event) => {
         const list = event.currentTarget;
@@ -241,28 +240,28 @@ function MissingPaintChecklist({
             key={paint.id}
             listPosition={{ index: listWindow.startIndex + offset, count: items.length }}
             paint={paint}
-            subtitle={`${paint.range} · ${projectCount} project${projectCount === 1 ? "" : "s"}`}
-            selectAction={reasons.includes("brokenSubstitution") ? "Fix substitution" : "add to wishlist"}
+            subtitle={t("paintProjectCount", { range: paint.range, count: projectCount })}
+            selectAction={reasons.includes("brokenSubstitution") ? t("fixSubstitution") : t("addToWishlist2")}
             onSelect={() => (reasons.includes("brokenSubstitution") ? onFix?.(paint) : onAdd(paint))}
             actions={
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
                 {reasons.includes("brokenSubstitution") && (
-                  <StatusChip tone="rust">Broken substitution</StatusChip>
+                  <StatusChip tone="rust">{t("brokenSubstitution")}</StatusChip>
                 )}
                 {reasons.includes("brokenSubstitution") && (
                   <Button
                     size="small"
-                    aria-label={`Fix substitution for ${paint.name}`}
+                    aria-label={t("fixPaintSubstitution", { name: paint.name })}
                     onClick={() => onFix?.(paint)}
                   >
-                    Fix substitution
+                    {t("fixSubstitution")}
                   </Button>
                 )}
                 {reasons.includes("missingStock") && (
                   <PaintRowActions
                     wishlist={{
-                      label: `Add ${paint.name} to wishlist`,
-                      title: "Add to wishlist",
+                      label: t("addPaintToWishlist", { name: paint.name }),
+                      title: t("addToWishlist"),
                       onClick: () => onAdd(paint),
                     }}
                   />

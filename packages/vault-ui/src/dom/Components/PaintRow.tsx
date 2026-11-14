@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -83,6 +84,7 @@ export function PaintRowView({
   onSetPaintState,
   renderSchemeChip,
 }: PaintRowViewProps) {
+  const { t } = useTranslation("components");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: sortableId ?? paint.id,
     disabled: { draggable: !editMode || !manual, droppable: !editMode },
@@ -123,8 +125,8 @@ export function PaintRowView({
       >
         {draggable && (
           <DragHandle
-            label={`Reorder ${paint.name}`}
-            title="Drag to reorder or move to another step"
+            label={t("reorderItem", { name: paint.name })}
+            title={t("dragToReorderOrMoveToAnotherStep")}
             attributes={attributes}
             listeners={listeners}
             sx={{
@@ -149,7 +151,7 @@ export function PaintRowView({
               tone={owned ? "ok" : wished ? "wishlist" : "muted"}
               sx={{ display: { xs: "none", sm: "inline-flex" }, textTransform: "uppercase" }}
             >
-              {owned ? "Packed" : wished ? "Wishlisted" : "Missing"}
+              {owned ? t("packed") : wished ? t("wishlisted") : t("missing")}
             </StatusChip>
           }
         />
@@ -158,15 +160,21 @@ export function PaintRowView({
             !owned && !active
               ? {
                   active: wished,
-                  label: wished ? `Remove ${paint.name} from wishlist` : `Add ${paint.name} to wishlist`,
-                  title: wished ? "Remove from wishlist" : "Add to wishlist",
+                  label: wished
+                    ? t("removePaintFromWishlist", { name: paint.name })
+                    : t("addPaintToWishlist", { name: paint.name }),
+                  title: wished ? t("removeFromWishlist") : t("addToWishlist"),
                   onClick: () => onSetPaintState(paint.id, wished ? null : "WISHLIST"),
                 }
               : undefined
           }
           remove={
             draggable
-              ? { label: `Remove ${paint.name} from recipe`, title: "Remove from recipe", onClick: onRemove }
+              ? {
+                  label: t("removePaintFromRecipe", { name: paint.name }),
+                  title: t("removeFromRecipe"),
+                  onClick: onRemove,
+                }
               : undefined
           }
         />
@@ -189,7 +197,7 @@ export function PaintRowView({
           }}
         >
           <Box component="span" sx={{ mr: 0.25 }}>
-            {manual ? "Added to miniature" : "From scheme"}
+            {manual ? t("addedToMiniature") : t("fromScheme")}
           </Box>
           {schemeSources.map((source) => (
             <Fragment key={source.id}>{renderSchemeChip(source)}</Fragment>

@@ -4,12 +4,11 @@ import inter600 from "@fontsource/inter/files/inter-latin-600-normal.woff2?url";
 import inter700 from "@fontsource/inter/files/inter-latin-700-normal.woff2?url";
 import fraunces from "@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2?url";
 import Box from "@mui/material/Box";
-import { ThemeProvider } from "@mui/material/styles";
 import type { Preview } from "@storybook/react-vite";
 import { themes } from "storybook/theming";
 
 import { withVaultStore } from "../src/dom/storybook/vault-store";
-import { theme } from "../src/dom/theme";
+import { LanguageProvider, languages } from "../src/dom/i18n";
 import { installBaseStyles } from "../src/dom/utils/base-styles";
 
 // Same page setup as the web app: dark theme, palette variables, and the Inter and Fraunces fonts.
@@ -28,6 +27,20 @@ for (const [family, source, weight] of [
 }
 
 const preview: Preview = {
+  initialGlobals: { locale: "en" },
+  globalTypes: {
+    locale: {
+      description: "Language",
+      toolbar: {
+        icon: "globe",
+        dynamicTitle: true,
+        items: [
+          ...languages.map(({ code, name }) => ({ value: code, title: name })),
+          { value: "en-XA", title: "［Pseudo］" },
+        ],
+      },
+    },
+  },
   parameters: {
     layout: "fullscreen",
     controls: { matchers: { color: /(background|color|colorHex)$/i } },
@@ -37,12 +50,12 @@ const preview: Preview = {
   },
   decorators: [
     withVaultStore,
-    (Story) => (
-      <ThemeProvider theme={theme}>
+    (Story, context) => (
+      <LanguageProvider language={String(context.parameters.locale || context.globals.locale || "en")}>
         <Box sx={{ minHeight: "100%", p: 3, bgcolor: "var(--canvas)", color: "var(--ink)" }}>
           <Story />
         </Box>
-      </ThemeProvider>
+      </LanguageProvider>
     ),
   ],
   tags: ["autodocs"],

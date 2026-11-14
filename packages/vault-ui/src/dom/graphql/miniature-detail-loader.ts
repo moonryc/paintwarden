@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -64,7 +65,7 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
           },
           fetchPolicy: "no-cache",
         });
-        if (!data) throw new Error("Miniature details response was empty");
+        if (!data) throw new Error(i18n.t("shell:miniatureDetailsResponseWasEmpty"));
         const next = unpack(data.miniature);
         if (view && !sameRevision(view.revision, next.revision)) {
           changed = true;
@@ -85,7 +86,7 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
           const page = view[family].pageInfo;
           const cursor = page.hasNextPage ? page.endCursor : null;
           if (page.hasNextPage && (!cursor || cursor === after[family]))
-            throw new Error("Miniature pagination did not advance");
+            throw new Error(i18n.t("shell:miniaturePaginationDidNotAdvance"));
           after[family] = cursor ?? null;
         }
       } while (families.some((family) => after[family]));
@@ -109,5 +110,5 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
       throw error;
     }
   }
-  throw new Error("Miniature changed while refreshing. Try again.");
+  throw new Error(i18n.t("shell:miniatureChangedWhileRefreshingTryAgain"));
 }

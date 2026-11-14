@@ -1,5 +1,6 @@
 import { Button, ButtonGroup, Menu, MenuItem } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { ChevronDown, PaintDrop, Palette, Plus } from "../icons";
 
@@ -14,6 +15,7 @@ export function AddMenuButton({
   onAddPaint(): void;
   onAddScheme(): void;
 }) {
+  const { t } = useTranslation("pages");
   const [addMenuAnchor, setAddMenuAnchor] = useState<HTMLElement | null>(null);
   const choose = (fn: () => void) => {
     setAddMenuAnchor(null);
@@ -32,7 +34,7 @@ export function AddMenuButton({
           borderRadius: "1rem",
           boxShadow: "none !important",
         }}
-        aria-label="Add to vault"
+        aria-label={t("layoutAddToVault")}
       >
         <Button
           onClick={onAddMiniature}
@@ -49,11 +51,11 @@ export function AddMenuButton({
             { flex: "1 1 auto" },
           ]}
         >
-          Miniature
+          {t("layoutMiniature")}
         </Button>
         <Button
           onClick={(event) => setAddMenuAnchor(event.currentTarget)}
-          aria-label="More add options"
+          aria-label={t("layoutMoreAddOptions")}
           aria-haspopup="menu"
           aria-expanded={!!addMenuAnchor}
 
@@ -102,7 +104,7 @@ export function AddMenuButton({
             gap: "0.5rem",
           }}
         >
-          <PaintDrop size={17} /> Add paint
+          <PaintDrop size={17} /> {t("layoutAddPaint")}
         </MenuItem>
         <MenuItem
           onClick={() => choose(onAddScheme)}
@@ -111,7 +113,7 @@ export function AddMenuButton({
             gap: "0.5rem",
           }}
         >
-          <Palette size={17} /> Add scheme
+          <Palette size={17} /> {t("layoutAddScheme")}
         </MenuItem>
       </Menu>
     </>

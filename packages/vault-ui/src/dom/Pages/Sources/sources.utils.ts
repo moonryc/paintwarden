@@ -1,3 +1,5 @@
+import { i18n } from "../../i18n";
+
 // Types and helpers shared by the Sources page and its cards and dialogs.
 
 export type ItemCounts = { paints: number; schemes: number; templates: number };
@@ -14,6 +16,7 @@ export type CatalogSource = {
   attribution?: string | null;
   dependencies: { repository: string; minimumVersion?: string }[];
   lastError: string | null;
+  lastErrorInfo?: { code: string; parameters: { name: string; value: string }[] } | null;
   logoUrl?: string | null;
   counts?: ItemCounts;
 };
@@ -57,8 +60,14 @@ export const repositoryLabel = (url: string) => url.replace(/^https:\/\/github\.
 export const isUploadedSource = (source: Pick<CatalogSource, "repository">) =>
   source.repository.startsWith("upload:");
 
-export const plural = (count: number, word: string) =>
-  `${count.toLocaleString()} ${count === 1 ? word.slice(0, -1) : word}`;
+const countKeys = {
+  paints: "pages:sourcesCountPaints",
+  schemes: "pages:sourcesCountSchemes",
+  templates: "pages:sourcesCountTemplates",
+  plugins: "pages:sourcesCountPlugins",
+  items: "pages:sourcesCountItems",
+} as const;
+export const plural = (count: number, word: keyof typeof countKeys) => i18n.t(countKeys[word], { count });
 
 export const message = (cause: unknown, fallback: string) =>
   cause instanceof Error ? cause.message : fallback;

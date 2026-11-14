@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import Box from "@mui/material/Box";
 import { memo, type KeyboardEvent } from "react";
@@ -55,6 +56,7 @@ function LibraryPaintRowView({
   border = "top",
   onKeyDownCapture,
 }: LibraryPaintRowProps & { projection: LibraryPaintProjection }) {
+  const { t } = useTranslation("components");
   const notify = useVaultStore((s) => s.notify);
   const { setPaintState, toggleOwned: stockToggleOwned } = usePaintStock();
   const toggleOwned = toggleOwnedOverride ?? ((item: Paint) => stockToggleOwned(item, record));
@@ -113,11 +115,17 @@ function LibraryPaintRowView({
           !available || wishlisted
             ? {
                 active: wishlisted,
-                label: wishlisted ? `Remove ${paint.name} from wishlist` : `Add ${paint.name} to wishlist`,
-                title: wishlisted ? "Remove from wishlist" : "Add to wishlist",
+                label: wishlisted
+                  ? t("removePaintFromWishlist", { name: paint.name })
+                  : t("addPaintToWishlist", { name: paint.name }),
+                title: wishlisted ? t("removeFromWishlist") : t("addToWishlist"),
                 onClick: () => {
                   setPaintState(paint.id, wishlisted ? null : "WISHLIST");
-                  notify(`${paint.name} ${wishlisted ? "removed from" : "added to"} wishlist`);
+                  notify(
+                    wishlisted
+                      ? t("paintRemovedFromWishlist", { name: paint.name })
+                      : t("paintAddedToWishlist", { name: paint.name }),
+                  );
                 },
               }
             : undefined
@@ -126,9 +134,11 @@ function LibraryPaintRowView({
           !available
             ? {
                 label: substitution
-                  ? `${paint.name} is unavailable through ${substitution.name}`
-                  : `Mark ${paint.name} as owned`,
-                title: substitution ? `Unavailable through ${substitution.name}` : "Mark as owned",
+                  ? t("paintUnavailableThrough", { name: paint.name, substitution: substitution.name })
+                  : t("markPaintOwned", { name: paint.name }),
+                title: substitution
+                  ? t("unavailableThrough", { substitution: substitution.name })
+                  : t("markAsOwned"),
                 disabled: Boolean(substitution),
                 onClick: () => toggleOwned(paint),
               }
@@ -137,8 +147,8 @@ function LibraryPaintRowView({
         remove={
           directlyOwned
             ? {
-                label: `Set ${paint.name} quantity to 0`,
-                title: "Remove from paint library",
+                label: t("clearPaintQuantity", { name: paint.name }),
+                title: t("removeFromPaintLibrary"),
                 onClick: () => setPaintState(paint.id, null, stockLevel, 0),
               }
             : undefined

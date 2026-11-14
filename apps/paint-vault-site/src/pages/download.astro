@@ -1,9 +1,10 @@
 ---
+import { siteT as t } from "../site/i18n";
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
 <SiteLayout
   page="download"
-  title="Get Paint Vault"
-  description="Install the Paint Vault desktop app for macOS or Windows, or run a self-hosted web vault with Docker Compose."
+  title={t("meta.downloadTitle")}
+  description={t("meta.downloadDescription")}
 />

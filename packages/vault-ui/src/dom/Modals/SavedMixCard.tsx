@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Card, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -31,6 +32,7 @@ function SavedMixCardView({
   onToggleDefault,
   onDelete,
 }: SavedMixProjection & Actions) {
+  const { t } = useTranslation("components");
   return (
     <Card
       sx={{
@@ -75,24 +77,31 @@ function SavedMixCardView({
               color: "var(--ink-faint)",
             }}
           >
-            {ingredients.map((row) => `${row.parts}× ${row.paint.name}`).join(" + ")}
+            {ingredients
+              .map((row) => t("mixIngredientParts", { parts: row.parts, name: row.paint.name }))
+              .join(" + ")}
           </Box>
         </Box>
         <Button size="small" variant={mix.isDefault ? "contained" : "outlined"} onClick={onToggleDefault}>
-          {mix.isDefault ? "Default" : "Make default"}
+          {mix.isDefault ? t("default") : t("makeDefault")}
         </Button>
-        <IconButton size="small" color="error" onClick={onDelete} aria-label={`Delete ${mix.name}`}>
+        <IconButton
+          size="small"
+          color="error"
+          onClick={onDelete}
+          aria-label={t("deleteMix", { name: mix.name })}
+        >
           <Trash2 size={15} />
         </IconButton>
       </Box>
       {hasMoreIngredients && (
         <Button size="small" onClick={onLoadMoreIngredients} sx={{ mt: 1 }}>
-          Load more ingredients
+          {t("loadMoreIngredients")}
         </Button>
       )}
       {brokenReason && (
         <Alert severity="error" variant="outlined" sx={{ mt: 1.5 }}>
-          Broken substitution: {brokenReason === "EMPTY" ? "empty recipe" : "circular recipe"}.
+          {brokenReason === "EMPTY" ? t("brokenEmptySubstitution") : t("brokenCircularSubstitution")}
         </Alert>
       )}
     </Card>

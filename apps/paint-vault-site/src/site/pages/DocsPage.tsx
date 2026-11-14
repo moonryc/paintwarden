@@ -12,24 +12,25 @@ import type { SvgIconProps } from "@mui/material/SvgIcon";
 import type { ComponentType, ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Screenshot, Surface, serif } from "../components/primitives";
+import { siteT as t } from "../i18n";
 import { examplePlugin, repository } from "../links";
 
-const steps = [
+const steps = () => [
   {
-    title: "Choose where your vault runs",
-    body: "Install the desktop app for a local vault, connect it to an existing server, or run the web app with Docker Compose.",
+    title: t("docs.chooseWhereYourVaultRuns"),
+    body: t("docs.installTheDesktopAppForALocalVaultConnectIt"),
   },
   {
-    title: "Create the owner account",
-    body: "On first use, set an owner username and a password of at least 12 characters. A server also asks for the one-time setup code printed in its log. Existing data remains when an older vault is upgraded.",
+    title: t("docs.createTheOwnerAccount"),
+    body: t("docs.onFirstUseSetAnOwnerUsernameAndAPassword"),
   },
   {
-    title: "Install a catalog plugin",
-    body: "A new vault starts empty. Open Data & settings → Plugins and add a catalog of paints, schemes, and templates from GitHub or a .zip file.",
+    title: t("docs.installACatalogPlugin"),
+    body: t("docs.aNewVaultStartsEmptyOpenDataSettingsPluginsAnd"),
   },
   {
-    title: "Add paints and a miniature",
-    body: "Mark bottles as owned, set quantities, then add a miniature and attach paint requirements or reusable schemes.",
+    title: t("docs.addPaintsAndAMiniature"),
+    body: t("docs.markBottlesAsOwnedSetQuantitiesThenAddAMiniature"),
   },
 ];
 
@@ -44,188 +45,172 @@ type Section = {
 
 const strong = (text: string) => <strong>{text}</strong>;
 
-const sections: Section[] = [
+const sections = (): Section[] => [
   {
     id: "plugins",
-    label: "Plugins",
-    title: "Install catalogs as plugins",
+    label: t("docs.plugins"),
+    title: t("docs.installCatalogsAsPlugins"),
     icon: ExtensionOutlined,
     image: {
       src: "/images/app/plugins.webp",
       width: 1000,
       height: 1048,
-      alt: "The Plugins dialog with a GitHub repository field, an Upload .zip button, and one installed plugin with 48 paints, 10 schemes, and 3 templates.",
-      caption: "Data & settings → Plugins",
+      alt: t("docs.thePluginsDialogWithAGitHubRepositoryFieldAnUpload"),
+      caption: t("docs.dataSettingsPlugins"),
       maxWidth: 460,
     },
     body: (
       <>
         <p>
-          Paint Vault doesn&rsquo;t bundle a paint catalog. Paints, color schemes, and miniature templates
-          come from {strong("plugins")}: public GitHub repositories, or .zip files, in the Paint Vault source
-          format. Open {strong("Data & settings → Plugins")}, then paste a repository in{" "}
-          <code>owner/repository</code> form or choose {strong("Upload .zip")}. Plugins a catalog depends on
-          are installed with it.
+          {t("docs.paintVaultDoesnTBundleAPaintCatalogPaintsColor")} {strong(t("docs.plugins2"))}
+          {t("docs.publicGitHubRepositoriesOrZipFilesInThePaintVault")}{" "}
+          {strong(t("docs.dataSettingsPlugins"))}
+          {t("docs.thenPasteARepositoryIn")} {/* i18n-allow: literal GitHub repository syntax */}
+          <code>owner/repository</code> {t("docs.formOrChoose")} {strong(t("docs.uploadZip"))}
+          {t("docs.pluginsACatalogDependsOnAreInstalledWithIt")}
         </p>
         <p>
-          To try it, install the example plugin{" "}
+          {t("docs.toTryItInstallTheExamplePlugin")}{" "}
           <a href={`https://github.com/${examplePlugin}`} target="_blank" rel="noreferrer">
             <code>{examplePlugin}</code>
           </a>
-          , a small catalog of sample paints, schemes, and templates. It can be removed afterward, as long as
-          nothing in your vault uses its items.
+          {t("docs.aSmallCatalogOfSamplePaintsSchemesAndTemplatesIt")}
         </p>
+        <p>{t("docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe")}</p>
         <p>
-          Installed catalogs stay available offline. Plugins from GitHub can be checked for updates and
-          synced. To update an uploaded plugin, upload a newer version of it; uploading the same version
-          changes nothing, and an older version is refused until the installed one is removed. A plugin can be
-          removed once your vault no longer uses its paints, schemes, or templates; the app lists anything
-          that still does.
-        </p>
-        <p>
-          {strong("Create plugin")} packages your own paints, schemes, and templates as a ready-to-publish
-          repository. The{" "}
+          {strong(t("docs.createPlugin"))} {t("docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady")}{" "}
           <a href={`${repository}/blob/main/docs/source-format.md`} target="_blank" rel="noreferrer">
-            source format guide
+            {t("docs.sourceFormatGuide")}
           </a>{" "}
-          describes every file.
+          {t("docs.describesEveryFile")}
         </p>
       </>
     ),
   },
   {
     id: "paints",
-    label: "Paints",
-    title: "Keep your paint library current",
+    label: t("docs.paints"),
+    title: t("docs.keepYourPaintLibraryCurrent"),
     icon: ScienceOutlined,
     body: (
       <>
         <p>
-          Open {strong("Paints")} to search the paints from your plugins, mark a paint as owned or wishlisted,
-          and update the number of bottles on hand. Add your own paints when a color is missing from your
-          catalog.
+          {t("docs.open")} {strong(t("docs.paints"))} {t("docs.toSearchThePaintsFromYourPluginsMarkAPaint")}
         </p>
       </>
     ),
   },
   {
     id: "miniatures",
-    label: "Workbench",
-    title: "Plan a miniature",
+    label: t("docs.workbench"),
+    title: t("docs.planAMiniature"),
     icon: DashboardOutlined,
     image: {
       src: "/images/app/miniature.webp",
       width: 960,
       height: 1350,
-      alt: "A miniature's detail view with its painting stage, the paints still to gather, and attached color schemes.",
-      caption: "A miniature's detail view",
+      alt: t("docs.aMiniatureSDetailViewWithItsPaintingStageThe"),
+      caption: t("docs.aMiniatureSDetailView"),
       maxWidth: 420,
     },
     body: (
       <>
         <p>
-          Use {strong("Miniature")} in the sidebar to add a model to your collection or wishlist. Open its
-          detail view to add notes, images, and paint requirements. Attach schemes to reuse a color recipe
-          across models.
+          {t("docs.use")} {strong(t("docs.miniature"))} {t("docs.inTheSidebarToAddAModelToYourCollection")}
         </p>
         <p>
-          The {strong("Workbench")} summarizes which projects are ready to paint and which paints are still
-          missing. From a model’s paint recipe, add missing colors to your wishlist.
+          {t("docs.the")} {strong(t("docs.workbench"))}{" "}
+          {t("docs.summarizesWhichProjectsAreReadyToPaintAndWhichPaints")}
         </p>
       </>
     ),
   },
   {
     id: "schemes",
-    label: "Schemes",
-    title: "Build reusable schemes",
+    label: t("docs.schemes"),
+    title: t("docs.buildReusableSchemes"),
     icon: LayersOutlined,
     image: {
       src: "/images/app/schemes.webp",
       width: 2400,
       height: 1500,
-      alt: "The Schemes screen with color recipe cards, each showing whether every paint is available and how many miniatures use it.",
-      caption: "Schemes, filtered by plugin, color, and availability",
+      alt: t("docs.theSchemesScreenWithColorRecipeCardsEachShowingWhether"),
+      caption: t("docs.schemesFilteredByPluginColorAndAvailability"),
     },
     body: (
       <p>
-        Open {strong("Schemes")} to browse color recipes or create your own. A scheme can include ordered
-        paints, dividers, and reference images. Attach one to a miniature when you want its recipe available
-        in the project.
+        {t("docs.open")} {strong(t("docs.schemes"))} {t("docs.toBrowseColorRecipesOrCreateYourOwnAScheme")}
       </p>
     ),
   },
   {
     id: "templates",
-    label: "Templates",
-    title: "Start from a template",
+    label: t("docs.templates"),
+    title: t("docs.startFromATemplate"),
     icon: BookmarksOutlined,
     body: (
       <p>
-        A {strong("template")} is a miniature&rsquo;s starting setup: its maker, faction, color schemes, and
-        paint steps. Browse the templates from your plugins in {strong("Templates")}, pick one when you add a
-        miniature, or use {strong("Save as template")} on a miniature you&rsquo;ve already planned.
+        {t("docs.a")} {strong(t("docs.template"))} {t("docs.isAMiniatureSStartingSetupItsMakerFactionColor")}{" "}
+        {strong(t("docs.templates"))}
+        {t("docs.pickOneWhenYouAddAMiniatureOrUse")} {strong(t("docs.saveAsTemplate"))}{" "}
+        {t("docs.onAMiniatureYouVeAlreadyPlanned")}
       </p>
     ),
   },
   {
     id: "paint-tools",
-    label: "Paint Tools",
-    title: "Compare colors and convert recipes",
+    label: t("docs.paintTools"),
+    title: t("docs.compareColorsAndConvertRecipes"),
     icon: SwapHoriz,
     image: {
       src: "/images/app/converter.webp",
       width: 1600,
       height: 1189,
-      alt: "The Recipe converter keeping three owned paints from a scheme and suggesting Scarlet, an 86% match, in place of a missing Ember Red.",
-      caption: "Recipe converter",
+      alt: t("docs.theRecipeConverterKeepingThreeOwnedPaintsFromAScheme"),
+      caption: t("docs.recipeConverter"),
     },
     body: (
       <>
         <p>
-          {strong("Paint compare")} ranks catalog paints by screen-color similarity, with notes on lightness,
-          hue, and vividness. Treat the score as a starting point: finish, primer, and coverage can change the
-          real result.
+          {strong(t("docs.paintCompare"))} {t("docs.ranksCatalogPaintsByScreenColorSimilarityWithNotesOn")}
         </p>
         <p>
-          The {strong("Recipe converter")} adapts a scheme to your collection. Review the suggestions and save
-          a new scheme; the source remains unchanged.
+          {t("docs.the")} {strong(t("docs.recipeConverter"))}{" "}
+          {t("docs.adaptsASchemeToYourCollectionReviewTheSuggestionsAnd")}
         </p>
       </>
     ),
   },
   {
     id: "wishlist",
-    label: "Wishlist",
-    title: "Gather what is missing",
+    label: t("docs.wishlist"),
+    title: t("docs.gatherWhatIsMissing"),
     icon: ChecklistIcon,
     body: (
       <p>
-        The {strong("Wishlist")} collects paints and miniatures you want. Add paints from a model’s missing
-        recipe, then use the list while shopping. Updating paint ownership brings your collection and project
-        readiness back together.
+        {t("docs.the")} {strong(t("docs.wishlist"))}{" "}
+        {t("docs.collectsPaintsAndMiniaturesYouWantAddPaintsFromA")}
       </p>
     ),
   },
   {
     id: "backup",
-    label: "Backups",
-    title: "Back up your vault",
+    label: t("docs.backups"),
+    title: t("docs.backUpYourVault"),
     icon: SaveOutlined,
     body: (
       <>
         <p>
-          In {strong("Data & settings")}, {strong("Export")} saves one .zip file with everything in the vault:
-          miniatures and their photos, paints, recipes, schemes, templates, and installed plugins. Your
-          account and password aren&rsquo;t included.
+          {t("docs.in")} {strong(t("docs.dataSettings"))}
+          {t("docs.text")} {strong(t("docs.export"))}{" "}
+          {t("docs.savesOneZipFileWithEverythingInTheVaultMiniatures")}
         </p>
         <p>
-          {strong("Restore from a backup")} shows what the file contains, then either merges it into the
-          current vault or replaces the vault with it. The{" "}
+          {strong(t("docs.restoreFromABackup"))} {t("docs.showsWhatTheFileContainsThenEitherMergesItInto")}{" "}
           <a href={`${repository}#storage-and-backups`} target="_blank" rel="noreferrer">
-            repository guide
+            {t("docs.repositoryGuide")}
           </a>{" "}
-          also covers copying the Docker volume.
+          {t("docs.alsoCoversCopyingTheDockerVolume")}
         </p>
       </>
     ),
@@ -236,7 +221,7 @@ function Contents() {
   return (
     <Box
       component="nav"
-      aria-label="On this page"
+      aria-label={t("docs.onThisPage")}
       sx={{ display: { xs: "none", md: "block" }, position: "sticky", top: 100, alignSelf: "start" }}
     >
       <Typography
@@ -250,10 +235,10 @@ function Contents() {
           pl: 2,
         }}
       >
-        On this page
+        {t("docs.onThisPage")}
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-        {sections.map(({ id, label, icon: Icon }) => (
+        {sections().map(({ id, label, icon: Icon }) => (
           <Box
             key={id}
             component="a"
@@ -287,9 +272,9 @@ export function DocsPage() {
   return (
     <Container maxWidth="lg">
       <PageIntro
-        eyebrow="How to use"
-        title="Get from shelf to session."
-        description="A practical guide to setting up Paint Vault and using it during your miniature painting workflow."
+        eyebrow={t("docs.howToUse")}
+        title={t("docs.getFromShelfToSession")}
+        description={t("docs.aPracticalGuideToSettingUpPaintVaultAndUsing")}
       />
       <Box
         component="ol"
@@ -302,7 +287,7 @@ export function DocsPage() {
           gap: 2,
         }}
       >
-        {steps.map((step, index) => (
+        {steps().map((step, index) => (
           <Surface key={step.title} component="li" sx={{ p: 3, position: "relative" }}>
             <Box
               aria-hidden="true"
@@ -336,8 +321,8 @@ export function DocsPage() {
         src="/images/app/workbench.webp"
         width={2400}
         height={1500}
-        alt="The Paint Vault workbench: 2 of 5 miniatures ready to paint, 3 paints missing, and project cards showing how many paints each still needs."
-        caption="The workbench, the first screen after setup"
+        alt={t("docs.thePaintVaultWorkbench2Of5MiniaturesReadyTo")}
+        caption={t("docs.theWorkbenchTheFirstScreenAfterSetup")}
         sx={{ mt: { xs: 8, md: 10 } }}
       />
 
@@ -351,7 +336,7 @@ export function DocsPage() {
       >
         <Contents />
         <Box sx={{ display: "grid", gap: 2 }}>
-          {sections.map(({ id, label, title, icon: Icon, body, image }) => (
+          {sections().map(({ id, label, title, icon: Icon, body, image }) => (
             <Surface key={id} component="section" sx={{ p: { xs: 3, md: 4 }, scrollMarginTop: 96 }}>
               <Box id={id} sx={{ scrollMarginTop: 96 }} />
               <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2.5 }}>
@@ -414,9 +399,9 @@ export function DocsPage() {
 
       <Box sx={{ mt: { xs: 8, md: 10 } }}>
         <CtaBand
-          title="Need the installation steps?"
-          body="Pick the desktop app or a self-hosted vault."
-          action="Go to downloads"
+          title={t("docs.needTheInstallationSteps")}
+          body={t("docs.pickTheDesktopAppOrASelfHostedVault")}
+          action={t("docs.goToDownloads")}
           href="/download/"
           icon={<ArrowForwardIcon />}
         />

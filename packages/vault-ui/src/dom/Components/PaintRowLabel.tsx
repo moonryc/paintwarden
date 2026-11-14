@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 
@@ -48,6 +49,7 @@ export function PaintRowLabel({
   status?: ReactNode;
   editMode?: boolean;
 }) {
+  const { t } = useTranslation("components");
   const recipe = variant === "recipe";
   return (
     <PaintDetailsButton
@@ -107,7 +109,7 @@ export function PaintRowLabel({
             ]}
           >
             {paint.brand} · {paint.range}
-            {paint.isCustom ? " · Custom" : ""}
+            {paint.isCustom ? t("customPaintSuffix") : ""}
           </Box>
           {recipe && notes && (
             <Box

@@ -1,3 +1,4 @@
+import { i18n, i18nReady } from "@paint-vault/i18n/runtime";
 import { isUserId } from "@paint-vault/core/vault-ids";
 import { readZipDirectory, readZipEntryData, type ZipSource } from "@paint-vault/core/zip-reader";
 import { inflateSync, strFromU8 } from "fflate";
@@ -6,7 +7,18 @@ export type BackupSummary =
   | {
       ok: true;
       exportedAt: Date | null;
-      counts: { label: string; count: number }[];
+      counts: {
+        label: string;
+        count: number;
+        key?:
+          | "backupMiniature"
+          | "backupCustomPaint"
+          | "backupPaintRecord"
+          | "backupScheme"
+          | "backupTemplate"
+          | "backupImage"
+          | "backupPlugin";
+      }[];
       // Pre-release JSON backups hold only the owner's items and can only be merged.
       legacy: boolean;
     }
@@ -20,9 +32,20 @@ const rows = (value: unknown): Rows =>
     ? value.filter((row): row is Record<string, unknown> => !!row && typeof row === "object")
     : [];
 const own = (list: Rows) => list.filter((row) => typeof row.id === "string" && isUserId(row.id)).length;
-const plural = (count: number, singular: string, pluralLabel: string) => ({
-  label: count === 1 ? singular : pluralLabel,
+const plural = (
+  count: number,
+  key:
+    | "backupMiniature"
+    | "backupCustomPaint"
+    | "backupPaintRecord"
+    | "backupScheme"
+    | "backupTemplate"
+    | "backupImage"
+    | "backupPlugin",
+) => ({
+  label: i18n.t(`shell:${key}`, { count }),
   count,
+  key,
 });
 
 // Only the ZIP's directory and manifest are read, so previewing a large backup stays quick.
@@ -35,6 +58,7 @@ async function readManifest(source: ZipSource): Promise<unknown> {
 
 // Mirrors the server's accepted formats so an unsupported file is caught before it is uploaded.
 export async function summarizeBackup(file: Blob): Promise<BackupSummary> {
+  await i18nReady;
   const source: ZipSource = {
     size: file.size,
     read: async (offset, length) => new Uint8Array(await file.slice(offset, offset + length).arrayBuffer()),
@@ -46,34 +70,33 @@ export async function summarizeBackup(file: Blob): Promise<BackupSummary> {
     zip = signature[0] === 0x50 && signature[1] === 0x4b;
     body = zip ? await readManifest(source) : JSON.parse(await file.text());
   } catch {
-    return { ok: false, error: "Choose a Paint Vault backup (.zip) file." };
+    return { ok: false, error: i18n.t("shell:backupChooseZip") };
   }
   if (!body || typeof body !== "object" || Array.isArray(body))
-    return { ok: false, error: "This isn't a Paint Vault backup." };
+    return { ok: false, error: i18n.t("shell:backupInvalid") };
   const record = body as Record<string, unknown>;
-  if (record.format !== "paint-vault-backup") return { ok: false, error: "This isn't a Paint Vault backup." };
+  if (record.format !== "paint-vault-backup") return { ok: false, error: i18n.t("shell:backupInvalid") };
   const legacy = !zip && (record.version === 3 || record.version === 4);
-  if (!legacy && !(zip && record.version === 1))
-    return { ok: false, error: "This backup was made by a different version of Paint Vault." };
+  if (!legacy && !(zip && record.version === 1)) return { ok: false, error: i18n.t("shell:backupVersion") };
   const exported = typeof record.exportedAt === "string" ? new Date(record.exportedAt) : null;
   const tables = (legacy ? record : (record.tables ?? {})) as Record<string, unknown>;
   const counts = legacy
     ? [
-        plural(rows(tables.miniatures).length, "miniature", "miniatures"),
-        plural(rows(tables.customPaints).length, "custom paint", "custom paints"),
-        plural(rows(tables.paintInventory).length, "paint record", "paint records"),
+        plural(rows(tables.miniatures).length, "backupMiniature"),
+        plural(rows(tables.customPaints).length, "backupCustomPaint"),
+        plural(rows(tables.paintInventory).length, "backupPaintRecord"),
         // These backups marked source schemes instead of using `user:` IDs.
-        plural(rows(tables.colorSchemes).filter((row) => row.isSystem !== true).length, "scheme", "schemes"),
-        plural(own(rows(tables.miniatureTemplates)), "template", "templates"),
+        plural(rows(tables.colorSchemes).filter((row) => row.isSystem !== true).length, "backupScheme"),
+        plural(own(rows(tables.miniatureTemplates)), "backupTemplate"),
       ]
     : [
-        plural(rows(tables.miniatures).length, "miniature", "miniatures"),
-        plural(Array.isArray(record.images) ? record.images.length : 0, "image", "images"),
-        plural(rows(tables.plugins).length, "plugin", "plugins"),
-        plural(own(rows(tables.paints)), "custom paint", "custom paints"),
-        plural(rows(tables.paintInventory).length, "paint record", "paint records"),
-        plural(own(rows(tables.schemes)), "scheme", "schemes"),
-        plural(own(rows(tables.templates)), "template", "templates"),
+        plural(rows(tables.miniatures).length, "backupMiniature"),
+        plural(Array.isArray(record.images) ? record.images.length : 0, "backupImage"),
+        plural(rows(tables.plugins).length, "backupPlugin"),
+        plural(own(rows(tables.paints)), "backupCustomPaint"),
+        plural(rows(tables.paintInventory).length, "backupPaintRecord"),
+        plural(own(rows(tables.schemes)), "backupScheme"),
+        plural(own(rows(tables.templates)), "backupTemplate"),
       ];
   return {
     ok: true,

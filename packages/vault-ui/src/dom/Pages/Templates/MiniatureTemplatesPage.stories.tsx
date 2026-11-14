@@ -49,7 +49,7 @@ export const GlobalSearchAndSummaryOnly: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
     await userEvent.type(canvas.getByPlaceholderText("Search templates…"), "Distant dragon");
-    await expect(await canvas.findByText("1 templates")).toBeInTheDocument();
+    await expect(await canvas.findByText("1 template")).toBeInTheDocument();
     await userEvent.click(await canvas.findByRole("button", { name: /Distant dragon/ }));
     const dialog = within(await within(document.body).findByRole("dialog", { name: "Distant dragon" }));
     await expect(dialog.getByText("4 schemes · 179 paints")).toBeInTheDocument();
@@ -63,7 +63,7 @@ export const GlobalCategoryFacet: Story = {
     await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
     await userEvent.click(canvas.getByRole("combobox", { name: "Category" }));
     await userEvent.click(within(document.body).getByRole("option", { name: "Dragons" }));
-    await expect(await canvas.findByText("1 templates")).toBeInTheDocument();
+    await expect(await canvas.findByText("1 template")).toBeInTheDocument();
     await expect(await canvas.findByRole("button", { name: /Distant dragon/ })).toBeInTheDocument();
   },
 };

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -24,16 +25,25 @@ export function OwnedToggle({
   // md is a round action button that matches the quantity counter; lg is a larger check circle.
   size?: "md" | "lg";
 }) {
+  const { t } = useTranslation("components");
   const label = resolvedBy
-    ? `${paint.name} is ${owned ? "available" : "unavailable"} through ${resolvedBy}`
+    ? owned
+      ? t("paintAvailableThrough", { name: paint.name, substitution: resolvedBy })
+      : t("paintUnavailableThrough", { name: paint.name, substitution: resolvedBy })
     : owned
-      ? `Unmark ${paint.name} as owned`
-      : `Mark ${paint.name} as ${unownedAction}`;
+      ? t("unmarkPaintOwned", { name: paint.name })
+      : unownedAction === "bought"
+        ? t("markPaintBought", { name: paint.name })
+        : t("markPaintOwned", { name: paint.name });
   const title = resolvedBy
-    ? `${owned ? "Available" : "Unavailable"} through ${resolvedBy}`
+    ? owned
+      ? t("availableThrough", { substitution: resolvedBy })
+      : t("unavailableThrough", { substitution: resolvedBy })
     : owned
-      ? "Unmark as owned"
-      : `Mark as ${unownedAction}`;
+      ? t("unmarkAsOwned")
+      : unownedAction === "bought"
+        ? t("markAsBought")
+        : t("markAsOwned");
 
   if (size === "md") {
     return (

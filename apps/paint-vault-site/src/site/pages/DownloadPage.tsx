@@ -19,20 +19,21 @@ import {
 import { useState, type ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Surface, serif } from "../components/primitives";
+import { siteT as t } from "../i18n";
 import { releases, repository } from "../links";
 
 type Choice = "desktop" | "server";
 
-const platforms = [
+const platforms = () => [
   {
     platform: "macOS",
     icon: <Apple />,
-    detail: "Built for Apple silicon Macs.",
+    detail: t("download.builtForAppleSiliconMacs"),
   },
   {
     platform: "Windows",
     icon: <Microsoft />,
-    detail: "Install a build made for Windows on a Windows machine.",
+    detail: t("download.installABuildMadeForWindowsOnAWindowsMachine"),
   },
 ];
 
@@ -126,12 +127,12 @@ function Terminal() {
             sx={{ width: 11, height: 11, borderRadius: 999, bgcolor: color, opacity: 0.8 }}
           />
         ))}
-        <Box sx={{ flex: 1, ml: 1, fontSize: 12, color: "var(--ink-faint)" }}>Terminal</Box>
-        <Tooltip title={copied ? "Copied" : "Copy commands"}>
+        <Box sx={{ flex: 1, ml: 1, fontSize: 12, color: "var(--ink-faint)" }}>{t("download.terminal")}</Box>
+        <Tooltip title={copied ? t("download.copied") : t("download.copyCommands")}>
           <IconButton
             size="small"
             onClick={copy}
-            aria-label="Copy commands"
+            aria-label={t("download.copyCommands")}
             sx={{ color: copied ? "var(--ok)" : "var(--ink-faint)" }}
           >
             {copied ? <CheckIcon fontSize="small" /> : <ContentCopyOutlined fontSize="small" />}
@@ -151,12 +152,12 @@ function Terminal() {
         }}
       >
         <Box component="span" sx={{ color: "var(--ink-faint)" }}>
-          # Clone and start the web app
+          {t("download.cloneAndStartTheWebApp")}
         </Box>
         {commands.map((command) => (
           <Box key={command} component="span" sx={{ display: "block" }}>
             <Box component="span" aria-hidden="true" sx={{ color: "var(--gold)", userSelect: "none" }}>
-              ${" "}
+              {t("download.text")}{" "}
             </Box>
             {command}
           </Box>
@@ -170,7 +171,7 @@ function DesktopPanel() {
   return (
     <>
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 2 }}>
-        {platforms.map((item) => (
+        {platforms().map((item) => (
           <Surface
             key={item.platform}
             component="article"
@@ -191,7 +192,7 @@ function DesktopPanel() {
                   textTransform: "uppercase",
                 }}
               >
-                Desktop
+                {t("download.desktop")}
               </Box>
             </Box>
             <Typography
@@ -210,7 +211,7 @@ function DesktopPanel() {
               endIcon={<OpenInNewIcon />}
               sx={{ alignSelf: "start", mt: "auto" }}
             >
-              View releases
+              {t("download.viewReleases")}
             </Button>
           </Surface>
         ))}
@@ -229,28 +230,31 @@ function DesktopPanel() {
             component="h2"
             sx={{ fontFamily: serif, fontWeight: 600, fontSize: 24, mb: 2.5, color: "#ececec" }}
           >
-            First launch
+            {t("download.firstLaunch")}
           </Typography>
           <Steps
             items={[
               {
-                title: "Choose a connection",
+                title: t("download.chooseAConnection"),
                 body: (
                   <>
-                    Pick <strong>Use this computer</strong> for a local vault, or connect to a Paint Vault
-                    server you already run.
+                    {t("download.pick")} <strong>{t("download.useThisComputer")}</strong>{" "}
+                    {t("download.forALocalVaultOrConnectToAPaintVault")}
                   </>
                 ),
               },
               {
-                title: "Create the owner account",
-                body: "Set a username and a password of at least 12 characters.",
+                title: t("download.createTheOwnerAccount"),
+                body: t("download.setAUsernameAndAPasswordOfAtLeast12"),
               },
               {
-                title: "Install a catalog",
-                body: "Open Data & settings → Plugins and add a paint catalog from GitHub or a .zip.",
+                title: t("download.installACatalog"),
+                body: t("download.openDataSettingsPluginsAndAddAPaintCatalogFrom"),
               },
-              { title: "Switch any time", body: "Change the connection later from Data & settings." },
+              {
+                title: t("download.switchAnyTime"),
+                body: t("download.changeTheConnectionLaterFromDataSettings"),
+              },
             ]}
           />
         </Box>
@@ -259,15 +263,14 @@ function DesktopPanel() {
             component="h2"
             sx={{ fontFamily: serif, fontWeight: 600, fontSize: 24, mb: 2.5, color: "#ececec" }}
           >
-            No packaged build listed?
+            {t("download.noPackagedBuildListed")}
           </Typography>
           <Typography sx={{ color: "var(--ink-soft)", lineHeight: 1.7, fontSize: 14.5 }}>
-            The releases page is the place to check for downloadable builds. You can also build the desktop
-            app from source on its target operating system with{" "}
+            {t("download.theReleasesPageIsThePlaceToCheckForDownloadable")}{" "}
             <Box component="code" sx={code}>
-              npm run desktop:package
+              {t("download.npmRunDesktopPackage")}
             </Box>
-            .
+            {t("download.text2")}
           </Typography>
         </Box>
       </Surface>
@@ -290,33 +293,36 @@ function ServerPanel() {
           component="h2"
           sx={{ fontFamily: serif, fontWeight: 600, fontSize: { xs: 28, md: 34 }, mb: 1.5, color: "#ececec" }}
         >
-          Run it with Docker Compose
+          {t("download.runItWithDockerCompose")}
         </Typography>
         <Typography sx={{ color: "var(--ink-soft)", lineHeight: 1.7, mb: 3.5 }}>
-          You need Docker Engine, Docker Compose v2, and Git.
+          {t("download.youNeedDockerEngineDockerComposeV2AndGit")}
         </Typography>
         <Steps
           items={[
-            { title: "Clone and start", body: "Run the commands to build and start the service." },
             {
-              title: "Open your vault",
+              title: t("download.cloneAndStart"),
+              body: t("download.runTheCommandsToBuildAndStartTheService"),
+            },
+            {
+              title: t("download.openYourVault"),
               body: (
                 <>
-                  Visit{" "}
+                  {t("download.visit")}{" "}
                   <Box component="code" sx={code}>
-                    http://localhost:3000
+                    {t("download.httpLocalhost3000")}
                   </Box>{" "}
-                  and create the owner account, using the setup code from{" "}
+                  {t("download.andCreateTheOwnerAccountUsingTheSetupCodeFrom")}{" "}
                   <Box component="code" sx={code}>
-                    docker compose logs paint-vault
+                    {t("download.dockerComposeLogsPaintVault")}
                   </Box>
-                  .
+                  {t("download.text2")}
                 </>
               ),
             },
             {
-              title: "Your data persists",
-              body: "The database and uploaded images are stored in a persistent Docker volume.",
+              title: t("download.yourDataPersists"),
+              body: t("download.theDatabaseAndUploadedImagesAreStoredInAPersistent"),
             },
           ]}
         />
@@ -328,7 +334,7 @@ function ServerPanel() {
           endIcon={<OpenInNewIcon />}
           sx={{ mt: 3.5 }}
         >
-          Full setup guide
+          {t("download.fullSetupGuide")}
         </Button>
       </Box>
       <Terminal />
@@ -341,35 +347,45 @@ export function DownloadPage() {
   return (
     <Container maxWidth="lg">
       <PageIntro
-        eyebrow="Get Paint Vault"
-        title="Pick your kind of vault."
-        description="Keep it on one computer, connect the desktop app to your own server, or open a self-hosted vault in the browser."
+        eyebrow={t("download.getPaintVault")}
+        title={t("download.pickYourKindOfVault")}
+        description={t("download.keepItOnOneComputerConnectTheDesktopAppTo")}
       />
       <ToggleButtonGroup
         exclusive
         value={choice}
         onChange={(_, value: Choice | null) => value && setChoice(value)}
-        aria-label="Installation method"
+        aria-label={t("download.installationMethod")}
         sx={{ mb: 4, "& .MuiToggleButton-root": { px: { xs: 2, sm: 2.5 }, py: 1.1, fontSize: 14, gap: 1 } }}
       >
         <ToggleButton value="desktop" aria-controls="desktop-panel">
-          <DesktopWindowsOutlined fontSize="small" /> Desktop app
+          <DesktopWindowsOutlined fontSize="small" /> {t("download.desktopApp")}
         </ToggleButton>
         <ToggleButton value="server" aria-controls="server-panel">
-          <DnsOutlined fontSize="small" /> Self-hosted web
+          <DnsOutlined fontSize="small" /> {t("download.selfHostedWeb")}
         </ToggleButton>
       </ToggleButtonGroup>
-      <Box id="desktop-panel" role="region" aria-label="Desktop app" hidden={choice !== "desktop"}>
+      <Box
+        id="desktop-panel"
+        role="region"
+        aria-label={t("download.desktopApp")}
+        hidden={choice !== "desktop"}
+      >
         <DesktopPanel />
       </Box>
-      <Box id="server-panel" role="region" aria-label="Self-hosted web" hidden={choice !== "server"}>
+      <Box
+        id="server-panel"
+        role="region"
+        aria-label={t("download.selfHostedWeb")}
+        hidden={choice !== "server"}
+      >
         <ServerPanel />
       </Box>
       <Box sx={{ mt: { xs: 8, md: 10 } }}>
         <CtaBand
-          title="Once it is running"
-          body="Follow the quick guide to add your first paints and model."
-          action="Read how to use it"
+          title={t("download.onceItIsRunning")}
+          body={t("download.followTheQuickGuideToAddYourFirstPaintsAnd")}
+          action={t("download.readHowToUseIt")}
           href="/docs/"
           icon={<ArrowForwardIcon />}
         />

@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { TypedDocumentNode } from "@apollo/client";
 
 import {
@@ -26,14 +27,15 @@ export async function acceptedSourceRead<
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const ticket = scope.controller.capture();
     const result = await scope.client.query({ query, variables, fetchPolicy: "no-cache" });
-    if (!scope.controller.isCurrent(ticket)) throw new Error("Vault connection changed. Please try again.");
-    if (!result.data) throw new Error("Could not load plugins");
+    if (!scope.controller.isCurrent(ticket))
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
+    if (!result.data) throw new Error(i18n.t("shell:couldNotLoadPlugins"));
     const view = envelope(result.data);
     if (!scope.controller.accepts(ticket, view.revision, FAMILIES)) continue;
     scope.client.writeQuery({ query, variables, data: result.data });
     return view;
   }
-  throw new Error("Plugins changed while loading. Please try again.");
+  throw new Error(i18n.t("shell:pluginsChangedWhileLoadingPleaseTryAgain"));
 }
 
 export const readInstalledSources = (scope: VaultGraphQLScope) =>

@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import ComputerOutlinedIcon from "@mui/icons-material/ComputerOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import {
@@ -14,6 +15,7 @@ import {
   createTheme,
 } from "@mui/material";
 import Vault from "@paint-vault/ui";
+import { useTranslation } from "react-i18next";
 import { colors } from "@paint-vault/ui/theme-tokens";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 
@@ -30,6 +32,8 @@ export type ConnectionChoice = {
   versionProblem?: VersionProblem;
 };
 export type PaintVaultDesktopBridge = {
+  getLanguage(): Promise<string>;
+  setLanguage(language: string): Promise<string>;
   getConnection(): Promise<ConnectionChoice>;
   setConnection(choice: { mode: "local" | "remote"; serverUrl?: string }): Promise<ConnectionChoice>;
   saveBinary(input: { bytes: Uint8Array; filename: string; title?: string }): Promise<boolean>;
@@ -58,6 +62,7 @@ const connectionTheme = createTheme({
 });
 
 export default function DesktopConnection({ bridge }: { bridge: PaintVaultDesktopBridge }) {
+  useTranslation("shell");
   const [choice, setChoice] = useState<ConnectionChoice | null>(null);
   const [editing, setEditing] = useState(false);
   const [remoteUrl, setRemoteUrl] = useState("");
@@ -75,7 +80,7 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
       (cause: unknown) => {
         if (!mounted) return;
         setChoice({ mode: null });
-        setError(errorMessage(cause, "Could not load the saved connection."));
+        setError(errorMessage(cause, i18n.t("shell:couldNotLoadTheSavedConnection")));
       },
     );
     return () => {
@@ -102,7 +107,7 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
         setChoice(saved);
         setEditing(false);
       } catch (cause) {
-        setError(errorMessage(cause, "Could not save the connection."));
+        setError(errorMessage(cause, i18n.t("shell:couldNotSaveTheConnection")));
       } finally {
         setBusy(false);
       }
@@ -151,7 +156,9 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
             <Stack spacing={2.5}>
               <Box>
                 <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }} gutterBottom>
-                  {problem.update === "server" ? "Update the server" : "Update this app"}
+                  {problem.update === "server"
+                    ? i18n.t("shell:updateTheServer")
+                    : i18n.t("shell:updateThisApp")}
                 </Typography>
                 <Typography color="text.secondary" sx={{ overflowWrap: "anywhere" }}>
                   {choice.serverUrl}
@@ -159,14 +166,13 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
               </Box>
               <Alert severity="warning">{problem.message}</Alert>
               <Typography color="text.secondary">
-                The app and the server must run the same version of Paint Vault. Your vault data is safe and
-                unchanged.
+                {i18n.t("shell:theAppAndTheServerMustRunTheSame")}
               </Typography>
               <Button variant="contained" size="large" disabled={checking} onClick={() => void handleRetry()}>
-                {checking ? "Checking…" : "Check again"}
+                {checking ? i18n.t("shell:checking") : i18n.t("shell:checkAgain")}
               </Button>
               <Button disabled={checking} onClick={handleChangeServer}>
-                Use a different server
+                {i18n.t("shell:useADifferentServer")}
               </Button>
             </Stack>
           </Card>
@@ -191,16 +197,16 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
           <Stack spacing={2.5}>
             <Box>
               <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }} gutterBottom>
-                Connect to Paint Vault
+                {i18n.t("shell:connectToPaintVault")}
               </Typography>
               <Typography color="text.secondary">
-                Choose where this app stores and reads your vault.
+                {i18n.t("shell:chooseWhereThisAppStoresAndReadsYourVault")}
               </Typography>
             </Box>
 
             {choice === null ? (
               <Box sx={{ display: "flex", justifyContent: "center", py: 2 }}>
-                <CircularProgress aria-label="Loading saved connection" />
+                <CircularProgress aria-label={i18n.t("shell:loadingSavedConnection")} />
               </Box>
             ) : (
               <>
@@ -211,13 +217,13 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
                   disabled={busy}
                   onClick={handleLocal}
                 >
-                  Use this computer
+                  {i18n.t("shell:useThisComputer")}
                 </Button>
-                <Typography color="text.secondary">Or connect to an existing server:</Typography>
+                <Typography color="text.secondary">{i18n.t("shell:orConnectToAnExistingServer")}</Typography>
                 <Box component="form" onSubmit={handleRemoteSubmit}>
                   <Stack spacing={2}>
                     <TextField
-                      label="Server URL"
+                      label={i18n.t("shell:serverUrl")}
                       placeholder="https://vault.example.com"
                       type="url"
                       autoComplete="url"
@@ -227,8 +233,7 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
                     />
                     {remoteUrl.trim().startsWith("http://") && (
                       <Alert severity="warning">
-                        HTTP sends your password and vault data without encryption. Use HTTPS outside a
-                        trusted network.
+                        {i18n.t("shell:httpSendsYourPasswordAndVaultDataWithoutEncryption")}
                       </Alert>
                     )}
                     <Button
@@ -238,13 +243,13 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
                       startIcon={<LanguageOutlinedIcon />}
                       disabled={busy || !remoteUrl.trim()}
                     >
-                      Connect to server
+                      {i18n.t("shell:connectToServer")}
                     </Button>
                   </Stack>
                 </Box>
                 {editing && (
                   <Button disabled={busy} onClick={handleCancel}>
-                    Cancel
+                    {i18n.t("shell:cancel")}
                   </Button>
                 )}
               </>

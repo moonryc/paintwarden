@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 import { usePaintCommands } from "../graphql/paint-actions";
@@ -15,6 +16,7 @@ type OverlayProps = {
 };
 
 export function PaintDetailsOverlay({ paintId, onClose, openMini: openMiniOverride }: OverlayProps) {
+  const { t } = useTranslation("components");
   const commands = usePaintCommands();
   const notify = useVaultStore((s) => s.notify);
   const storeOpenMini = useVaultStore((s) => s.openMini);
@@ -23,7 +25,7 @@ export function PaintDetailsOverlay({ paintId, onClose, openMini: openMiniOverri
   const paint = paintId
     ? {
         id: paintId,
-        name: "Paint details",
+        name: t("paintDetails"),
         brand: "",
         range: "",
         colorHex: null,
@@ -54,13 +56,13 @@ export function PaintDetailsOverlay({ paintId, onClose, openMini: openMiniOverri
           onSave={async (values) => {
             await commands.updatePaint(editingPaint.id, values).then(() => {
               setEditingPaint(null);
-              notify("Custom paint updated");
+              notify(t("customPaintUpdated"));
             }, noop);
           }}
           onDelete={async () => {
             await commands.deletePaint(editingPaint.id).then(() => {
               setEditingPaint(null);
-              notify("Custom paint deleted");
+              notify(t("customPaintDeleted"));
             }, noop);
           }}
         />

@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -48,7 +49,7 @@ export function useSchemeWindow<T extends { revision: Revision }>(
         scope,
         data: null,
         loading: false,
-        error: new Error("The scheme connection is not available."),
+        error: new Error(i18n.t("shell:theSchemeConnectionIsNotAvailable")),
       });
       commands.current = { refetch: () => {}, loadMore: () => {} };
       return;

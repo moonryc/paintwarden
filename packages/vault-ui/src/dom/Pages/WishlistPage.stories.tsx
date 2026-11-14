@@ -63,7 +63,7 @@ export const LargeGroupedWishlist: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     window.scrollTo(0, 0);
-    await expect(await canvas.findByRole("heading", { name: "A First brand 1000" })).toBeVisible();
+    await expect(await canvas.findByRole("heading", { name: "A First brand 1,000" })).toBeVisible();
     await expect(canvasElement.querySelectorAll("li").length).toBeLessThan(80);
     window.scrollTo(0, document.body.scrollHeight);
     const finalAction = await canvas.findByRole("button", { name: `Mark ${finalPaint.name} as bought` });

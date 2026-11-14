@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -22,6 +23,7 @@ export function ModalHeader({
   size?: "md" | "lg";
   sx?: SxProps<Theme>;
 }) {
+  const { t } = useTranslation("components");
   return (
     <Box
       component="div"
@@ -116,7 +118,7 @@ export function ModalHeader({
       </Box>
       <IconButton
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t("close")}
         sx={{
           boxSizing: "border-box",
           flexShrink: "0",

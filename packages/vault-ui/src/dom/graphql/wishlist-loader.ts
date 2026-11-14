@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import { WishlistPageDocument, type WishlistPageQuery } from "./generated/graphql";
@@ -31,7 +32,7 @@ export async function readWishlistPage(
     fetchPolicy: "no-cache",
     context: { fetchOptions: { signal }, queryDeduplication: false },
   });
-  if (!data) throw new Error("Wishlist response was empty");
+  if (!data) throw new Error(i18n.t("shell:wishlistResponseWasEmpty"));
   return data;
 }
 
@@ -91,9 +92,9 @@ export async function readWishlistWindow(
       after = shoppingDone ? null : (next.wishlist.shopping.pageInfo.endCursor ?? null);
       missingAfter = missingDone ? null : (next.wishlist.missing.pageInfo.endCursor ?? null);
       if ((!shoppingDone && !after) || (!missingDone && !missingAfter))
-        throw new Error("Wishlist returned an invalid page cursor");
+        throw new Error(i18n.t("shell:wishlistReturnedAnInvalidPageCursor"));
     }
     if (combined) return combined;
   }
-  throw new Error("Wishlist changed repeatedly while refreshing. Try again.");
+  throw new Error(i18n.t("shell:wishlistChangedRepeatedlyWhileRefreshingTryAgain"));
 }

@@ -1,3 +1,5 @@
+import { dividerLabel } from "../Components/component-labels";
+import { useTranslation } from "react-i18next";
 import { Box, Button, MenuItem, TextField } from "@mui/material";
 import { RECIPE_STEPS, SCHEME_MILESTONES } from "@paint-vault/core/recipe-steps";
 import { useState } from "react";
@@ -11,13 +13,6 @@ export type SchemeItemKind = "STEP" | "MILESTONE" | "IMAGE" | "PAINT";
 // The labels a scheme divider can take: a paint step, or a milestone.
 export const dividerOptions = (tone: DividerTone): string[] =>
   tone === "SECTION" ? RECIPE_STEPS.map(([id]) => id) : [...SCHEME_MILESTONES];
-
-const TITLES: Record<SchemeItemKind, string> = {
-  STEP: "Add step",
-  MILESTONE: "Add milestone",
-  IMAGE: "Add image",
-  PAINT: "Add paint",
-};
 
 // Adds one item to a color scheme being edited: a step or milestone divider, an example image
 // by URL, or a paint placed in the step named by stepLabel.
@@ -40,6 +35,13 @@ export function AddSchemeItemDialog({
   onAddPaint(paint: Paint): void;
   onClose(): void;
 }) {
+  const { t } = useTranslation("components");
+  const TITLES: Record<SchemeItemKind, string> = {
+    STEP: t("addStep"),
+    MILESTONE: t("addMilestone"),
+    IMAGE: t("addImage"),
+    PAINT: t("addPaint"),
+  };
   const divider = kind === "STEP" || kind === "MILESTONE";
   const tone: DividerTone = kind === "MILESTONE" ? "MILESTONE" : "SECTION";
   const [label, setLabel] = useState(dividerOptions(tone)[0]);
@@ -53,7 +55,11 @@ export function AddSchemeItemDialog({
     <Modal
       title={TITLES[kind]}
       subtitle={
-        kind === "PAINT" ? `Place a paint in ${stepLabel ?? "this step"}.` : "Add an item to this scheme."
+        kind === "PAINT"
+          ? stepLabel
+            ? t("placePaintInStep", { label: dividerLabel(stepLabel) })
+            : t("placePaintInThisStep")
+          : t("addAnItemToThisScheme")
       }
       onClose={onClose}
     >
@@ -62,13 +68,13 @@ export function AddSchemeItemDialog({
           select
           fullWidth
           required
-          label={kind === "STEP" ? "Paint step" : "Milestone"}
+          label={kind === "STEP" ? t("paintStep") : t("milestone")}
           value={label}
           onChange={(event) => setLabel(event.target.value)}
         >
           {dividerOptions(tone).map((option) => (
             <MenuItem key={option} value={option}>
-              {option}
+              {dividerLabel(option)}
             </MenuItem>
           ))}
         </TextField>
@@ -77,7 +83,7 @@ export function AddSchemeItemDialog({
         <TextField
           fullWidth
           required
-          label="Image URL"
+          label={t("imageUrl")}
           type="url"
           value={imageUrl}
           onChange={(event) => setImageUrl(event.target.value)}
@@ -87,7 +93,7 @@ export function AddSchemeItemDialog({
               addImage();
             }
           }}
-          placeholder="https://…"
+          placeholder={t("https")}
         />
       )}
       {kind === "PAINT" && (
@@ -99,15 +105,15 @@ export function AddSchemeItemDialog({
         />
       )}
       <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, mt: 2 }}>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("cancel")}</Button>
         {divider && (
           <Button variant="contained" disabled={!label.trim()} onClick={() => onAddDivider(label, tone)}>
-            Add {kind === "STEP" ? "step" : "milestone"}
+            {kind === "STEP" ? t("addStep") : t("addMilestone")}
           </Button>
         )}
         {kind === "IMAGE" && (
           <Button variant="contained" disabled={!imageValid} onClick={addImage}>
-            Add image
+            {t("addImage")}
           </Button>
         )}
       </Box>

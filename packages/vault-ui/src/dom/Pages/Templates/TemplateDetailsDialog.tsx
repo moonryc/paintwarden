@@ -1,10 +1,11 @@
-import { imageUrl } from "../../utils/image-cache";
 import { Button } from "@mui/material";
 import Box from "@mui/material/Box";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
 import { PluginChip } from "../../Components/PluginChip";
 import type { MiniatureTemplate } from "../../types";
+import { imageUrl } from "../../utils/image-cache";
 
 // A template's details: its picture and counts, with Add miniature, and for your own templates
 // Edit and a Delete that asks for a second click.
@@ -24,10 +25,11 @@ export function TemplateDetailsDialog({
   onUse: () => void;
   onClose: () => void;
 }) {
+  const { t, i18n } = useTranslation("pages");
   return (
     <Modal
       title={template.name}
-      subtitle={template.kind === "source" ? "Read-only template" : "Your template"}
+      subtitle={template.kind === "source" ? t("templatesReadOnlyTemplate") : t("templatesYourTemplate")}
       badge={
         template.kind === "source" ? (
           <PluginChip name={template.sourceName} logoUrl={template.sourceLogoUrl} />
@@ -39,14 +41,14 @@ export function TemplateDetailsDialog({
           {template.kind === "user" && (
             <>
               <Button color="error" variant={confirmingDelete ? "contained" : "text"} onClick={onDelete}>
-                {confirmingDelete ? "Confirm delete" : "Delete"}
+                {confirmingDelete ? t("templatesConfirmDelete") : t("templatesDelete")}
               </Button>
-              <Button onClick={onEdit}>Edit</Button>
+              <Button onClick={onEdit}>{t("templatesEdit")}</Button>
             </>
           )}
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose}>{t("templatesClose")}</Button>
           <Button variant="contained" onClick={onUse}>
-            Add miniature
+            {t("templatesAddMiniature")}
           </Button>
         </Box>
       }
@@ -55,12 +57,20 @@ export function TemplateDetailsDialog({
         <Box
           component="img"
           src={imageUrl(template.imageUrl)}
-          alt={`${template.name} template preview`}
+          alt={t("templatesPreviewAlt", { name: template.name })}
           sx={{ mb: 1.5, width: "100%", maxHeight: "18rem", borderRadius: "16px", objectFit: "contain" }}
         />
       )}
       <Box component="p" sx={{ m: 0, fontSize: "0.875rem", lineHeight: 10 / 7, color: "var(--ink-soft)" }}>
-        {template.schemeCount} schemes · {template.paintCount} paints
+        {t("templatesSchemeCount", {
+          count: template.schemeCount,
+          formattedCount: new Intl.NumberFormat(i18n.language).format(template.schemeCount),
+        })}{" "}
+        ·{" "}
+        {t("templatesPaintCount", {
+          count: template.paintCount,
+          formattedCount: new Intl.NumberFormat(i18n.language).format(template.paintCount),
+        })}
       </Box>
     </Modal>
   );

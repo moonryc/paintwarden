@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { useMemo } from "react";
 
 import { useVaultStore } from "../store/hooks";
@@ -31,12 +32,12 @@ export function createSchemeActions(scope: VaultGraphQLScope, notify: Notify): S
     const ticket = scope.controller.captureCommand();
     const task = async () => {
       if (!scope.controller.isCommandCurrent(ticket))
-        throw new Error("Vault connection changed. Please try again.");
+        throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
       try {
         return await work(ticket);
       } catch (error) {
         if (scope.controller.isCommandCurrent(ticket))
-          notify(error instanceof Error ? error.message : "Could not save color scheme", "error");
+          notify(error instanceof Error ? error.message : i18n.t("shell:couldNotSaveColorScheme"), "error");
         throw error;
       }
     };
@@ -50,12 +51,12 @@ export function createSchemeActions(scope: VaultGraphQLScope, notify: Notify): S
   };
   const committed = async (payload: SchemeEditResultFragment | null | undefined, ticket: CommandTicket) => {
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
-    if (!payload) throw new Error("Scheme save returned no result");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
+    if (!payload) throw new Error(i18n.t("shell:schemeSaveReturnedNoResult"));
     if (!scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     if (!scope.controller.isCommandCurrent(ticket))
-      throw new Error("Vault connection changed. Please try again.");
+      throw new Error(i18n.t("shell:vaultConnectionChangedPleaseTryAgain"));
     return payload.schemeId;
   };
   return {
@@ -94,7 +95,7 @@ export function useSchemeActions(): SchemeActions {
   const scope = useVaultGraphQL();
   const notify = useVaultStore((store) => store.notify);
   return useMemo(() => {
-    if (!scope) throw new Error("Scheme actions require the GraphQL provider");
+    if (!scope) throw new Error(i18n.t("shell:schemeActionsRequireTheGraphqlProvider"));
     let actions = scopes.get(scope);
     if (!actions) {
       actions = createSchemeActions(scope, notify);

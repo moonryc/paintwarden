@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
@@ -18,6 +19,7 @@ export function SchemeChipView({
   onRemove,
   swatch,
 }: SchemeChipProps & { swatch: ReactNode }) {
+  const { t } = useTranslation("components");
   const md = size === "md";
   return (
     <Box
@@ -47,7 +49,7 @@ export function SchemeChipView({
       {onRemove && (
         <ButtonBase
           onClick={onRemove}
-          aria-label={`Remove ${scheme.name}`}
+          aria-label={t("removeScheme", { name: scheme.name })}
           sx={{
             display: "grid",
             placeItems: "center",

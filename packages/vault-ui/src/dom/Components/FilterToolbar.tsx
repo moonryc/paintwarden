@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Card, IconButton, InputAdornment, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ export function FilterToolbar({
   wideSearch?: boolean;
   singleLineFilters?: boolean;
 }) {
+  const { t } = useTranslation("components");
   return (
     <Card
       sx={[
@@ -98,7 +100,12 @@ export function FilterToolbar({
             ),
             endAdornment: search ? (
               <InputAdornment position="end">
-                <IconButton size="small" edge="end" onClick={() => setSearch("")} aria-label="Clear search">
+                <IconButton
+                  size="small"
+                  edge="end"
+                  onClick={() => setSearch("")}
+                  aria-label={t("clearSearch")}
+                >
                   <X size={15} />
                 </IconButton>
               </InputAdornment>

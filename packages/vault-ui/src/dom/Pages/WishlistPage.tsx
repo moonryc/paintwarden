@@ -2,6 +2,7 @@ import { useFragment } from "@apollo/client/react";
 import { Alert, Autocomplete, Button, CircularProgress, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../Components/EmptyState";
 import { MissingProjectPaints } from "../Components/MissingProjectPaints";
@@ -21,6 +22,7 @@ import {
   type WishlistModelOption,
   type WishlistProjection,
 } from "../graphql/wishlist-hooks";
+import { formatNumber } from "../i18n";
 import { PackageCheck, Share2 } from "../icons";
 import { PaintDetailsOverlay } from "../Modals/PaintDetailsOverlay";
 import { SubstitutionDialog } from "../Modals/SubstitutionDialog";
@@ -40,6 +42,7 @@ const normalized = (value: string) =>
 type RetainedRow = { row: WishlistProjection; miniatureId: string | null };
 
 export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }) {
+  const { t } = useTranslation("pages");
   const notify = useVaultStore((s) => s.notify);
   const { setPaintState } = usePaintStock();
   const [selectedMini, setSelectedMini] = useState<WishlistModelOption | null>(null);
@@ -101,14 +104,13 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
         } while (after);
         if (active) setRetainedMembership((previous) => ({ ...previous, [key]: false }));
       })().catch(() => {
-        if (active)
-          notify("Could not check bought paint project associations. Retry the miniature filter.", "error");
+        if (active) notify(t("wishlistCouldNotCheckBoughtPaintProjectAssociationsRetryThe"), "error");
       });
     }
     return () => {
       active = false;
     };
-  }, [selectedMini, retained, retainedMembership, readRelatedProjects, notify]);
+  }, [selectedMini, retained, retainedMembership, readRelatedProjects, notify, t]);
 
   const groups = useMemo(() => {
     const grouped = new Map<string, WishlistProjection[]>();
@@ -128,10 +130,10 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       if (navigator.share) await navigator.share({ title, text });
       else {
         await navigator.clipboard.writeText(text);
-        notify("Shopping list copied");
+        notify(t("wishlistShoppingListCopied"));
       }
     } catch (error) {
-      if ((error as Error).name !== "AbortError") notify("Couldn't share the list", "error");
+      if ((error as Error).name !== "AbortError") notify(t("wishlistCouldnTShareTheList"), "error");
     } finally {
       setSharing(false);
     }
@@ -140,11 +142,11 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
     for (const paint of paints) setPaintState(paint.id, "WISHLIST");
     notify(
       paints.length === 1
-        ? `${paints[0].name} added to wishlist`
-        : `${paints.length} paints added to wishlist`,
+        ? t("wishlistAddedPaint", { name: paints[0].name })
+        : t("wishlistAddedPaints", { count: paints.length }),
       "ok",
       {
-        label: "Undo",
+        label: t("wishlistUndo"),
         onClick: () => {
           for (const paint of paints) {
             const previous = list.missing.find((row) => row.paint.id === paint.id)?.record;
@@ -160,14 +162,19 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
   return (
     <div>
       <PageHeader
-        eyebrow="Supply run"
-        title="Wishlist"
+        eyebrow={t("wishlistSupplyRun")}
+        title={t("wishlistWishlist")}
         body={
           list.counts.shoppingPaints
-            ? `${list.counts.shoppingPaints} paint${list.counts.shoppingPaints === 1 ? "" : "s"} to buy${list.counts.projectCount ? ` for ${list.counts.projectCount} project${list.counts.projectCount === 1 ? "" : "s"}` : ""}. Tick one off when it’s on your shelf.`
+            ? list.counts.projectCount
+              ? t("wishlistToBuyForProjects", {
+                  count: list.counts.shoppingPaints,
+                  projects: t("wishlistProjectCount", { count: list.counts.projectCount }),
+                })
+              : t("wishlistToBuy", { count: list.counts.shoppingPaints })
             : retained.size
-              ? "All listed paints bought. Set bottle quantities before leaving this page."
-              : "Wishlisted and depleted paints appear here."
+              ? t("wishlistAllListedPaintsBoughtSetBottleQuantitiesBeforeLeaving")
+              : t("wishlistWishlistedAndDepletedPaintsAppearHere")
         }
       />
       <MissingProjectPaints
@@ -184,7 +191,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       {list.missingHasNextPage && (
         <Box sx={{ mb: 2 }}>
           <Button onClick={list.loadMoreMissing} disabled={list.loading || list.refreshing}>
-            Load more project paint issues ({list.missing.length} of {list.missingCount})
+            {t("wishlistLoadProjectIssues", { loaded: list.missing.length, total: list.missingCount })}
           </Button>
         </Box>
       )}
@@ -202,27 +209,31 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
           isOptionEqualToValue={(option, value) => option.id === value.id}
           filterOptions={(options) => options}
           loading={models.loading}
-          noOptionsText="No miniatures found"
+          noOptionsText={t("wishlistNoMiniaturesFound")}
+          clearText={t("wishlistAutocompleteClear")}
+          openText={t("wishlistAutocompleteOpen")}
+          closeText={t("wishlistAutocompleteClose")}
+          loadingText={t("wishlistAutocompleteLoading")}
           renderOption={(props, option) => {
             const { key, ...rest } = props;
             return (
               <li key={key} {...rest}>
-                {option.title} ({option.projectCount})
+                {option.title} ({formatNumber(option.projectCount)})
               </li>
             );
           }}
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Miniature"
-              placeholder="All miniatures"
+              label={t("wishlistMiniature")}
+              placeholder={t("wishlistAllMiniatures")}
               sx={{ "& .MuiInputLabel-root.Mui-focused": { color: "var(--ink)" } }}
             />
           )}
         />
         {models.hasNextPage && (
           <Button onClick={models.loadMore} disabled={models.loading}>
-            Load more miniatures
+            {t("wishlistLoadMoreMiniatures")}
           </Button>
         )}
         <Button
@@ -232,23 +243,26 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
           startIcon={<Share2 size={15} />}
           sx={{ ml: "auto", flexShrink: 0 }}
         >
-          {sharing ? "Sharing list…" : "Share list"}
+          {sharing ? t("wishlistSharingList") : t("wishlistShareList")}
         </Button>
       </Box>
       {models.error && (
-        <Alert severity="error" action={<Button onClick={models.retry}>Retry miniature search</Button>}>
+        <Alert
+          severity="error"
+          action={<Button onClick={models.retry}>{t("wishlistRetryMiniatureSearch")}</Button>}
+        >
           {models.error}
         </Alert>
       )}
       {list.error && (
-        <Alert severity="error" action={<Button onClick={list.retry}>Retry wishlist</Button>}>
+        <Alert severity="error" action={<Button onClick={list.retry}>{t("wishlistRetryWishlist")}</Button>}>
           {list.error}
         </Alert>
       )}
       {(list.loading || list.refreshing) && (
         <Box role="status" sx={{ display: "flex", alignItems: "center", gap: 1, my: 2 }}>
           <CircularProgress size={18} />
-          {list.loading ? "Loading wishlist…" : "Updating wishlist…"}
+          {list.loading ? t("wishlistLoadingWishlist") : t("wishlistUpdatingWishlist")}
         </Box>
       )}
       {groups.length ? (
@@ -283,18 +297,22 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
         !list.error && (
           <EmptyState
             icon={<PackageCheck size={26} />}
-            title={selectedMini ? `Nothing listed for ${selectedMini.title}` : "Nothing to buy"}
+            title={
+              selectedMini
+                ? t("wishlistNothingForMiniature", { title: selectedMini.title })
+                : t("wishlistNothingToBuy")
+            }
             body={
               selectedMini
-                ? "This miniature has no paints on your wishlist yet."
+                ? t("wishlistThisMiniatureHasNoPaintsOnYourWishlistYet")
                 : list.missingCount
-                  ? "Review your project paint issues above, or browse the library for something new."
-                  : "Your wishlist has no paints to buy or restock. Tap the heart on any paint to add it here."
+                  ? t("wishlistReviewYourProjectPaintIssuesAboveOrBrowseThe")
+                  : t("wishlistYourWishlistHasNoPaintsToBuyOrRestock")
             }
             action={
               onBrowsePaints && (
                 <Button variant="outlined" onClick={onBrowsePaints}>
-                  Browse paints
+                  {t("wishlistBrowsePaints")}
                 </Button>
               )
             }
@@ -304,7 +322,7 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
       {list.hasNextPage && (
         <Box sx={{ mt: 2 }}>
           <Button onClick={list.loadMore} disabled={list.loading || list.refreshing}>
-            Load more paints ({list.rows.length} of {list.totalCount})
+            {t("wishlistLoadPaints", { loaded: list.rows.length, total: list.totalCount })}
           </Button>
         </Box>
       )}
@@ -354,6 +372,7 @@ function CachedShoppingRow({ scope, ...props }: ShoppingRowProps & { scope: Vaul
 }
 function ShoppingRow({ row, position, retained, onRetain, onRemoveRetained, ...actions }: ShoppingRowProps) {
   const { setPaintState, toggleOwned } = usePaintStock();
+  const { t } = useTranslation("pages");
   const notify = useVaultStore((s) => s.notify);
   return (
     <WishlistPaintRow
@@ -373,8 +392,8 @@ function ShoppingRow({ row, position, retained, onRetain, onRemoveRetained, ...a
       onRemove={() => {
         onRemoveRetained();
         setPaintState(row.paint.id, null);
-        notify(`${row.paint.name} removed from wishlist`, "ok", {
-          label: "Undo",
+        notify(t("wishlistRemovedPaint", { name: row.paint.name }), "ok", {
+          label: t("wishlistUndo"),
           onClick: () => {
             if (row.record)
               setPaintState(row.paint.id, row.record.state, row.record.stockLevel, row.record.quantity);
@@ -388,6 +407,7 @@ function ShoppingRow({ row, position, retained, onRetain, onRemoveRetained, ...a
 
 type ProjectReader = ReturnType<typeof useWishlist>["relatedProjects"];
 function RelatedProjects({ paint, read, onClose }: { paint: Paint; read: ProjectReader; onClose(): void }) {
+  const { t } = useTranslation("pages");
   const [page, setPage] = useState<Awaited<ReturnType<ProjectReader>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -402,7 +422,7 @@ function RelatedProjects({ paint, read, onClose }: { paint: Paint; read: Project
       if (alive.current)
         setPage((old) => ({ ...next, nodes: after && old ? [...old.nodes, ...next.nodes] : next.nodes }));
     } catch (cause) {
-      if (alive.current) setError(cause instanceof Error ? cause.message : "Could not load projects");
+      if (alive.current) setError(cause instanceof Error ? cause.message : t("wishlistCouldNotLoadProjects"));
     } finally {
       if (alive.current) setLoading(false);
     }
@@ -418,13 +438,20 @@ function RelatedProjects({ paint, read, onClose }: { paint: Paint; read: Project
   }, []);
   return (
     <Modal
-      title={`Projects using ${paint.name}`}
-      subtitle={page ? `${page.totalCount} associated projects` : "Associated projects"}
+      title={t("wishlistProjectsUsingPaint", { name: paint.name })}
+      subtitle={
+        page
+          ? t("wishlistAssociatedProjectCount", { count: page.totalCount })
+          : t("wishlistAssociatedProjects")
+      }
       onClose={onClose}
     >
-      {loading && <Box role="status">Loading projects…</Box>}
+      {loading && <Box role="status">{t("wishlistLoadingProjects")}</Box>}
       {error && (
-        <Alert severity="error" action={<Button onClick={() => void load()}>Retry projects</Button>}>
+        <Alert
+          severity="error"
+          action={<Button onClick={() => void load()}>{t("wishlistRetryProjects")}</Button>}
+        >
           {error}
         </Alert>
       )}
@@ -435,7 +462,7 @@ function RelatedProjects({ paint, read, onClose }: { paint: Paint; read: Project
       </Box>
       {page?.hasNextPage && (
         <Button disabled={loading} onClick={() => void load(page.endCursor)}>
-          Load more projects
+          {t("wishlistLoadMoreProjects")}
         </Button>
       )}
     </Modal>

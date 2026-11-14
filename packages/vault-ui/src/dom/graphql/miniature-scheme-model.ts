@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { COLOR_CATEGORIES } from "@paint-vault/core/color-categories";
 
 import type { ColorScheme, Paint, SchemeOrderEntry } from "../types";
@@ -42,7 +43,7 @@ export function schemeEntryModels(nodes: MiniatureSchemeRead["entries"]["nodes"]
   const projections = new Map<string, LibraryPaintProjection>();
   const entries = nodes.map((entry): SchemeOrderEntry => {
     if (entry.kind === "PAINT") {
-      if (!entry.paint) throw new Error("A scheme paint entry has no paint");
+      if (!entry.paint) throw new Error(i18n.t("shell:aSchemePaintEntryHasNoPaint"));
       const paint = paintModel(entry.paint);
       projections.set(paint.id, {
         paint,
@@ -54,7 +55,7 @@ export function schemeEntryModels(nodes: MiniatureSchemeRead["entries"]["nodes"]
       return { id: entry.id, type: "PAINT", paintId: paint.id, sortOrder: entry.sortOrder };
     }
     if (entry.kind === "IMAGE") {
-      if (!entry.imageUrl) throw new Error("A scheme image entry has no image URL");
+      if (!entry.imageUrl) throw new Error(i18n.t("shell:aSchemeImageEntryHasNoImageUrl"));
       return {
         id: entry.id,
         type: "IMAGE",
@@ -71,7 +72,7 @@ export function schemeEntryModels(nodes: MiniatureSchemeRead["entries"]["nodes"]
       (entry.role !== null && entry.role !== "START" && entry.role !== "COMPLETE") ||
       entry.label === null
     ) {
-      throw new Error("A scheme divider entry is invalid");
+      throw new Error(i18n.t("shell:aSchemeDividerEntryIsInvalid"));
     }
     return {
       id: entry.id,

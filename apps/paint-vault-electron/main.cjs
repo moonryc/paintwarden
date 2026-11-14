@@ -9,7 +9,7 @@ const os = require("node:os");
 const path = require("node:path");
 const { Readable } = require("node:stream");
 const { pipeline } = require("node:stream/promises");
-const { app, BrowserWindow, dialog, ipcMain, protocol, shell } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, protocol, shell, Menu } = require("electron");
 const {
   assetPath,
   shellCacheControl,
@@ -23,6 +23,9 @@ const {
   versionMismatch,
 } = require("./desktop-core.cjs");
 const { createUpdater } = require("./desktop-update.cjs");
+const { t, setLanguage, getLanguage, resolveLanguage } = require("./desktop-i18n.cjs");
+const { createPreferences } = require("./desktop-preferences.cjs");
+const { menuTemplate } = require("./desktop-menu.cjs");
 
 const appOrigin = "paintvault://app";
 const testPort = !app.isPackaged && Number(process.env.PAINT_VAULT_DESKTOP_PORT);
@@ -100,19 +103,26 @@ function connectionPath() {
   return path.join(dataDirectory, "client-connection.json");
 }
 
+let preferences;
 async function readConnection() {
-  try {
-    return parsedChoice(JSON.parse(await readFile(connectionPath(), "utf8")));
-  } catch {
-    return { mode: null };
-  }
+  const saved = await preferences.read();
+  setLanguage(saved.language);
+  return parsedChoice(saved);
 }
-
 async function writeConnection(choice) {
-  const target = connectionPath();
-  const temporary = `${target}.${randomBytes(8).toString("hex")}.tmp`;
-  await writeFile(temporary, JSON.stringify(choice), { mode: 0o600 });
-  await rename(temporary, target);
+  await preferences.setConnection(choice);
+}
+function updateMenu() {
+  Menu.setApplicationMenu(
+    Menu.buildFromTemplate(
+      menuTemplate({
+        platform: process.platform,
+        appName: "Paint Vault",
+        t,
+        openWebsite: () => shell.openExternal("https://github.com/moonryc/paint-tracker"),
+      }),
+    ),
+  );
 }
 
 async function serverHealthy() {
@@ -136,13 +146,13 @@ async function launchLocalServer() {
     if (!explicitPort) localUrl = `http://127.0.0.1:${await freeLoopbackPort()}`;
   }
   if (await serverHealthy()) {
-    if (explicitPort) throw new Error(`Port ${explicitPort} is already used by another server.`);
+    if (explicitPort) throw new Error(t("errors.portUsed", { port: explicitPort }));
     localUrl = `http://127.0.0.1:${await freeLoopbackPort()}`;
   }
   const directory = serverDirectory();
   const executable = path.join(directory, process.platform === "win32" ? "node.exe" : "node");
   if (!existsSync(executable) || !existsSync(path.join(directory, "server.mjs")))
-    throw new Error("Bundled Paint Vault server is missing. Rebuild the desktop app.");
+    throw new Error(t("errors.missingServer"));
   const child = spawn(executable, ["server.mjs"], {
     cwd: directory,
     env: {
@@ -174,7 +184,7 @@ async function launchLocalServer() {
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   stopLocalServer();
-  throw new Error("Could not start the bundled Paint Vault server.");
+  throw new Error(t("errors.startServer"));
 }
 
 function ensureLocalServer() {
@@ -200,7 +210,7 @@ function stopLocalServer() {
 }
 
 async function setConnection(input) {
-  if (!input || typeof input !== "object") throw new Error("Choose a connection mode");
+  if (!input || typeof input !== "object") throw new Error(t("errors.connectionMode"));
   let next;
   if (input.mode === "local") {
     await ensureLocalServer();
@@ -212,11 +222,11 @@ async function setConnection(input) {
       redirect: "manual",
     });
     if (!response.ok || typeof (await response.json()).setupRequired !== "boolean")
-      throw new Error("This address is not a Paint Vault server");
+      throw new Error(t("errors.notServer"));
     const problem = await remoteVersionProblem(origin, { fresh: true });
     if (problem) throw new Error(problem.message);
     next = { mode: "remote", serverUrl: origin };
-  } else throw new Error("Choose a connection mode");
+  } else throw new Error(t("errors.connectionMode"));
   await writeConnection(next);
   connection = next;
   subscriptionStreams.abortAll();
@@ -234,7 +244,7 @@ async function serverVersion(origin) {
     redirect: "manual",
   });
   if (response.status === 404) return null;
-  if (!response.ok) throw new Error("Could not check the server's version");
+  if (!response.ok) throw new Error(t("errors.serverVersion"));
   const body = await response.json().catch(() => null);
   return body?.name === "paint-vault" && typeof body.version === "string" ? body.version : null;
 }
@@ -295,7 +305,7 @@ async function uploadFile(target, headers, file) {
 async function proxyApi(request, requestUrl) {
   if (connection.mode === null)
     return Response.json(
-      { error: "Choose a server before using the vault" },
+      { error: t("errors.chooseServer") },
       { status: 503, headers: { "cache-control": "no-store" } },
     );
   const selected = connection;
@@ -313,7 +323,10 @@ async function proxyApi(request, requestUrl) {
         );
     }
     if (selected !== connection)
-      return new Response("Connection changed", { status: 409, headers: { "cache-control": "no-store" } });
+      return new Response(t("errors.connectionChanged"), {
+        status: 409,
+        headers: { "cache-control": "no-store" },
+      });
     const isImage = imageRequest(request.method, requestUrl.pathname);
     const headers = new Headers(request.headers);
     if (!isImage) {
@@ -326,7 +339,10 @@ async function proxyApi(request, requestUrl) {
     const scope = imageScope;
     const scoped = requestUrl.searchParams.get("_pv_scope") === scope;
     if (isImage && requestUrl.searchParams.has("_pv_scope") && !scoped)
-      return new Response("Image session changed", { status: 409, headers: { "cache-control": "no-store" } });
+      return new Response(t("errors.imageSessionChanged"), {
+        status: 409,
+        headers: { "cache-control": "no-store" },
+      });
     // This is a local cache key, never a server API parameter or a persisted image URL.
     const upstreamUrl = new URL(requestUrl);
     upstreamUrl.searchParams.delete("_pv_scope");
@@ -366,12 +382,15 @@ async function proxyApi(request, requestUrl) {
     // replace its session. Abandon its body instead of leaving a download running.
     if (selected !== connection) {
       await response.body?.cancel();
-      return new Response("Connection changed", { status: 409, headers: { "cache-control": "no-store" } });
+      return new Response(t("errors.connectionChanged"), {
+        status: 409,
+        headers: { "cache-control": "no-store" },
+      });
     }
     rememberSession(origin, response);
     if (response.status >= 300 && response.status < 400)
       return Response.json(
-        { error: "The vault server redirected an API request" },
+        { error: t("errors.redirect") },
         { status: 502, headers: { "cache-control": "no-store" } },
       );
     const responseHeaders = new Headers(response.headers);
@@ -389,9 +408,12 @@ async function proxyApi(request, requestUrl) {
     return reply;
   } catch (error) {
     if (subscription && selected !== connection)
-      return new Response("Connection changed", { status: 409, headers: { "cache-control": "no-store" } });
+      return new Response(t("errors.connectionChanged"), {
+        status: 409,
+        headers: { "cache-control": "no-store" },
+      });
     return Response.json(
-      { error: error instanceof Error ? error.message : "Server unavailable" },
+      { error: error instanceof Error ? error.message : t("errors.unavailable") },
       { status: 503, headers: { "cache-control": "no-store" } },
     );
   } finally {
@@ -402,13 +424,13 @@ async function proxyApi(request, requestUrl) {
 async function serveStatic(url) {
   const directory = webDirectory();
   const file = assetPath(directory, url.pathname);
-  if (!file) return new Response("Forbidden", { status: 403 });
+  if (!file) return new Response(t("errors.forbidden"), { status: 403 });
   let content;
   try {
-    if (!(await stat(file)).isFile()) return new Response("Not found", { status: 404 });
+    if (!(await stat(file)).isFile()) return new Response(t("errors.notFound"), { status: 404 });
     content = await readFile(file);
   } catch {
-    return new Response("Not found", { status: 404 });
+    return new Response(t("errors.notFound"), { status: 404 });
   }
   return new Response(content, {
     headers: {
@@ -422,7 +444,7 @@ async function serveStatic(url) {
 
 function allowRenderer(event) {
   if (event.senderFrame !== event.sender.mainFrame || !event.senderFrame.url.startsWith(`${appOrigin}/`))
-    throw new Error("Unavailable outside Paint Vault");
+    throw new Error(t("errors.outsideApp"));
 }
 
 async function createWindow() {
@@ -457,12 +479,28 @@ app
   .then(async () => {
     if (devIcon) app.dock?.setIcon(devIcon);
     localUrl = `http://127.0.0.1:${explicitPort ?? (await freeLoopbackPort())}`;
+    preferences = createPreferences(connectionPath(), resolveLanguage(app.getLocale()));
     connection = await readConnection();
+    updateMenu();
+    ipcMain.handle("language:get", (event) => {
+      allowRenderer(event);
+      return getLanguage();
+    });
+    ipcMain.handle("language:set", async (event, language) => {
+      allowRenderer(event);
+      if (!require("./desktop-i18n.cjs").supportedLanguages.includes(language))
+        throw new Error(t("errors.invalidLanguage"));
+      await preferences.setLanguage(language);
+      setLanguage(language);
+      versionChecks.clear();
+      updateMenu();
+      return getLanguage();
+    });
 
     protocol.handle("paintvault", async (request) => {
       const url = new URL(request.url);
       if (url.protocol !== "paintvault:" || url.hostname !== "app")
-        return new Response("Forbidden", { status: 403 });
+        return new Response(t("errors.forbidden"), { status: 403 });
       if (url.pathname.startsWith("/api/")) return proxyApi(request, url);
       return serveStatic(url);
     });
@@ -493,11 +531,12 @@ app
         input.bytes.byteLength > 2_000_000_000 ||
         (input.title !== undefined && (typeof input.title !== "string" || input.title.length > 100))
       )
-        throw new Error("Invalid export");
+        throw new Error(t("errors.invalidExport"));
       const result = await dialog.showSaveDialog(mainWindow, {
-        title: input.title || "Export Paint Vault file",
+        title: input.title || t("dialogs.exportFile"),
+        buttonLabel: t("dialogs.save"),
         defaultPath: input.filename,
-        filters: [{ name: "ZIP", extensions: ["zip"] }],
+        filters: [{ name: t("dialogs.zip"), extensions: ["zip"] }],
       });
       if (result.canceled || !result.filePath) return false;
       await writeFile(result.filePath, Buffer.from(input.bytes));
@@ -516,17 +555,18 @@ app
         (input.authorization !== undefined &&
           (typeof input.authorization !== "string" || input.authorization.length > 200))
       )
-        throw new Error("Invalid export");
+        throw new Error(t("errors.invalidExport"));
       const result = await dialog.showSaveDialog(mainWindow, {
-        title: "Export Paint Vault backup",
+        title: t("dialogs.exportBackup"),
+        buttonLabel: t("dialogs.save"),
         defaultPath: input.filename,
-        filters: [{ name: "ZIP", extensions: ["zip"] }],
+        filters: [{ name: t("dialogs.zip"), extensions: ["zip"] }],
       });
       if (result.canceled || !result.filePath) return false;
       const url = new URL(`${appOrigin}/api/backup`);
       const headers = input.authorization ? { authorization: input.authorization } : {};
       const response = await proxyApi({ method: "GET", headers }, url);
-      if (!response.ok || !response.body) throw new Error("Export failed");
+      if (!response.ok || !response.body) throw new Error(t("errors.exportFailed"));
       // Written beside the target first, so a failed export never replaces an earlier backup.
       const partial = `${result.filePath}.part`;
       try {
@@ -551,7 +591,7 @@ app
         (input.authorization !== undefined &&
           (typeof input.authorization !== "string" || input.authorization.length > 200))
       )
-        throw new Error("Invalid restore");
+        throw new Error(t("errors.invalidRestore"));
       const url = new URL(`${appOrigin}/api/backup?mode=${input.mode}`);
       const response = await proxyApi(
         {
@@ -563,7 +603,7 @@ app
       );
       if (response.ok) return {};
       const body = await response.json().catch(() => null);
-      return { error: typeof body?.error === "string" ? body.error : "Restore failed" };
+      return { error: typeof body?.error === "string" ? body.error : t("errors.restoreFailed") };
     });
 
     // Packaged builds update themselves; smoke tests set PAINT_VAULT_DISABLE_UPDATES=1.

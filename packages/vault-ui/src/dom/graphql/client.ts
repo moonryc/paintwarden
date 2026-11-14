@@ -1,3 +1,4 @@
+import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
 import { ApolloClient, ApolloLink, HttpLink } from "@apollo/client";
 import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
@@ -5,7 +6,7 @@ import { ErrorLink } from "@apollo/client/link/error";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { print } from "graphql";
 import { createClient } from "graphql-sse";
-import { Observable } from "rxjs";
+import { Observable, map } from "rxjs";
 
 import { createVaultCache } from "./cache";
 
@@ -66,7 +67,7 @@ export function createVaultSSELink(options: Options) {
                     ? "FORBIDDEN"
                     : "BAD_REQUEST";
               return new Response(
-                `event: next\ndata: ${JSON.stringify({ errors: [{ message: `GraphQL stream failed (${response.status})`, extensions: { code } }] })}\n\nevent: complete\ndata: {}\n\n`,
+                `event: next\ndata: ${JSON.stringify({ errors: [{ message: i18n.t("shell:graphqlStreamFailed", { value1: response.status }), extensions: { code } }] })}\n\nevent: complete\ndata: {}\n\n`,
                 {
                   headers: { "content-type": "text/event-stream" },
                 },
@@ -123,7 +124,10 @@ export function createVaultGraphQLClient(options: Options) {
           ["UNAUTHENTICATED", "FORBIDDEN"].includes(String(entry.extensions?.code)),
         ));
     if (accessDenied) dispose();
-    options.onError?.({ message: error.message, accessDenied });
+    options.onError?.({
+      message: translateServerError({ errorCode: accessDenied ? "UNAUTHENTICATED" : "REQUEST_FAILED" }),
+      accessDenied,
+    });
   });
   const auth = new SetContextLink(() => ({ headers: options.authHeaders() }));
   const transport = ApolloLink.split(
@@ -141,9 +145,19 @@ export function createVaultGraphQLClient(options: Options) {
       enhancedClientAwareness: { transport: false },
     }),
   );
+  const localizedErrors = new ApolloLink((operation, forward) =>
+    forward(operation).pipe(
+      map((result) => ({
+        ...result,
+        ...(result.errors
+          ? { errors: result.errors.map((error) => ({ ...error, message: translateServerError(error) })) }
+          : {}),
+      })),
+    ),
+  );
   const client = new ApolloClient({
     cache: createVaultCache(),
-    link: ApolloLink.from([lifecycle, errors, auth, transport]),
+    link: ApolloLink.from([lifecycle, errors, auth, localizedErrors, transport]),
     defaultOptions: {
       watchQuery: {
         fetchPolicy: "cache-and-network",

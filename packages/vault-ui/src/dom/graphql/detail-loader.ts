@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -53,7 +54,7 @@ export async function readPaintDetail(client: ApolloClient, id: string, window: 
           variables: { id, substitutionsAfter, usedByAfter },
           fetchPolicy: "no-cache",
         });
-        if (!data) throw new Error("Paint details response was empty");
+        if (!data) throw new Error(i18n.t("shell:paintDetailsResponseWasEmpty"));
         const next = unpack(data.paint);
         if (view && !sameRevision(view.revision, next.revision)) {
           changed = true;
@@ -91,7 +92,7 @@ export async function readPaintDetail(client: ApolloClient, id: string, window: 
             variables: { id: mix.id, after: mix.ingredients.pageInfo.endCursor },
             fetchPolicy: "no-cache",
           });
-          if (!data) throw new Error("Substitution response was empty");
+          if (!data) throw new Error(i18n.t("shell:substitutionResponseWasEmpty"));
           if (!sameRevision(view.revision, data.substitution.revision)) {
             changed = true;
             break;
@@ -124,5 +125,5 @@ export async function readPaintDetail(client: ApolloClient, id: string, window: 
       throw error;
     }
   }
-  throw new Error("Paint changed while refreshing. Try again.");
+  throw new Error(i18n.t("shell:paintChangedWhileRefreshingTryAgain"));
 }

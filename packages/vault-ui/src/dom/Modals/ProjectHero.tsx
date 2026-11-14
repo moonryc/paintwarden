@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { imageUrl } from "../utils/image-cache";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -6,7 +7,7 @@ import { PaintGradientPlaceholder } from "../Components/PaintGradientPlaceholder
 import { Fullscreen } from "../icons";
 import { up } from "../theme-tokens";
 import type { Miniature, Paint } from "../types";
-import { STAGES } from "../utils/constants";
+import { getStages } from "../utils/constants";
 
 // The top of a project: its photo, or a blend of its paints when it has none, with the title and
 // painting stage over a dark gradient. Clicking a photo opens it full screen.
@@ -20,6 +21,7 @@ export function ProjectHero({
   paints: Paint[];
   onOpenImage(): void;
 }) {
+  const { t } = useTranslation("components");
   return (
     <ButtonBase
       component="div"
@@ -27,7 +29,7 @@ export function ProjectHero({
       tabIndex={miniature.imageUrl ? 0 : -1}
       disabled={!miniature.imageUrl}
       onClick={() => miniature.imageUrl && onOpenImage()}
-      aria-label={miniature.imageUrl ? `View ${miniature.title} image full screen` : undefined}
+      aria-label={miniature.imageUrl ? t("viewMiniatureFullScreen", { name: miniature.title }) : undefined}
       sx={[
         {
           boxSizing: "border-box",
@@ -144,8 +146,8 @@ export function ProjectHero({
             textTransform: "uppercase",
           }}
         >
-          {miniature.status === "OWNED" ? "In collection" : "Wishlist project"} ·{" "}
-          {STAGES.find(([stage]) => stage === miniature.paintingStatus)?.[1]}
+          {miniature.status === "OWNED" ? t("inCollection") : t("wishlistProject")} ·{" "}
+          {getStages().find(([stage]) => stage === miniature.paintingStatus)?.[1]}
         </Box>
         <Box
           component="h2"

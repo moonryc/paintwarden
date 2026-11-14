@@ -1,4 +1,5 @@
 import Vault from "@paint-vault/ui";
+import { LanguageProvider } from "@paint-vault/ui/i18n";
 import { createRoot } from "react-dom/client";
 
 import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
@@ -49,5 +50,7 @@ if (webPage && import.meta.env.DEV && "serviceWorker" in navigator) {
 }
 
 createRoot(document.getElementById("root")!).render(
-  window.paintVaultDesktop ? <DesktopConnection bridge={window.paintVaultDesktop} /> : <Vault />,
+  <LanguageProvider>
+    {window.paintVaultDesktop ? <DesktopConnection bridge={window.paintVaultDesktop} /> : <Vault />}
+  </LanguageProvider>,
 );

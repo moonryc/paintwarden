@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { CatalogSource, SourceVersion } from "../Pages/Sources/sources.utils";
@@ -20,7 +21,7 @@ export function usePluginSources() {
     error: string;
   }>({ scope, sources: [], loading: true, error: "" });
   const requireScope = useCallback(() => {
-    if (!scope) throw new Error("The plugin connection is not available.");
+    if (!scope) throw new Error(i18n.t("shell:thePluginConnectionIsNotAvailable"));
     return scope;
   }, [scope]);
   const reload = useCallback(async () => {
@@ -40,7 +41,7 @@ export function usePluginSources() {
       setState({ scope, sources, loading: false, error: "" });
     } catch (cause) {
       if (serial.current !== request) return;
-      const error = cause instanceof Error ? cause.message : "Could not load plugins";
+      const error = cause instanceof Error ? cause.message : i18n.t("shell:couldNotLoadPlugins");
       setState((previous) => ({ ...previous, scope, loading: false, error }));
     }
   }, [scope, requireScope]);

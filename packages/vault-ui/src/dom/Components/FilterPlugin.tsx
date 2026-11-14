@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { MenuItem, TextField } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -13,6 +14,7 @@ export type FilterPluginState = ReturnType<typeof useFilterPlugin>;
 // Filters items by the plugin (catalog source) that installed them. Items without a source
 // match the "not from a plugin" option.
 export function useFilterPlugin(items: readonly FromPlugin[]) {
+  const { t } = useTranslation("components");
   const [plugin, setPlugin] = useState(ALL_PLUGINS);
   const plugins = useMemo(
     () =>
@@ -38,7 +40,11 @@ export function useFilterPlugin(items: readonly FromPlugin[]) {
     active: plugin !== ALL_PLUGINS,
     // A phrase for empty states, such as "from Paint Vault test source".
     description:
-      plugin === ALL_PLUGINS ? null : plugin === NO_PLUGIN ? "not from a plugin" : `from ${plugin}`,
+      plugin === ALL_PLUGINS
+        ? null
+        : plugin === NO_PLUGIN
+          ? t("notFromAPlugin2")
+          : t("fromPlugin", { name: plugin }),
     matches,
     reset: () => setPlugin(ALL_PLUGINS),
   };
@@ -54,13 +60,14 @@ export function FilterPluginSelect({
   onChange?(): void;
   sx?: SxProps<Theme>;
 }) {
+  const { t } = useTranslation("components");
   if (!filter.plugins.length) return null;
   return (
     <TextField
       select
       fullWidth
       size="small"
-      label="Plugin"
+      label={t("plugin")}
       value={filter.plugin}
       onChange={(event) => {
         filter.setPlugin(event.target.value);
@@ -68,13 +75,13 @@ export function FilterPluginSelect({
       }}
       sx={sx}
     >
-      <MenuItem value={ALL_PLUGINS}>All plugins</MenuItem>
+      <MenuItem value={ALL_PLUGINS}>{t("allPlugins")}</MenuItem>
       {filter.plugins.map((name) => (
         <MenuItem key={name} value={name}>
           {name}
         </MenuItem>
       ))}
-      <MenuItem value={NO_PLUGIN}>Not from a plugin</MenuItem>
+      <MenuItem value={NO_PLUGIN}>{t("notFromAPlugin")}</MenuItem>
     </TextField>
   );
 }

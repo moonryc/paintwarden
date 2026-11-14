@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { CircularProgress } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -14,6 +15,7 @@ export function SchemeProgressChip({
   // sm fits over a scheme card's image; md lines up with the scheme preview's other chips.
   size?: "sm" | "md";
 }) {
+  const { t } = useTranslation("components");
   const needed = Math.max(0, total - available);
   const ready = total > 0 && needed === 0;
   const progress = total > 0 ? (available / total) * 100 : 0;
@@ -82,7 +84,7 @@ export function SchemeProgressChip({
           </>
         )}
       </Box>
-      {total === 0 ? "No paints" : needed === 0 ? "Ready" : `${needed} needed`}
+      {total === 0 ? t("noPaints") : needed === 0 ? t("ready") : t("paintsNeeded", { count: needed })}
     </Box>
   );
 }

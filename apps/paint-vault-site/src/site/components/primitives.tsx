@@ -2,6 +2,8 @@ import { Box, Button, Typography } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 
+import { siteT as t } from "../i18n";
+
 type SxItem = Exclude<SxProps<Theme>, readonly unknown[]>;
 
 /** Flattens an optional `sx` prop so it can follow a component's base styles. */
@@ -45,7 +47,7 @@ export function Wordmark({ size = "md" }: { size?: "sm" | "md" }) {
             color: "var(--ink)",
           }}
         >
-          Paint Vault
+          {t("primitives.paintVault")}
         </Box>
         <Box
           component="span"
@@ -59,7 +61,7 @@ export function Wordmark({ size = "md" }: { size?: "sm" | "md" }) {
             color: "var(--ink-faint)",
           }}
         >
-          Miniature studio
+          {t("primitives.miniatureStudio")}
         </Box>
       </Box>
     </Box>

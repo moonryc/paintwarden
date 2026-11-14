@@ -1,10 +1,8 @@
+import { colorCategoryLabel } from "../Components/component-labels";
+import { useTranslation } from "react-i18next";
 import { Alert, Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import {
-  COLOR_CATEGORIES,
-  COLOR_CATEGORY_LABELS,
-  type ColorCategory,
-} from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORIES, type ColorCategory } from "@paint-vault/core/color-categories";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "../Components/Modal";
@@ -17,7 +15,7 @@ import { truncateSx } from "../utils/truncate";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
 
 const schemeSearchText = (scheme: SchemePickerOption) =>
-  `${scheme.name} ${scheme.category ? COLOR_CATEGORY_LABELS[scheme.category] : ""}`;
+  `${scheme.name} ${scheme.category ? colorCategoryLabel(scheme.category) : ""}`;
 
 export type SchemePickerFilter = "ALL" | "SELECTED" | ColorCategory;
 export type SchemePickerOption = Pick<ColorScheme, "id" | "name" | "category"> & {
@@ -66,6 +64,7 @@ export function SchemePickerDialogView({
   hasMore?: boolean;
   onLoadMore?(): void;
 }) {
+  const { t } = useTranslation("components");
   const [selected, setSelected] = useState<string[]>([]);
   const [localSearch, setSearch] = useState("");
   const search = remoteSearch ?? localSearch;
@@ -175,21 +174,20 @@ export function SchemePickerDialogView({
       await onSave([...attachedIds, ...picked.map((scheme) => scheme.id)]);
       onClose();
     } catch (cause) {
-      setSaveError(cause instanceof Error ? cause.message : "Could not add schemes. Try again.");
+      setSaveError(cause instanceof Error ? cause.message : t("couldNotAddSchemesTryAgain"));
       setSaving(false);
     }
   };
-  const plural = (count: number) => `${count} scheme${count === 1 ? "" : "s"}`;
   const summary = changed
-    ? `${plural(picked.length)} to add`
+    ? t("schemesToAdd", { count: picked.length })
     : attachedIds.length
-      ? `${plural(attachedIds.length)} already on this miniature`
-      : "Choose schemes to add";
+      ? t("schemesAlreadyAttached", { count: attachedIds.length })
+      : t("chooseSchemesToAdd");
 
   return (
     <Modal
-      title="Color schemes"
-      subtitle="Pick schemes to add to this miniature. Nothing changes until you save."
+      title={t("colorSchemes")}
+      subtitle={t("pickSchemesToAddToThisMiniatureNothingChanges")}
       onClose={onClose}
       fillBody
       footer={
@@ -202,23 +200,27 @@ export function SchemePickerDialogView({
             {summary}
           </Box>
           <Button onClick={onClose} disabled={saving}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button variant="contained" onClick={save} disabled={!changed || saving}>
-            {saving ? "Adding…" : picked.length > 1 ? `Add ${picked.length} schemes` : "Add scheme"}
+            {saving
+              ? t("adding")
+              : picked.length > 1
+                ? t("addSchemeCount", { count: picked.length })
+                : t("addScheme2")}
           </Button>
         </>
       }
     >
       {saveError && <Alert severity="error">{saveError}</Alert>}
       {error && (
-        <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
+        <Alert severity="error" action={<Button onClick={onRetry}>{t("retry")}</Button>}>
           {error.message}
         </Alert>
       )}
       {loading && schemes.length > 0 && (
         <Box role="status" sx={{ fontSize: 13 }}>
-          Refreshing schemes…
+          {t("refreshingSchemes")}
         </Box>
       )}
       <TextField
@@ -231,7 +233,7 @@ export function SchemePickerDialogView({
           onSearchChange?.(e.target.value);
           resetScroll();
         }}
-        placeholder="Search schemes or colors…"
+        placeholder={t("searchSchemesOrColors")}
         slotProps={{
           htmlInput: { "aria-label": "Search color schemes" },
           input: {
@@ -247,7 +249,7 @@ export function SchemePickerDialogView({
         select
         fullWidth
         size="small"
-        label="Filter schemes"
+        label={t("filterSchemes")}
         value={filter}
         onChange={(event) => {
           setFilter(event.target.value as SchemePickerFilter);
@@ -256,16 +258,16 @@ export function SchemePickerDialogView({
         }}
         sx={{ flexShrink: 0, mt: 1.5 }}
       >
-        <MenuItem value="ALL">All ({totalCount ?? available.length})</MenuItem>
-        <MenuItem value="SELECTED">Selected ({selected.length})</MenuItem>
+        <MenuItem value="ALL">{t("allSchemesFilter", { count: totalCount ?? available.length })}</MenuItem>
+        <MenuItem value="SELECTED">{t("selectedSchemesFilter", { count: selected.length })}</MenuItem>
         {filter !== "ALL" &&
           filter !== "SELECTED" &&
           !categories.some((item) => item.category === filter) && (
-            <MenuItem value={filter}>{COLOR_CATEGORY_LABELS[filter]}</MenuItem>
+            <MenuItem value={filter}>{colorCategoryLabel(filter)}</MenuItem>
           )}
         {categories.map(({ category, count }) => (
           <MenuItem key={category} value={category}>
-            {COLOR_CATEGORY_LABELS[category]} ({count})
+            {t("schemeCategoryCount", { category: colorCategoryLabel(category), count })}
           </MenuItem>
         ))}
       </TextField>
@@ -273,7 +275,7 @@ export function SchemePickerDialogView({
       <Box
         component="ul"
         ref={listRef}
-        aria-label="Color schemes"
+        aria-label={t("colorSchemes")}
         onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
         sx={{
           listStyle: "none",
@@ -346,12 +348,12 @@ export function SchemePickerDialogView({
                       {scheme.name}
                     </Box>
                     <Box component="span" sx={{ display: "block", fontSize: 12, color: "var(--ink-faint)" }}>
-                      {scheme.category ? COLOR_CATEGORY_LABELS[scheme.category] : "Uncategorized"} ·{" "}
+                      {scheme.category ? colorCategoryLabel(scheme.category) : t("uncategorized")} ·{" "}
                       {total === 0
-                        ? "No paints"
+                        ? t("noPaints")
                         : available === total
-                          ? `All ${total} paints on hand`
-                          : `${available} of ${total} paints on hand`}
+                          ? t("allPaintsOnHand", { count: total })
+                          : t("paintsOnHandRatio", { have: available, total })}
                     </Box>
                   </Box>
                   <Box
@@ -378,22 +380,22 @@ export function SchemePickerDialogView({
         ) : (
           <Box component="li" sx={{ p: 4, textAlign: "center", fontSize: 14, color: "var(--ink-faint)" }}>
             {loading
-              ? "Loading schemes…"
+              ? t("loadingSchemes")
               : error
-                ? "Schemes could not be loaded."
+                ? t("schemesCouldNotBeLoaded")
                 : query
-                  ? `No schemes match “${query}”.`
+                  ? t("noMatchingSchemes", { query })
                   : onSearchChange && filter !== "ALL"
-                    ? "No schemes in this filter."
+                    ? t("noSchemesInThisFilter")
                     : !schemes.length && !hasMore
                       ? attachedIds.length
-                        ? "Every scheme is already on this miniature."
-                        : "Create a color scheme on the Schemes page first."
+                        ? t("everySchemeIsAlreadyOnThisMiniature")
+                        : t("createAColorSchemeOnTheSchemesPageFirst")
                       : !available.length
-                        ? "Every scheme is already on this miniature."
+                        ? t("everySchemeIsAlreadyOnThisMiniature")
                         : query
-                          ? `No schemes match “${query}”.`
-                          : "No schemes in this filter."}
+                          ? t("noMatchingSchemes", { query })
+                          : t("noSchemesInThisFilter")}
           </Box>
         )}
         {visible.length > 0 && listWindow.totalHeight > listWindow.topOffset + renderedHeight && (
@@ -406,15 +408,15 @@ export function SchemePickerDialogView({
 
       {hasMore && filter !== "SELECTED" && (
         <Button onClick={onLoadMore} disabled={loading} sx={{ flexShrink: 0, mt: 1 }}>
-          {loading ? "Loading…" : "Load more schemes"}
+          {loading ? t("loading") : t("loadMoreSchemes")}
         </Button>
       )}
       {picked.length > 0 && (
         <Box sx={{ flexShrink: 0, mt: 1.5 }}>
-          <Box sx={{ mb: 0.75, fontSize: 12, fontWeight: 650, color: "var(--ink-faint)" }}>To add</Box>
+          <Box sx={{ mb: 0.75, fontSize: 12, fontWeight: 650, color: "var(--ink-faint)" }}>{t("toAdd")}</Box>
           <Box
             component="ul"
-            aria-label="Schemes to add"
+            aria-label={t("schemesToAdd")}
             sx={{ listStyle: "none", m: 0, p: 0, display: "flex", flexWrap: "wrap", gap: 0.75 }}
           >
             {(chipsExpanded ? picked : picked.slice(0, COLLAPSED_CHIPS)).map((scheme) => (
@@ -444,7 +446,9 @@ export function SchemePickerDialogView({
                     "&:focus-visible": { outline: "2px solid var(--gold)", outlineOffset: 2 },
                   }}
                 >
-                  {chipsExpanded ? "Show less" : `+${picked.length - COLLAPSED_CHIPS} more`}
+                  {chipsExpanded
+                    ? t("showLess")
+                    : t("morePickedSchemes", { count: picked.length - COLLAPSED_CHIPS })}
                 </ButtonBase>
               </Box>
             )}

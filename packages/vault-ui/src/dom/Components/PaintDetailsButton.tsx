@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -16,11 +17,12 @@ export function PaintDetailsButton({
   sx?: SxProps<Theme>;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("components");
   return (
     <ButtonBase onClick={onClick} sx={sx}>
       {children}
       <Box component="span" sx={visuallyHiddenSx}>
-        , open details
+        {t("openDetails")}
       </Box>
     </ButtonBase>
   );

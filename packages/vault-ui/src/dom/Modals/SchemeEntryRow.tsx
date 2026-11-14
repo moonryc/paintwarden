@@ -1,3 +1,6 @@
+import { dividerLabel } from "../Components/component-labels";
+import { i18n } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { imageUrl } from "../utils/image-cache";
 import { Button, Chip, IconButton, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -20,14 +23,15 @@ const labelSx = {
 
 // A milestone every scheme has, which can't be renamed or removed.
 export function RequiredMilestone({ label }: { label: string }) {
+  const { t } = useTranslation("components");
   return (
     <>
       <Box component="span" sx={{ ...labelSx, fontWeight: 700, letterSpacing: "0.025em" }}>
-        {label}
+        {dividerLabel(label)}
       </Box>
       <Chip
         size="small"
-        label="Required"
+        label={t("required")}
         sx={{
           boxSizing: "border-box",
           bgcolor: "color-mix(in oklab, var(--scrim) 15%, transparent)",
@@ -39,7 +43,11 @@ export function RequiredMilestone({ label }: { label: string }) {
 }
 
 const entryName = (entry: SchemeOrderEntry, paint: Paint | null | undefined) =>
-  entry.type === "PAINT" ? (paint?.name ?? "paint") : entry.type === "DIVIDER" ? entry.label : "scheme image";
+  entry.type === "PAINT"
+    ? (paint?.name ?? i18n.t("components:paint"))
+    : entry.type === "DIVIDER"
+      ? dividerLabel(entry.label)
+      : i18n.t("components:schemeImage");
 
 // One draggable item in a scheme being edited: a paint, a step or milestone divider whose label
 // can be changed, or an example image. Each can be removed except a required milestone, and a
@@ -60,6 +68,7 @@ export function SchemeEntryRow({
   onAddPaint(): void;
   onRemove(): void;
 }) {
+  const { t } = useTranslation("components");
   const name = entryName(entry, paint);
   return (
     <SortableRow
@@ -98,7 +107,7 @@ export function SchemeEntryRow({
             <TextField
               select
               size="small"
-              label={entry.tone === "SECTION" ? "Paint step" : "Milestone"}
+              label={entry.tone === "SECTION" ? t("paintStep") : t("milestone")}
               value={entry.label}
               onChange={(e) => onChangeLabel({ label: e.target.value })}
               sx={{
@@ -116,17 +125,19 @@ export function SchemeEntryRow({
               }}
             >
               {!dividerOptions(entry.tone).includes(entry.label) && (
-                <MenuItem value={entry.label}>{entry.label} (existing)</MenuItem>
+                <MenuItem value={entry.label}>
+                  {t("existingDividerLabel", { label: dividerLabel(entry.label) })}
+                </MenuItem>
               )}
               {dividerOptions(entry.tone).map((label) => (
                 <MenuItem key={label} value={label}>
-                  {label}
+                  {dividerLabel(label)}
                 </MenuItem>
               ))}
             </TextField>
             {entry.tone === "SECTION" && (
               <Button size="small" variant="outlined" onClick={onAddPaint}>
-                Add paint
+                {t("addPaint")}
               </Button>
             )}
           </>
@@ -136,7 +147,7 @@ export function SchemeEntryRow({
           <Box
             component="img"
             src={imageUrl(entry.thumbnailUrl || entry.imageUrl)}
-            alt="Scheme example"
+            alt={t("schemeExample")}
             sx={{
               height: "6rem",
               width: "7rem",
@@ -148,17 +159,19 @@ export function SchemeEntryRow({
           />
           <Box component="span" sx={{ minWidth: 0, flex: "1" }}>
             <Box component="b" sx={{ display: "block", fontSize: "0.875rem", lineHeight: 10 / 7 }}>
-              {entry.imageType ? `${entry.imageType.toLowerCase()} ready image` : "Scheme image"}
+              {entry.imageType
+                ? t("schemeImageTypeReadyImage", { type: entry.imageType })
+                : t("schemeImage2")}
             </Box>
             <Box component="small" sx={{ display: "block", ...truncateSx, color: "var(--ink-faint)" }}>
-              {entry.method ? `${entry.method.toLowerCase()} · ` : ""}
+              {entry.method ? `${entry.method} · ` : ""}
               {entry.imageUrl}
             </Box>
           </Box>
         </>
       ) : (
         <Box component="span" sx={{ ...labelSx, color: "var(--rust)" }}>
-          Paint unavailable
+          {t("paintUnavailable")}
         </Box>
       )}
       {!isRequiredMilestone(entry) && (
@@ -166,7 +179,13 @@ export function SchemeEntryRow({
           size="small"
           disabled={entry.type === "DIVIDER" && entry.tone === "SECTION" && stepHasPaints}
           onClick={onRemove}
-          aria-label={`Remove ${entry.type === "DIVIDER" ? `${entry.label} ${entry.tone === "SECTION" ? "step" : "milestone"}` : name}`}
+          aria-label={
+            entry.type === "DIVIDER"
+              ? entry.tone === "SECTION"
+                ? t("removeNamedStep", { label: dividerLabel(entry.label) })
+                : t("removeNamedMilestone", { label: dividerLabel(entry.label) })
+              : t("removeNamedItem", { name })
+          }
           sx={[{ boxSizing: "border-box" }, entry.type === "DIVIDER" && { color: "currentcolor !important" }]}
         >
           <X size={15} />

@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import type { PaintingStatus } from "../types";
@@ -127,7 +128,11 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
   useEffect(() => {
     if (fixture) return;
     if (!scope) {
-      setState({ loading: false, refreshing: false, error: "The miniature connection is not available." });
+      setState({
+        loading: false,
+        refreshing: false,
+        error: i18n.t("shell:theMiniatureConnectionIsNotAvailable"),
+      });
       return;
     }
     let active = true;
@@ -199,7 +204,7 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
         if (active)
           setState((previous) => ({
             ...previous,
-            error: error instanceof Error ? error.message : "Miniature refresh failed",
+            error: error instanceof Error ? error.message : i18n.t("shell:miniatureRefreshFailed"),
           }));
       } finally {
         running = false;

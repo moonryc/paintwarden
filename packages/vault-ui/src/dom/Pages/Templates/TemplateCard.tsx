@@ -1,9 +1,10 @@
-import { imageUrl } from "../../utils/image-cache";
 import { Card, CardActionArea } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { MiniatureTemplate } from "../../types";
+import { imageUrl } from "../../utils/image-cache";
 import { liftCardSx } from "../../utils/lift-card";
 
 // One template in the templates grid: its picture, name, source and counts. It opens the
@@ -20,6 +21,7 @@ export function TemplateCard({
   onOpen: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }) {
+  const { t, i18n } = useTranslation("pages");
   return (
     <Card sx={liftCardSx}>
       <CardActionArea
@@ -33,7 +35,7 @@ export function TemplateCard({
             <Box
               component="img"
               src={imageUrl(template.imageUrl)}
-              alt={`${template.name} template`}
+              alt={t("templatesImageAlt", { name: template.name })}
               loading="lazy"
               sx={{
                 position: "absolute",
@@ -72,7 +74,7 @@ export function TemplateCard({
               backdropFilter: "blur(8px)",
             }}
           >
-            {template.kind === "user" ? "Mine" : "Read-only"}
+            {template.kind === "user" ? t("templatesMine") : t("templatesReadOnly")}
           </Box>
           <Box
             sx={{
@@ -112,7 +114,15 @@ export function TemplateCard({
                 color: "color-mix(in oklab, var(--on-scrim) 75%, transparent)",
               }}
             >
-              {template.schemeCount} schemes · {template.paintCount} paints
+              {t("templatesSchemeCount", {
+                count: template.schemeCount,
+                formattedCount: new Intl.NumberFormat(i18n.language).format(template.schemeCount),
+              })}{" "}
+              ·{" "}
+              {t("templatesPaintCount", {
+                count: template.paintCount,
+                formattedCount: new Intl.NumberFormat(i18n.language).format(template.paintCount),
+              })}
             </Box>
           </Box>
         </Box>

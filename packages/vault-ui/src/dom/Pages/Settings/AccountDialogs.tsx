@@ -1,12 +1,14 @@
 import { Alert, Box, Button, TextField } from "@mui/material";
 import type { FormEvent, ReactNode } from "react";
 import { useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
 import { PasswordField } from "../../Components/PasswordField";
+import { i18n } from "../../i18n";
 
 const errorMessage = (cause: unknown) =>
-  cause instanceof Error ? cause.message : "Could not update account";
+  cause instanceof Error ? cause.message : i18n.t("pages:settingsAccountUpdateError");
 
 // Field change handlers that also clear the last attempt's error.
 const fieldEditor =
@@ -77,6 +79,7 @@ export function SignInSettingDialog({
   // Rejects with the reason the change failed.
   onConfirm(currentPassword: string): Promise<void>;
 }) {
+  const { t } = useTranslation("pages");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const ready = (!needsPassword || Boolean(password)) && !busy;
@@ -89,12 +92,8 @@ export function SignInSettingDialog({
     <AccountDialog
       open={open}
       onClose={() => !busy && close()}
-      title={requireSignIn ? "Turn off sign-in?" : "Require sign-in?"}
-      subtitle={
-        requireSignIn
-          ? "Anyone who can reach this server will be able to open and change the vault."
-          : "Visitors will need your username and password to open the vault."
-      }
+      title={requireSignIn ? t("settingsTurnOffSignInTitle") : t("settingsRequireSignInTitle")}
+      subtitle={requireSignIn ? t("settingsTurnOffSignInDescription") : t("settingsRequireSignInDescription")}
       error={error}
       onSubmit={() => {
         if (!ready) return;
@@ -103,7 +102,7 @@ export function SignInSettingDialog({
       actions={(formId) => (
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, width: "100%" }}>
           <Button type="button" variant="outlined" disabled={busy} onClick={close}>
-            Cancel
+            {t("settingsCancel")}
           </Button>
           <Button
             type="submit"
@@ -112,7 +111,7 @@ export function SignInSettingDialog({
             color={requireSignIn ? "error" : "primary"}
             disabled={!ready}
           >
-            {requireSignIn ? "Turn off" : "Turn on"}
+            {requireSignIn ? t("settingsTurnOff") : t("settingsTurnOn")}
           </Button>
         </Box>
       )}
@@ -121,7 +120,7 @@ export function SignInSettingDialog({
         <PasswordField
           fullWidth
           required
-          label="Current password"
+          label={t("settingsCurrentPassword")}
           autoComplete="current-password"
           value={password}
           onChange={fieldEditor(setError)(setPassword)}
@@ -144,6 +143,7 @@ export function ChangePasswordDialog({
   // Rejects with the reason the change failed.
   onConfirm(currentPassword: string, newPassword: string): Promise<void>;
 }) {
+  const { t } = useTranslation("pages");
   const [current, setCurrent] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -162,8 +162,8 @@ export function ChangePasswordDialog({
     <AccountDialog
       open={open}
       onClose={() => !busy && close()}
-      title="Change password"
-      subtitle="Enter your current password to set a new one."
+      title={t("settingsChangePassword")}
+      subtitle={t("settingsChangePasswordDescription")}
       error={error}
       onSubmit={() => {
         if (!ready) return;
@@ -172,10 +172,10 @@ export function ChangePasswordDialog({
       actions={(formId) => (
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, width: "100%" }}>
           <Button type="button" variant="outlined" disabled={busy} onClick={close}>
-            Cancel
+            {t("settingsCancel")}
           </Button>
           <Button type="submit" form={formId} variant="contained" disabled={!ready}>
-            Change password
+            {t("settingsChangePassword")}
           </Button>
         </Box>
       )}
@@ -183,7 +183,7 @@ export function ChangePasswordDialog({
       <PasswordField
         fullWidth
         required
-        label="Current password"
+        label={t("settingsCurrentPassword")}
         autoComplete="current-password"
         value={current}
         onChange={edit(setCurrent)}
@@ -191,12 +191,12 @@ export function ChangePasswordDialog({
       <PasswordField
         fullWidth
         required
-        label="New password"
+        label={t("settingsNewPassword")}
         autoComplete="new-password"
         helperText={
           newPassword && remaining > 0
-            ? `${remaining} more character${remaining === 1 ? "" : "s"} needed`
-            : "At least 12 characters"
+            ? t("settingsPasswordCharactersRemaining", { count: remaining })
+            : t("settingsPasswordMinimumLength")
         }
         value={newPassword}
         onChange={edit(setNewPassword)}
@@ -204,10 +204,12 @@ export function ChangePasswordDialog({
       <PasswordField
         fullWidth
         required
-        label="Confirm new password"
+        label={t("settingsConfirmNewPassword")}
         autoComplete="new-password"
         error={Boolean(confirmPassword && confirmPassword !== newPassword)}
-        helperText={confirmPassword && confirmPassword !== newPassword ? "Passwords do not match" : undefined}
+        helperText={
+          confirmPassword && confirmPassword !== newPassword ? t("settingsPasswordsDoNotMatch") : undefined
+        }
         value={confirmPassword}
         onChange={edit(setConfirmPassword)}
       />
@@ -230,6 +232,7 @@ export function ChangeUsernameDialog({
   // Rejects with the reason the change failed.
   onConfirm(currentPassword: string, newUsername: string): Promise<void>;
 }) {
+  const { t } = useTranslation("pages");
   const [current, setCurrent] = useState("");
   const [newUsername, setNewUsername] = useState("");
   const [error, setError] = useState("");
@@ -247,8 +250,8 @@ export function ChangeUsernameDialog({
     <AccountDialog
       open={open}
       onClose={() => !busy && close()}
-      title="Change username"
-      subtitle="Enter your current password to choose a new username. You stay signed in on this device."
+      title={t("settingsChangeUsername")}
+      subtitle={t("settingsChangeUsernameDescription")}
       error={error}
       onSubmit={() => {
         if (!ready) return;
@@ -257,10 +260,10 @@ export function ChangeUsernameDialog({
       actions={(formId) => (
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, width: "100%" }}>
           <Button type="button" variant="outlined" disabled={busy} onClick={close}>
-            Cancel
+            {t("settingsCancel")}
           </Button>
           <Button type="submit" form={formId} variant="contained" disabled={!ready}>
-            Change username
+            {t("settingsChangeUsername")}
           </Button>
         </Box>
       )}
@@ -268,16 +271,16 @@ export function ChangeUsernameDialog({
       <TextField
         fullWidth
         required
-        label="New username"
+        label={t("settingsNewUsername")}
         autoComplete="username"
         placeholder={username}
         error={Boolean(trimmed && !lengthOk)}
         helperText={
           trimmed && !lengthOk
-            ? "Use 2–64 characters"
+            ? t("settingsUsernameLengthError")
             : trimmed === username
-              ? "This is already your username"
-              : "2–64 characters"
+              ? t("settingsUsernameUnchanged")
+              : t("settingsUsernameLength")
         }
         value={newUsername}
         onChange={edit(setNewUsername)}
@@ -285,7 +288,7 @@ export function ChangeUsernameDialog({
       <PasswordField
         fullWidth
         required
-        label="Current password"
+        label={t("settingsCurrentPassword")}
         autoComplete="current-password"
         value={current}
         onChange={edit(setCurrent)}

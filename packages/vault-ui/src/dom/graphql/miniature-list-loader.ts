@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import {
@@ -12,7 +13,7 @@ export type MiniatureListVariables = Omit<MiniatureListQueryVariables, "first" |
 
 export function miniatureListEnvelope(data: MiniatureListQuery) {
   const envelope = data.home ?? data.miniatures;
-  if (!envelope) throw new Error("Miniature list response was empty");
+  if (!envelope) throw new Error(i18n.t("shell:miniatureListResponseWasEmpty"));
   return envelope;
 }
 
@@ -36,7 +37,7 @@ export function appendMiniaturePage(
       ...next,
       miniatures: { ...next.miniatures, miniatures: { ...next.miniatures.miniatures, nodes } },
     };
-  throw new Error("Miniature list response was empty");
+  throw new Error(i18n.t("shell:miniatureListResponseWasEmpty"));
 }
 
 // Read complete windows without touching normalized entities until the revision guard accepts.
@@ -50,7 +51,7 @@ export async function readMiniaturePage(
     variables: { ...variables, first: MINIATURE_PAGE_SIZE, after },
     fetchPolicy: "no-cache",
   });
-  if (!data) throw new Error("Miniature list response was empty");
+  if (!data) throw new Error(i18n.t("shell:miniatureListResponseWasEmpty"));
   miniatureListEnvelope(data);
   return data;
 }
@@ -80,9 +81,9 @@ export async function readMiniatureWindow(
       const connection = miniatureListEnvelope(data).miniatures;
       if (!connection.pageInfo.hasNextPage) break;
       after = connection.pageInfo.endCursor ?? null;
-      if (!after) throw new Error("Miniatures returned an invalid page cursor");
+      if (!after) throw new Error(i18n.t("shell:miniaturesReturnedAnInvalidPageCursor"));
     }
     if (combined) return combined;
   }
-  throw new Error("Miniatures changed repeatedly while refreshing. Try again.");
+  throw new Error(i18n.t("shell:miniaturesChangedRepeatedlyWhileRefreshingTryAgain"));
 }

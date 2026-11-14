@@ -1,6 +1,7 @@
 import { Alert, Autocomplete, Box, Button, Card, Divider, TextField } from "@mui/material";
 import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PaintBottle } from "../../Components/PaintBottle";
 import { PaintDetailsButton } from "../../Components/PaintDetailsButton";
@@ -12,6 +13,7 @@ import { ArrowLeftRight } from "../../icons";
 import type { Paint } from "../../types";
 
 export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void }) {
+  const { t } = useTranslation("pages");
   const [selectedPaint, setSelectedPaint] = useState<Paint | null>(null);
   const [query, setQuery] = useState("");
   const options = usePaintOptions(query.trim(), []);
@@ -20,6 +22,11 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
   return (
     <Card sx={{ p: { xs: 2, sm: 4 } }}>
       <Autocomplete<Paint>
+        noOptionsText={t("toolsNoOptions")}
+        loadingText={t("toolsLoadingOptions")}
+        clearText={t("toolsClear")}
+        openText={t("toolsOpen")}
+        closeText={t("toolsClose")}
         options={matches}
         inputValue={query}
         onInputChange={(_, value) => setQuery(value)}
@@ -30,7 +37,7 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
         isOptionEqualToValue={(option, value) => option.id === value.id}
         filterOptions={(options) => options}
         renderInput={(params) => (
-          <TextField {...params} label="Paint" placeholder="Search paint, brand, or range…" />
+          <TextField {...params} label={t("toolsPaint")} placeholder={t("toolsSearchPaint")} />
         )}
         renderOption={(props, paint) => {
           const { key, ...optionProps } = props;
@@ -70,10 +77,7 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
           }}
         >
           <ArrowLeftRight size={18} style={{ flexShrink: 0, marginTop: 2 }} />
-          <span>
-            Choose a paint to rank the closest colors across every brand in the catalog. Use it to find a
-            match from a range you already own or to replace a discontinued bottle.
-          </span>
+          <span>{t("toolsComparisonHint")}</span>
         </Box>
       )}
       {selectedPaint && <SelectedComparison id={selectedPaint.id} onOpenPaint={onOpenPaint} />}
@@ -82,6 +86,8 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
 }
 
 function SelectedComparison({ id, onOpenPaint }: { id: string; onOpenPaint(id: string): void }) {
+  const { t, i18n } = useTranslation("pages");
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
   const result = usePaintRanking(id);
   const selectedPaint = result.data?.paint ? paintModel(result.data.paint) : null;
   const ranked = result.data?.nodes.map((row) => ({ ...row, paint: paintModel(row.paint) })) ?? [];
@@ -90,17 +96,21 @@ function SelectedComparison({ id, onOpenPaint }: { id: string; onOpenPaint(id: s
     <>
       {result.loading && (
         <Box role="status" sx={{ mt: 2 }}>
-          Loading color matches…
+          {t("toolsLoadingMatches")}
         </Box>
       )}
       {result.error && (
-        <Alert severity="error" sx={{ mt: 2 }} action={<Button onClick={result.refetch}>Retry</Button>}>
+        <Alert
+          severity="error"
+          sx={{ mt: 2 }}
+          action={<Button onClick={result.refetch}>{t("toolsRetry")}</Button>}
+        >
           {result.error.message}
         </Alert>
       )}
       {!result.loading && !result.error && !selectedPaint && (
         <Alert severity="info" sx={{ mt: 2 }}>
-          This paint is no longer in the catalog.
+          {t("toolsPaintUnavailable")}
         </Alert>
       )}
       {selectedPaint && (
@@ -134,19 +144,20 @@ function SelectedComparison({ id, onOpenPaint }: { id: string; onOpenPaint(id: s
               <PaintSimilarityList key={selectedPaint.id} ranked={ranked} />
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mt: 1.5 }}>
                 <Box sx={{ color: "text.secondary", fontSize: 12 }}>
-                  {ranked.length} of {result.data?.totalCount ?? 0} matches
+                  {t("toolsMatchCount", {
+                    shown: number.format(ranked.length),
+                    total: number.format(result.data?.totalCount ?? 0),
+                  })}
                 </Box>
                 {result.data?.pageInfo.hasNextPage && (
                   <Button disabled={result.loading} onClick={result.loadMore}>
-                    Load more matches
+                    {t("toolsMoreMatches")}
                   </Button>
                 )}
               </Box>
             </>
           ) : (
-            <Box sx={{ mt: 2.5, color: "text.secondary", fontSize: 13 }}>
-              Add a valid hex color to this paint to compare it with the catalog.
-            </Box>
+            <Box sx={{ mt: 2.5, color: "text.secondary", fontSize: 13 }}>{t("toolsInvalidColor")}</Box>
           )}
         </>
       )}

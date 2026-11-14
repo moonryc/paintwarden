@@ -59,6 +59,8 @@ export function column(maxWidth: number): Decorator {
 // A stand-in for the desktop app's preload bridge, reporting a fixed update state.
 function fakeBridge(state: DesktopUpdateState): DesktopBridge {
   return {
+    getLanguage: () => Promise.resolve("en"),
+    setLanguage: (language) => Promise.resolve(language),
     getConnection: () => Promise.resolve({ mode: "local" }),
     setConnection: (choice) => Promise.resolve(choice),
     saveBinary: () => Promise.resolve(true),

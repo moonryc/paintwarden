@@ -1,5 +1,6 @@
 import { Alert, Button, Chip, FormControlLabel, Radio, RadioGroup } from "@mui/material";
 import Box from "@mui/material/Box";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
 import type { BackupSummary } from "../../utils/backup-summary";
@@ -8,16 +9,20 @@ export type PendingBackup = { file: File; summary: Extract<BackupSummary, { ok: 
 
 export type RestoreMode = "merge" | "replace";
 
-const RESTORE_MODES: { value: RestoreMode; label: string; description: string }[] = [
+const RESTORE_MODES: {
+  value: RestoreMode;
+  label: "settingsMergeLabel" | "settingsReplaceLabel";
+  description: "settingsMergeDescription" | "settingsReplaceDescription";
+}[] = [
   {
     value: "merge",
-    label: "Merge into this vault",
-    description: "Adds what this vault doesn't have yet. Anything already here stays as it is.",
+    label: "settingsMergeLabel",
+    description: "settingsMergeDescription",
   },
   {
     value: "replace",
-    label: "Replace this vault",
-    description: "Removes everything in this vault and restores the backup exactly. Your account is kept.",
+    label: "settingsReplaceLabel",
+    description: "settingsReplaceDescription",
   },
 ];
 
@@ -36,18 +41,20 @@ export function RestoreBackupDialog({
   onRestore(): void;
   onClose(): void;
 }) {
+  const { t, i18n } = useTranslation("pages");
+  const locale = i18n.resolvedLanguage ?? i18n.language;
   const { summary } = pending;
   const replacing = mode === "replace";
   return (
     <Modal
-      title="Restore backup"
+      title={t("settingsRestoreDialogTitle")}
       subtitle={pending.file.name}
       onClose={onClose}
       footer={
         <>
           <Box sx={{ flex: 1 }} />
           <Button variant="text" disabled={busy} onClick={onClose}>
-            Cancel
+            {t("settingsCancel")}
           </Button>
           <Button
             variant="contained"
@@ -55,7 +62,7 @@ export function RestoreBackupDialog({
             disabled={busy}
             onClick={onRestore}
           >
-            {busy ? "Restoring…" : replacing ? "Replace vault" : "Merge into vault"}
+            {busy ? t("settingsRestoring") : replacing ? t("settingsReplaceVault") : t("settingsMergeVault")}
           </Button>
         </>
       }
@@ -64,33 +71,31 @@ export function RestoreBackupDialog({
         <Box sx={{ display: "grid", gap: 1 }}>
           <Box sx={{ fontSize: 12, color: "var(--ink-soft)" }}>
             {summary.exportedAt
-              ? `Exported ${summary.exportedAt.toLocaleDateString(undefined, { dateStyle: "medium" })}`
-              : "Export date unknown"}
+              ? t("settingsExportedAt", {
+                  date: new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(summary.exportedAt),
+                })
+              : t("settingsExportDateUnknown")}
           </Box>
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
             {summary.counts.length ? (
-              summary.counts.map(({ count, label }) => (
+              summary.counts.map(({ count, label, key }) => (
                 <Chip
                   key={label}
                   size="small"
-                  label={`${count.toLocaleString()} ${label}`}
+                  label={`${new Intl.NumberFormat(locale).format(count)} ${key ? i18n.t(`shell:${key}`, { count }) : label}`}
                   sx={{ bgcolor: "var(--surface-raised)", fontWeight: 600 }}
                 />
               ))
             ) : (
-              <Chip size="small" label="No records" sx={{ bgcolor: "var(--surface-raised)" }} />
+              <Chip size="small" label={t("settingsNoRecords")} sx={{ bgcolor: "var(--surface-raised)" }} />
             )}
           </Box>
         </Box>
         {summary.legacy ? (
-          <Alert severity="info">
-            {
-              "This backup is from an earlier version of Paint Vault. It doesn't include plugins or photos, so it can only be merged. Install the plugins it uses first."
-            }
-          </Alert>
+          <Alert severity="info">{t("settingsLegacyBackup")}</Alert>
         ) : (
           <RadioGroup
-            aria-label="How to restore"
+            aria-label={t("settingsHowToRestore")}
             value={mode}
             onChange={(event) => onModeChange(event.target.value as RestoreMode)}
             sx={{ display: "grid", gap: 1 }}
@@ -103,8 +108,8 @@ export function RestoreBackupDialog({
                 control={<Radio size="small" />}
                 label={
                   <Box sx={{ py: 0.5 }}>
-                    <Box sx={{ fontSize: 14, fontWeight: 650 }}>{option.label}</Box>
-                    <Box sx={{ fontSize: 12, color: "var(--ink-soft)" }}>{option.description}</Box>
+                    <Box sx={{ fontSize: 14, fontWeight: 650 }}>{t(option.label)}</Box>
+                    <Box sx={{ fontSize: 12, color: "var(--ink-soft)" }}>{t(option.description)}</Box>
                   </Box>
                 }
                 sx={{
@@ -121,13 +126,7 @@ export function RestoreBackupDialog({
             ))}
           </RadioGroup>
         )}
-        {replacing && (
-          <Alert severity="warning">
-            {
-              "Replacing can't be undone. Export a backup of this vault first if you might want its current contents."
-            }
-          </Alert>
-        )}
+        {replacing && <Alert severity="warning">{t("settingsReplacingWarning")}</Alert>}
       </Box>
     </Modal>
   );

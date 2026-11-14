@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import {
@@ -20,7 +21,7 @@ type Connection = { pageInfo: { hasNextPage: boolean; endCursor?: string | null 
 function nextCursor(connection: Connection, previous: string | null) {
   if (!connection.pageInfo.hasNextPage) return null;
   const next = connection.pageInfo.endCursor;
-  if (!next || next === previous) throw new Error("Templates returned an invalid page cursor");
+  if (!next || next === previous) throw new Error(i18n.t("shell:templatesReturnedAnInvalidPageCursor"));
   return next;
 }
 async function stable<T>(read: () => Promise<T | undefined>): Promise<T> {
@@ -32,7 +33,7 @@ async function stable<T>(read: () => Promise<T | undefined>): Promise<T> {
       if (!isStaleLibraryCursor(error)) throw error;
     }
   }
-  throw new Error("Templates changed while refreshing. Try again.");
+  throw new Error(i18n.t("shell:templatesChangedWhileRefreshingTryAgain"));
 }
 
 // Only the explicitly loaded summary window is rebuilt after invalidation. No
@@ -47,7 +48,7 @@ export function readTemplateSummaries(client: ApolloClient, variables: TemplateV
         variables: { ...variables, first: TEMPLATE_PAGE_SIZE, after },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Template summaries response was empty");
+      if (!data) throw new Error(i18n.t("shell:templateSummariesResponseWasEmpty"));
       if (combined && !sameRevision(combined.templates.revision, data.templates.revision)) return undefined;
       combined = combined
         ? {
@@ -80,7 +81,7 @@ export function readTemplateRecipe(client: ApolloClient, id: string) {
         variables: { id, paintAfter, schemeAfter },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Template recipe response was empty");
+      if (!data) throw new Error(i18n.t("shell:templateRecipeResponseWasEmpty"));
       if (combined && !sameRevision(combined.templateRecipe.revision, data.templateRecipe.revision))
         return undefined;
       const next: SelectedTemplateRecipeQuery["templateRecipe"] = data.templateRecipe;
@@ -122,7 +123,7 @@ export function readTemplateSourceMiniature(client: ApolloClient, id: string) {
         variables: { id, paintAfter, schemeAfter },
         fetchPolicy: "no-cache",
       });
-      if (!data) throw new Error("Source miniature response was empty");
+      if (!data) throw new Error(i18n.t("shell:sourceMiniatureResponseWasEmpty"));
       if (combined && !sameRevision(combined.miniature.revision, data.miniature.revision)) return undefined;
       const next: TemplateSourceMiniatureQuery["miniature"] = data.miniature;
       const firstPage = !combined;

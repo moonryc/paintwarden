@@ -33,12 +33,12 @@ test("summarizes the contents of a zip backup", async () => {
   assert.equal(summary.legacy, false);
   assert.equal(summary.exportedAt?.toISOString(), "2026-10-01T12:00:00.000Z");
   assert.deepEqual(summary.counts, [
-    { label: "miniatures", count: 2 },
-    { label: "image", count: 1 },
-    { label: "plugin", count: 1 },
-    { label: "custom paint", count: 1 },
-    { label: "paint record", count: 1 },
-    { label: "scheme", count: 1 },
+    { label: "miniatures", count: 2, key: "backupMiniature" },
+    { label: "image", count: 1, key: "backupImage" },
+    { label: "plugin", count: 1, key: "backupPlugin" },
+    { label: "custom paint", count: 1, key: "backupCustomPaint" },
+    { label: "paint record", count: 1, key: "backupPaintRecord" },
+    { label: "scheme", count: 1, key: "backupScheme" },
   ]);
 });
 
@@ -59,8 +59,8 @@ test("recognizes pre-release JSON backups, which can only be merged", async () =
   assert.equal(summary.ok, true);
   assert.equal(summary.legacy, true);
   assert.deepEqual(summary.counts, [
-    { label: "miniature", count: 1 },
-    { label: "scheme", count: 1 },
+    { label: "miniature", count: 1, key: "backupMiniature" },
+    { label: "scheme", count: 1, key: "backupScheme" },
   ]);
 });
 

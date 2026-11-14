@@ -1,11 +1,14 @@
-import { imageUrl } from "../../utils/image-cache";
+import { translateServerError } from "../../i18n";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlineOutlined";
 import NewReleasesOutlinedIcon from "@mui/icons-material/NewReleasesOutlined";
 import { Alert, Box, Button, Card, CircularProgress, IconButton, Tooltip } from "@mui/material";
 import { type ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { formatNumber } from "../../i18n";
 import { ExternalLink, FileUp, RotateCw, Trash2 } from "../../icons";
+import { imageUrl } from "../../utils/image-cache";
 
 import { type CatalogSource, type SourceVersion, isUploadedSource, repositoryLabel } from "./sources.utils";
 
@@ -18,25 +21,35 @@ function SourceStatus({
   remote?: SourceVersion;
   checking: boolean;
 }) {
+  const { t } = useTranslation("pages");
   const [tone, icon, label] = isUploadedSource(source)
-    ? (["muted", null, "Uploaded file"] as const)
+    ? (["muted", null, t("sourcesUploadedFile")] as const)
     : source.lastError
-      ? (["rust", <ErrorOutlineIcon key="i" sx={{ fontSize: 14 }} />, "Update failed"] as const)
+      ? (["rust", <ErrorOutlineIcon key="i" sx={{ fontSize: 14 }} />, t("sourcesUpdateFailed")] as const)
       : remote?.updateAvailable
         ? ([
             "gold",
             <NewReleasesOutlinedIcon key="i" sx={{ fontSize: 14 }} />,
-            `v${remote.availableVersion} available`,
+            t("sourcesVersionAvailable", { version: remote.availableVersion }),
           ] as const)
         : checking && !remote
           ? ([
               "muted",
-              <CircularProgress key="i" size={10} color="inherit" aria-label="Checking plugin update" />,
-              "Checking…",
+              <CircularProgress
+                key="i"
+                size={10}
+                color="inherit"
+                aria-label={t("sourcesCheckingPluginUpdate")}
+              />,
+              t("sourcesChecking"),
             ] as const)
           : remote && !remote.error
-            ? (["ok", <CheckCircleOutlineIcon key="i" sx={{ fontSize: 14 }} />, "Up to date"] as const)
-            : (["muted", null, "Offline copy"] as const);
+            ? ([
+                "ok",
+                <CheckCircleOutlineIcon key="i" sx={{ fontSize: 14 }} />,
+                t("sourcesUpToDate"),
+              ] as const)
+            : (["muted", null, t("sourcesOfflineCopy")] as const);
   const colors = {
     rust: { bg: "var(--rust-soft)", fg: "var(--rust)" },
     gold: { bg: "var(--gold-soft)", fg: "var(--gold-text)" },
@@ -44,7 +57,7 @@ function SourceStatus({
     muted: { bg: "var(--sunken)", fg: "var(--ink-faint)" },
   }[tone];
   return (
-    <Tooltip title={remote?.error ? "Couldn't reach GitHub to check for updates" : ""}>
+    <Tooltip title={remote?.error ? t("sourcesCouldnTReachGitHubToCheckForUpdates") : ""}>
       <Box
         component="span"
         sx={{
@@ -88,7 +101,7 @@ function CountChip({ count, label }: { count: number; label: string }) {
         component="strong"
         sx={{ fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}
       >
-        {count.toLocaleString()}
+        {formatNumber(count)}
       </Box>
       {label}
     </Box>
@@ -166,6 +179,7 @@ export function SourceCard({
   onUpdate(): void;
   onRemove(): void;
 }) {
+  const { t } = useTranslation("pages");
   const counts = source.counts;
   const uploaded = isUploadedSource(source);
   const hasUpdate = !uploaded && !!remote?.updateAvailable;
@@ -206,7 +220,7 @@ export function SourceCard({
               }}
             >
               <Box component="span" sx={{ fontVariantNumeric: "tabular-nums" }}>
-                v{source.version}
+                {t("sourcesVersionValue", { version: source.version })}
               </Box>
               <Box component="span" aria-hidden>
                 ·
@@ -214,7 +228,7 @@ export function SourceCard({
               {uploaded ? (
                 <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
                   <FileUp size={13} />
-                  Installed from a .zip
+                  {t("sourcesInstalledFromAZip")}
                 </Box>
               ) : (
                 <Box
@@ -249,14 +263,18 @@ export function SourceCard({
                 disabled={disabled && !updating}
                 onClick={onUpdate}
               >
-                {source.lastError ? "Retry" : hasUpdate ? `Update to v${remote?.availableVersion}` : "Sync"}
+                {source.lastError
+                  ? t("sourcesRetry")
+                  : hasUpdate
+                    ? t("sourcesUpdateVersion", { version: remote?.availableVersion })
+                    : t("sourcesSync")}
               </Button>
             )}
-            <Tooltip title="Remove plugin">
+            <Tooltip title={t("sourcesRemovePlugin")}>
               <span>
                 <IconButton
                   size="small"
-                  aria-label={`Remove ${source.name}`}
+                  aria-label={t("sourcesRemoveNamed", { name: source.name })}
                   disabled={disabled}
                   onClick={onRemove}
                   sx={{ color: "var(--ink-faint)", "&:hover": { color: "error.main" } }}
@@ -272,22 +290,32 @@ export function SourceCard({
       <Box sx={{ ml: { xs: 0, sm: "58px" } }}>
         {counts && (
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1.5 }}>
-            <CountChip count={counts.paints} label={counts.paints === 1 ? "paint" : "paints"} />
-            <CountChip count={counts.schemes} label={counts.schemes === 1 ? "scheme" : "schemes"} />
-            <CountChip count={counts.templates} label={counts.templates === 1 ? "template" : "templates"} />
+            <CountChip count={counts.paints} label={t("sourcesPaintNoun", { count: counts.paints })} />
+            <CountChip count={counts.schemes} label={t("sourcesSchemeNoun", { count: counts.schemes })} />
+            <CountChip
+              count={counts.templates}
+              label={t("sourcesTemplateNoun", { count: counts.templates })}
+            />
           </Box>
         )}
         {hasMeta && (
           <Box sx={{ display: "grid", gap: 0.25, mt: 1.25 }}>
-            {requires.length > 0 && <MetaLine label="Requires">{requires.join(", ")}</MetaLine>}
-            {requiredBy.length > 0 && <MetaLine label="Required by">{requiredBy.join(", ")}</MetaLine>}
-            {source.license && <MetaLine label="License">{source.license}</MetaLine>}
-            {source.attribution && <MetaLine label="Credit">{source.attribution}</MetaLine>}
+            {requires.length > 0 && <MetaLine label={t("sourcesRequires")}>{requires.join(", ")}</MetaLine>}
+            {requiredBy.length > 0 && (
+              <MetaLine label={t("sourcesRequiredBy")}>{requiredBy.join(", ")}</MetaLine>
+            )}
+            {source.license && <MetaLine label={t("sourcesLicense")}>{source.license}</MetaLine>}
+            {source.attribution && <MetaLine label={t("sourcesCredit")}>{source.attribution}</MetaLine>}
           </Box>
         )}
         {source.lastError && (
           <Alert severity="warning" sx={{ mt: 1.5 }}>
-            {source.lastError}
+            {translateServerError({
+              errorCode: source.lastErrorInfo?.code,
+              errorParameters: Object.fromEntries(
+                (source.lastErrorInfo?.parameters ?? []).map(({ name, value }) => [name, value]),
+              ),
+            })}
           </Alert>
         )}
       </Box>

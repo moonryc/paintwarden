@@ -1,3 +1,5 @@
+import { i18n } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { useFragment } from "@apollo/client/react";
 import { Alert, Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -19,7 +21,7 @@ import { Pencil } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { Miniature, Paint, PaintingStatus, PaintStatus, RecipeStep } from "../types";
-import { STAGES, STEPS, noop } from "../utils/constants";
+import { getStages, getSteps, noop } from "../utils/constants";
 
 import { ApolloProjectSchemeDialog } from "./ApolloProjectSchemeDialog";
 import { ApolloSchemePickerDialog } from "./ApolloSchemePickerDialog";
@@ -32,6 +34,7 @@ import { ProjectDrawerFrame } from "./ProjectDrawerFrame";
 // This boundary never loads the legacy State snapshot, even when a project is
 // opened directly from a paint's Used by link.
 export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: string; onClose(): void }) {
+  const { t } = useTranslation("components");
   const detail = useMiniatureDetail(miniatureId);
   const scope = useVaultGraphQL();
   // A list-opened drawer already knows whether the hero has a photograph. Reuse
@@ -43,7 +46,7 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
   });
   if (detail.loading && !detail.data?.miniature && !detail.error)
     return (
-      <ProjectDrawerFrame title="Miniature" onClose={onClose}>
+      <ProjectDrawerFrame title={t("miniature")} onClose={onClose}>
         <PageSkeleton
           page="miniature-detail"
           miniatureImage={preview.data.imageUrl === undefined ? undefined : Boolean(preview.data.imageUrl)}
@@ -52,14 +55,14 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
     );
   if (!detail.data?.miniature)
     return (
-      <Modal title="Project" subtitle="Miniature details" onClose={onClose}>
+      <Modal title={t("project")} subtitle={t("miniatureDetails")} onClose={onClose}>
         {detail.error ? (
-          <Alert severity="error" action={<Button onClick={detail.refresh}>Retry</Button>}>
+          <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
             {detail.error.message}
           </Alert>
         ) : (
           <Box role="status">
-            {detail.loading ? "Loading project…" : "This miniature is no longer available."}
+            {detail.loading ? t("loadingProject") : t("thisMiniatureIsNoLongerAvailable")}
           </Box>
         )}
       </Modal>
@@ -77,8 +80,8 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
 }
 
 function recipeStep(value: string): RecipeStep {
-  const step = STEPS.find(([id]) => id === value)?.[0];
-  if (!step) throw new Error(`Unknown recipe step: ${value}`);
+  const step = getSteps().find(([id]) => id === value)?.[0];
+  if (!step) throw new Error(i18n.t("components:unknownRecipeStep", { value }));
   return step;
 }
 
@@ -95,6 +98,7 @@ function ProjectContent({
   refresh(): void;
   onClose(): void;
 }) {
+  const { t } = useTranslation("components");
   const miniature = data.miniature!;
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
@@ -151,11 +155,11 @@ function ProjectContent({
     run(actions.update(miniature.id, { ...miniature, ...patch }));
   const setStage = (paintingStatus: PaintingStatus) => {
     const previous = miniature.paintingStatus;
-    const label = STAGES.find(([stage]) => stage === paintingStatus)?.[1] ?? paintingStatus;
+    const label = getStages().find(([stage]) => stage === paintingStatus)?.[1] ?? paintingStatus;
     saveMiniature({ paintingStatus }).then(
       () =>
-        notify(`${miniature.title} marked ${label.toLowerCase()}`, "ok", {
-          label: "Undo",
+        notify(t("miniatureStageChanged", { name: miniature.title, stage: label }), "ok", {
+          label: t("undo"),
           onClick: () => void saveMiniature({ paintingStatus: previous }).catch(noop),
         }),
       noop,
@@ -163,8 +167,8 @@ function ProjectContent({
   };
   const addAllToWishlist = (paints: Paint[]) => {
     for (const paint of paints) setPaintState(paint.id, "WISHLIST");
-    notify(`${paints.length} paint${paints.length === 1 ? "" : "s"} added to wishlist`, "ok", {
-      label: "Undo",
+    notify(t("paintsAddedToWishlist", { count: paints.length }), "ok", {
+      label: t("undo"),
       onClick: () => {
         for (const paint of paints) {
           const previous = projections.get(paint.id)?.inventory;
@@ -200,7 +204,7 @@ function ProjectContent({
         }}
       >
         {error && (
-          <Alert severity="error" action={<Button onClick={refresh}>Retry</Button>}>
+          <Alert severity="error" action={<Button onClick={refresh}>{t("retry")}</Button>}>
             {error.message}
           </Alert>
         )}
@@ -233,7 +237,7 @@ function ProjectContent({
                 onClick={() => setEditingDetails(true)}
                 sx={{ ml: -1, color: "var(--ink-faint)" }}
               >
-                Add project notes
+                {t("addProjectNotes")}
               </Button>
             )}
           </Box>
@@ -246,11 +250,11 @@ function ProjectContent({
                   method: "POST",
                   body: JSON.stringify({ sourceMiniatureId: miniature.id }),
                 })
-                  .then(() => notify(`Saved ${miniature.title} as a template`))
+                  .then(() => notify(t("miniatureSavedAsTemplate", { name: miniature.title })))
                   .catch(noop)
               }
             >
-              Save as template
+              {t("saveAsTemplate")}
             </Button>
             <Button
               variant="outlined"
@@ -258,7 +262,7 @@ function ProjectContent({
               startIcon={<Pencil size={14} />}
               onClick={() => setEditingDetails(true)}
             >
-              Edit
+              {t("edit")}
             </Button>
           </Box>
         </Box>
@@ -277,7 +281,7 @@ function ProjectContent({
               color: "var(--ink-faint)",
             }}
           >
-            Painting stage
+            {t("paintingStage")}
           </Box>
           <StageStepper value={miniature.paintingStatus} onChange={setStage} />
         </Box>
@@ -336,17 +340,17 @@ function ProjectContent({
           onDelete={async () => {
             try {
               await run(actions.remove(miniature.id));
-              notify(`Deleted ${miniature.title}`);
+              notify(t("miniatureDeleted", { name: miniature.title }));
               onClose();
             } catch (error) {
-              notify(error instanceof Error ? error.message : "Could not delete miniature", "error");
+              notify(error instanceof Error ? error.message : t("couldNotDeleteMiniature"), "error");
               throw error;
             }
           }}
           onSubmit={async (values) => {
             await run(actions.update(miniature.id, values));
             setEditingDetails(false);
-            notify("Miniature updated");
+            notify(t("miniatureUpdated"));
           }}
         />
       )}

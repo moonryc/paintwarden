@@ -1,3 +1,4 @@
+import { i18n } from "@paint-vault/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
 import { Alert } from "@mui/material";
@@ -95,7 +96,9 @@ function Scope({ children }: { children: ReactNode }) {
               ? previous
               : {
                   message:
-                    error instanceof Error ? error.message : "Live updates disconnected. Retrying on focus.",
+                    error instanceof Error
+                      ? error.message
+                      : i18n.t("shell:liveUpdatesDisconnectedRetryingOnFocus"),
                   accessDenied: false,
                 },
           );
@@ -128,7 +131,7 @@ function Scope({ children }: { children: ReactNode }) {
       .catch((error: unknown) => {
         if (current)
           setFailure({
-            message: error instanceof Error ? error.message : "Could not refresh live updates",
+            message: error instanceof Error ? error.message : i18n.t("shell:couldNotRefreshLiveUpdates"),
             accessDenied: false,
           });
       });
@@ -158,7 +161,7 @@ function Scope({ children }: { children: ReactNode }) {
             previous?.accessDenied
               ? previous
               : {
-                  message: error instanceof Error ? error.message : "Could not check for updates",
+                  message: error instanceof Error ? error.message : i18n.t("shell:couldNotCheckForUpdates"),
                   accessDenied: false,
                 },
           );
@@ -185,7 +188,8 @@ function Scope({ children }: { children: ReactNode }) {
     },
     [scope],
   );
-  if (failure?.accessDenied) return <Alert severity="error">Vault access expired. Sign in again.</Alert>;
+  if (failure?.accessDenied)
+    return <Alert severity="error">{i18n.t("shell:vaultAccessExpiredSignInAgain")}</Alert>;
   return (
     <ApolloProvider client={scope.client}>
       <VaultGraphQLContext.Provider value={scope}>

@@ -1,13 +1,32 @@
 import { Card, CardActionArea, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
-import { COLOR_CATEGORY_LABELS } from "@paint-vault/core/color-categories";
 import { memo, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { SchemeProgressChip } from "../../Components/SchemeProgressChip";
-import { Check, Layers } from "../../icons";
 import type { SchemeSummaryModel } from "../../graphql/miniature-scheme-model";
+import { Check, Layers } from "../../icons";
 import { imageUrl } from "../../utils/image-cache";
 import { liftCardSx } from "../../utils/lift-card";
+
+const categoryKeys = {
+  RED: "schemesCategoryRed",
+  PINK: "schemesCategoryPink",
+  ORANGE: "schemesCategoryOrange",
+  YELLOW: "schemesCategoryYellow",
+  GREEN: "schemesCategoryGreen",
+  TURQUOISE: "schemesCategoryTurquoise",
+  BLUE: "schemesCategoryBlue",
+  PURPLE: "schemesCategoryPurple",
+  BROWN: "schemesCategoryBrown",
+  BLACK: "schemesCategoryBlack",
+  GREY: "schemesCategoryGrey",
+  WHITE: "schemesCategoryWhite",
+  GOLD: "schemesCategoryGold",
+  SILVER: "schemesCategorySilver",
+  BONE: "schemesCategoryBone",
+  FLESH: "schemesCategoryFlesh",
+} as const;
 
 // One color scheme in the schemes grid: its finished example or paint blend, readiness, name,
 // category, source and paints. It opens the scheme.
@@ -35,6 +54,8 @@ export const SchemeCard = memo(function SchemeCard({
   onOpen: (id: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>, index: number) => void;
 }) {
+  const { t, i18n } = useTranslation("pages");
+  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
   const { gradient, previewUrl, uses, paintNames } = summary;
   const ready = total > 0 && available === total;
   return (
@@ -98,7 +119,7 @@ export const SchemeCard = memo(function SchemeCard({
               <Box
                 component="img"
                 src={imageUrl(previewUrl ?? "")}
-                alt={`${scheme.name} finished example`}
+                alt={t("schemesFinishedExample", { name: scheme.name })}
                 loading="lazy"
                 sx={{
                   position: "absolute",
@@ -152,8 +173,14 @@ export const SchemeCard = memo(function SchemeCard({
           {!!summary.previewMoreCount && (
             <Chip
               size="small"
-              label={`+${summary.previewMoreCount} more`}
-              aria-label={`+${summary.previewMoreCount} more paint entries in the full scheme`}
+              label={t("schemesMorePaints", {
+                count: summary.previewMoreCount,
+                formattedCount: number.format(summary.previewMoreCount),
+              })}
+              aria-label={t("schemesMorePaintEntries", {
+                count: summary.previewMoreCount,
+                formattedCount: number.format(summary.previewMoreCount),
+              })}
               sx={{ position: "absolute", bottom: 12, right: 12, zIndex: 1, bgcolor: "background.paper" }}
             />
           )}
@@ -203,13 +230,13 @@ export const SchemeCard = memo(function SchemeCard({
               <Chip
                 size="small"
                 variant="outlined"
-                label={scheme.category ? COLOR_CATEGORY_LABELS[scheme.category] : "Uncategorized"}
+                label={scheme.category ? t(categoryKeys[scheme.category]) : t("schemesUncategorized")}
               />
               {scheme.isSystem && (
                 <Chip
                   color="secondary"
                   size="small"
-                  label={scheme.sourceName || "Catalog source"}
+                  label={scheme.sourceName || t("schemesCatalogSource")}
                   sx={{
                     boxSizing: "border-box",
                   }}
@@ -236,13 +263,16 @@ export const SchemeCard = memo(function SchemeCard({
           >
             {ready && <Check size={14} />}
             {total === 0
-              ? "No paints yet"
+              ? t("schemesNoPaints")
               : ready
-                ? "Every paint available"
-                : `${available} of ${total} paints available`}
+                ? t("schemesEveryPaintAvailable")
+                : t("schemesAvailablePaints", {
+                    available: number.format(available),
+                    total: number.format(total),
+                  })}
             {uses > 0 && (
               <Box component="span" sx={{ color: "var(--ink-faint)", fontWeight: 400 }}>
-                · Used by {uses} miniature{uses === 1 ? "" : "s"}
+                {t("schemesUsedBy", { count: uses, formattedCount: number.format(uses) })}
               </Box>
             )}
           </Box>

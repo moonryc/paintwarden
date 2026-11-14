@@ -168,14 +168,16 @@ void test("failed save reports error and does not poison following queued save",
   let calls = 0;
   const fixture = setup(async () =>
     ++calls === 1
-      ? Response.json({ errors: [{ message: "recipe rejected" }] })
+      ? Response.json({
+          errors: [{ message: "recipe rejected", extensions: { errorCode: "BAD_USER_INPUT" } }],
+        })
       : payload("setMiniatureSchemes"),
   );
   const first = fixture.actions.setSchemes("miniature", ["gone"]);
   const next = fixture.actions.setSchemes("miniature", []);
-  await assert.rejects(first, /recipe rejected/);
+  await assert.rejects(first, /Check the entered information and try again/);
   await next;
   assert.equal(calls, 2);
-  assert.deepEqual(fixture.errors, ["recipe rejected"]);
+  assert.deepEqual(fixture.errors, ["Check the entered information and try again."]);
   fixture.dispose();
 });

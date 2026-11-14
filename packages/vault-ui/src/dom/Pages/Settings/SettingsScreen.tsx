@@ -7,11 +7,14 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import SystemUpdateAltOutlinedIcon from "@mui/icons-material/SystemUpdateAltOutlined";
 import { Alert, Button, Chip, Switch } from "@mui/material";
 import Box from "@mui/material/Box";
+import { translateServerError } from "@paint-vault/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { PageHeader } from "../../Components/PageHeader";
-import { FALLBACK_OWNER_NAME, UserAvatar } from "../../Layout/UserAvatar";
 import { Download, Extension, FileUp } from "../../icons";
+import { LanguagePicker } from "../../LanguagePicker";
+import { FALLBACK_OWNER_NAME, UserAvatar } from "../../Layout/UserAvatar";
 import { useVaultStore } from "../../store/hooks";
 import type { AuthStatus } from "../../types";
 import { exportBackupFile } from "../../utils/backup-export";
@@ -31,6 +34,7 @@ export function SettingsScreen({
   connected: boolean;
   onChangeServer?: () => void;
 }) {
+  const { t, i18n } = useTranslation("pages");
   const setToken = useVaultStore((s) => s.setToken);
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
@@ -46,7 +50,7 @@ export function SettingsScreen({
   const [restoreMode, setRestoreMode] = useState<RestoreMode>("merge");
   const [exporting, setExporting] = useState(false);
   const [lastExport, setLastExport] = useState<Date | null>(null);
-  const [serverAddress, setServerAddress] = useState(window.location.origin);
+  const [serverAddress, setServerAddress] = useState<string>(window.location.origin);
   const [localServer, setLocalServer] = useState(false);
   useEffect(() => {
     if (!window.paintVaultDesktop) return;
@@ -54,13 +58,13 @@ export function SettingsScreen({
       .getConnection()
       .then((choice) => {
         setLocalServer(choice.mode !== "remote");
-        setServerAddress(choice.mode === "remote" ? (choice.serverUrl ?? "Remote server") : "This computer");
+        setServerAddress(choice.mode === "remote" ? (choice.serverUrl ?? "remote") : "local");
       })
-      .catch(() => setServerAddress("Desktop connection"));
+      .catch(() => setServerAddress("desktop"));
   }, []);
   const update = useDesktopUpdate();
   const requireSignIn = Boolean(auth?.requireSignIn);
-  const username = auth?.username || FALLBACK_OWNER_NAME;
+  const username = auth?.username || t(FALLBACK_OWNER_NAME);
   const serverVersion = useServerVersion();
 
   async function exportBackup() {
@@ -68,14 +72,14 @@ export function SettingsScreen({
     try {
       if (await saveBackup()) setLastExport(new Date());
     } catch (error) {
-      notify(error instanceof Error ? error.message : "Export failed", "error");
+      notify(error instanceof Error ? error.message : t("settingsExportFailed"), "error");
     } finally {
       setExporting(false);
     }
   }
   async function saveBackup() {
     if (!(await exportBackupFile(authHeaders))) return false;
-    notify("Backup exported");
+    notify(t("settingsBackupExported"));
     return true;
   }
   async function changeAccount(path: "settings" | "password" | "username", extra: object, password: string) {
@@ -87,17 +91,17 @@ export function SettingsScreen({
         body: JSON.stringify({ password, ...extra }),
       });
       const result = (await response.json()) as { error?: string; token?: string };
-      if (!response.ok) throw new Error(result.error || "Could not update account");
+      if (!response.ok) throw new Error(translateServerError(result));
       if (result.token) setToken(result.token);
       await refresh();
       notify(
         path === "password"
-          ? "Password changed"
+          ? t("settingsPasswordChanged")
           : path === "username"
-            ? "Username changed"
+            ? t("settingsUsernameChanged")
             : requireSignIn
-              ? "Sign-in no longer required"
-              : "Sign-in now required",
+              ? t("settingsSignInNoLongerRequired")
+              : t("settingsSignInNowRequired"),
       );
     } finally {
       setBusy(false);
@@ -110,11 +114,11 @@ export function SettingsScreen({
         headers: { "content-type": "application/json", ...authHeaders() },
         body: "{}",
       });
-      if (!response.ok) throw new Error("Could not sign out");
+      if (!response.ok) throw new Error(t("settingsSignOutFailed"));
       setToken("");
       await refresh();
     } catch (error) {
-      notify(error instanceof Error ? error.message : "Could not sign out", "error");
+      notify(error instanceof Error ? error.message : t("settingsSignOutFailed"), "error");
     }
   }
   async function stageBackup(file: File) {
@@ -149,7 +153,7 @@ export function SettingsScreen({
       setPendingBackup(null);
       // A restore can change any part of the vault, so it is reloaded in full.
       await refresh();
-      notify(mode === "replace" ? "Vault replaced from backup" : "Backup merged into vault");
+      notify(mode === "replace" ? t("settingsVaultReplaced") : t("settingsBackupMerged"));
     } catch {
       // The shared API helper already displays the error.
     } finally {
@@ -159,13 +163,9 @@ export function SettingsScreen({
 
   return (
     <Box component="div" sx={{ width: "100%", minWidth: 0, display: "grid", gap: { xs: 3, md: 3.5 } }}>
-      <PageHeader
-        eyebrow="Your data"
-        title="Data & settings"
-        body="Manage the connection, plugins, who can open the vault, and backups."
-      />
+      <PageHeader eyebrow={t("settingsYourData")} title={t("settingsTitle")} body={t("settingsBody")} />
 
-      <SettingsSection title="Connection">
+      <SettingsSection title={t("settingsConnection")}>
         <SettingsRow
           icon={localServer ? <LaptopMacOutlinedIcon /> : <DnsOutlinedIcon />}
           title={
@@ -173,10 +173,10 @@ export function SettingsScreen({
               component="span"
               sx={{ display: "inline-flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}
             >
-              Vault server
+              {t("settingsVaultServer")}
               <Chip
                 size="small"
-                label={connected ? "Connected" : "Not connected"}
+                label={connected ? t("settingsConnected") : t("settingsNotConnected")}
                 icon={
                   <Box
                     component="span"
@@ -202,14 +202,20 @@ export function SettingsScreen({
           }
           description={
             <Box component="span" sx={{ color: "var(--ink-soft)", overflowWrap: "anywhere" }}>
-              {serverAddress}
-              {serverVersion && ` · Version ${serverVersion}`}
+              {serverAddress === "remote"
+                ? t("settingsRemoteServer")
+                : serverAddress === "local"
+                  ? t("settingsThisComputer")
+                  : serverAddress === "desktop"
+                    ? t("settingsDesktopConnection")
+                    : serverAddress}
+              {serverVersion && t("settingsServerVersion", { version: serverVersion })}
             </Box>
           }
           action={
             onChangeServer && (
               <Button variant="outlined" size="small" onClick={onChangeServer}>
-                Change server
+                {t("settingsChangeServer")}
               </Button>
             )
           }
@@ -217,12 +223,12 @@ export function SettingsScreen({
         {update.state && (
           <SettingsRow
             icon={<SystemUpdateAltOutlinedIcon />}
-            title="Desktop app"
+            title={t("settingsDesktopApp")}
             description={describeUpdate(update.state)}
             action={
               update.state.status === "ready" ? (
                 <Button variant="contained" size="small" onClick={() => void update.install()}>
-                  Restart to update
+                  {t("settingsRestartToUpdate")}
                 </Button>
               ) : (
                 <Button
@@ -231,7 +237,7 @@ export function SettingsScreen({
                   disabled={["disabled", "checking", "downloading"].includes(update.state.status)}
                   onClick={() => void update.check()}
                 >
-                  Check for updates
+                  {t("settingsCheckForUpdates")}
                 </Button>
               )
             }
@@ -239,24 +245,26 @@ export function SettingsScreen({
         )}
       </SettingsSection>
 
-      <SettingsSection title="Catalog">
+      <LanguagePicker />
+
+      <SettingsSection title={t("settingsCatalog")}>
         <SettingsRow
           icon={<Extension size={20} />}
-          title="Plugins"
-          description="Install catalogs of paints, schemes, and templates from GitHub, or package your own to share."
+          title={t("settingsPlugins")}
+          description={t("settingsPluginsDescription")}
           action={
             <Button variant="outlined" size="small" onClick={openPlugins}>
-              Manage plugins
+              {t("settingsManagePlugins")}
             </Button>
           }
         />
       </SettingsSection>
 
-      <SettingsSection title="Account and security">
+      <SettingsSection title={t("settingsAccountSecurity")}>
         <SettingsRow
           icon={<UserAvatar name={username} size={40} />}
           title={username}
-          description={auth?.authenticated ? "Vault owner · signed in on this device" : "Vault owner"}
+          description={auth?.authenticated ? t("settingsOwnerSignedIn") : t("settingsOwner")}
           action={
             requireSignIn &&
             auth?.authenticated && (
@@ -266,38 +274,36 @@ export function SettingsScreen({
                 startIcon={<LogoutOutlinedIcon />}
                 onClick={() => void signOut()}
               >
-                Sign out
+                {t("settingsSignOut")}
               </Button>
             )
           }
         />
         <SettingsRow
           icon={<LockOutlinedIcon />}
-          title="Require sign-in"
+          title={t("settingsRequireSignIn")}
           description={
-            requireSignIn
-              ? "Visitors must sign in before they can see or change vault data."
-              : "Anyone who can reach this server can open the vault. Use only on a trusted network."
+            requireSignIn ? t("settingsSignInRequiredDescription") : t("settingsSignInOffDescription")
           }
           action={
             <Switch
               checked={requireSignIn}
               disabled={busy}
               onChange={() => setSignInDialogOpen(true)}
-              slotProps={{ input: { "aria-label": "Require sign-in" } }}
+              slotProps={{ input: { "aria-label": t("settingsRequireSignIn") } }}
             />
           }
         >
           {!requireSignIn && (
             <Alert severity="warning" sx={{ py: 0, fontSize: 12.5, borderRadius: 2 }}>
-              Sign-in is off. Turn it on before exposing this server beyond your home network.
+              {t("settingsSignInOffWarning")}
             </Alert>
           )}
         </SettingsRow>
         <SettingsRow
           icon={<PersonOutlineOutlinedIcon />}
-          title="Username"
-          description={`You sign in as ${username}.`}
+          title={t("settingsUsername")}
+          description={t("settingsSignedInAs", { username })}
           action={
             <Button
               variant="outlined"
@@ -305,14 +311,14 @@ export function SettingsScreen({
               disabled={busy}
               onClick={() => setUsernameDialogOpen(true)}
             >
-              Change username
+              {t("settingsChangeUsername")}
             </Button>
           }
         />
         <SettingsRow
           icon={<KeyOutlinedIcon />}
-          title="Password"
-          description="Use at least 12 characters."
+          title={t("settingsPassword")}
+          description={t("settingsPasswordDescription")}
           action={
             <Button
               variant="outlined"
@@ -320,23 +326,24 @@ export function SettingsScreen({
               disabled={busy}
               onClick={() => setPasswordDialogOpen(true)}
             >
-              Change password
+              {t("settingsChangePassword")}
             </Button>
           }
         />
       </SettingsSection>
 
-      <SettingsSection
-        title="Backups"
-        description="A backup is one .zip file with everything in this vault: miniatures and photos, paints, recipes, schemes, templates and installed plugins."
-      >
+      <SettingsSection title={t("settingsBackups")} description={t("settingsBackupsDescription")}>
         <SettingsRow
           icon={<Download size={20} />}
-          title="Export a backup"
+          title={t("settingsExportBackup")}
           description={
             lastExport
-              ? `Saved a backup at ${lastExport.toLocaleTimeString(undefined, { timeStyle: "short" })}.`
-              : "Your account and password aren't included."
+              ? t("settingsLastBackup", {
+                  time: new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, {
+                    timeStyle: "short",
+                  }).format(lastExport),
+                })
+              : t("settingsAccountExcluded")
           }
           action={
             <Button
@@ -346,14 +353,14 @@ export function SettingsScreen({
               startIcon={<Download size={16} />}
               onClick={() => void exportBackup()}
             >
-              {exporting ? "Exporting…" : "Export"}
+              {exporting ? t("settingsExporting") : t("settingsExport")}
             </Button>
           }
         />
         <SettingsRow
           icon={<FileUp size={20} />}
-          title="Restore from a backup"
-          description="You'll see what the backup contains and choose how to restore it before anything changes."
+          title={t("settingsRestoreBackup")}
+          description={t("settingsRestoreDescription")}
           action={
             <Button
               variant="outlined"
@@ -362,7 +369,7 @@ export function SettingsScreen({
               startIcon={<FileUp size={16} />}
               onClick={() => inputRef.current?.click()}
             >
-              Choose file
+              {t("settingsChooseFile")}
             </Button>
           }
         />

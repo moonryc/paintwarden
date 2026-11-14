@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   closestCenter,
@@ -22,7 +23,7 @@ import { Check, CircleDashed, Layers, Pencil, Plus } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import type { Miniature, Paint, PaintStateSetter, RecipeStep, Requirement, SchemeOrderEntry } from "../types";
 import { createClientId } from "../utils/client-id";
-import { noop, STEPS } from "../utils/constants";
+import { noop, getSteps } from "../utils/constants";
 import { mergeRecipePaints } from "../utils/recipe-merge";
 
 import { DashedAddButton } from "./DashedAddButton";
@@ -36,7 +37,7 @@ import { SchemeSwatchView } from "./SchemeSwatch";
 type Entry = Omit<Requirement, "miniatureId">;
 type Adding = { kind: "paint"; step: RecipeStep } | { kind: "step"; step: RecipeStep } | null;
 
-const STEP_RANK = new Map(STEPS.map(([step], index) => [step, index]));
+const STEP_RANK = new Map(getSteps().map(([step], index) => [step, index]));
 
 // Recipes read top to bottom in painting order, so keep entries grouped by step.
 function orderEntries(entries: Entry[]): Entry[] {
@@ -102,6 +103,7 @@ export function ProjectRecipeView({
   setAttached,
   renderSchemePicker,
 }: ProjectRecipeViewProps) {
+  const { t } = useTranslation("components");
   const notify = useVaultStore((s) => s.notify);
   // Editing controls stay hidden until asked for, so a stray tap can't change the recipe.
   const [editMode, setEditMode] = useState(false);
@@ -152,8 +154,8 @@ export function ProjectRecipeView({
   const removePaint = (paint: Paint, step: RecipeStep) => {
     const previous = entries;
     save(entries.filter((entry) => entry.paintId !== paint.id || entry.step !== step));
-    notify(`Removed ${paint.name} from recipe`, "ok", {
-      label: "Undo",
+    notify(t("paintRemovedFromRecipe", { name: paint.name }), "ok", {
+      label: t("undo"),
       onClick: () => setRecipe(miniature.id, previous),
     });
   };
@@ -186,13 +188,13 @@ export function ProjectRecipeView({
 
   const attachedIds = schemes.map((scheme) => scheme.id);
   const undoSchemes = (previous: string[]) => ({
-    label: "Undo",
+    label: t("undo"),
     onClick: () => void setAttached(previous).catch(noop),
   });
   const removeScheme = (schemeId: string, name: string) => {
     const previous = attachedIds;
     setAttached(attachedIds.filter((id) => id !== schemeId)).then(
-      () => notify(`Removed ${name}`, "ok", undoSchemes(previous)),
+      () => notify(t("removedItem", { name }), "ok", undoSchemes(previous)),
       noop,
     );
   };
@@ -201,12 +203,15 @@ export function ProjectRecipeView({
     const added = next.filter((id) => !previous.includes(id)).length;
     const removed = previous.filter((id) => !next.includes(id)).length;
     await setAttached(next);
-    const parts = [
-      added && `added ${added} scheme${added === 1 ? "" : "s"}`,
-      removed && `removed ${removed} scheme${removed === 1 ? "" : "s"}`,
-    ].filter(Boolean);
-    const message = parts.join(", ");
-    notify(message.charAt(0).toUpperCase() + message.slice(1), "ok", undoSchemes(previous));
+    const addedSummary = t("schemesAdded", { count: added });
+    const removedSummary = t("schemesRemoved", { count: removed });
+    const message =
+      added && removed
+        ? t("schemesChanged", { addedSummary, removedSummary })
+        : added
+          ? addedSummary
+          : removedSummary;
+    notify(message, "ok", undoSchemes(previous));
   };
 
   const merged = mergeRecipePaints(
@@ -222,11 +227,13 @@ export function ProjectRecipeView({
   const rows = merged
     .map((row) => ({ ...row, paint: catalog.find((paint) => paint.id === row.paintId) }))
     .filter((item): item is typeof item & { paint: Paint } => !!item.paint);
-  const groups = STEPS.map(([step, label]) => ({
-    step,
-    label,
-    rows: rows.filter((row) => row.step === step),
-  })).filter((group) => group.rows.length || explicitSteps.includes(group.step));
+  const groups = getSteps()
+    .map(([step, label]) => ({
+      step,
+      label,
+      rows: rows.filter((row) => row.step === step),
+    }))
+    .filter((group) => group.rows.length || explicitSteps.includes(group.step));
 
   const closeAdding = () => {
     setAdding(null);
@@ -245,7 +252,7 @@ export function ProjectRecipeView({
   };
   const openStepAdd = () => {
     const step = groups.some((group) => group.step === lastStep)
-      ? (STEPS.find(([candidate]) => !groups.some((group) => group.step === candidate))?.[0] ?? lastStep)
+      ? (getSteps().find(([candidate]) => !groups.some((group) => group.step === candidate))?.[0] ?? lastStep)
       : lastStep;
     setAdding((current) => (current?.kind === "step" ? null : { kind: "step", step }));
   };
@@ -305,7 +312,7 @@ export function ProjectRecipeView({
               color: "var(--ink-faint)",
             }}
           >
-            Schemes and paints
+            {t("schemesAndPaints")}
           </Box>
           <Box
             component="h3"
@@ -320,13 +327,13 @@ export function ProjectRecipeView({
               fontWeight: 600,
             }}
           >
-            Paint recipe
+            {t("paintRecipe")}
           </Box>
         </div>
         <Box component="div" sx={{ display: "flex", flexWrap: "wrap", justifyContent: "flex-end", gap: 1 }}>
           {editMode ? (
             <Button size="small" variant="contained" startIcon={<Check size={14} />} onClick={finishEditing}>
-              Done
+              {t("done")}
             </Button>
           ) : (
             <Button
@@ -335,7 +342,7 @@ export function ProjectRecipeView({
               startIcon={<Pencil size={14} />}
               onClick={() => setEditMode(true)}
             >
-              Edit recipe
+              {t("editRecipe")}
             </Button>
           )}
         </Box>
@@ -348,7 +355,7 @@ export function ProjectRecipeView({
         }}
       >
         {(schemes.length > 0 || editMode) && (
-          <RecipeSubheader id="recipe-schemes-heading" label="Color schemes" />
+          <RecipeSubheader id="recipe-schemes-heading" label={t("colorSchemes")} />
         )}
         {(schemes.length > 0 || editMode) && (
           <Box
@@ -373,7 +380,7 @@ export function ProjectRecipeView({
             ))}
             {editMode && (
               <DashedAddButton
-                label="Add Scheme"
+                label={t("addScheme")}
                 onClick={() => setPickingSchemes(true)}
                 ariaHaspopup="dialog"
                 minHeight={116}
@@ -385,7 +392,7 @@ export function ProjectRecipeView({
         {(groups.length > 0 || editMode || schemes.length > 0) && (
           <RecipeSubheader
             id="recipe-paints-heading"
-            label="Paint steps"
+            label={t("paintSteps")}
             spaced={schemes.length > 0 || editMode}
             action={
               schemes.length > 0 && !editMode ? (
@@ -395,10 +402,10 @@ export function ProjectRecipeView({
                       size="small"
                       checked={showSchemePaints}
                       onChange={(event) => changeShowSchemePaints(event.target.checked)}
-                      slotProps={{ input: { "aria-label": "Show scheme paints in steps" } }}
+                      slotProps={{ input: { "aria-label": t("showSchemePaintsInSteps") } }}
                     />
                   }
-                  label="Show scheme paints"
+                  label={t("showSchemePaints")}
                   sx={{ m: 0, flexShrink: 0, "& .MuiFormControlLabel-label": { fontSize: 12 } }}
                 />
               ) : null
@@ -457,10 +464,10 @@ export function ProjectRecipeView({
           </DndContext>
         )}
 
-        {editMode && groups.length < STEPS.length && (
+        {editMode && groups.length < getSteps().length && (
           <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 1 }}>
             <DashedAddButton
-              label={adding?.kind === "step" ? "Close" : "Add a step"}
+              label={adding?.kind === "step" ? t("close") : t("addAStep")}
               onClick={openStepAdd}
               expanded={adding?.kind === "step"}
             />
@@ -469,21 +476,21 @@ export function ProjectRecipeView({
                 <TextField
                   select
                   size="small"
-                  label="Step"
+                  label={t("step")}
                   value={adding.step}
                   onChange={(event) => setAdding({ kind: "step", step: event.target.value as RecipeStep })}
                   sx={{ flex: "1 1 150px" }}
                 >
-                  {STEPS.filter(([step]) => !groups.some((group) => group.step === step)).map(
-                    ([step, label]) => (
+                  {getSteps()
+                    .filter(([step]) => !groups.some((group) => group.step === step))
+                    .map(([step, label]) => (
                       <MenuItem key={step} value={step}>
                         {label}
                       </MenuItem>
-                    ),
-                  )}
+                    ))}
                 </TextField>
                 <Button variant="contained" size="small" onClick={() => confirmStep(adding.step)}>
-                  Confirm
+                  {t("confirm")}
                 </Button>
               </Card>
             )}
@@ -492,7 +499,7 @@ export function ProjectRecipeView({
 
         {editMode && groups.length > 0 && (
           <Box component="p" sx={{ m: 0, fontSize: 12, color: "var(--ink-faint)", textAlign: "center" }}>
-            Drag a paint to reorder it or move it to another step.
+            {t("dragAPaintToReorderItOrMoveIt")}
           </Box>
         )}
 
@@ -519,7 +526,7 @@ export function ProjectRecipeView({
                 color: "var(--ink)",
               }}
             >
-              No paints assigned yet
+              {t("noPaintsAssignedYet")}
             </Box>
             <Box
               component="span"
@@ -528,7 +535,7 @@ export function ProjectRecipeView({
                 lineHeight: 4 / 3,
               }}
             >
-              Start from a color scheme or create a paint step.
+              {t("startFromAColorSchemeOrCreateAPaint")}
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 1, mt: 2 }}>
               <Button
@@ -540,7 +547,7 @@ export function ProjectRecipeView({
                   setPickingSchemes(true);
                 }}
               >
-                Add a scheme
+                {t("addAScheme")}
               </Button>
               <Button
                 size="small"
@@ -551,7 +558,7 @@ export function ProjectRecipeView({
                   openStepAdd();
                 }}
               >
-                Add a step
+                {t("addAStep")}
               </Button>
             </Box>
           </Box>

@@ -1,6 +1,7 @@
 import { Alert, Button, Card, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
@@ -21,6 +22,9 @@ import { visuallyHiddenSx } from "../utils/visually-hidden";
 import { useInitialPageLoading } from "./useInitialPageLoading";
 
 export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
+  const { t, i18n } = useTranslation("pages");
+  const number = (value: number) =>
+    new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language).format(value);
   const filter = useVaultStore((s) => s.paintFilter);
   const setFilter = useVaultStore((s) => s.setPaintFilter);
   const search = useVaultStore((s) => s.paintSearch);
@@ -39,8 +43,8 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
     plugin === ALL_LIBRARY_SOURCES
       ? null
       : plugin === NO_LIBRARY_SOURCE
-        ? "not from a plugin"
-        : `from ${plugin}`;
+        ? t("libraryNoPluginDescription")
+        : t("libraryPluginDescription", { plugin });
   useEffect(() => {
     if (!loading && !library.error && brand !== "ALL" && !library.brands.some((facet) => facet.key === brand))
       setBrand("ALL");
@@ -139,23 +143,27 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
   return (
     <div>
       <PageHeader
-        eyebrow="Color library"
-        title="Paints"
+        eyebrow={t("libraryColorLibrary")}
+        title={t("libraryPaintsTitle")}
         body={
           ownedCount || wishlistCount
-            ? `${ownedCount.toLocaleString()} paint${ownedCount === 1 ? "" : "s"} available${wishlistCount ? ` · ${wishlistCount} on your wishlist` : ""} · ${library.catalogCount.toLocaleString()} in the library.`
-            : "Browse paints from your catalog sources or add your own colors."
+            ? t(wishlistCount ? "libraryAvailableWishlist" : "libraryAvailable", {
+                count: ownedCount,
+                wishlistCount,
+                catalogCount: library.catalogCount,
+              })
+            : t("libraryBrowseBody")
         }
         action={
           <Button variant="contained" onClick={onAddPaint} startIcon={<Plus size={16} />}>
-            Add paint
+            {t("libraryAddPaint")}
           </Button>
         }
       />
       <FilterToolbar
         search={search}
         setSearch={setSearch}
-        placeholder="Search brand, range, or paint…"
+        placeholder={t("librarySearchPlaceholder")}
         // Three filters need the full row until the window is wide enough to sit beside the search.
         singleLineFilters={plugins.length > 0}
       >
@@ -185,27 +193,27 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
               select
               fullWidth
               size="small"
-              label="Plugin"
+              label={t("libraryPluginLabel")}
               value={plugin}
               onChange={(event) => setPlugin(event.target.value)}
             >
-              <MenuItem value={ALL_LIBRARY_SOURCES}>All plugins</MenuItem>
+              <MenuItem value={ALL_LIBRARY_SOURCES}>{t("libraryAllPlugins")}</MenuItem>
               {plugins.map((source) => (
                 <MenuItem key={source.key} value={source.key}>
                   {source.label}
                 </MenuItem>
               ))}
-              <MenuItem value={NO_LIBRARY_SOURCE}>Not from a plugin</MenuItem>
+              <MenuItem value={NO_LIBRARY_SOURCE}>{t("libraryNotFromPlugin")}</MenuItem>
             </TextField>
           )}
           <TextField
             select
             size="small"
-            label="Brand"
+            label={t("libraryBrandLabel")}
             value={brand}
             onChange={(event) => setBrand(event.target.value)}
           >
-            <MenuItem value="ALL">All brands</MenuItem>
+            <MenuItem value="ALL">{t("libraryAllBrands")}</MenuItem>
             {brands.map((item) => (
               <MenuItem key={item} value={item}>
                 {item}
@@ -215,7 +223,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           <TextField
             select
             size="small"
-            label="Inventory"
+            label={t("libraryInventoryLabel")}
             value={activeFilter}
             onChange={(event) => {
               buzz();
@@ -224,8 +232,17 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           >
             {filters.map((item, index) => (
               <MenuItem key={item} value={item}>
-                {["All", "Owned", "Wishlist", "Not owned"][index]} (
-                {library.inventory.find((facet) => facet.key === item)?.count ?? 0})
+                {t(
+                  (
+                    [
+                      "libraryFilterAll",
+                      "libraryFilterOwned",
+                      "libraryFilterWishlist",
+                      "libraryFilterUntracked",
+                    ] as const
+                  )[index],
+                )}{" "}
+                ({number(library.inventory.find((facet) => facet.key === item)?.count ?? 0)})
               </MenuItem>
             ))}
           </TextField>
@@ -236,7 +253,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           severity="error"
           action={
             <Button color="inherit" onClick={library.retry}>
-              Retry
+              {t("libraryRetry")}
             </Button>
           }
         >
@@ -245,13 +262,13 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       )}
       {loading && (
         <Box role="status" sx={{ py: 3 }}>
-          Loading paints…
+          {t("libraryLoadingPaints")}
         </Box>
       )}
       {list.length ? (
         <Card
           component="ul"
-          aria-label="Paint library"
+          aria-label={t("libraryPaintLibrary")}
           aria-busy={refreshing}
           data-loaded-count={list.length}
           data-total-count={library.totalCount}
@@ -299,11 +316,11 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       ) : loading || library.error ? null : library.catalogCount === 0 ? (
         <EmptyState
           icon={<PaintDrop size={26} />}
-          title="Your paint library is empty"
-          body="Install a plugin from Data & settings → Plugins to add paint ranges, or add your own paints."
+          title={t("libraryEmptyTitle")}
+          body={t("libraryEmptyBody")}
           action={
             <Button variant="contained" onClick={onAddPaint} startIcon={<Plus size={16} />}>
-              Add a paint
+              {t("libraryAddAPaint")}
             </Button>
           }
         />
@@ -325,12 +342,12 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
       {hasNextPage && (
         <Box sx={{ textAlign: "center", mt: 1.5 }}>
           <Button disabled={loading || refreshing} onClick={loadMore}>
-            Load more paints
+            {t("libraryLoadMorePaints")}
           </Button>
         </Box>
       )}
       <Box role="status" sx={visuallyHiddenSx}>
-        {refreshing ? "Updating paints…" : ""}
+        {refreshing ? t("libraryUpdatingPaints") : ""}
       </Box>
       {library.catalogCount > 0 && (
         <Box
@@ -347,7 +364,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
             },
           }}
         >
-          {library.totalCount.toLocaleString()} matching paint{library.totalCount === 1 ? "" : "s"}
+          {t("libraryMatchingPaints", { count: library.totalCount })}
         </Box>
       )}
       <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />
@@ -370,21 +387,20 @@ function PaintLibraryEmptyState({
   onBrowseAll(): void;
   onClear(): void;
 }) {
+  const { t } = useTranslation("pages");
   // A narrowed search, brand, or plugin is the likely cause, so offer to clear it.
   if (search || brand !== "ALL" || plugin || filter === "ALL" || filter === "UNTRACKED") {
-    const scope = [brand === "ALL" ? "" : ` in ${brand}`, plugin ? ` ${plugin}` : ""].join("");
+    const scope = [brand === "ALL" ? "" : t("libraryBrandScope", { brand }), plugin ? ` ${plugin}` : ""].join(
+      "",
+    );
     return (
       <EmptyState
         icon={<SearchX size={26} />}
-        title="No paints match"
-        body={
-          search
-            ? `Nothing found for “${search}”${scope}. Check the spelling or try a shorter name.`
-            : `No paints in this view${scope}.`
-        }
+        title={t("libraryNoMatches")}
+        body={search ? t("librarySearchNoResults", { search, scope }) : t("libraryViewNoResults", { scope })}
         action={
           <Button variant="outlined" onClick={onClear}>
-            Clear filters
+            {t("libraryClearFilters")}
           </Button>
         }
       />
@@ -394,15 +410,11 @@ function PaintLibraryEmptyState({
   return (
     <EmptyState
       icon={owned ? <FlaskConical size={26} /> : <Heart size={24} />}
-      title={owned ? "No paints owned yet" : "Your wishlist is empty"}
-      body={
-        owned
-          ? "Mark bottles on your shelf as owned, or set an active substitution whose ingredients are on hand."
-          : "Browse the library and tap the heart on paints you want to buy."
-      }
+      title={owned ? t("libraryOwnedEmpty") : t("libraryWishlistEmpty")}
+      body={owned ? t("libraryOwnedEmptyBody") : t("libraryWishlistEmptyBody")}
       action={
         <Button variant="contained" onClick={onBrowseAll}>
-          Browse all paints
+          {t("libraryBrowseAllPaints")}
         </Button>
       }
     />

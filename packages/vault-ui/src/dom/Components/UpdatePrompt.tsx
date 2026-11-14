@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Alert, Button, Snackbar } from "@mui/material";
 import { useState } from "react";
 
@@ -6,6 +7,7 @@ import { useDesktopUpdate } from "../utils/desktop-update";
 // Offers to restart the desktop app once an update has downloaded. "Later" hides the prompt;
 // the update still installs the next time the app quits.
 export function UpdatePrompt() {
+  const { t } = useTranslation("components");
   const { state, install } = useDesktopUpdate();
   const [dismissed, setDismissed] = useState<string | null>(null);
   const [restarting, setRestarting] = useState(false);
@@ -36,7 +38,7 @@ export function UpdatePrompt() {
               disabled={restarting}
               onClick={() => setDismissed(state?.version ?? null)}
             >
-              Later
+              {t("updateLater")}
             </Button>
             <Button
               color="inherit"
@@ -48,12 +50,12 @@ export function UpdatePrompt() {
                 void install().finally(() => setRestarting(false));
               }}
             >
-              Restart
+              {t("updateRestart")}
             </Button>
           </>
         }
       >
-        Paint Vault {state?.version} is ready to install.
+        {t("updateReady", { version: state?.version })}
       </Alert>
     </Snackbar>
   );

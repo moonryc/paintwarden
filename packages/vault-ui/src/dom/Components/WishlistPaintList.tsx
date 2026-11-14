@@ -1,3 +1,5 @@
+import { formatNumber } from "../i18n";
+import { useTranslation } from "react-i18next";
 import { Card } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
@@ -41,6 +43,7 @@ export function WishlistPaintList<T extends { paint: { id: string } }>({
   groups: readonly (readonly [brand: string, items: readonly T[]])[];
   renderRow: (row: T, position: { index: number; size: number }) => ReactNode;
 }) {
+  const { t } = useTranslation("components");
   const id = useId();
   const listRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ top: 0, scrollY: 0, height: 900 });
@@ -228,7 +231,7 @@ export function WishlistPaintList<T extends { paint: { id: string } }>({
                   {brand}
                 </Box>
                 <Box component="span" sx={{ color: "var(--ink-faint)", flexShrink: 0 }}>
-                  {items.length}
+                  {formatNumber(items.length)}
                 </Box>
               </Box>
             )}
@@ -236,7 +239,7 @@ export function WishlistPaintList<T extends { paint: { id: string } }>({
               <Box
                 component="ul"
                 data-wishlist-start={section.rows[0].index}
-                aria-label={`${brand}: ${items.length} paint${items.length === 1 ? "" : "s"}`}
+                aria-label={t("wishlistBrandPaints", { brand, count: items.length })}
                 sx={{
                   ...listResetSx,
                   boxSizing: "border-box",

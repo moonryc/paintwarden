@@ -215,6 +215,8 @@ export type DesktopUpdateState = {
 };
 
 export type DesktopBridge = {
+  getLanguage(): Promise<string>;
+  setLanguage(language: string): Promise<string>;
   getConnection(): Promise<DesktopConnectionChoice>;
   setConnection(choice: { mode: "local" | "remote"; serverUrl?: string }): Promise<DesktopConnectionChoice>;
   saveBinary(input: { bytes: Uint8Array; filename: string; title?: string }): Promise<boolean>;

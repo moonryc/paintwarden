@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -5,6 +6,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import { Plus } from "../icons";
 
 export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProps<Theme> }) {
+  const { t } = useTranslation("components");
   return (
     <ButtonBase
       onClick={onClick}
@@ -71,7 +73,7 @@ export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProp
             color: "var(--ink)",
           }}
         >
-          Add miniature
+          {t("addMiniature")}
         </Box>
         <Box
           component="span"
@@ -80,7 +82,7 @@ export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProp
             lineHeight: 4 / 3,
           }}
         >
-          Owned or wishlist
+          {t("ownedOrWishlist")}
         </Box>
       </Box>
     </ButtonBase>

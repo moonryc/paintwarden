@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Dialog, IconButton, SwipeableDrawer, useMediaQuery } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { Theme } from "@mui/material/styles";
@@ -17,6 +18,7 @@ export function ProjectDrawerFrame({
   onClose(): void;
   children: ReactNode;
 }) {
+  const { t } = useTranslation("components");
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"), { noSsr: true });
   const content = (
     <>
@@ -24,7 +26,7 @@ export function ProjectDrawerFrame({
         <IconButton
           color="overlay"
           onClick={onClose}
-          aria-label="Close project"
+          aria-label={t("closeProject")}
           sx={{
             boxSizing: "border-box",
             position: "absolute",

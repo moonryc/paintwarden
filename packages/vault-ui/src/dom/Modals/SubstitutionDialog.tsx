@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { Alert, Autocomplete, Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -71,6 +72,7 @@ function SubstitutionDialogView({
   hasMore?: boolean;
   onLoadMore?: () => void;
 }) {
+  const { t } = useTranslation("components");
   const commands = usePaintCommands();
   const notify = useVaultStore((s) => s.notify);
   const [name, setName] = useState(""),
@@ -86,8 +88,8 @@ function SubstitutionDialogView({
   };
   return (
     <Modal
-      title={`Substitute ${paint.name}`}
-      subtitle="Save multiple alternatives. Only one substitution can be used at a time."
+      title={t("substitutePaint", { name: paint.name })}
+      subtitle={t("saveMultipleAlternativesOnlyOneSubstitutionCanBeUsed")}
       onClose={onClose}
     >
       <Box component="div" sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -129,7 +131,7 @@ function SubstitutionDialogView({
                   color: "var(--ink-faint)",
                 }}
               >
-                Original paint · {paint.brand} {paint.range}
+                {t("originalPaintDetails", { brand: paint.brand, range: paint.range })}
               </Box>
             </Box>
             <Button
@@ -140,10 +142,10 @@ function SubstitutionDialogView({
                 defaultRecipe &&
                 commands
                   .setSubstitutionDefault(defaultRecipe.id, false)
-                  .then(() => notify(`${paint.name} is now the default`), noop)
+                  .then(() => notify(t("defaultSubstitutionChanged", { name: paint.name })), noop)
               }
             >
-              {defaultRecipe ? "Make default" : "Default"}
+              {defaultRecipe ? t("makeDefault") : t("default")}
             </Button>
           </Box>
         </Card>
@@ -169,7 +171,7 @@ function SubstitutionDialogView({
               color: "var(--ink-faint)",
             }}
           >
-            Substitutions
+            {t("substitutions")}
           </Box>
         </Box>
         {error && (
@@ -177,7 +179,7 @@ function SubstitutionDialogView({
             severity="error"
             action={
               <Button color="inherit" onClick={onRetry}>
-                Retry
+                {t("retry")}
               </Button>
             }
           >
@@ -195,25 +197,27 @@ function SubstitutionDialogView({
                   () =>
                     notify(
                       projection.mix.isDefault
-                        ? `${paint.name} is now the default`
-                        : `${projection.mix.name} is now the default`,
+                        ? t("defaultSubstitutionChanged", { name: paint.name })
+                        : t("defaultSubstitutionChanged", { name: projection.mix.name }),
                     ),
                   noop,
                 )
             }
             onDelete={() =>
-              commands.deleteSubstitution(projection.mix.id).then(() => notify("Substitution deleted"), noop)
+              commands
+                .deleteSubstitution(projection.mix.id)
+                .then(() => notify(t("substitutionDeleted")), noop)
             }
           />
         ))}
         {hasMore && (
           <Button onClick={onLoadMore} disabled={loading}>
-            Load more substitutions
+            {t("loadMoreSubstitutions")}
           </Button>
         )}
         {loading && !recipes.length && (
           <Box component="p" role="status">
-            Loading substitutions…
+            {t("loadingSubstitutions")}
           </Box>
         )}
         {!loading && !error && !recipes.length && (
@@ -231,7 +235,7 @@ function SubstitutionDialogView({
               color: "var(--ink-faint)",
             }}
           >
-            No substitutions saved yet.
+            {t("noSubstitutionsSavedYet")}
           </Box>
         )}
       </Box>
@@ -260,15 +264,15 @@ function SubstitutionDialogView({
             color: "var(--ink-faint)",
           }}
         >
-          New substitution
+          {t("newSubstitution")}
         </Box>
         <TextField
           fullWidth
           size="small"
-          label="Recipe name"
+          label={t("recipeName")}
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="e.g. Two-paint mix"
+          placeholder={t("eGTwoPaintMix")}
         />
         <Box component="div" sx={{ display: "flex", gap: 1 }}>
           <IngredientPicker
@@ -279,7 +283,7 @@ function SubstitutionDialogView({
             onQuery={setIngredientQuery}
           />
           <Button variant="outlined" disabled={!choice} onClick={addIngredient}>
-            Add
+            {t("add")}
           </Button>
         </Box>
         {ingredients.map((ingredient, index) => {
@@ -317,7 +321,7 @@ function SubstitutionDialogView({
               <TextField
                 size="small"
                 type="number"
-                label="Parts"
+                label={t("parts")}
                 value={ingredient.parts}
                 onChange={(event) =>
                   setIngredients((rows) =>
@@ -333,7 +337,7 @@ function SubstitutionDialogView({
               <IconButton
                 size="small"
                 onClick={() => setIngredients((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}
-                aria-label={`Remove ${ingredientPaint.name}`}
+                aria-label={t("removeNamedItem", { name: ingredientPaint.name })}
               >
                 <X size={15} />
               </IconButton>
@@ -356,7 +360,7 @@ function SubstitutionDialogView({
               });
               setName("");
               setIngredients([]);
-              notify("Substitution saved");
+              notify(t("substitutionSaved"));
             } catch {
               // The command reports the error. Keep the draft available for retry.
             } finally {
@@ -364,7 +368,7 @@ function SubstitutionDialogView({
             }
           }}
         >
-          Save substitution
+          {t("saveSubstitution")}
         </Button>
       </Box>
     </Modal>
@@ -392,6 +396,7 @@ function IngredientPickerView({
   loading,
   error,
 }: PickerProps & { options: Paint[]; loading?: boolean; error?: string }) {
+  const { t } = useTranslation("components");
   return (
     <Autocomplete
       fullWidth
@@ -408,8 +413,8 @@ function IngredientPickerView({
       renderInput={(params) => (
         <TextField
           {...params}
-          label="Ingredient paint"
-          placeholder="Search by paint, brand, or range…"
+          label={t("ingredientPaint")}
+          placeholder={t("searchByPaintBrandOrRange")}
           error={!!error}
           helperText={error}
         />

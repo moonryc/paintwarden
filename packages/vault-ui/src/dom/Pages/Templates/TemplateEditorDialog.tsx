@@ -1,6 +1,7 @@
 import { Alert, Autocomplete, Button, CircularProgress, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
 import { usePaintOptions } from "../../graphql/detail-hooks";
@@ -29,6 +30,7 @@ export function TemplateEditorDialog(props: EditorProps) {
 }
 
 function SelectedTemplateEditor(props: EditorProps) {
+  const { t } = useTranslation("pages");
   const recipe = useTemplateRecipe(props.template?.id ?? null);
   // A clicked card may still be from the previous accepted list window. Never
   // initialize editable metadata from those stale props after a successful save.
@@ -66,13 +68,13 @@ function SelectedTemplateEditor(props: EditorProps) {
   };
   if (props.template && !initial) {
     return (
-      <Modal title="Edit template" subtitle="Load this reusable miniature setup." onClose={props.onClose}>
+      <Modal title={t("templatesEditTemplate")} subtitle={t("templatesLoadSetup")} onClose={props.onClose}>
         {readError ? (
           <ReadError error={readError} retry={retry} />
         ) : summary.data && !currentTemplate && !summary.loading ? (
-          <Alert severity="error">This template is no longer available.</Alert>
+          <Alert severity="error">{t("templatesUnavailable")}</Alert>
         ) : (
-          <CircularProgress size={24} aria-label="Loading template recipe" />
+          <CircularProgress size={24} aria-label={t("templatesLoadingRecipe")} />
         )}
       </Modal>
     );
@@ -89,8 +91,9 @@ function SelectedTemplateEditor(props: EditorProps) {
 }
 
 function ReadError({ error, retry }: { error: Error; retry: () => unknown }) {
+  const { t } = useTranslation("pages");
   return (
-    <Alert severity="error" action={<Button onClick={() => void retry()}>Retry</Button>}>
+    <Alert severity="error" action={<Button onClick={() => void retry()}>{t("templatesRetry")}</Button>}>
       {error.message}
     </Alert>
   );
@@ -104,6 +107,7 @@ function TemplateEditorFields({
   recipeError,
   retryRecipe,
 }: EditorProps & { recipe?: EditorRecipe; recipeError: Error | null; retryRecipe: () => unknown }) {
+  const { t, i18n } = useTranslation("pages");
   const actions = useTemplateActions();
   const [name, setName] = useState(() => template?.name ?? "");
   const [manufacturer, setManufacturer] = useState(() => template?.manufacturer ?? "");
@@ -185,12 +189,8 @@ function TemplateEditorFields({
   };
   return (
     <Modal
-      title={template ? "Edit template" : "New template"}
-      subtitle={
-        template
-          ? "Update this reusable miniature setup."
-          : "Start from a miniature or build a reusable setup."
-      }
+      title={template ? t("templatesEditTemplate") : t("templatesNewTemplate")}
+      subtitle={template ? t("templatesUpdateSetup") : t("templatesStartSetup")}
       onClose={onClose}
     >
       <Box
@@ -215,33 +215,47 @@ function TemplateEditorFields({
                 {source.error ? (
                   <ReadError error={source.error} retry={source.refetch} />
                 ) : !source.data || source.isStale ? (
-                  <CircularProgress size={24} aria-label="Loading source miniature recipe" />
+                  <CircularProgress size={24} aria-label={t("templatesLoadingSourceRecipe")} />
                 ) : !source.data.miniature ? (
-                  <Alert severity="error">
-                    This miniature is no longer available. Choose another miniature.
-                  </Alert>
+                  <Alert severity="error">{t("templatesSourceUnavailable")}</Alert>
                 ) : (
                   <Alert severity="info">
-                    Copies {source.data.schemeIds.length} schemes and {source.data.paints.length} paint steps
-                    from this miniature when saved.
+                    {t("templatesCopyRecipe", {
+                      schemes: t("templatesSchemeCount", {
+                        count: source.data.schemeIds.length,
+                        formattedCount: new Intl.NumberFormat(i18n.language).format(
+                          source.data.schemeIds.length,
+                        ),
+                      }),
+                      paints: t("templatesPaintStepCount", { count: source.data.paints.length }),
+                    })}
                   </Alert>
                 )}
               </>
             )}
           </>
         )}
-        <TextField required label="Name" value={name} onChange={(event) => setName(event.target.value)} />
         <TextField
-          label="Manufacturer"
+          required
+          label={t("templatesName")}
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+        />
+        <TextField
+          label={t("templatesManufacturer")}
           value={manufacturer}
           onChange={(event) => setManufacturer(event.target.value)}
         />
-        <TextField label="Faction" value={faction} onChange={(event) => setFaction(event.target.value)} />
         <TextField
-          label="Image URL"
+          label={t("templatesFaction")}
+          value={faction}
+          onChange={(event) => setFaction(event.target.value)}
+        />
+        <TextField
+          label={t("templatesImageUrl")}
           value={imageUrl}
           onChange={(event) => setImageUrl(event.target.value)}
-          helperText="Optional direct image URL"
+          helperText={t("templatesImageUrlHelp")}
         />
         {!sourceMiniatureId && (
           <>
@@ -261,12 +275,12 @@ function TemplateEditorFields({
                       entries.map((row, i) => (i === index ? { ...row, notes: event.target.value } : row)),
                     )
                   }
-                  placeholder="Notes (optional)"
+                  placeholder={t("templatesNotesPlaceholder")}
                 />
                 <TextField
                   select
                   size="small"
-                  label="Step"
+                  label={t("templatesStep")}
                   value={entry.step}
                   onChange={(event) =>
                     setPaintEntries((entries) =>
@@ -283,7 +297,30 @@ function TemplateEditorFields({
                           (row, i) => i !== index && row.paintId === entry.paintId && row.step === step,
                         )}
                       >
-                        {step[0] + step.slice(1).toLowerCase()}
+                        {t(
+                          (
+                            {
+                              PRIMER: "templatesStepPrimer",
+                              BASECOAT: "templatesStepBasecoat",
+                              SHADE: "templatesStepShade",
+                              LAYER: "templatesStepLayer",
+                              HIGHLIGHT: "templatesStepHighlight",
+                              DETAIL: "templatesStepDetail",
+                              BASING: "templatesStepBasing",
+                              OTHER: "templatesStepOther",
+                            } as const
+                          )[
+                            step as
+                              | "PRIMER"
+                              | "BASECOAT"
+                              | "SHADE"
+                              | "LAYER"
+                              | "HIGHLIGHT"
+                              | "DETAIL"
+                              | "BASING"
+                              | "OTHER"
+                          ],
+                        )}
                       </MenuItem>
                     ),
                   )}
@@ -297,7 +334,7 @@ function TemplateEditorFields({
             severity="error"
             action={
               <Button disabled={busy} onClick={() => void save()}>
-                Retry
+                {t("templatesRetry")}
               </Button>
             }
           >
@@ -306,10 +343,10 @@ function TemplateEditorFields({
         )}
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, pt: 1 }}>
           <Button type="button" onClick={onClose}>
-            Cancel
+            {t("templatesCancel")}
           </Button>
           <Button type="submit" variant="contained" disabled={!name.trim() || busy || !sourceReady}>
-            Save template
+            {t("templatesSaveTemplate")}
           </Button>
         </Box>
       </Box>
@@ -318,6 +355,7 @@ function TemplateEditorFields({
 }
 
 function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void }) {
+  const { t } = useTranslation("pages");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SchemeChoice | null>(null);
   const miniatures = useMiniatureList({
@@ -329,6 +367,11 @@ function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void })
   return (
     <>
       <Autocomplete
+        noOptionsText={t("templatesNoOptions")}
+        loadingText={t("templatesLoadingOptions")}
+        clearText={t("templatesClear")}
+        openText={t("templatesOpen")}
+        closeText={t("templatesClose")}
         options={miniatures.rows.map(({ mini }) => ({ id: mini.id, name: mini.title }))}
         value={selected}
         loading={miniatures.loading || miniatures.refreshing}
@@ -345,8 +388,8 @@ function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void })
         renderInput={(params) => (
           <TextField
             {...params}
-            label="Start from miniature"
-            helperText="Search miniatures, or leave empty to start from scratch."
+            label={t("templatesStartFromMiniature")}
+            helperText={t("templatesStartFromMiniatureHelp")}
           />
         )}
       />
@@ -358,13 +401,13 @@ function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void })
             onSelect("");
           }}
         >
-          Start from scratch
+          {t("templatesStartFromScratch")}
         </Button>
       )}
       {miniatures.error && <ReadError error={new Error(miniatures.error)} retry={miniatures.retry} />}
       {miniatures.hasNextPage && (
         <Button disabled={miniatures.loading || miniatures.refreshing} onClick={miniatures.loadMore}>
-          Load more miniatures
+          {t("templatesLoadMoreMiniatures")}
         </Button>
       )}
     </>
@@ -378,11 +421,17 @@ function TemplateSchemePicker({
   selected: SchemeChoice[];
   onChange: (items: SchemeChoice[]) => void;
 }) {
+  const { t } = useTranslation("pages");
   const [search, setSearch] = useState("");
   const schemes = useSchemeOptions(search);
   return (
     <>
       <Autocomplete
+        noOptionsText={t("templatesNoOptions")}
+        loadingText={t("templatesLoadingOptions")}
+        clearText={t("templatesClear")}
+        openText={t("templatesOpen")}
+        closeText={t("templatesClose")}
         multiple
         filterSelectedOptions
         options={schemes.items}
@@ -395,12 +444,12 @@ function TemplateSchemePicker({
           if (reason === "input" || reason === "clear") setSearch(value);
         }}
         onChange={(_, items) => onChange(items)}
-        renderInput={(params) => <TextField {...params} label="Schemes" />}
+        renderInput={(params) => <TextField {...params} label={t("templatesSchemes")} />}
       />
       {schemes.error && <ReadError error={schemes.error} retry={schemes.refetch} />}
       {schemes.hasNextPage && (
         <Button disabled={schemes.loading} onClick={schemes.loadMore}>
-          Load more schemes
+          {t("templatesLoadMoreSchemes")}
         </Button>
       )}
     </>
@@ -423,6 +472,7 @@ function TemplatePaintOptions({
   onChange: (items: PaintChoice[]) => void;
   retry: () => void;
 }) {
+  const { t } = useTranslation("pages");
   const [search, setSearch] = useState("");
   const paints = usePaintOptions(
     search,
@@ -431,6 +481,11 @@ function TemplatePaintOptions({
   return (
     <>
       <Autocomplete
+        noOptionsText={t("templatesNoOptions")}
+        loadingText={t("templatesLoadingOptions")}
+        clearText={t("templatesClear")}
+        openText={t("templatesOpen")}
+        closeText={t("templatesClose")}
         multiple
         filterSelectedOptions
         options={paints.items}
@@ -444,7 +499,11 @@ function TemplatePaintOptions({
         }}
         onChange={(_, items) => onChange(items)}
         renderInput={(params) => (
-          <TextField {...params} label="Required paints" helperText="Search paint, brand, or range." />
+          <TextField
+            {...params}
+            label={t("templatesRequiredPaints")}
+            helperText={t("templatesSearchPaintHelp")}
+          />
         )}
       />
       {paints.error && <ReadError error={paints.error} retry={retry} />}

@@ -16,6 +16,7 @@ const source = {
   attribution: "Example authors",
   dependencies: [],
   lastError: null,
+  lastErrorInfo: null,
   logoUrl: null,
   counts: { paints: 12, schemes: 2, templates: 1 },
 };

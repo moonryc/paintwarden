@@ -1,9 +1,10 @@
 ---
+import { siteT as t } from "../site/i18n";
 import SiteLayout from "../layouts/SiteLayout.astro";
 ---
 
 <SiteLayout
   page="home"
-  title="Paint Vault — your miniature painting studio"
-  description="Paint Vault keeps your miniature paints, projects, recipes, and wishlists together, on your desktop or your own server."
+  title={t("meta.homeTitle")}
+  description={t("meta.homeDescription")}
 />
