@@ -6,7 +6,16 @@ import { getSqlite } from "../db/index.ts";
 import { PasswordCheckBusyError, hashPassword, needsRehash, verifyPassword } from "./password-hash.ts";
 import { isPublicAddress } from "./public-fetch.ts";
 
-type Account = { username: string; password_hash: string; require_sign_in: number };
+type Account = {
+  username: string;
+  password_hash: string;
+  require_sign_in: number;
+  credential_generation: number;
+};
+type PasswordOperations = {
+  hashPassword: typeof hashPassword;
+  verifyPassword: typeof verifyPassword;
+};
 const lifetime = 30 * 24 * 60 * 60 * 1000;
 
 // The server sets this header itself on every request, replacing anything the client sent.
@@ -122,7 +131,9 @@ export function pendingSetupCode() {
 
 function account(): Account | undefined {
   return getSqlite()
-    .prepare("SELECT username, password_hash, require_sign_in FROM vault_account WHERE id = 1")
+    .prepare(
+      "SELECT username, password_hash, require_sign_in, credential_generation FROM vault_account WHERE id = 1",
+    )
     .get() as Account | undefined;
 }
 function digest(token: string) {
@@ -141,15 +152,19 @@ export function authenticated(request: Request) {
       .get(digest(token), Date.now()),
   );
 }
-function issueSession() {
+// Called inside the same synchronous transaction as any credential write. The insert itself
+// checks the generation too, so no session can be issued for an older async password check.
+function issueSession(generation: number) {
   const token = randomBytes(32).toString("hex");
   const sqlite = getSqlite(),
     now = Date.now();
   sqlite.prepare("DELETE FROM vault_sessions WHERE expires_at <= ?").run(now);
-  sqlite
-    .prepare("INSERT INTO vault_sessions (token_hash, expires_at) VALUES (?, ?)")
-    .run(digest(token), now + lifetime);
-  return token;
+  const inserted = sqlite
+    .prepare(
+      "INSERT INTO vault_sessions (token_hash, expires_at) SELECT ?, ? FROM vault_account WHERE id = 1 AND credential_generation = ?",
+    )
+    .run(digest(token), now + lifetime, generation);
+  return inserted.changes ? token : null;
 }
 function sessionResponse(token: string, request: Request) {
   const response = Response.json({ ok: true, token });
@@ -187,24 +202,26 @@ export function sameOrigin(request: Request) {
   const origin = request.headers.get("origin");
   return !origin || origin === new URL(request.url).origin;
 }
-// Sign-in is the only time the plain password is known, so an outdated hash is replaced then.
-async function upgradeHash(password: string, stored: string) {
-  if (needsRehash(stored))
-    getSqlite()
-      .prepare("UPDATE vault_account SET password_hash = ?, updated_at = ? WHERE id = 1")
-      .run(await hashPassword(password), Date.now());
+// A factory lets regression tests pause hashing without changing the live handler or its
+// password-work limits. Production always uses the real password operations below.
+export function createAuthAction(passwords: PasswordOperations = { hashPassword, verifyPassword }) {
+  return async (request: Request, path: string): Promise<Response> => {
+    try {
+      return await runAuthAction(request, path, passwords);
+    } catch (caught) {
+      if (caught instanceof PasswordCheckBusyError)
+        return error("The server is busy checking passwords. Try again in a moment", 503);
+      throw caught;
+    }
+  };
 }
-export async function authAction(request: Request, path: string): Promise<Response> {
-  try {
-    return await runAuthAction(request, path);
-  } catch (caught) {
-    if (caught instanceof PasswordCheckBusyError)
-      return error("The server is busy checking passwords. Try again in a moment", 503);
-    throw caught;
-  }
-}
+export const authAction = createAuthAction();
 
-async function runAuthAction(request: Request, path: string): Promise<Response> {
+async function runAuthAction(
+  request: Request,
+  path: string,
+  { hashPassword, verifyPassword }: PasswordOperations,
+): Promise<Response> {
   if (!sameOrigin(request)) return error("Invalid origin", 403);
   let body: Record<string, unknown>;
   try {
@@ -221,15 +238,19 @@ async function runAuthAction(request: Request, path: string): Promise<Response> 
     if (username.length < 2 || username.length > 64 || password.length < 12 || password.length > 1024)
       return error("Use a username of 2–64 characters and a password of at least 12 characters", 400);
     try {
-      getSqlite()
-        .prepare(
-          "INSERT INTO vault_account (id, username, password_hash, require_sign_in) VALUES (1, ?, ?, 1)",
-        )
-        .run(username, await hashPassword(password));
+      const passwordHash = await hashPassword(password);
+      const token = getSqlite().transaction(() => {
+        getSqlite()
+          .prepare(
+            "INSERT INTO vault_account (id, username, password_hash, require_sign_in) VALUES (1, ?, ?, 1)",
+          )
+          .run(username, passwordHash);
+        return issueSession(0)!;
+      })();
+      return sessionResponse(token, request);
     } catch {
       return error("Account already set up", 409);
     }
-    return sessionResponse(issueSession(), request);
   }
   const owner = account();
   if (!owner) return error("Account setup required", 428);
@@ -238,8 +259,19 @@ async function runAuthAction(request: Request, path: string): Promise<Response> 
     if (username !== owner.username || !(await verifyPassword(password, owner.password_hash)))
       return error("Invalid username or password", 401);
     attempts.delete(client);
-    await upgradeHash(password, owner.password_hash);
-    return sessionResponse(issueSession(), request);
+    // Compute outside the transaction, then compare-and-swap only the exact verified hash.
+    // Another login's rehash may win; that is fine while the password generation is unchanged.
+    const upgraded = needsRehash(owner.password_hash) ? await hashPassword(password) : null;
+    const token = getSqlite().transaction(() => {
+      if (upgraded)
+        getSqlite()
+          .prepare(
+            "UPDATE vault_account SET password_hash = ?, updated_at = ? WHERE id = 1 AND credential_generation = ? AND password_hash = ?",
+          )
+          .run(upgraded, Date.now(), owner.credential_generation, owner.password_hash);
+      return issueSession(owner.credential_generation);
+    })();
+    return token ? sessionResponse(token, request) : error("Invalid username or password", 401);
   }
   if (path === "auth/logout") {
     if (!authenticated(request)) return error("Sign in required", 401);
@@ -267,13 +299,18 @@ async function runAuthAction(request: Request, path: string): Promise<Response> 
         return error("Current password is incorrect", 400);
       attempts.delete(client);
     }
-    getSqlite()
-      .prepare("UPDATE vault_account SET require_sign_in = ?, updated_at = ? WHERE id = 1")
-      .run(body.requireSignIn ? 1 : 0, Date.now());
-    // Turning sign-in on without a session would otherwise send the owner straight to sign-in.
-    return body.requireSignIn && !hasSession
-      ? sessionResponse(issueSession(), request)
-      : Response.json({ ok: true });
+    const result = getSqlite().transaction(() => {
+      const updated = getSqlite()
+        .prepare(
+          "UPDATE vault_account SET require_sign_in = ?, updated_at = ? WHERE id = 1 AND credential_generation = ?",
+        )
+        .run(body.requireSignIn ? 1 : 0, Date.now(), owner.credential_generation);
+      if (!updated.changes) return null;
+      // Turning sign-in on without a session would otherwise send the owner straight to sign-in.
+      return { token: body.requireSignIn && !hasSession ? issueSession(owner.credential_generation) : null };
+    })();
+    if (!result) return error("Current password is incorrect", 400);
+    return result.token ? sessionResponse(result.token, request) : Response.json({ ok: true });
   }
   if (path === "auth/password") {
     if (!beginAttempt(client)) return error("Too many password attempts. Try again later", 429);
@@ -284,13 +321,18 @@ async function runAuthAction(request: Request, path: string): Promise<Response> 
     if (next.length < 12 || next.length > 1024)
       return error("Use at least 12 characters for the new password", 400);
     const nextHash = await hashPassword(next);
-    getSqlite().transaction(() => {
-      getSqlite()
-        .prepare("UPDATE vault_account SET password_hash = ?, updated_at = ? WHERE id = 1")
-        .run(nextHash, Date.now());
+    const token = getSqlite().transaction(() => {
+      const updated = getSqlite()
+        .prepare(
+          "UPDATE vault_account SET password_hash = ?, credential_generation = credential_generation + 1, updated_at = ? WHERE id = 1 AND credential_generation = ?",
+        )
+        .run(nextHash, Date.now(), owner.credential_generation);
+      if (!updated.changes) return null;
+      // Preserve the existing UX: revoke every old token and return a fresh current session.
       getSqlite().prepare("DELETE FROM vault_sessions").run();
+      return issueSession(owner.credential_generation + 1);
     })();
-    return sessionResponse(issueSession(), request);
+    return token ? sessionResponse(token, request) : error("Current password is incorrect", 400);
   }
   // Renaming the owner keeps existing sessions; only the name used to sign in changes.
   if (path === "auth/username") {
@@ -300,9 +342,12 @@ async function runAuthAction(request: Request, path: string): Promise<Response> 
       return error("Current password is incorrect", 400);
     attempts.delete(client);
     if (next.length < 2 || next.length > 64) return error("Use a username of 2–64 characters", 400);
-    getSqlite()
-      .prepare("UPDATE vault_account SET username = ?, updated_at = ? WHERE id = 1")
-      .run(next, Date.now());
+    const updated = getSqlite()
+      .prepare(
+        "UPDATE vault_account SET username = ?, updated_at = ? WHERE id = 1 AND credential_generation = ?",
+      )
+      .run(next, Date.now(), owner.credential_generation);
+    if (!updated.changes) return error("Current password is incorrect", 400);
     return Response.json({ ok: true, username: next }, { headers: { "cache-control": "no-store" } });
   }
   return error("Not found", 404);

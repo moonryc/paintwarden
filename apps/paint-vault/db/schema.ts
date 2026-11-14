@@ -95,6 +95,8 @@ export const vaultAccount = vaultTable(
     id: integer("id").primaryKey(),
     username: text("username").notNull(),
     passwordHash: text("password_hash").notNull(),
+    // Password changes advance this; a hash-only upgrade preserves the credential.
+    credentialGeneration: integer("credential_generation").notNull().default(0),
     requireSignIn: integer("require_sign_in", { mode: "boolean" }).notNull().default(true),
     updatedAt: updatedAt(),
   },

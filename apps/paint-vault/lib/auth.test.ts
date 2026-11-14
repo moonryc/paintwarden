@@ -1,11 +1,15 @@
 import assert from "node:assert/strict";
 import { scryptSync } from "node:crypto";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-test("setup, access control, sign-in, and password changes", async () => {
+import Database from "better-sqlite3";
+
+import { migrateVault } from "../db/migrate.ts";
+
+test("setup, access control, sign-in, and password changes", async (t) => {
   const directory = mkdtempSync(path.join(tmpdir(), "paint-vault-auth-"));
   process.env.DATA_DIR = directory;
   process.env.DATABASE_PATH = path.join(directory, "vault.sqlite");
@@ -132,6 +136,11 @@ test("setup, access control, sign-in, and password changes", async () => {
       "auth/password",
     );
     assert.equal(changed.status, 200);
+    const changedToken = (await changed.json()).token as string;
+    const { authenticated } = await import("./auth.ts");
+    assert.equal(authenticated(post("auth/status", {}, token)), false);
+    assert.equal(authenticated(post("auth/status", {}, (await login.json()).token as string)), false);
+    assert.equal(authenticated(post("auth/status", {}, changedToken)), true);
     assert.equal(
       (
         await authAction(
@@ -213,7 +222,285 @@ test("setup, access control, sign-in, and password changes", async () => {
     assert.equal(clientAddress("2606:4700:0001:0002:aaaa:bbbb:cccc:dddd", undefined), network);
     assert.equal(clientAddress("172.18.0.2", "2606:4700:1:2::9", true), network);
     assert.equal(clientAddress("2606:4700::1", undefined), "2606:4700:0:0::/64");
+
+    const { createAuthAction } = await import("./auth.ts");
+    const passwords = await import("./password-hash.ts");
+    const sqlite = getSqlite();
+    const oldPassword = "old regression password";
+    const newPassword = "new regression password";
+    const currentHash = await passwords.hashPassword(oldPassword);
+    const legacyHash = `${salt}:${scryptSync(oldPassword, salt, 64).toString("hex")}`;
+    const generation = () =>
+      sqlite.prepare("SELECT credential_generation FROM vault_account WHERE id = 1").pluck().get();
+    const sessionCount = () => sqlite.prepare("SELECT count(*) FROM vault_sessions").pluck().get();
+    // Each case starts with a distinct generation; all credential changes in production are CAS.
+    const reset = (hash = currentHash) => {
+      sqlite.prepare("DELETE FROM vault_sessions").run();
+      sqlite
+        .prepare(
+          "UPDATE vault_account SET username = 'painter', password_hash = ?, require_sign_in = 1, credential_generation = credential_generation + 1 WHERE id = 1",
+        )
+        .run(hash);
+    };
+    const loginRequest = () => post("auth/login", { username: "painter", password: oldPassword });
+    const changePassword = () =>
+      authAction(post("auth/password", { password: oldPassword, newPassword }), "auth/password");
+    const assertChanged = async () => {
+      assert.equal(await passwords.verifyPassword(newPassword, storedHash()), true);
+      assert.equal(await passwords.verifyPassword(oldPassword, storedHash()), false);
+    };
+
+    await t.test("an old-password login cannot issue a session after a password change", async () => {
+      reset();
+      const before = generation();
+      const pause = controlledPause();
+      const action = createAuthAction({
+        ...passwords,
+        verifyPassword: async (...args) => {
+          const verified = await passwords.verifyPassword(...args);
+          await pause.wait();
+          return verified;
+        },
+      });
+      const pending = action(loginRequest(), "auth/login");
+      await pause.entered;
+      try {
+        const changed = await changePassword();
+        assert.equal(changed.status, 200);
+        assert.equal(generation(), Number(before) + 1);
+        assert.equal(authenticated(post("auth/status", {}, (await changed.json()).token as string)), true);
+      } finally {
+        pause.release();
+      }
+      const stale = await pending;
+      assert.equal(stale.status, 401);
+      assert.deepEqual(await stale.json(), { error: "Invalid username or password" });
+      assert.equal(stale.headers.get("set-cookie"), null);
+      assert.equal(stale.headers.get("cache-control"), "no-store");
+      assert.equal(sessionCount(), 1);
+      await assertChanged();
+    });
+
+    await t.test("a delayed legacy rehash cannot replace a changed password or issue a session", async () => {
+      reset(legacyHash);
+      const pause = controlledPause();
+      const action = createAuthAction({
+        ...passwords,
+        hashPassword: async (...args) => {
+          const upgraded = await passwords.hashPassword(...args);
+          await pause.wait();
+          return upgraded;
+        },
+      });
+      const pending = action(loginRequest(), "auth/login");
+      await pause.entered;
+      try {
+        assert.equal((await changePassword()).status, 200);
+      } finally {
+        pause.release();
+      }
+      assert.equal((await pending).status, 401);
+      assert.equal(sessionCount(), 1);
+      await assertChanged();
+    });
+
+    await t.test(
+      "concurrent legacy logins rehash by exact-hash CAS without changing generation",
+      async () => {
+        reset(legacyHash);
+        const before = generation();
+        const pause = controlledPause();
+        const action = createAuthAction({
+          ...passwords,
+          hashPassword: async (...args) => {
+            const upgraded = await passwords.hashPassword(...args);
+            await pause.wait();
+            return upgraded;
+          },
+        });
+        const pending = action(loginRequest(), "auth/login");
+        await pause.entered;
+        let winnerHash: string;
+        try {
+          assert.equal((await authAction(loginRequest(), "auth/login")).status, 200);
+          winnerHash = storedHash();
+          assert.notEqual(winnerHash, legacyHash);
+        } finally {
+          pause.release();
+        }
+        assert.equal((await pending).status, 200);
+        assert.equal(storedHash(), winnerHash!);
+        assert.equal(generation(), before);
+        assert.equal(sessionCount(), 2);
+        assert.equal(await passwords.verifyPassword(oldPassword, storedHash()), true);
+      },
+    );
+
+    await t.test(
+      "a stale competing password change cannot overwrite the winner or revoke its session",
+      async () => {
+        reset();
+        const pause = controlledPause();
+        const action = createAuthAction({
+          ...passwords,
+          hashPassword: async (...args) => {
+            const hash = await passwords.hashPassword(...args);
+            await pause.wait();
+            return hash;
+          },
+        });
+        const pending = action(
+          post("auth/password", { password: oldPassword, newPassword: "stale different password" }),
+          "auth/password",
+        );
+        await pause.entered;
+        let winnerToken: string;
+        try {
+          const changed = await changePassword();
+          assert.equal(changed.status, 200);
+          winnerToken = (await changed.json()).token;
+        } finally {
+          pause.release();
+        }
+        const stale = await pending;
+        assert.equal(stale.status, 400);
+        assert.deepEqual(await stale.json(), { error: "Current password is incorrect" });
+        assert.equal(authenticated(post("auth/status", {}, winnerToken!)), true);
+        assert.equal(sessionCount(), 1);
+        await assertChanged();
+      },
+    );
+
+    for (const route of ["auth/settings", "auth/username"]) {
+      await t.test(`a stale password check cannot commit ${route}`, async () => {
+        reset();
+        const pause = controlledPause();
+        const action = createAuthAction({
+          ...passwords,
+          verifyPassword: async (...args) => {
+            const verified = await passwords.verifyPassword(...args);
+            await pause.wait();
+            return verified;
+          },
+        });
+        const pending = action(
+          post(route, { password: oldPassword, requireSignIn: false, newUsername: "stale-name" }),
+          route,
+        );
+        await pause.entered;
+        try {
+          assert.equal((await changePassword()).status, 200);
+        } finally {
+          pause.release();
+        }
+        const stale = await pending;
+        assert.equal(stale.status, 400);
+        assert.deepEqual(await stale.json(), { error: "Current password is incorrect" });
+        assert.equal(sessionCount(), 1);
+        assert.equal((await authStatus(new Request(url)).json()).requireSignIn, true);
+        assert.equal((await authStatus(new Request(url)).json()).username, "painter");
+      });
+    }
+
+    await t.test(
+      "password-authenticated settings issue a session only for the checked generation",
+      async () => {
+        reset();
+        sqlite.prepare("UPDATE vault_account SET require_sign_in = 0 WHERE id = 1").run();
+        const pause = controlledPause();
+        const action = createAuthAction({
+          ...passwords,
+          verifyPassword: async (...args) => {
+            const verified = await passwords.verifyPassword(...args);
+            await pause.wait();
+            return verified;
+          },
+        });
+        const pending = action(
+          post("auth/settings", { password: oldPassword, requireSignIn: true }),
+          "auth/settings",
+        );
+        await pause.entered;
+        try {
+          assert.equal((await changePassword()).status, 200);
+        } finally {
+          pause.release();
+        }
+        assert.equal((await pending).status, 400);
+        assert.equal(sessionCount(), 1);
+        assert.equal((await authStatus(new Request(url)).json()).requireSignIn, false);
+      },
+    );
   } finally {
     rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+// Pause exactly at a completed password operation, never by wall-clock timing.
+function controlledPause() {
+  let enter!: () => void;
+  let release!: () => void;
+  const entered = new Promise<void>((resolve) => {
+    enter = resolve;
+  });
+  const released = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  return {
+    entered,
+    release,
+    wait: async () => {
+      enter();
+      await released;
+    },
+  };
+}
+
+test("the credential generation migration preserves an existing owner and sessions", () => {
+  const folder = mkdtempSync(path.join(tmpdir(), "paint-vault-auth-migration-"));
+  const sqlite = new Database(":memory:");
+  try {
+    const migrations = path.join(process.cwd(), "drizzle");
+    mkdirSync(path.join(folder, "meta"));
+    const journal = JSON.parse(readFileSync(path.join(migrations, "meta/_journal.json"), "utf8")) as {
+      entries: { tag: string }[];
+    };
+    writeFileSync(
+      path.join(folder, "meta/_journal.json"),
+      JSON.stringify({ ...journal, entries: journal.entries.slice(0, 1) }),
+    );
+    writeFileSync(path.join(folder, "0000_init.sql"), readFileSync(path.join(migrations, "0000_init.sql")));
+    migrateVault(sqlite, folder);
+    sqlite
+      .prepare(
+        "INSERT INTO vault_account (id, username, password_hash, require_sign_in, updated_at) VALUES (1, 'painter', 'preserved-hash', 0, 123)",
+      )
+      .run();
+    sqlite
+      .prepare("INSERT INTO vault_sessions (token_hash, expires_at) VALUES ('preserved-token', ?)")
+      .run(Date.now() + 60_000);
+    migrateVault(sqlite, migrations);
+    assert.deepEqual(sqlite.prepare("SELECT * FROM vault_account").get(), {
+      id: 1,
+      username: "painter",
+      password_hash: "preserved-hash",
+      require_sign_in: 0,
+      credential_generation: 0,
+      updated_at: 123,
+    });
+    assert.equal(sqlite.prepare("SELECT token_hash FROM vault_sessions").pluck().get(), "preserved-token");
+    assert.deepEqual(sqlite.pragma("foreign_key_check"), []);
+    assert.equal(sqlite.pragma("foreign_keys", { simple: true }), 1);
+    assert.throws(
+      () => sqlite.prepare("UPDATE vault_account SET credential_generation = 'invalid'").run(),
+      /integers_check/,
+    );
+    // Restart/no-pending migration does not reset an advanced generation.
+    sqlite.prepare("UPDATE vault_account SET credential_generation = 7").run();
+    migrateVault(sqlite, migrations);
+    assert.equal(sqlite.prepare("SELECT credential_generation FROM vault_account").pluck().get(), 7);
+  } finally {
+    sqlite.close();
+    rmSync(folder, { recursive: true, force: true });
   }
 });
