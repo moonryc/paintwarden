@@ -36,9 +36,9 @@ try {
   const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   const result = spawnSync(
     npm,
-    // Omitting optional packages also drops build tools such as esbuild and tsx, which the lockfile
-    // marks as both dev and optional; the server needs neither.
-    ["ci", "--omit=dev", "--omit=optional", "--workspace", "paint-vault", "--no-audit", "--no-fund"],
+    // sharp distributes its platform-native addon/libvips as optional dependencies.
+    // Keep them: npm selects macOS arm64/x64, Windows or Linux for this build host.
+    ["ci", "--omit=dev", "--workspace", "paint-vault", "--no-audit", "--no-fund"],
     { cwd: staging, stdio: "inherit", shell: process.platform === "win32" },
   );
   if (result.status !== 0) throw new Error("Desktop server dependency install failed");
@@ -50,6 +50,17 @@ try {
   await rm(output, { recursive: true, force: true });
   await mkdir(output, { recursive: true });
   await cp(modules, path.join(output, "node_modules"), { recursive: true, verbatimSymlinks: true });
+  // A lockfile can place a server dependency here when another workspace uses a
+  // different version (e.g. Astro's optional sharp). Keep the server's resolution
+  // precedence rather than accidentally resolving a developer checkout's modules.
+  const serverModules = path.join(staging, "apps/paint-vault/node_modules");
+  if (
+    await lstat(serverModules).then(
+      () => true,
+      () => false,
+    )
+  )
+    await cp(serverModules, path.join(output, "node_modules"), { recursive: true, verbatimSymlinks: true });
 } finally {
   await rm(staging, { recursive: true, force: true });
 }
@@ -71,6 +82,15 @@ const sqliteCheck = spawnSync(
   { cwd: output, stdio: "inherit" },
 );
 if (sqliteCheck.status !== 0) throw new Error("Bundled SQLite native binary failed its smoke test");
+const sharpCheck = spawnSync(
+  path.join(output, executable),
+  [
+    "-e",
+    "if(!require.resolve('sharp').startsWith(process.cwd()+require('node:path').sep+'node_modules'))throw Error('sharp resolved outside packaged server');require('sharp')({create:{width:16,height:16,channels:3,background:'#345678'}}).webp().toBuffer().then(b=>{if(b.length<20)process.exit(1)}).catch(e=>{console.error(e);process.exit(1)})",
+  ],
+  { cwd: output, stdio: "inherit" },
+);
+if (sharpCheck.status !== 0) throw new Error("Bundled sharp native binary failed its smoke test");
 await writeFile(
   path.join(output, "README.txt"),
   "Paint Vault local server. Data is stored outside this application folder.\n",

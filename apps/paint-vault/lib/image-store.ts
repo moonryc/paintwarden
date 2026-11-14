@@ -1,5 +1,6 @@
-import { mkdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, open, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { Readable } from "node:stream";
 
 import { eq, or } from "drizzle-orm";
 
@@ -7,6 +8,15 @@ import { getDb } from "../db";
 import { catalogSourceAssets, colorSchemeImages, miniatureTemplates, miniatures } from "../db/schema";
 
 import { serializeImageMutation } from "./image-mutations";
+import {
+  ensureThumbnail,
+  prepareThumbnails,
+  removeThumbnails,
+  ThumbnailBusyError,
+  thumbnailWidths,
+  thumbnailPath,
+  type ThumbnailWidth,
+} from "./image-thumbnails";
 
 const imageDirectory = path.join(process.env.DATA_DIR || path.resolve(process.cwd(), "../../data"), "images");
 
@@ -22,12 +32,42 @@ const contentTypes: Record<string, string> = Object.fromEntries(
   Object.entries(extensions).map(([type, extension]) => [extension, type]),
 );
 
-export const saveImage = serializeImageMutation(async function saveImage(file: File) {
+export const saveImageBytes = serializeImageMutation(async function saveImageBytes(
+  bytes: Uint8Array,
+  contentType: string,
+) {
   await mkdir(imageDirectory, { recursive: true });
-  const extension = extensions[file.type] || "img";
+  const extension = extensions[contentType] || "img";
   const key = `${crypto.randomUUID()}.${extension}`;
-  await writeFile(path.join(imageDirectory, key), Buffer.from(await file.arrayBuffer()));
+  const filename = path.join(imageDirectory, key);
+  await writeFile(filename, bytes);
+  await prepareThumbnails(filename);
   return key;
+});
+
+export const saveImage = (file: File) =>
+  file.arrayBuffer().then((bytes) => saveImageBytes(new Uint8Array(bytes), file.type));
+
+// Filesystem copy avoids loading a source photo into JS, wrapping it in a File, and
+// reading it again. A fresh key preserves independent ownership/deletion semantics.
+export const copyImage = serializeImageMutation(async function copyImage(key: string) {
+  if (!isImageKey(key)) return null;
+  const source = path.join(imageDirectory, key);
+  const copiedKey = `${crypto.randomUUID()}${path.extname(key)}`;
+  const destination = path.join(imageDirectory, copiedKey);
+  try {
+    await copyFile(source, destination);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+  await Promise.all(
+    thumbnailWidths.map((width) =>
+      copyFile(thumbnailPath(source, width), thumbnailPath(destination, width)).catch(() => undefined),
+    ),
+  );
+  await prepareThumbnails(destination);
+  return copiedKey;
 });
 
 // Image keys are generated file names: a lowercase UUID plus an image extension. The database
@@ -47,7 +87,10 @@ export async function imageExists(key: string) {
 export const writeImage = serializeImageMutation(async function writeImage(key: string, bytes: Uint8Array) {
   if (!isImageKey(key)) return false;
   await mkdir(imageDirectory, { recursive: true });
-  await writeFile(path.join(imageDirectory, key), bytes);
+  const filename = path.join(imageDirectory, key);
+  await removeThumbnails(filename);
+  await writeFile(filename, bytes);
+  // Restored originals regenerate lazily. Backups never include derivatives.
   return true;
 });
 
@@ -61,6 +104,50 @@ export async function loadImage(key: string) {
     };
   } catch {
     return null;
+  }
+}
+
+// Routes stream the open file instead of buffering it then copying it into Response.
+// Width is a closed enum: arbitrary query values must never allocate arbitrary variants.
+export async function imageResponse(key: string, request?: Request, cacheControl?: string) {
+  if (!isImageKey(key)) return new Response("Not found", { status: 404 });
+  const requested = request ? new URL(request.url).searchParams.get("w") : null;
+  if (requested !== null && !thumbnailWidths.some((width) => String(width) === requested))
+    return new Response("Invalid image width", { status: 400 });
+  const original = path.join(imageDirectory, key);
+  let filename = original;
+  if (requested !== null) {
+    try {
+      filename = await ensureThumbnail(original, Number(requested) as ThumbnailWidth);
+    } catch (error) {
+      if (error instanceof ThumbnailBusyError)
+        return new Response("Thumbnail busy", { status: 503, headers: { "retry-after": "1" } });
+      if (!(await imageExists(key))) return new Response("Not found", { status: 404 });
+      return new Response("Unsupported image", { status: 415 });
+    }
+  }
+  try {
+    const handle = await open(filename, "r");
+    try {
+      const info = await handle.stat();
+      const stream = handle.createReadStream({ signal: request?.signal });
+      return new Response(Readable.toWeb(stream) as ReadableStream<Uint8Array>, {
+        headers: {
+          "content-type":
+            requested === null
+              ? contentTypes[path.extname(key).slice(1)] || "application/octet-stream"
+              : "image/webp",
+          "content-length": String(info.size),
+          "cache-control": cacheControl ?? imageCacheControl(request, key),
+          "x-content-type-options": "nosniff",
+        },
+      });
+    } catch (error) {
+      await handle.close();
+      throw error;
+    }
+  } catch {
+    return new Response("Not found", { status: 404 });
   }
 }
 
@@ -126,7 +213,9 @@ async function unlinkUnusedImage(key: string) {
     putOff.add(key);
     return;
   }
-  await unlink(path.join(imageDirectory, key)).catch(() => undefined);
+  const original = path.join(imageDirectory, key);
+  await unlink(original).catch(() => undefined);
+  await removeThumbnails(original);
 }
 
 export const deleteImage = serializeImageMutation(async function deleteImage(key: string | null) {

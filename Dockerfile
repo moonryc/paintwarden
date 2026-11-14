@@ -30,6 +30,9 @@ ENV NODE_ENV=production \
 
 RUN mkdir -p /data && chown node:node /data
 COPY --from=production-dependencies --chown=node:node /app/node_modules /app/node_modules
+# Preserve lockfile-nested server dependencies as well as hoisted modules. This
+# stage contains only dependency manifests/modules, not source or user data.
+COPY --from=production-dependencies --chown=node:node /app/apps/paint-vault ./
 COPY --from=builder --chown=node:node /app/apps/paint-vault/dist ./dist
 COPY --from=builder --chown=node:node /app/apps/paint-vault/dist/drizzle ./drizzle
 COPY --from=builder --chown=node:node /app/apps/paint-vault/package.json ./package.json

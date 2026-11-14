@@ -16,6 +16,7 @@ await build({
   external: [
     "@nestjs/*",
     "better-sqlite3",
+    "sharp",
     "drizzle-orm",
     "drizzle-orm/*",
     "express",
