@@ -3,6 +3,8 @@ import path from "node:path";
 
 import type Database from "better-sqlite3";
 
+import { reportStartupProgress, startStartupOperation } from "../lib/startup-progress.ts";
+
 // Before a new release changes an existing vault's schema, the database is copied to
 // `backups/` beside it, so a failed or faulty migration can be undone by restoring that file.
 // Only the most recent copies are kept.
@@ -51,6 +53,7 @@ export function backupBeforeMigrating(
   if (pending?.length === 0 || databasePath === ":memory:" || !hasTables(sqlite)) return null;
   const migrations = pending ?? pendingMigrations(sqlite, migrationsFolder);
   if (!migrations.length) return null;
+  startStartupOperation("backing-up");
   const directory = path.join(path.dirname(databasePath), "backups");
   mkdirSync(directory, { recursive: true });
   const file = path.join(directory, `paint-vault-${timestamp(now)}-before-${migrations[0]}.sqlite`);
@@ -62,5 +65,6 @@ export function backupBeforeMigrating(
     .map((name) => ({ name, modified: statSync(path.join(directory, name)).mtimeMs }))
     .sort((a, b) => b.modified - a.modified || b.name.localeCompare(a.name));
   for (const old of copies.slice(MIGRATION_BACKUPS_KEPT)) rmSync(path.join(directory, old.name));
+  reportStartupProgress({ phase: "backing-up", status: "completed" });
   return file;
 }

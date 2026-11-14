@@ -13,6 +13,7 @@ import { migrationBackupPath } from "../db";
 import { CLIENT_ADDRESS_HEADER, clientAddress, pendingSetupCode, trustProxy } from "../lib/auth";
 import { clearBackupUploads } from "../lib/backup";
 import { compressJsonResponse } from "../lib/http-compression";
+import { reportStartupProgress } from "../lib/startup-progress";
 
 import { routeApi } from "./api-router";
 
@@ -88,7 +89,7 @@ class ApiController {
 @Module({ controllers: [ApiController] })
 class AppModule {}
 
-export async function startServer() {
+async function listenServer() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
   app.set("trust proxy", trustProxy());
   app.disable("x-powered-by");
@@ -109,6 +110,21 @@ export async function startServer() {
   const setupCode = pendingSetupCode();
   if (setupCode) Logger.warn(`Enter this setup code to create the owner account: ${setupCode}`);
   return app;
+}
+
+export async function startServer() {
+  reportStartupProgress({ phase: "starting" });
+  try {
+    const app = await listenServer();
+    reportStartupProgress({ phase: "ready" });
+    return app;
+  } catch (error) {
+    reportStartupProgress({
+      phase: "failed",
+      message: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 if (process.env.NODE_ENV !== "test") {

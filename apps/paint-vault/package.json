@@ -34,7 +34,7 @@
     "dev": "tsx watch server/main.ts",
     "build": "node build.mjs",
     "start": "node dist/server.mjs",
-    "test": "node --import tsx --test db/migration-backup.test.ts db/migrate.test.ts db/schema.test.ts lib/auth.test.ts lib/password-hash.test.ts lib/public-fetch.test.ts lib/request-limits.test.ts lib/catalog-sources.test.ts lib/catalog-source-upload.test.ts lib/demo-plugin.test.ts lib/client-config.test.ts lib/sqlite-read-cache.test.ts lib/http-compression.test.ts lib/source-format.test.ts db/change-log.test.ts lib/zip-writer.test.ts lib/image-mutations.test.ts lib/image-thumbnails.test.ts lib/commands/schemes.test.ts server/api-router.test.ts app/api/backup/route.test.ts app/api/color-schemes/route.test.ts app/api/paint-state/route.test.ts",
+    "test": "node --import tsx --test db/migration-backup.test.ts db/migrate.test.ts db/schema.test.ts lib/auth.test.ts lib/password-hash.test.ts lib/public-fetch.test.ts lib/request-limits.test.ts lib/catalog-sources.test.ts lib/catalog-source-upload.test.ts lib/demo-plugin.test.ts lib/client-config.test.ts lib/sqlite-read-cache.test.ts lib/http-compression.test.ts server/startup-progress.test.ts lib/source-format.test.ts db/change-log.test.ts lib/zip-writer.test.ts lib/image-mutations.test.ts lib/image-thumbnails.test.ts lib/commands/schemes.test.ts server/api-router.test.ts app/api/backup/route.test.ts app/api/color-schemes/route.test.ts app/api/paint-state/route.test.ts",
     "lint": "tsc --noEmit -p tsconfig.json",
     "code-lint": "eslint . --ext .ts",
     "db:generate": "drizzle-kit generate",

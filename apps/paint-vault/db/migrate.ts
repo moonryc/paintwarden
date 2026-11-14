@@ -2,6 +2,8 @@ import type Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
+import { reportStartupProgress, startStartupOperation } from "../lib/startup-progress.ts";
+
 import { pendingMigrations } from "./migration-backup.ts";
 
 type ForeignKeyProblem = { table: string; rowid: number; parent: string };
@@ -18,6 +20,7 @@ export function migrateVault(
 ) {
   // Ordinary startup must not load migration SQL or scan every foreign key in the vault.
   if (!pending.length) return;
+  startStartupOperation("migrating");
   sqlite.pragma("foreign_keys = OFF");
   try {
     migrate(drizzle(sqlite), { migrationsFolder });
@@ -29,6 +32,7 @@ export function migrateVault(
   } finally {
     sqlite.pragma("foreign_keys = ON");
   }
+  reportStartupProgress({ phase: "migrating", status: "completed" });
 }
 
 // Space freed by deleted rows is returned to the file system in steps (see `auto_vacuum` in
