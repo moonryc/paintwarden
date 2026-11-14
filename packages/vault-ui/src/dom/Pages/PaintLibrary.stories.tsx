@@ -214,8 +214,11 @@ function libraryAtWidth(width: number): Story {
           window.scrollTo(0, document.documentElement.scrollHeight);
           await waitFor(() => expect(loaded()).toBeGreaterThan(before));
         }
-        window.scrollTo(0, document.documentElement.scrollHeight);
-        await expect(await canvas.findByText(longCatalog.at(-1)!.name)).toBeVisible();
+        // Loading the last page precedes the virtualizer's height commit.
+        await waitFor(() => {
+          window.scrollTo(0, document.documentElement.scrollHeight);
+          expect(canvas.getByText(longCatalog.at(-1)!.name)).toBeVisible();
+        });
         expect(list.querySelectorAll("[data-paint-index]").length).toBeLessThan(longCatalog.length);
         noOverflow();
       } finally {
