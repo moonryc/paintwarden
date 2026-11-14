@@ -424,5 +424,8 @@
   "supportPrivacy": "자동으로 업로드되는 정보는 없습니다. 이슈에 첨부하기 전에 파일을 검토하세요. 비밀번호, 토큰 또는 기타 비밀 정보를 공유하지 마세요.",
   "supportCancel": "취소",
   "supportConfirm": "파일 저장",
-  "supportSaved": "지원 번들을 저장했습니다."
+  "supportSaved": "지원 번들을 저장했습니다.",
+  "licenseLabel": "라이선스: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "라이선스 읽기",
+  "licenseSummary": "소스 코드 공개. 개인 및 기타 비상업적 용도로 무료로 사용할 수 있습니다. 상업적 사용에는 허가가 필요합니다."
 }

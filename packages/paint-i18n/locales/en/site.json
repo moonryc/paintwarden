@@ -263,5 +263,7 @@
   "meta.docsDescription": "Set up Paint Vault and learn the paint library, workbench, schemes, Paint Tools, wishlist, and backups.",
   "home.macOSAndWindows": "macOS & Windows",
   "home.selfHostedWebApp": "Self-hosted web app",
-  "home.yourDataStaysYours": "Your data stays yours"
+  "home.yourDataStaysYours": "Your data stays yours",
+  "website.license": "License",
+  "website.licenseSummary": "Source-available. Free for personal and other non-commercial use. Commercial use requires permission."
 }

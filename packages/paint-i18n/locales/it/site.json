@@ -263,5 +263,7 @@
   "meta.docsDescription": "Configura Paint Vault e scopri libreria colori, banco da lavoro, schemi di colore, strumenti per i colori, lista dei desideri e backup.",
   "home.macOSAndWindows": "macOS e Windows",
   "home.selfHostedWebApp": "App web sul tuo server",
-  "home.yourDataStaysYours": "I tuoi dati restano tuoi"
+  "home.yourDataStaysYours": "I tuoi dati restano tuoi",
+  "website.license": "Licenza",
+  "website.licenseSummary": "Codice sorgente disponibile. Gratuito per uso personale e altri usi non commerciali. L’uso commerciale richiede un’autorizzazione."
 }

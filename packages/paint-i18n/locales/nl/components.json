@@ -445,5 +445,8 @@
   "supportPrivacy": "Er wordt niets automatisch geüpload. Controleer het bestand voordat je het aan een issue toevoegt. Deel nooit wachtwoorden, tokens of andere geheimen.",
   "supportCancel": "Annuleren",
   "supportConfirm": "Bestand opslaan",
-  "supportSaved": "Ondersteuningspakket opgeslagen."
+  "supportSaved": "Ondersteuningspakket opgeslagen.",
+  "licenseLabel": "Licentie: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "Licentie lezen",
+  "licenseSummary": "Broncode beschikbaar. Gratis voor persoonlijk en ander niet-commercieel gebruik. Commercieel gebruik vereist toestemming."
 }

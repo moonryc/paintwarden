@@ -105,3 +105,36 @@ export const Narrow: Story = {
   ],
 };
 export const Pseudo: Story = { parameters: { locale: "en-XA" } };
+
+export const License: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("License: PolyForm Noncommercial 1.0.0")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Read license" }));
+    const dialog = within(
+      await within(document.body).findByRole("dialog", { name: "License: PolyForm Noncommercial 1.0.0" }),
+    );
+    await expect(dialog.getByText(/Required Notice: Copyright \(c\) 2026 Ryan Moon/)).toHaveTextContent(
+      "## Noncommercial Purposes",
+    );
+    await expect(dialog.getByText(/Required Notice: Copyright \(c\) 2026 Ryan Moon/)).toHaveAttribute(
+      "lang",
+      "en",
+    );
+    await userEvent.keyboard("{Escape}");
+    await expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};
+export const LicenseJapanese: Story = {
+  parameters: { locale: "ja" },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(await within(canvasElement).findByRole("button", { name: "ライセンスを読む" }));
+    const dialog = within(
+      await within(document.body).findByRole("dialog", { name: "ライセンス: PolyForm Noncommercial 1.0.0" }),
+    );
+    await expect(dialog.getByText(/Required Notice: Copyright \(c\) 2026 Ryan Moon/)).toHaveTextContent(
+      "## Noncommercial Purposes",
+    );
+    await userEvent.keyboard("{Escape}");
+  },
+};

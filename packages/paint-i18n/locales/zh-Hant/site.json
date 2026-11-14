@@ -263,5 +263,7 @@
   "meta.docsDescription": "設定 Paint Vault，認識塗料庫、工作檯、配色方案、塗料工具、願望清單與備份功能。",
   "home.macOSAndWindows": "macOS 與 Windows",
   "home.selfHostedWebApp": "自行架設網頁版應用程式",
-  "home.yourDataStaysYours": "您的資料，始終屬於您"
+  "home.yourDataStaysYours": "您的資料，始終屬於您",
+  "website.license": "授權條款",
+  "website.licenseSummary": "原始碼可用。個人及其他非商業用途免費。商業使用需要取得許可。"
 }

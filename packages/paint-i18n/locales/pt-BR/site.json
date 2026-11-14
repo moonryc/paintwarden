@@ -263,5 +263,7 @@
   "meta.docsDescription": "Configure o Paint Vault e conheça a biblioteca de tintas, a bancada, os esquemas de cores, as Ferramentas de pintura, a lista de desejos e os backups.",
   "home.macOSAndWindows": "macOS e Windows",
   "home.selfHostedWebApp": "Aplicativo web em servidor próprio",
-  "home.yourDataStaysYours": "Seus dados continuam seus"
+  "home.yourDataStaysYours": "Seus dados continuam seus",
+  "website.license": "Licença",
+  "website.licenseSummary": "Código-fonte disponível. Gratuito para uso pessoal e outros usos não comerciais. O uso comercial requer permissão."
 }

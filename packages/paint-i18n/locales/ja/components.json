@@ -424,5 +424,8 @@
   "supportPrivacy": "自動でアップロードされることはありません。Issue に添付する前にファイルを確認してください。パスワード、トークンなどの秘密情報は共有しないでください。",
   "supportCancel": "キャンセル",
   "supportConfirm": "ファイルを保存",
-  "supportSaved": "サポートバンドルを保存しました。"
+  "supportSaved": "サポートバンドルを保存しました。",
+  "licenseLabel": "ライセンス: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "ライセンスを読む",
+  "licenseSummary": "ソースコード公開。個人利用およびその他の非商用利用は無料です。商用利用には許可が必要です。"
 }

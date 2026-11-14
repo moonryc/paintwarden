@@ -2,6 +2,8 @@ import { Alert, Box, Button, Card, Stack, Typography } from "@mui/material";
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import licenseText from "../../../../../LICENSE?raw";
+
 import { getSupportSummary, saveSupportBundle, type SupportSummary } from "../utils/support";
 
 import { Modal } from "./Modal";
@@ -27,6 +29,7 @@ export function HelpAbout({
   const headingId = useId();
   const [summary, setSummary] = useState<SupportSummary | null>(null);
   const [failed, setFailed] = useState(false);
+  const [licenseOpen, setLicenseOpen] = useState(false);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -122,6 +125,15 @@ export function HelpAbout({
           </Box>
         )}
         <Stack spacing={2} sx={{ mt: 2 }}>
+          <Typography variant="body2">{t("licenseLabel")}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("licenseSummary")}
+          </Typography>
+          <Box>
+            <Button variant="text" onClick={() => setLicenseOpen(true)}>
+              {t("licenseRead")}
+            </Button>
+          </Box>
           {failed && !preview && <Alert severity="error">{t("supportFailure")}</Alert>}
           {saved && <Alert severity="success">{t("supportSaved")}</Alert>}
           <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1 }}>
@@ -146,6 +158,17 @@ export function HelpAbout({
           </Typography>
         </Stack>
       </Box>
+      {licenseOpen && (
+        <Modal title={t("licenseLabel")} subtitle={t("licenseSummary")} onClose={() => setLicenseOpen(false)}>
+          <Box
+            component="pre"
+            lang="en"
+            sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 13 }}
+          >
+            {licenseText}
+          </Box>
+        </Modal>
+      )}
       {preview && (
         <Modal
           title={t("supportPreviewTitle")}

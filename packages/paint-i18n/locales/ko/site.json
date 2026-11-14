@@ -263,5 +263,7 @@
   "meta.docsDescription": "Paint Vault를 설정하고 도료 라이브러리, 작업대, 색상 구성, 도료 도구, 위시리스트, 백업을 알아보세요.",
   "home.macOSAndWindows": "macOS 및 Windows",
   "home.selfHostedWebApp": "직접 호스팅하는 웹 앱",
-  "home.yourDataStaysYours": "데이터는 내 소유로"
+  "home.yourDataStaysYours": "데이터는 내 소유로",
+  "website.license": "라이선스",
+  "website.licenseSummary": "소스 코드 공개. 개인 및 기타 비상업적 용도로 무료로 사용할 수 있습니다. 상업적 사용에는 허가가 필요합니다."
 }

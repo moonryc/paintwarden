@@ -466,5 +466,8 @@
   "supportPrivacy": "Rien n’est envoyé automatiquement. Vérifiez le fichier avant de le joindre à un ticket. Ne partagez jamais de mots de passe, de jetons ou d’autres secrets.",
   "supportCancel": "Annuler",
   "supportConfirm": "Enregistrer le fichier",
-  "supportSaved": "Dossier d’assistance enregistré."
+  "supportSaved": "Dossier d’assistance enregistré.",
+  "licenseLabel": "Licence: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "Lire la licence",
+  "licenseSummary": "Code source disponible. Gratuit pour un usage personnel et tout autre usage non commercial. Un usage commercial nécessite une autorisation."
 }

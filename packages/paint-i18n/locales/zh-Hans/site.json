@@ -263,5 +263,7 @@
   "meta.docsDescription": "设置 Paint Vault，了解涂料库、工作台、配色方案、涂料工具、愿望清单和备份。",
   "home.macOSAndWindows": "macOS 与 Windows",
   "home.selfHostedWebApp": "自托管网页应用",
-  "home.yourDataStaysYours": "你的数据，始终属于你"
+  "home.yourDataStaysYours": "你的数据，始终属于你",
+  "website.license": "许可证",
+  "website.licenseSummary": "源代码可用。个人及其他非商业用途免费。商业使用需要获得许可。"
 }

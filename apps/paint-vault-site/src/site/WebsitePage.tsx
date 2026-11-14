@@ -229,6 +229,9 @@ function Footer() {
           <Typography sx={{ color: "var(--ink-faint)", fontSize: 14, mt: 2, maxWidth: 320, lineHeight: 1.6 }}>
             {t("website.yourPaintsProjectsAndRecipesInOneQuietPlaceOn")}
           </Typography>
+          <Typography sx={{ color: "var(--ink-faint)", fontSize: 14, mt: 2, maxWidth: 320, lineHeight: 1.6 }}>
+            {t("website.licenseSummary")}
+          </Typography>
         </Box>
         <Box>
           <Typography
@@ -267,6 +270,11 @@ function Footer() {
             {t("website.project")}
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1.25 }}>
+            <li>
+              <Box component="a" href={`${repository}/blob/main/LICENSE`} sx={footerLink}>
+                {t("website.license")}
+              </Box>
+            </li>
             <li>
               <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
                 <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}

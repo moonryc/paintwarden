@@ -263,5 +263,7 @@
   "meta.docsDescription": "Paint Vaultの初期設定から、塗料ライブラリー・作業台・カラースキーム・塗料ツール・ウィッシュリスト・バックアップまでを解説します。",
   "home.macOSAndWindows": "macOS・Windows",
   "home.selfHostedWebApp": "セルフホストのウェブアプリ",
-  "home.yourDataStaysYours": "データは、ずっとあなたのもの"
+  "home.yourDataStaysYours": "データは、ずっとあなたのもの",
+  "website.license": "ライセンス",
+  "website.licenseSummary": "ソースコード公開。個人利用およびその他の非商用利用は無料です。商用利用には許可が必要です。"
 }

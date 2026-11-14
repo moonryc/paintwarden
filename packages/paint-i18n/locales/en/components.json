@@ -445,5 +445,8 @@
   "supportPrivacy": "Nothing is uploaded automatically. Review the file before attaching it to an issue. Never share passwords, tokens, or other secrets.",
   "supportCancel": "Cancel",
   "supportConfirm": "Save file",
-  "supportSaved": "Support bundle saved."
+  "supportSaved": "Support bundle saved.",
+  "licenseLabel": "License: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "Read license",
+  "licenseSummary": "Source-available. Free for personal and other non-commercial use. Commercial use requires permission."
 }

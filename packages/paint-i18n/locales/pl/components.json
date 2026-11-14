@@ -487,5 +487,8 @@
   "supportPrivacy": "Nic nie jest wysyłane automatycznie. Sprawdź plik przed dołączeniem do zgłoszenia. Nigdy nie udostępniaj haseł, tokenów ani innych tajnych danych.",
   "supportCancel": "Anuluj",
   "supportConfirm": "Zapisz plik",
-  "supportSaved": "Pakiet diagnostyczny zapisany."
+  "supportSaved": "Pakiet diagnostyczny zapisany.",
+  "licenseLabel": "Licencja: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "Przeczytaj licencję",
+  "licenseSummary": "Kod źródłowy jest dostępny. Bezpłatne do użytku osobistego i innych celów niekomercyjnych. Użytek komercyjny wymaga zgody."
 }

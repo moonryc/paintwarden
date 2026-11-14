@@ -11,5 +11,6 @@
   "dependencies": {
     "i18next": "^27.1.1",
     "i18next-resources-to-backend": "^1.2.4"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

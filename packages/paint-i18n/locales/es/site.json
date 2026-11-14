@@ -263,5 +263,7 @@
   "meta.docsDescription": "Configura Paint Vault y descubre la biblioteca de pinturas, la mesa de trabajo, los esquemas, las herramientas de pintura, la lista de deseos y las copias de seguridad.",
   "home.macOSAndWindows": "macOS y Windows",
   "home.selfHostedWebApp": "Aplicación web en tu servidor",
-  "home.yourDataStaysYours": "Tus datos siguen siendo tuyos"
+  "home.yourDataStaysYours": "Tus datos siguen siendo tuyos",
+  "website.license": "Licencia",
+  "website.licenseSummary": "Código disponible. Gratis para uso personal y otros usos no comerciales. El uso comercial requiere permiso."
 }

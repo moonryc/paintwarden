@@ -48,6 +48,10 @@
       {
         "from": "../../packages/paint-i18n/locales",
         "to": "locales"
+      },
+      {
+        "from": "../../LICENSE",
+        "to": "LICENSE"
       }
     ],
     "mac": {
@@ -90,5 +94,6 @@
     "electron-updater": "6.8.11",
     "fflate": "^0.8.3",
     "i18next": "^27.1.1"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

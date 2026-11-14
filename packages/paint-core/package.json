@@ -23,5 +23,6 @@
     "test": "node --test *.test.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "code-lint": "eslint . --ext .ts"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

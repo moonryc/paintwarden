@@ -263,5 +263,7 @@
   "meta.docsDescription": "Skonfiguruj Paint Vault i poznaj bibliotekę farb, stół modelarski, schematy, narzędzia malarskie, listę życzeń i kopie zapasowe.",
   "home.macOSAndWindows": "macOS i Windows",
   "home.selfHostedWebApp": "Aplikacja internetowa na własnym serwerze",
-  "home.yourDataStaysYours": "Twoje dane należą do ciebie"
+  "home.yourDataStaysYours": "Twoje dane należą do ciebie",
+  "website.license": "Licencja",
+  "website.licenseSummary": "Kod źródłowy jest dostępny. Bezpłatne do użytku osobistego i innych celów niekomercyjnych. Użytek komercyjny wymaga zgody."
 }

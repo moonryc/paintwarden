@@ -424,5 +424,8 @@
   "supportPrivacy": "不会自动上传任何内容。将文件附加到问题报告之前请先检查。切勿分享密码、令牌或其他机密信息。",
   "supportCancel": "取消",
   "supportConfirm": "保存文件",
-  "supportSaved": "支持包已保存。"
+  "supportSaved": "支持包已保存。",
+  "licenseLabel": "许可证: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "阅读许可证",
+  "licenseSummary": "源代码可用。个人及其他非商业用途免费。商业使用需要获得许可。"
 }

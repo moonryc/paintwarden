@@ -263,5 +263,7 @@
   "meta.docsDescription": "Configurez Paint Vault et découvrez la bibliothèque de peintures, l’établi, les schémas de couleurs, les outils de peinture, la liste de souhaits et les sauvegardes.",
   "home.macOSAndWindows": "macOS et Windows",
   "home.selfHostedWebApp": "Application web auto-hébergée",
-  "home.yourDataStaysYours": "Vos données restent les vôtres"
+  "home.yourDataStaysYours": "Vos données restent les vôtres",
+  "website.license": "Licence",
+  "website.licenseSummary": "Code source disponible. Gratuit pour un usage personnel et tout autre usage non commercial. Un usage commercial nécessite une autorisation."
 }

@@ -263,5 +263,7 @@
   "meta.docsDescription": "Richte Paint Vault ein und lerne Farbbibliothek, Maltisch, Farbschemata, Farbwerkzeuge, Wunschliste und Sicherungen kennen.",
   "home.macOSAndWindows": "macOS & Windows",
   "home.selfHostedWebApp": "Selbst gehostete Web-App",
-  "home.yourDataStaysYours": "Deine Daten bleiben deine"
+  "home.yourDataStaysYours": "Deine Daten bleiben deine",
+  "website.license": "Lizenz",
+  "website.licenseSummary": "Quellcode verfügbar. Für persönliche und andere nichtkommerzielle Nutzung kostenlos. Kommerzielle Nutzung erfordert eine Genehmigung."
 }

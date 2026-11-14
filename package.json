@@ -66,5 +66,6 @@
     "nx": {
       "undici": "7.30.2"
     }
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

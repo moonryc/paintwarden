@@ -27,5 +27,6 @@
     "build": "vite build",
     "lint": "tsc --noEmit -p tsconfig.json",
     "code-lint": "eslint . --ext .ts,.tsx"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

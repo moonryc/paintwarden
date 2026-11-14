@@ -466,5 +466,8 @@
   "supportPrivacy": "No se sube nada automáticamente. Revisa el archivo antes de adjuntarlo a una incidencia. Nunca compartas contraseñas, tokens ni otros secretos.",
   "supportCancel": "Cancelar",
   "supportConfirm": "Guardar archivo",
-  "supportSaved": "Paquete de soporte guardado."
+  "supportSaved": "Paquete de soporte guardado.",
+  "licenseLabel": "Licencia: PolyForm Noncommercial 1.0.0",
+  "licenseRead": "Leer licencia",
+  "licenseSummary": "Código disponible. Gratis para uso personal y otros usos no comerciales. El uso comercial requiere permiso."
 }

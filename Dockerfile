@@ -37,6 +37,8 @@ COPY --from=builder --chown=node:node /app/apps/paint-vault/dist ./dist
 COPY --from=builder --chown=node:node /app/apps/paint-vault/dist/drizzle ./drizzle
 COPY --from=builder --chown=node:node /app/apps/paint-vault/package.json ./package.json
 
+COPY --from=builder --chown=node:node /app/LICENSE /app/LICENSE
+
 USER node
 EXPOSE 3000
 VOLUME ["/data"]

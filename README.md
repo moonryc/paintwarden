@@ -7,6 +7,16 @@ wishlists, shopping lists, project photos, and reusable color schemes.
 Everything runs on your own machine. App records are stored in a SQLite file and
 uploaded project photos are stored as ordinary files alongside it.
 
+## License
+
+Paint Vault is **source-available**, under [PolyForm Noncommercial 1.0.0](LICENSE).
+It is free for personal and other non-commercial use. Forking and modifying for
+non-commercial purposes are allowed. Commercial use needs permission from Ryan
+Moon; for now, request it through [GitHub Issues](https://github.com/moonryc/paint-tracker/issues).
+The license text controls; third-party components retain their own licenses.
+See also the separate [trademark policy](TRADEMARKS.md) and
+[contribution terms / CLA](CONTRIBUTING.md).
+
 ## Docker Compose setup
 
 ### Requirements

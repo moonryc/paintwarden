@@ -39,5 +39,6 @@
     "code-lint": "eslint . --ext .ts",
     "db:generate": "drizzle-kit generate",
     "test:graphql": "node --import tsx --test graphql/*.test.ts"
-  }
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
 }

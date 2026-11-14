@@ -263,5 +263,7 @@
   "meta.docsDescription": "Stel Paint Vault in en ontdek de verfbibliotheek, werkbank, kleurenschema's, het verfgereedschap, de verlanglijst en back-ups.",
   "home.macOSAndWindows": "macOS en Windows",
   "home.selfHostedWebApp": "Zelfgehoste web-app",
-  "home.yourDataStaysYours": "Je gegevens blijven van jou"
+  "home.yourDataStaysYours": "Je gegevens blijven van jou",
+  "website.license": "Licentie",
+  "website.licenseSummary": "Broncode beschikbaar. Gratis voor persoonlijk en ander niet-commercieel gebruik. Commercieel gebruik vereist toestemming."
 }
