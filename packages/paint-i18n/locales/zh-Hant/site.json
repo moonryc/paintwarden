@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "自行架設網頁版應用程式",
   "home.yourDataStaysYours": "您的資料，始終屬於您",
   "website.license": "授權條款",
-  "website.licenseSummary": "原始碼可用。個人及其他非商業用途免費。商業使用需要取得許可。"
+  "website.licenseSummary": "原始碼可用。個人及其他非商業用途免費。商業使用需要取得許可。",
+  "website.openSourceLicenses": "開源授權條款",
+  "licenses.description": "第三方授權條款及著作權聲明。原始聲明以英文提供，可離線檢視。",
+  "licenses.download": "下載聲明",
+  "meta.licensesTitle": "開源授權條款 | Paintwarden",
+  "meta.licensesDescription": "第三方授權條款及著作權聲明。原始聲明以英文提供，可離線檢視。"
 }

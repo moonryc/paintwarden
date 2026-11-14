@@ -3,6 +3,8 @@ import { spawnSync } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { copyThirdPartyNotices } from "./copy-third-party-notices.mjs";
+import { pruneSharpWasm } from "./prune-sharp-wasm.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 if (process.argv[2] !== "electron") {
@@ -42,6 +44,9 @@ try {
     { cwd: staging, stdio: "inherit", shell: process.platform === "win32" },
   );
   if (result.status !== 0) throw new Error("Desktop server dependency install failed");
+  // Native sharp is smoke-tested below. Do not distribute the unused statically
+  // linked WASM/libvips fallback (nor its now-orphaned emnapi helpers).
+  console.log("Pruned unused sharp WASM:", await pruneSharpWasm(staging));
 
   // Workspace packages are bundled into server.mjs; drop their links into the staging folders.
   const modules = path.join(staging, "node_modules");
@@ -70,6 +75,7 @@ await cp(path.join(dist, "server.mjs"), path.join(output, "server.mjs"));
 await cp(path.join(dist, "schema.graphql"), path.join(output, "schema.graphql"));
 await cp(path.join(dist, "web-dist"), path.join(output, "web-dist"), { recursive: true });
 await cp(path.join(dist, "drizzle"), path.join(output, "drizzle"), { recursive: true });
+await copyThirdPartyNotices(path.join(output, "web-dist"));
 
 const executable = process.platform === "win32" ? "node.exe" : "node";
 await cp(process.execPath, path.join(output, executable));

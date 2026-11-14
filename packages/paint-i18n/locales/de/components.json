@@ -488,5 +488,11 @@
   "scanAssignHint": "Wähle einen vorhandenen Schritt oder füge einen Schritt mit Phase hinzu.",
   "scanRecipeStep": "Rezeptschritt",
   "scanNewStep": "Neuer Schritt",
-  "scanStage": "Phase"
+  "scanStage": "Phase",
+  "noticesTitle": "Open-Source-Lizenzen",
+  "noticesSummary": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar.",
+  "noticesRead": "Open-Source-Lizenzen lesen",
+  "noticesLoading": "Hinweise werden geladen…",
+  "noticesFailure": "Die Hinweise konnten nicht geladen werden.",
+  "noticesRetry": "Erneut versuchen"
 }

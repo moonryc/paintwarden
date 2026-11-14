@@ -488,5 +488,11 @@
   "scanAssignHint": "Choose an existing step, or add a step and choose its stage.",
   "scanRecipeStep": "Recipe step",
   "scanNewStep": "New step",
-  "scanStage": "Stage"
+  "scanStage": "Stage",
+  "noticesTitle": "Open-source licenses",
+  "noticesSummary": "Third-party licenses and copyright notices. Original notices are provided in English and are available offline.",
+  "noticesRead": "Read open-source licenses",
+  "noticesLoading": "Loading notices…",
+  "noticesFailure": "Could not load the notices.",
+  "noticesRetry": "Try again"
 }

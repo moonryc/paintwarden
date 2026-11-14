@@ -24,9 +24,10 @@ import { DocsPage } from "./pages/DocsPage";
 import { DownloadPage } from "./pages/DownloadPage";
 import { FaqPage } from "./pages/FaqPage";
 import { HomePage } from "./pages/HomePage";
+import { LicensesPage } from "./pages/LicensesPage";
 import { theme } from "./theme";
 
-export type Page = "home" | "docs" | "faq" | "download";
+export type Page = "home" | "docs" | "faq" | "download" | "licenses";
 
 const nav = (): { label: string; href: string; page: Page }[] => [
   { label: t("website.overview"), href: "/", page: "home" },
@@ -276,6 +277,11 @@ function Footer() {
               </Box>
             </li>
             <li>
+              <Box component="a" href="/licenses/" sx={footerLink}>
+                {t("website.openSourceLicenses")}
+              </Box>
+            </li>
+            <li>
               <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
                 <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}
               </Box>
@@ -302,7 +308,7 @@ function Footer() {
   );
 }
 
-export default function WebsitePage({ page }: { page: Page }) {
+export default function WebsitePage({ page, notices = "" }: { page: Page; notices?: string }) {
   const { language, setLanguage } = useSiteLanguage();
   useEffect(() => {
     document.title = t(`meta.${page}Title`);
@@ -341,6 +347,7 @@ export default function WebsitePage({ page }: { page: Page }) {
           {page === "docs" && <DocsPage />}
           {page === "faq" && <FaqPage />}
           {page === "download" && <DownloadPage />}
+          {page === "licenses" && <LicensesPage notices={notices} />}
         </Box>
         <Footer />
       </Box>

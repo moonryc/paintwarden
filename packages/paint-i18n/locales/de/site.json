@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "Selbst gehostete Web-App",
   "home.yourDataStaysYours": "Deine Daten bleiben deine",
   "website.license": "Lizenz",
-  "website.licenseSummary": "Quellcode verfügbar. Für persönliche und andere nichtkommerzielle Nutzung kostenlos. Kommerzielle Nutzung erfordert eine Genehmigung."
+  "website.licenseSummary": "Quellcode verfügbar. Für persönliche und andere nichtkommerzielle Nutzung kostenlos. Kommerzielle Nutzung erfordert eine Genehmigung.",
+  "website.openSourceLicenses": "Open-Source-Lizenzen",
+  "licenses.description": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar.",
+  "licenses.download": "Hinweise herunterladen",
+  "meta.licensesTitle": "Open-Source-Lizenzen | Paintwarden",
+  "meta.licensesDescription": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar."
 }

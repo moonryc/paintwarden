@@ -52,6 +52,14 @@
       {
         "from": "../../LICENSE",
         "to": "LICENSE"
+      },
+      {
+        "from": "../../THIRD_PARTY_NOTICES.txt",
+        "to": "THIRD_PARTY_NOTICES.txt"
+      },
+      {
+        "from": "../../third-party",
+        "to": "third-party"
       }
     ],
     "mac": {
@@ -96,7 +104,8 @@
     "nsis": {
       "shortcutName": "Paintwarden",
       "uninstallDisplayName": "Paintwarden"
-    }
+    },
+    "afterPack": "build/check-notices.cjs"
   },
   "dependencies": {
     "electron-updater": "6.8.11",

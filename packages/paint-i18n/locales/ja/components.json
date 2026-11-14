@@ -467,5 +467,11 @@
   "scanAssignHint": "既存の手順を選ぶか、新しい手順を追加して工程を選んでください。",
   "scanRecipeStep": "レシピの手順",
   "scanNewStep": "新しい手順",
-  "scanStage": "工程"
+  "scanStage": "工程",
+  "noticesTitle": "オープンソースライセンス",
+  "noticesSummary": "サードパーティのライセンスと著作権表示。原文は英語で、オフラインでも閲覧できます。",
+  "noticesRead": "オープンソースライセンスを読む",
+  "noticesLoading": "通知を読み込み中…",
+  "noticesFailure": "通知を読み込めませんでした。",
+  "noticesRetry": "再試行"
 }

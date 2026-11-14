@@ -16,6 +16,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run notices:check
       - run: npm run audit:production
       - run: npm run i18n:check
       - run: npm run codegen:check
@@ -26,6 +27,10 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run storybook:test
       - run: npm run build
+      - run: node scripts/check-notice-artifact.mjs --web-root apps/paintwarden-web/dist
+      - run: node scripts/check-notice-artifact.mjs --web-root apps/paintwarden-site/dist
+      # Dockerfile checks final /app notices, native linkage and sharp after pruning WASM.
+      - run: docker build --tag paintwarden-notices-ci .
 
   macos:
     runs-on: macos-latest
@@ -36,10 +41,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run notices:check
       - run: npm run typecheck
       - run: npm run build
       - run: node scripts/package-desktop-server.mjs electron
       - run: npm run dist --workspace paintwarden-electron -- --dir --publish never
+      - name: Verify packaged macOS notices and dynamic libvips
+        run: node scripts/check-notice-artifact.mjs --resources "$(find dist/electron -type d -path '*.app/Contents/Resources' -print -quit)"
 
   windows:
     # npm's bundled node-gyp supports VS 2022, not the VS 2026 image behind windows-latest.
@@ -51,7 +59,10 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run notices:check
       - run: npm run typecheck
       - run: npm run build
       - run: node scripts/package-desktop-server.mjs electron
       - run: npm run dist --workspace paintwarden-electron -- --dir --publish never
+      - name: Verify packaged Windows notices and dynamic libvips
+        run: node scripts/check-notice-artifact.mjs --resources dist/electron/win-unpacked/resources

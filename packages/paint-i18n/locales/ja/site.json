@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "セルフホストのウェブアプリ",
   "home.yourDataStaysYours": "データは、ずっとあなたのもの",
   "website.license": "ライセンス",
-  "website.licenseSummary": "ソースコード公開。個人利用およびその他の非商用利用は無料です。商用利用には許可が必要です。"
+  "website.licenseSummary": "ソースコード公開。個人利用およびその他の非商用利用は無料です。商用利用には許可が必要です。",
+  "website.openSourceLicenses": "オープンソースライセンス",
+  "licenses.description": "サードパーティのライセンスと著作権表示。原文は英語で、オフラインでも閲覧できます。",
+  "licenses.download": "通知をダウンロード",
+  "meta.licensesTitle": "オープンソースライセンス | Paintwarden",
+  "meta.licensesDescription": "サードパーティのライセンスと著作権表示。原文は英語で、オフラインでも閲覧できます。"
 }

@@ -509,5 +509,11 @@
   "scanAssignHint": "Scegli un passaggio esistente, oppure aggiungine uno e scegli la fase.",
   "scanRecipeStep": "Passaggio della ricetta",
   "scanNewStep": "Nuovo passaggio",
-  "scanStage": "Fase"
+  "scanStage": "Fase",
+  "noticesTitle": "Licenze open source",
+  "noticesSummary": "Licenze e avvisi sul copyright di terze parti. Gli avvisi originali sono in inglese e disponibili offline.",
+  "noticesRead": "Leggi le licenze open source",
+  "noticesLoading": "Caricamento degli avvisi…",
+  "noticesFailure": "Impossibile caricare gli avvisi.",
+  "noticesRetry": "Riprova"
 }

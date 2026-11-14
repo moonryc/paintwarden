@@ -1,0 +1,6 @@
+# Preserve authoritative legal/source bytes (including upstream CRLF and whitespace)
+# on every platform; the notice inventory checks their cryptographic hashes.
+third-party/** -text -whitespace linguist-vendored
+THIRD_PARTY_NOTICES.txt -text -whitespace linguist-generated
+# The deterministic inventory binds the raw lockfile bytes, including on Windows.
+package-lock.json text eol=lf

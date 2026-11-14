@@ -530,5 +530,11 @@
   "scanAssignHint": "Wybierz istniejący krok lub dodaj nowy i wybierz etap.",
   "scanRecipeStep": "Krok receptury",
   "scanNewStep": "Nowy krok",
-  "scanStage": "Etap"
+  "scanStage": "Etap",
+  "noticesTitle": "Licencje open source",
+  "noticesSummary": "Licencje i informacje o prawach autorskich podmiotów trzecich. Oryginalne informacje są dostępne w języku angielskim i bez połączenia z internetem.",
+  "noticesRead": "Przeczytaj licencje open source",
+  "noticesLoading": "Wczytywanie informacji…",
+  "noticesFailure": "Nie udało się wczytać informacji.",
+  "noticesRetry": "Spróbuj ponownie"
 }

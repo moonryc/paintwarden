@@ -3,10 +3,10 @@ import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import licenseText from "../../../../../LICENSE?raw";
-
 import { getSupportSummary, saveSupportBundle, type SupportSummary } from "../utils/support";
 
 import { Modal } from "./Modal";
+import { OpenSourceLicensesModal } from "./OpenSourceLicensesModal";
 import { ReportBugButton } from "./ReportBugButton";
 
 type Props = {
@@ -30,6 +30,7 @@ export function HelpAbout({
   const [summary, setSummary] = useState<SupportSummary | null>(null);
   const [failed, setFailed] = useState(false);
   const [licenseOpen, setLicenseOpen] = useState(false);
+  const [noticesOpen, setNoticesOpen] = useState(false);
   const [preview, setPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -134,6 +135,15 @@ export function HelpAbout({
               {t("licenseRead")}
             </Button>
           </Box>
+          <Typography variant="body2">{t("noticesTitle")}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("noticesSummary")}
+          </Typography>
+          <Box>
+            <Button variant="text" onClick={() => setNoticesOpen(true)}>
+              {t("noticesRead")}
+            </Button>
+          </Box>
           {failed && !preview && <Alert severity="error">{t("supportFailure")}</Alert>}
           {saved && <Alert severity="success">{t("supportSaved")}</Alert>}
           <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1 }}>
@@ -169,6 +179,7 @@ export function HelpAbout({
           </Box>
         </Modal>
       )}
+      {noticesOpen && <OpenSourceLicensesModal onClose={() => setNoticesOpen(false)} />}
       {preview && (
         <Modal
           title={t("supportPreviewTitle")}

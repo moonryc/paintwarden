@@ -488,5 +488,11 @@
   "scanAssignHint": "Kies een bestaande stap, of voeg een stap toe en kies de fase.",
   "scanRecipeStep": "Receptstap",
   "scanNewStep": "Nieuwe stap",
-  "scanStage": "Fase"
+  "scanStage": "Fase",
+  "noticesTitle": "Opensourcelicenties",
+  "noticesSummary": "Licenties en auteursrechtvermeldingen van derden. De oorspronkelijke vermeldingen zijn in het Engels en offline beschikbaar.",
+  "noticesRead": "Opensourcelicenties lezen",
+  "noticesLoading": "Vermeldingen laden…",
+  "noticesFailure": "De vermeldingen konden niet worden geladen.",
+  "noticesRetry": "Opnieuw proberen"
 }

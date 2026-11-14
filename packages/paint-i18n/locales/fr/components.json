@@ -509,5 +509,11 @@
   "scanAssignHint": "Choisissez une étape existante, ou ajoutez-en une et choisissez sa phase.",
   "scanRecipeStep": "Étape de recette",
   "scanNewStep": "Nouvelle étape",
-  "scanStage": "Phase"
+  "scanStage": "Phase",
+  "noticesTitle": "Licences open source",
+  "noticesSummary": "Licences et mentions de droits d’auteur de tiers. Les mentions originales sont en anglais et disponibles hors ligne.",
+  "noticesRead": "Lire les licences open source",
+  "noticesLoading": "Chargement des mentions…",
+  "noticesFailure": "Impossible de charger les mentions.",
+  "noticesRetry": "Réessayer"
 }

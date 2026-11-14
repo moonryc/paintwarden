@@ -17,6 +17,16 @@ The license text controls; third-party components retain their own licenses.
 See also the separate [trademark policy](TRADEMARKS.md) and
 [contribution terms / CLA](CONTRIBUTING.md).
 
+[Third-party notices](THIRD_PARTY_NOTICES.txt) include the independently licensed
+fonts, npm/native libraries, Node and Electron/Chromium. Read them offline in
+Settings → Help & About → Open-source licenses, on the website's Licenses page,
+in desktop app resources next to `LICENSE`, or at `/app/THIRD_PARTY_NOTICES.txt`
+in Docker. [Maintenance and LGPL source/replacement instructions](third-party/README.txt)
+cover the exact library sources and build recipes. Run `npm run notices:generate`
+after lockfile changes (`-- --refresh` to collect new npm tarball notices), then
+`npm run notices:check`; new license types require explicit review. Native/runtime
+version updates also require reviewing `third-party/sources.json` and its full texts.
+
 ## Docker Compose setup
 
 ### Requirements
