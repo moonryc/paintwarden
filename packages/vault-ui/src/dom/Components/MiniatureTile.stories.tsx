@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn } from "storybook/test";
 
 import { column } from "../storybook/decorators";
 import { miniatures, paints } from "../storybook/fixtures";
@@ -37,5 +37,29 @@ export const WithPhoto: Story = {
           '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4 5"><rect width="4" height="5" fill="#3a2a2a"/><circle cx="2" cy="1.8" r="1" fill="#9a1115"/><rect x="1" y="2.8" width="2" height="2.2" rx=".4" fill="#b6873d"/></svg>',
         ),
     },
+  },
+};
+
+export const LocalThumbnail: Story = {
+  args: {
+    mini: {
+      ...miniatures.knight,
+      imageUrl: "/api/miniatures/story/image?v=original.webp",
+      thumbnailUrl: "/api/miniatures/story/image?v=original.webp&w=320",
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const image = canvasElement.querySelector("img")!;
+    await expect(image).toHaveAttribute("src", "/api/miniatures/story/image?v=original.webp&w=320");
+    await expect(image).toHaveAttribute(
+      "srcset",
+      [160, 320, 640]
+        .map((width) => `/api/miniatures/story/image?v=original.webp&w=${width} ${width}w`)
+        .join(", "),
+    );
+    await expect(image).toHaveAttribute("sizes");
+    await expect(image).toHaveAttribute("loading", "lazy");
+    await expect(image).toHaveAttribute("decoding", "async");
+    await expect(image.parentElement).toHaveStyle({ aspectRatio: "4 / 5" });
   },
 };

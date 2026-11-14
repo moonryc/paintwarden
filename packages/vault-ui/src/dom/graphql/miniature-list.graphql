@@ -3,6 +3,7 @@ fragment MiniatureTile on Miniature {
   title
   status
   imageUrl
+  thumbnailUrl
   readiness {
     total
     missing

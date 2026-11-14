@@ -4,6 +4,7 @@ fragment TemplateSummaryFields on TemplateSummary {
   manufacturer
   faction
   imageUrl
+  thumbnailUrl
   categories
   kind
   sourceId

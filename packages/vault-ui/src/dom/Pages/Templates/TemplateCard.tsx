@@ -4,7 +4,7 @@ import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { MiniatureTemplate } from "../../types";
-import { imageUrl } from "../../utils/image-cache";
+import { thumbnailImageProps } from "../../image-thumbnails";
 import { liftCardSx } from "../../utils/lift-card";
 
 // One template in the templates grid: its picture, name, source and counts. It opens the
@@ -22,6 +22,7 @@ export function TemplateCard({
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }) {
   const { t, i18n } = useTranslation("pages");
+  const previewUrl = template.thumbnailUrl ?? template.imageUrl;
   return (
     <Card sx={liftCardSx}>
       <CardActionArea
@@ -31,12 +32,11 @@ export function TemplateCard({
         sx={{ display: "block", lineHeight: 1.5 }}
       >
         <Box sx={{ position: "relative", aspectRatio: "4 / 5", bgcolor: "var(--sunken)" }}>
-          {template.imageUrl && (
+          {previewUrl && (
             <Box
               component="img"
-              src={imageUrl(template.imageUrl)}
+              {...thumbnailImageProps(previewUrl, "(max-width: 599px) 50vw, (max-width: 1199px) 33vw, 240px")}
               alt={t("templatesImageAlt", { name: template.name })}
-              loading="lazy"
               sx={{
                 position: "absolute",
                 inset: 0,

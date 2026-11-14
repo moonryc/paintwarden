@@ -401,6 +401,7 @@ export type MiniatureTileFragment = {
   title: string;
   status: Ownership;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   readiness: { total: number; missing: number };
   previewSwatches: Array<{ colorHex: string }>;
 } & { " $fragmentName"?: "MiniatureTileFragment" };
@@ -454,6 +455,7 @@ export type MiniatureSchemeSummaryFragment = {
   availableCount: number;
   previewSwatchesTruncated: boolean;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   previewSwatches: Array<{ paintId: string; colorHex: string }>;
 } & { " $fragmentName"?: "MiniatureSchemeSummaryFragment" };
 
@@ -837,6 +839,7 @@ export type TemplateSummaryFieldsFragment = {
   manufacturer: string;
   faction: string;
   imageUrl: string;
+  thumbnailUrl: string | null;
   categories: Array<string>;
   kind: string;
   sourceId: string | null;
@@ -1259,6 +1262,7 @@ export const MiniatureTileFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "title" } },
           { kind: "Field", name: { kind: "Name", value: "status" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           {
             kind: "Field",
             name: { kind: "Name", value: "readiness" },
@@ -1314,6 +1318,7 @@ export const MiniatureSchemeSummaryFragmentDoc = {
           },
           { kind: "Field", name: { kind: "Name", value: "previewSwatchesTruncated" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
         ],
       },
     },
@@ -1391,6 +1396,7 @@ export const TemplateSummaryFieldsFragmentDoc = {
           { kind: "Field", name: { kind: "Name", value: "manufacturer" } },
           { kind: "Field", name: { kind: "Name", value: "faction" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           { kind: "Field", name: { kind: "Name", value: "categories" } },
           { kind: "Field", name: { kind: "Name", value: "kind" } },
           { kind: "Field", name: { kind: "Name", value: "sourceId" } },
@@ -3557,6 +3563,7 @@ export const MiniatureListDocument = {
           { kind: "Field", name: { kind: "Name", value: "title" } },
           { kind: "Field", name: { kind: "Name", value: "status" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           {
             kind: "Field",
             name: { kind: "Name", value: "readiness" },
@@ -3733,6 +3740,7 @@ export const MiniatureSchemeDetailsDocument = {
           },
           { kind: "Field", name: { kind: "Name", value: "previewSwatchesTruncated" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
         ],
       },
     },
@@ -3935,6 +3943,7 @@ export const SchemePickerOptionsDocument = {
           },
           { kind: "Field", name: { kind: "Name", value: "previewSwatchesTruncated" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
         ],
       },
     },
@@ -5101,6 +5110,7 @@ export const SchemesPageDocument = {
           },
           { kind: "Field", name: { kind: "Name", value: "previewSwatchesTruncated" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
         ],
       },
     },
@@ -6059,6 +6069,7 @@ export const TemplateSummariesDocument = {
           { kind: "Field", name: { kind: "Name", value: "manufacturer" } },
           { kind: "Field", name: { kind: "Name", value: "faction" } },
           { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+          { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
           { kind: "Field", name: { kind: "Name", value: "categories" } },
           { kind: "Field", name: { kind: "Name", value: "kind" } },
           { kind: "Field", name: { kind: "Name", value: "sourceId" } },

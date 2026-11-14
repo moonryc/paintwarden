@@ -152,3 +152,21 @@ export const ExplicitlyBoundedPreview: Story = {
     );
   },
 };
+
+export const LocalCatalogThumbnail: Story = {
+  args: {
+    scheme: { ...vault.colorSchemes[0], thumbnailUrl: "/api/catalog-source-images/scheme.webp?w=320" },
+  },
+  play: async ({ canvas, args }) => {
+    const image = canvas.getByRole("img", { name: `${args.scheme.name} finished example` });
+    await expect(image).toHaveAttribute(
+      "srcset",
+      [160, 320, 640]
+        .map((width) => `/api/catalog-source-images/scheme.webp?w=${width} ${width}w`)
+        .join(", "),
+    );
+    await expect(image).toHaveAttribute("sizes", "128px");
+    await expect(image).toHaveAttribute("loading", "lazy");
+    await expect(image).toHaveAttribute("decoding", "async");
+  },
+};

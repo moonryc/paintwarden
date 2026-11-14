@@ -8,6 +8,7 @@
     "./color-categories": "./color-categories.ts",
     "./color-hex": "./color-hex.ts",
     "./fuzzy-search": "./fuzzy-search.ts",
+    "./image-thumbnails": "./image-thumbnails.ts",
     "./paint-color-similarity": "./paint-color-similarity.ts",
     "./paint-state": "./paint-state.ts",
     "./paint-substitutions": "./paint-substitutions.ts",

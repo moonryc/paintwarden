@@ -246,6 +246,7 @@ type Miniature {
   status: Ownership!
   paintingStatus: PaintingStatus!
   imageUrl: String
+  thumbnailUrl: String
   createdAt: Float!
   notes: String!
   manufacturer: String!
@@ -302,6 +303,7 @@ type MiniatureScheme {
   previewSwatches: [MiniatureSwatch!]!
   previewSwatchesTruncated: Boolean!
   imageUrl: String
+  thumbnailUrl: String
 }
 type MiniatureSchemeLink {
   id: ID!
@@ -578,6 +580,7 @@ type TemplateSummary {
   manufacturer: String!
   faction: String!
   imageUrl: String!
+  thumbnailUrl: String
   categories: [String!]!
   kind: String!
   sourceId: ID

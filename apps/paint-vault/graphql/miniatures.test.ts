@@ -879,3 +879,25 @@ void test("GraphQL HTTP exposes Home, Miniatures, detail connections and navigat
   ]);
   assert.deepEqual(result.data.miniature.schemes.nodes, [{ scheme: { paintCount: 1, availableCount: 0 } }]);
 });
+
+void test("home and miniature lists expose bounded local thumbnails while details retain originals", () => {
+  const id = miniature("Thumbnail model");
+  const imageKey = `${uuid(998)}.webp`;
+  sqlite.prepare("UPDATE miniatures SET image_key=? WHERE id=?").run(imageKey, id);
+  const original = `/api/miniatures/${id}/image?v=${imageKey}`;
+  for (const row of [
+    readHome({ first: 40 }).miniatures.nodes[0],
+    readMiniatures({ first: 40 }).miniatures.nodes[0],
+  ]) {
+    assert.equal(row.thumbnailUrl, `${original}&w=320`);
+    assert.equal(row.imageUrl, original);
+  }
+  assert.equal(readMiniature(id).miniature!.imageUrl, original);
+  sqlite
+    .prepare("UPDATE miniatures SET image_key=NULL,source_image_url=? WHERE id=?")
+    .run("https://external.test/original.png?v=external", id);
+  assert.equal(
+    readMiniatures({ first: 40 }).miniatures.nodes[0].thumbnailUrl,
+    "https://external.test/original.png?v=external",
+  );
+});

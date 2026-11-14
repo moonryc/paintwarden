@@ -1,7 +1,7 @@
 import { dividerLabel } from "../Components/component-labels";
 import { i18n } from "../i18n";
 import { useTranslation } from "react-i18next";
-import { imageUrl } from "../utils/image-cache";
+import { thumbnailImageProps } from "../image-thumbnails";
 import { Button, Chip, IconButton, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 
@@ -146,7 +146,7 @@ export function SchemeEntryRow({
         <>
           <Box
             component="img"
-            src={imageUrl(entry.thumbnailUrl || entry.imageUrl)}
+            {...thumbnailImageProps(entry.thumbnailUrl || entry.imageUrl, "112px")}
             alt={t("schemeExample")}
             sx={{
               height: "6rem",

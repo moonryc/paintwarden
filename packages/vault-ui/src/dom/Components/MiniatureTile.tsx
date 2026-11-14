@@ -6,7 +6,7 @@ import { memo } from "react";
 
 import { Check } from "../icons";
 import type { Miniature, Paint } from "../types";
-import { imageUrl } from "../utils/image-cache";
+import { thumbnailImageProps } from "../image-thumbnails";
 
 import { PaintGradientPlaceholder } from "./PaintGradientPlaceholder";
 
@@ -20,7 +20,7 @@ export const MiniatureTile = memo(function MiniatureTile({
   onOpen,
   sx,
 }: {
-  mini: Pick<Miniature, "id" | "title" | "status" | "imageUrl">;
+  mini: Pick<Miniature, "id" | "title" | "status" | "imageUrl"> & { thumbnailUrl?: string | null };
   paints?: Paint[];
   swatches?: { colorHex: string | null }[];
   total: number;
@@ -28,6 +28,7 @@ export const MiniatureTile = memo(function MiniatureTile({
   sx?: SxProps<Theme>;
 } & ({ onClick: () => void; onOpen?: never } | { onOpen: (id: string) => void; onClick?: never })) {
   const { t } = useTranslation("components");
+  const previewUrl = mini.thumbnailUrl ?? mini.imageUrl;
   const ready = total > 0 && missing === 0,
     pct = total ? ((total - missing) / total) * 100 : 0;
   return (
@@ -74,13 +75,12 @@ export const MiniatureTile = memo(function MiniatureTile({
             bgcolor: "var(--sunken)",
           }}
         >
-          {mini.imageUrl ? (
+          {previewUrl ? (
             <Box
               component="img"
-              src={imageUrl(mini.imageUrl)}
+              {...thumbnailImageProps(previewUrl, "(max-width: 599px) 50vw, (max-width: 1199px) 33vw, 240px")}
               alt=""
               draggable={false}
-              loading="lazy"
               sx={{
                 pointerEvents: "none",
                 position: "absolute",

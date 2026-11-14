@@ -126,6 +126,7 @@ export type ProjectSchemeEntry =
 export type MiniatureColorScheme = { miniatureId: string; schemeId: string; sortOrder: number };
 
 export type MiniatureTemplate = {
+  thumbnailUrl?: string | null;
   id: string;
   name: string;
   imageUrl: string;

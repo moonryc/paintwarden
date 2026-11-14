@@ -34,3 +34,24 @@ export const User: Story = {
     },
   },
 };
+
+export const LocalThumbnail: Story = {
+  args: {
+    template: {
+      ...sampleTemplates[0],
+      imageUrl: "/api/miniature-templates/story/image?v=photo.webp",
+      thumbnailUrl: "/api/miniature-templates/story/image?v=photo.webp&w=320",
+    },
+  },
+  play: async ({ canvas }) => {
+    const image = canvas.getByRole("img");
+    await expect(image).toHaveAttribute(
+      "srcset",
+      [160, 320, 640]
+        .map((width) => `/api/miniature-templates/story/image?v=photo.webp&w=${width} ${width}w`)
+        .join(", "),
+    );
+    await expect(image).toHaveAttribute("loading", "lazy");
+    await expect(image).toHaveAttribute("decoding", "async");
+  },
+};

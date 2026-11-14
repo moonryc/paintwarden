@@ -1,5 +1,6 @@
 // Complete-State fixture projections shared by whole-app and isolated Apollo stories only.
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { imageThumbnailUrl } from "@paint-vault/core/image-thumbnails";
 import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
 
 import type { Paint, PaintingStatus, State } from "../types";
@@ -50,6 +51,7 @@ export function fixtureMiniatureResponse(
       view.rows.map(({ mini, swatches, total, missing }) => ({
         __typename: "Miniature",
         ...mini,
+        thumbnailUrl: mini.imageUrl ? imageThumbnailUrl(mini.imageUrl) : null,
         readiness: { __typename: "Readiness", total, missing },
         previewSwatches: swatches
           .filter((color) => color.colorHex)
@@ -98,6 +100,7 @@ export function fixtureMiniatureResponse(
     const images = data.colorSchemeImages
       .filter((row) => row.schemeId === scheme.id)
       .sort((a, b) => a.sortOrder - b.sortOrder);
+    const previewUrl = images.at(-1)?.thumbnailUrl || images.at(-1)?.imageUrl;
     return {
       __typename: "MiniatureScheme",
       ...scheme,
@@ -107,7 +110,8 @@ export function fixtureMiniatureResponse(
       availableCount: paints.filter((paint) => isPaintAvailable(data, data.paintRecords, paint.id)).length,
       previewSwatches: colors.slice(0, 8),
       previewSwatchesTruncated: colors.length > 8,
-      imageUrl: images.at(-1)?.thumbnailUrl ?? images.at(-1)?.imageUrl ?? null,
+      imageUrl: previewUrl ?? null,
+      thumbnailUrl: previewUrl ? imageThumbnailUrl(previewUrl) : null,
     };
   };
   if (operation === "SchemeUsedPaintOptions") {

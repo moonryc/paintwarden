@@ -13,6 +13,7 @@ fragment MiniatureSchemeSummary on MiniatureScheme {
   }
   previewSwatchesTruncated
   imageUrl
+  thumbnailUrl
 }
 query MiniatureSchemeDetails($id: ID!, $after: String) {
   miniatureScheme(id: $id) {

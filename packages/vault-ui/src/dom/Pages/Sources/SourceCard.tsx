@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 import { formatNumber } from "../../i18n";
 import { ExternalLink, FileUp, RotateCw, Trash2 } from "../../icons";
-import { imageUrl } from "../../utils/image-cache";
+import { thumbnailImageProps } from "../../image-thumbnails";
 
 import { type CatalogSource, type SourceVersion, isUploadedSource, repositoryLabel } from "./sources.utils";
 
@@ -145,7 +145,7 @@ function SourceLogo({ name, logoUrl }: { name: string; logoUrl?: string | null }
       {showLogo ? (
         <Box
           component="img"
-          src={imageUrl(logoUrl)}
+          {...thumbnailImageProps(logoUrl, "44px")}
           alt=""
           draggable={false}
           onError={() => setFailedUrl(logoUrl)}

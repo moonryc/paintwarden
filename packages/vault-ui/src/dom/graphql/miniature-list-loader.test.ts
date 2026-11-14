@@ -14,6 +14,7 @@ function tile(index: number) {
     title: `Miniature ${index}`,
     status: "OWNED",
     imageUrl: null,
+    thumbnailUrl: null,
     readiness: { __typename: "Readiness", total: 4, missing: 2 },
     previewSwatches: [{ __typename: "MiniatureSwatch", colorHex: "#112233" }],
   };
@@ -200,11 +201,12 @@ void test("tile projections keep server counts and colors, without synthetic Pai
     title: "Dragon",
     status: "OWNED",
     imageUrl: null,
+    thumbnailUrl: null,
     readiness: { total: 120, missing: 80 },
     previewSwatches: [{ colorHex: "#112233" }, { colorHex: "#445566" }],
   });
   assert.deepEqual(projection, {
-    mini: { id: "mini", title: "Dragon", status: "OWNED", imageUrl: null },
+    mini: { id: "mini", title: "Dragon", status: "OWNED", imageUrl: null, thumbnailUrl: null },
     total: 120,
     missing: 80,
     swatches: [{ colorHex: "#112233" }, { colorHex: "#445566" }],

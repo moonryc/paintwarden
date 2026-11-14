@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { SchemeProgressChip } from "../../Components/SchemeProgressChip";
 import type { SchemeSummaryModel } from "../../graphql/miniature-scheme-model";
 import { Check, Layers } from "../../icons";
-import { imageUrl } from "../../utils/image-cache";
+import { thumbnailImageProps } from "../../image-thumbnails";
 import { liftCardSx } from "../../utils/lift-card";
 
 const categoryKeys = {
@@ -56,7 +56,8 @@ export const SchemeCard = memo(function SchemeCard({
 }) {
   const { t, i18n } = useTranslation("pages");
   const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
-  const { gradient, previewUrl, uses, paintNames } = summary;
+  const { gradient, uses, paintNames } = summary;
+  const previewUrl = scheme.thumbnailUrl ?? summary.previewUrl;
   const ready = total > 0 && available === total;
   return (
     <Card sx={{ ...liftCardSx, height: "18rem" }}>
@@ -92,10 +93,12 @@ export const SchemeCard = memo(function SchemeCard({
             <>
               <Box
                 component="img"
-                src={imageUrl(previewUrl ?? "")}
+                {...thumbnailImageProps(
+                  previewUrl,
+                  "(max-width: 599px) 100vw, (max-width: 1535px) 50vw, 33vw",
+                )}
                 alt=""
                 aria-hidden="true"
-                loading="lazy"
                 sx={{
                   position: "absolute",
                   inset: 0,
@@ -118,9 +121,8 @@ export const SchemeCard = memo(function SchemeCard({
               />
               <Box
                 component="img"
-                src={imageUrl(previewUrl ?? "")}
+                {...thumbnailImageProps(previewUrl, "128px")}
                 alt={t("schemesFinishedExample", { name: scheme.name })}
-                loading="lazy"
                 sx={{
                   position: "absolute",
                   top: "0.5rem",

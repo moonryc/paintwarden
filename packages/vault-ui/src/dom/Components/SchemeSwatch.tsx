@@ -2,7 +2,7 @@ import Box from "@mui/material/Box";
 
 import { Layers } from "../icons";
 import type { Paint, SchemeOrderEntry } from "../types";
-import { imageUrl } from "../utils/image-cache";
+import { thumbnailImageProps } from "../image-thumbnails";
 import { paintGradient } from "../utils/paint-gradient";
 
 const SWATCH_SIZES = {
@@ -61,7 +61,7 @@ export function SchemeSwatchPreview({
       {image ? (
         <Box
           component="img"
-          src={imageUrl(image)}
+          {...thumbnailImageProps(image, { xs: "16px", sm: "24px", md: "36px", lg: "56px" }[size])}
           alt=""
           draggable={false}
           sx={{

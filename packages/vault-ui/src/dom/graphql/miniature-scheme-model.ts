@@ -10,7 +10,7 @@ import type { MiniatureSchemeRead } from "./miniature-scheme-loader";
 export type SchemeSummaryModel = Pick<
   ColorScheme,
   "id" | "name" | "category" | "isSystem" | "sourceName" | "sourceLogoUrl"
->;
+> & { thumbnailUrl?: string | null };
 
 export function schemeSummaryModel(scheme: MiniatureSchemeSummaryFragment): SchemeSummaryModel {
   return {
@@ -20,6 +20,7 @@ export function schemeSummaryModel(scheme: MiniatureSchemeSummaryFragment): Sche
     isSystem: scheme.isSystem,
     sourceName: scheme.sourceName ?? undefined,
     sourceLogoUrl: scheme.sourceLogoUrl,
+    thumbnailUrl: scheme.thumbnailUrl ?? null,
   };
 }
 

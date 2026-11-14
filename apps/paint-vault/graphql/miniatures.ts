@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { imageThumbnailUrl } from "@paint-vault/core/image-thumbnails";
 import { isPaintOwned } from "@paint-vault/core/paint-state";
 import { createPaintChoiceResolver } from "@paint-vault/core/paint-substitutions";
 import { RECIPE_STEP_VALUES } from "@paint-vault/core/recipe-steps";
@@ -128,6 +129,9 @@ function group<T>(rows: T[], key: (r: T) => string) {
 }
 function miniatureRead(row: MiniatureRow, required: PaintRead[], missing: MissingRead[]) {
   const colors = required.filter((p) => p.colorHex).map((p) => ({ paintId: p.id, colorHex: p.colorHex! }));
+  const imageUrl = row.imageKey
+    ? `/api/miniatures/${encodeURIComponent(row.id)}/image?v=${encodeURIComponent(row.imageKey)}`
+    : row.sourceImageUrl;
   return {
     id: row.id,
     title: row.title,
@@ -139,9 +143,8 @@ function miniatureRead(row: MiniatureRow, required: PaintRead[], missing: Missin
     scale: row.scale,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
-    imageUrl: row.imageKey
-      ? `/api/miniatures/${encodeURIComponent(row.id)}/image?v=${encodeURIComponent(row.imageKey)}`
-      : row.sourceImageUrl,
+    imageUrl,
+    thumbnailUrl: imageUrl ? imageThumbnailUrl(imageUrl) : null,
     readiness: {
       total: required.length,
       missing: missing.length,

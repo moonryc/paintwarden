@@ -247,3 +247,19 @@ void test("REST and GraphQL share validated atomic template commands with source
   // Content-addressed source bytes remain referenced by the source model.
   assert.ok(await imageExists(image));
 });
+
+void test("template summaries expose bounded local thumbnails without replacing editor originals", () => {
+  const id = insertTemplate("Thumbnail template", true);
+  const key = `${randomUUID()}.webp`;
+  sqlite.prepare("UPDATE miniature_templates SET image_key=? WHERE id=?").run(key, id);
+  let row = readTemplates({ first: 48, id }).templates.nodes[0];
+  const original = `/api/miniature-templates/${encodeURIComponent(id)}/image?v=${key}`;
+  assert.equal(row.imageUrl, original);
+  assert.equal(row.thumbnailUrl, `${original}&w=320`);
+  for (const image of ["/api/catalog-source-images/source.webp", "https://external.test/source.jpg"]) {
+    sqlite.prepare("UPDATE miniature_templates SET image_key=NULL,image_url=? WHERE id=?").run(image, id);
+    row = readTemplates({ first: 48, id }).templates.nodes[0];
+    assert.equal(row.imageUrl, image);
+    assert.equal(row.thumbnailUrl, image.startsWith("/api/") ? `${image}?w=320` : image);
+  }
+});

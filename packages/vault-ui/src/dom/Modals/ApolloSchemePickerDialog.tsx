@@ -29,7 +29,7 @@ export function ApolloSchemePickerDialog(props: SchemePickerDialogProps) {
         availableCount: scheme.availableCount,
         paintCount: scheme.paintCount,
         colors: scheme.previewSwatches.map((swatch) => swatch.colorHex),
-        imageUrl: scheme.imageUrl,
+        imageUrl: scheme.thumbnailUrl ?? scheme.imageUrl,
       })),
     [options.items],
   );

@@ -127,6 +127,7 @@ export type Miniature = {
   readiness: Readiness;
   scale: Scalars["String"]["output"];
   status: Ownership;
+  thumbnailUrl?: Maybe<Scalars["String"]["output"]>;
   title: Scalars["String"]["output"];
 };
 
@@ -220,6 +221,7 @@ export type MiniatureScheme = {
   sourceId?: Maybe<Scalars["ID"]["output"]>;
   sourceLogoUrl?: Maybe<Scalars["String"]["output"]>;
   sourceName?: Maybe<Scalars["String"]["output"]>;
+  thumbnailUrl?: Maybe<Scalars["String"]["output"]>;
   usageCount: Scalars["Int"]["output"];
 };
 
@@ -1051,6 +1053,7 @@ export type TemplateSummary = {
   sourceId?: Maybe<Scalars["ID"]["output"]>;
   sourceLogoUrl?: Maybe<Scalars["String"]["output"]>;
   sourceName?: Maybe<Scalars["String"]["output"]>;
+  thumbnailUrl?: Maybe<Scalars["String"]["output"]>;
 };
 
 export type TemplatesView = {
@@ -1572,6 +1575,7 @@ export type MiniatureResolvers<
   readiness?: Resolver<ResolversTypes["Readiness"], ParentType, ContextType>;
   scale?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
   status?: Resolver<ResolversTypes["Ownership"], ParentType, ContextType>;
+  thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   title?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
 };
 
@@ -1668,6 +1672,7 @@ export type MiniatureSchemeResolvers<
   sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
   sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   usageCount?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
 };
 
@@ -2520,6 +2525,7 @@ export type TemplateSummaryResolvers<
   sourceId?: Resolver<Maybe<ResolversTypes["ID"]>, ParentType, ContextType>;
   sourceLogoUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   sourceName?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
 };
 
 export type TemplatesViewResolvers<

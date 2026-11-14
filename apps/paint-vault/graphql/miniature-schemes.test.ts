@@ -309,3 +309,27 @@ void test("scheme picker uses legacy base-sensitivity name order with ID ties ac
   );
   assert.equal(new Set(actual).size, expected.length);
 });
+
+void test("scheme picker thumbnails resize local catalog assets and preserve full detail entries", () => {
+  const id = scheme("Catalog asset thumbnail");
+  const original = "/api/catalog-source-images/original.webp";
+  const authoredThumbnail = "/api/catalog-source-images/authored-thumb.webp";
+  sqlite
+    .prepare(
+      "INSERT INTO color_scheme_images(id,scheme_id,image_url,thumbnail_url,sort_order,updated_at) VALUES(?,?,?,?,0,?)",
+    )
+    .run(uuid(), id, original, authoredThumbnail, timestamp);
+  let row = readMiniatureSchemeOptions({ first: 40 }).nodes[0];
+  assert.equal(row.thumbnailUrl, `${authoredThumbnail}?w=320`);
+  assert.equal(readMiniatureScheme(id).entries[0].imageUrl, original);
+  sqlite.prepare("UPDATE color_scheme_images SET thumbnail_url=NULL WHERE scheme_id=?").run(id);
+  row = readMiniatureSchemeOptions({ first: 40 }).nodes[0];
+  assert.equal(row.thumbnailUrl, `${original}?w=320`);
+  sqlite
+    .prepare("UPDATE color_scheme_images SET image_url=? WHERE scheme_id=?")
+    .run("https://external.test/original.webp", id);
+  assert.equal(
+    readMiniatureSchemeOptions({ first: 40 }).nodes[0].thumbnailUrl,
+    "https://external.test/original.webp",
+  );
+});

@@ -13,7 +13,7 @@ import { useVaultStore } from "../store/hooks";
 import type { Paint, SchemeOrderEntry } from "../types";
 import { schemePreviewChipSize } from "../utils/chip-sizes";
 import { listResetSx } from "../utils/element-resets";
-import { imageUrl } from "../utils/image-cache";
+import { thumbnailImageProps } from "../image-thumbnails";
 import { displayDividerLabel } from "../utils/scheme-order";
 
 import { LibraryPaintRow } from "./LibraryPaintRow";
@@ -181,13 +181,18 @@ export function SchemePreview({
                   >
                     <Box
                       component="img"
-                      src={imageUrl(entry.imageUrl)}
+                      {...thumbnailImageProps(
+                        entry.thumbnailUrl || entry.imageUrl,
+                        "(max-width: 599px) 100vw, 640px",
+                      )}
                       alt={
                         entry.imageType
                           ? t("schemeExampleForType", { name: active.name, type: entry.imageType })
                           : t("schemeRecipeExample", { name: active.name })
                       }
                       sx={{
+                        display: "block",
+                        aspectRatio: "4 / 3",
                         marginInline: "auto",
                         maxHeight: "34rem",
                         width: "100%",

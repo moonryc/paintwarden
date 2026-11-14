@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { imageThumbnailUrl } from "@paint-vault/core/image-thumbnails";
 import { isUserId } from "@paint-vault/core/vault-ids";
 import { GraphQLError } from "graphql";
 
@@ -38,6 +39,7 @@ export type TemplateSummary = {
   manufacturer: string;
   faction: string;
   imageUrl: string;
+  thumbnailUrl: string | null;
   categories: string[];
   kind: "user" | "source";
   sourceId: string | null;
@@ -102,6 +104,13 @@ function projection(revision: Revision, allowCache: boolean): Projection {
       imageUrl: r.imageKey
         ? `/api/miniature-templates/${encodeURIComponent(r.id)}/image?v=${encodeURIComponent(r.imageKey)}`
         : r.imageUrl || "",
+      thumbnailUrl: r.imageKey
+        ? imageThumbnailUrl(
+            `/api/miniature-templates/${encodeURIComponent(r.id)}/image?v=${encodeURIComponent(r.imageKey)}`,
+          )
+        : r.imageUrl
+          ? imageThumbnailUrl(r.imageUrl)
+          : null,
       kind: isUserId(r.id) ? "user" : "source",
       sourceId: r.sourceId,
       sourceName: r.sourceName,

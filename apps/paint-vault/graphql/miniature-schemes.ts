@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { imageThumbnailUrl } from "@paint-vault/core/image-thumbnails";
 import { isUserId } from "@paint-vault/core/vault-ids";
 import { GraphQLError } from "graphql";
 
@@ -30,6 +31,7 @@ export type MiniatureSchemeSummary = {
   previewSwatches: { paintId: string; colorHex: string }[];
   previewSwatchesTruncated: boolean;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
 };
 export type MiniatureSchemeEntry = {
   id: string;
@@ -70,6 +72,7 @@ type SchemeStats = Pick<
   | "previewSwatches"
   | "previewSwatchesTruncated"
   | "imageUrl"
+  | "thumbnailUrl"
   | "paintNames"
   | "usageCount"
   | "gradient"
@@ -135,6 +138,7 @@ function schemeStats(rows: SummaryRow[], byId: Map<string, PaintRead>): Map<stri
         previewSwatches: JSON.parse(row.swatches) as MiniatureSchemeSummary["previewSwatches"],
         previewSwatchesTruncated: row.swatchCount > 8,
         imageUrl: row.imageUrl,
+        thumbnailUrl: row.imageUrl ? imageThumbnailUrl(row.imageUrl) : null,
       },
     ]),
   );
