@@ -1,6 +1,7 @@
 // Run from apps/paint-vault using Node 22.22.2 --import tsx.
 import assert from "node:assert/strict";
 import { cp, mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import os from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
@@ -59,7 +60,9 @@ assert.equal(
   measuredBytes.reduce((a, b) => a + b, 0),
   originalBytes + derivedBytes,
 );
+const sharp = createRequire(new URL("../apps/paint-vault/lib/image-store.ts", import.meta.url))("sharp");
 const result = {
+  codec: { sharp: sharp.versions.sharp, vips: sharp.versions.vips, webp: sharp.versions.webp },
   measuredAt: new Date().toISOString(),
   node: process.version,
   platform: `${process.platform}/${process.arch}`,

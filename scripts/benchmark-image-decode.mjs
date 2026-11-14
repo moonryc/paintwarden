@@ -68,6 +68,7 @@ try {
   });
   const report = {
     measuredAt: new Date().toISOString(),
+    codec: generated.codec,
     browser: browser.version(),
     method:
       "32 synthetic detailed 3.84MP JPEGs and matching 320w WebP, three createImageBitmap samples each, encoded bytes already in memory before the timer; new Blob each sample. Canvas240×160 draw+single-pixel synchronous readback is reported separately. Warm buffers/caches, sequential paired order, headless Chromium; NOT original UI/compositor paint, network decode scheduling, frame time, or a controlled end-user speed measurement.",

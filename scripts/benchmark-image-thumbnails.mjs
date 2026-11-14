@@ -143,6 +143,7 @@ if (mode === "seed") {
     measuredAt: new Date().toISOString(),
     node: process.version,
     label,
+    codec: { sharp: sharp.versions.sharp, vips: sharp.versions.vips, webp: sharp.versions.webp },
     deviceScaleFactor,
     base,
     dataDir,

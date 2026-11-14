@@ -162,15 +162,14 @@ try {
         path.join(resources, "server/node"),
         [
           "-e",
-          "console.log(JSON.stringify({sharp:require.resolve('sharp'),versions:require('sharp').versions}))",
+          "const sharp=require('sharp');console.log(JSON.stringify({sharp:require.resolve('sharp'),versions:sharp.versions,binding:Object.keys(require.cache).find(filename=>filename.endsWith('.node')&&filename.includes('sharp'))}))",
         ],
         { cwd: path.join(resources, "server"), encoding: "utf8" },
       ),
     );
     assert.ok(report.nativeDependencies.sharp.startsWith(path.join(resources, "server/node_modules")));
-    report.nativeAddon = await identity(
-      path.join(resources, "server/node_modules/@img/sharp-darwin-arm64/lib/sharp-darwin-arm64.node"),
-    );
+    assert.ok(report.nativeDependencies.binding?.startsWith(path.join(resources, "server/node_modules")));
+    report.nativeAddon = await identity(report.nativeDependencies.binding);
     let app;
     try {
       app = await electron.launch({
