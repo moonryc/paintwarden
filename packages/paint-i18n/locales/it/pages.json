@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Ripristina da un backup",
   "settingsRestoreDescription": "Vedrai cosa contiene il backup e sceglierai come ripristinarlo prima che cambi qualcosa.",
   "settingsChooseFile": "Scegli file",
-  "settingsServerVersion": " · Versione {{version}}",
   "settingsSignedInAs": "Accedi come {{username}}.",
   "settingsLastBackup": "Backup salvato alle {{time}}.",
   "settingsMergeLabel": "Unisci a questo archivio",

@@ -143,7 +143,6 @@
   "settingsRestoreBackup": "從備份還原",
   "settingsRestoreDescription": "變更任何內容前，您可以先查看備份內容並選擇還原方式。",
   "settingsChooseFile": "選擇檔案",
-  "settingsServerVersion": " · 版本 {{version}}",
   "settingsSignedInAs": "您以 {{username}} 登入。",
   "settingsLastBackup": "已於 {{time}} 儲存備份。",
   "settingsMergeLabel": "合併至此資料庫",

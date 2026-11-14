@@ -1,4 +1,3 @@
-import { i18n } from "@paint-vault/i18n/runtime";
 import ComputerOutlinedIcon from "@mui/icons-material/ComputerOutlined";
 import LanguageOutlinedIcon from "@mui/icons-material/LanguageOutlined";
 import {
@@ -14,10 +13,13 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
+import { i18n } from "@paint-vault/i18n/runtime";
 import Vault from "@paint-vault/ui";
-import { useTranslation } from "react-i18next";
 import { colors } from "@paint-vault/ui/theme-tokens";
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
+
+import { HelpAbout } from "../../../packages/vault-ui/src/dom/Components/HelpAbout";
 
 // Set when the saved remote server runs a different Paint Vault version than this app.
 export type VersionProblem = {
@@ -179,9 +181,19 @@ export default function DesktopConnection({ bridge }: { bridge: PaintVaultDeskto
                   <Button variant="contained" onClick={handleLocal} disabled={busy}>
                     {i18n.t("shell:retryVaultStartup")}
                   </Button>
-                  <Button onClick={() => void bridge.openLogsFolder?.()}>
-                    {i18n.t("shell:openLogsFolder")}
-                  </Button>
+                  {bridge.openLogsFolder && (
+                    <Button
+                      onClick={() =>
+                        void bridge
+                          .openLogsFolder?.()
+                          .catch(() => setError(i18n.t("components:supportFailure")))
+                      }
+                    >
+                      {i18n.t("shell:openLogsFolder")}
+                    </Button>
+                  )}
+                  {error && <Alert severity="error">{error}</Alert>}
+                  <HelpAbout desktop embedded />
                 </>
               )}
             </Stack>

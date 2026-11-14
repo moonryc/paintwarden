@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("paintVaultDesktop", {
+  getSupportSummary: (language) => ipcRenderer.invoke("support:summary", language),
+  saveSupportBundle: (language) => ipcRenderer.invoke("support:save", language),
+  openBugReport: (language) => ipcRenderer.invoke("support:report", language),
   getStartupState: () => ipcRenderer.invoke("startup:get"),
   openLogsFolder: () => ipcRenderer.invoke("startup:logs"),
   onStartupState: (listener) => {

@@ -1,3 +1,5 @@
+import type { SupportSummary } from "./utils/support";
+
 import type { ColorCategory } from "@paint-vault/core/color-categories";
 import type {
   MiniaturePaintSubstitution,
@@ -231,6 +233,9 @@ export type DesktopStartupState = {
 };
 
 export type DesktopBridge = {
+  getSupportSummary(language: string): Promise<SupportSummary>;
+  saveSupportBundle(language: string): Promise<boolean>;
+  openBugReport(language: string): Promise<boolean>;
   getStartupState?(): Promise<DesktopStartupState>;
   onStartupState?(listener: (state: DesktopStartupState) => void): () => void;
   openLogsFolder?(): Promise<string>;

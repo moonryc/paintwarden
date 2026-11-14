@@ -34,6 +34,9 @@ export const Connected: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("heading", { name: "Data & settings" })).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Manage plugins" })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Help & About" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Report a bug" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Save support bundle" })).toBeVisible();
     await expect(canvas.getByRole("switch", { name: "Require sign-in" })).not.toBeChecked();
   },
 };

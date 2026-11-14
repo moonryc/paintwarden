@@ -1,10 +1,12 @@
-import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Card } from "@mui/material";
 import { Component, type ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Download, RotateCw } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import { exportBackupFile } from "../utils/backup-export";
+
+import { HelpAbout } from "./HelpAbout";
 
 // Catches a rendering error anywhere in the app and shows a recovery screen instead of a blank
 // window. The vault data is safe on the server, so the screen offers a reload and a backup.
@@ -68,6 +70,7 @@ export function CrashScreen({ error }: { error: Error }) {
         >
           {error.message || String(error)}
         </Box>
+        <HelpAbout embedded />
         {exportResult === "saved" && <Alert severity="success">{t("backupExported")}</Alert>}
         {exportResult === "failed" && <Alert severity="error">{t("backupExportFailed")}</Alert>}
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, justifyContent: "flex-end" }}>

@@ -155,7 +155,6 @@
   "settingsRestoreBackup": "Przywróć z kopii zapasowej",
   "settingsRestoreDescription": "Zanim cokolwiek się zmieni, zobaczysz zawartość kopii zapasowej i wybierzesz sposób przywracania.",
   "settingsChooseFile": "Wybierz plik",
-  "settingsServerVersion": " · Wersja {{version}}",
   "settingsSignedInAs": "Logujesz się jako {{username}}.",
   "settingsLastBackup": "Zapisano kopię zapasową o {{time}}.",
   "settingsMergeLabel": "Scal z tym skarbcem",

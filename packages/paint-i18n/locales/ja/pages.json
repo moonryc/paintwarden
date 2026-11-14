@@ -143,7 +143,6 @@
   "settingsRestoreBackup": "バックアップから復元",
   "settingsRestoreDescription": "変更を適用する前に、バックアップの内容を確認して復元方法を選べます。",
   "settingsChooseFile": "ファイルを選択",
-  "settingsServerVersion": " · バージョン{{version}}",
   "settingsSignedInAs": "{{username}}としてサインインします。",
   "settingsLastBackup": "{{time}}にバックアップを保存しました。",
   "settingsMergeLabel": "この保管庫に統合",

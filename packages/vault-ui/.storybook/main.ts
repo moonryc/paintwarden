@@ -11,7 +11,11 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 // it only finds while a story loads makes it reload the page, and stories already loading can
 // then pick up a second copy of React and fail with "Invalid hook call".
 function importedPackages() {
-  const files = [path.join(here, "preview.tsx")];
+  const files = [
+    path.join(here, "preview.tsx"),
+    // The startup-recovery story exercises the real desktop connection screen.
+    path.join(here, "../../../apps/paint-vault-web/src/desktop-connection.tsx"),
+  ];
   for (const entry of readdirSync(path.join(here, "../src/dom"), { recursive: true, withFileTypes: true }))
     if (entry.isFile() && /\.tsx?$/.test(entry.name)) files.push(path.join(entry.parentPath, entry.name));
   const packages = new Set<string>();

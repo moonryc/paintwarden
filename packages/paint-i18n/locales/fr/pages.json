@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Restaurer depuis une sauvegarde",
   "settingsRestoreDescription": "Vous pourrez voir le contenu de la sauvegarde et choisir comment la restaurer avant toute modification.",
   "settingsChooseFile": "Choisir un fichier",
-  "settingsServerVersion": " · Version {{version}}",
   "settingsSignedInAs": "Vous vous connectez en tant que {{username}}.",
   "settingsLastBackup": "Sauvegarde enregistrée à {{time}}.",
   "settingsMergeLabel": "Fusionner avec ce coffre",

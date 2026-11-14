@@ -28,6 +28,7 @@ const { createUpdater } = require("./desktop-update.cjs");
 const { t, setLanguage, getLanguage, resolveLanguage } = require("./desktop-i18n.cjs");
 const { createPreferences } = require("./desktop-preferences.cjs");
 const { menuTemplate } = require("./desktop-menu.cjs");
+const { supportSummary, createSupportBundle, openBugReport } = require("./desktop-support.cjs");
 
 const appOrigin = "paintvault://app";
 const testPort = !app.isPackaged && Number(process.env.PAINT_VAULT_DESKTOP_PORT);
@@ -64,6 +65,20 @@ mkdirSync(path.join(dataDirectory, "electron"), { recursive: true });
 app.setPath("userData", path.join(dataDirectory, "electron"));
 // Isolated desktop profiles must not write logs into the person's normal profile.
 if (dataOverride) app.setAppLogsPath(path.join(dataDirectory, "electron", "logs"));
+// Retain bounded desktop failures alongside the child server log. These private logs
+// are projected through the strict support redactor before they can be exported.
+const desktopLog = createServerLog(app.getPath("logs"), { filename: "vault-desktop.log" });
+for (const level of ["warn", "error"]) {
+  const original = console[level].bind(console);
+  console[level] = (...args) => {
+    try {
+      desktopLog.write(require("node:util").format(...args) + "\n");
+    } catch {
+      /* Keep stderr usable. */
+    }
+    original(...args);
+  };
+}
 let localUrl;
 let serverProcess;
 let readyServer;
@@ -613,6 +628,39 @@ app
         return new Response(t("errors.forbidden"), { status: 403 });
       if (url.pathname.startsWith("/api/")) return proxyApi(request, url);
       return serveStatic(url);
+    });
+
+    function diagnostics(language) {
+      return supportSummary({
+        version: app.getVersion(),
+        os: { darwin: "macOS", win32: "Windows", linux: "Linux" }[process.platform],
+        mode: connection.mode,
+        language,
+        serverVersion:
+          connection.mode === "remote" ? versionChecks.get(connection.serverUrl)?.version : undefined,
+        migrationState: startupState.phase,
+      });
+    }
+    ipcMain.handle("support:summary", (event, language) => {
+      allowRenderer(event);
+      return diagnostics(language);
+    });
+    ipcMain.handle("support:save", async (event, language) => {
+      allowRenderer(event);
+      const result = await dialog.showSaveDialog(mainWindow, {
+        title: t("dialogs.exportFile"),
+        buttonLabel: t("dialogs.save"),
+        defaultPath: "paint-vault-support.zip",
+        filters: [{ name: t("dialogs.zip"), extensions: ["zip"] }],
+      });
+      if (result.canceled || !result.filePath) return false;
+      const bytes = await createSupportBundle(app.getPath("logs"), diagnostics(language));
+      await writeFile(result.filePath, bytes, { mode: 0o600 });
+      return true;
+    });
+    ipcMain.handle("support:report", async (event, language) => {
+      allowRenderer(event);
+      return openBugReport(diagnostics(language), (url) => shell.openExternal(url));
     });
 
     ipcMain.handle("startup:get", (event) => {

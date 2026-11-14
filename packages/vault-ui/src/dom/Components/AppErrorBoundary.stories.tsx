@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
+
+import { desktopBridge } from "../storybook/decorators";
 
 import { AppErrorBoundary, CrashScreen } from "./AppErrorBoundary";
 
@@ -30,5 +32,27 @@ export const CatchesRenderErrors: Story = {
     await expect(await canvas.findByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();
     await expect(canvas.getByText("This component failed to render")).toBeInTheDocument();
     await expect(canvas.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+  },
+};
+
+const report = fn(async () => true);
+export const SupportExcludesRenderingError: Story = {
+  args: { error: new Error("private-render-context /Users/example/vault.sqlite") },
+  decorators: [
+    desktopBridge(
+      { status: "disabled", currentVersion: "1.0.0", version: null, progress: null, error: null },
+      { openBugReport: report },
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Report a bug" }));
+    await expect(report).toHaveBeenCalledWith("en");
+    await userEvent.click(await canvas.findByRole("button", { name: "Save support bundle" }));
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await expect(dialog.getByText(/"version": "1.0.0"/)).toBeInTheDocument();
+    await expect(dialog.queryByText(/private-render-context/)).not.toBeInTheDocument();
+    await expect(dialog.queryByText(/vault.sqlite/)).not.toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("button", { name: "Cancel" }));
   },
 };

@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Восстановить из резервной копии",
   "settingsRestoreDescription": "Прежде чем что-либо изменится, вы увидите содержимое резервной копии и выберете способ восстановления.",
   "settingsChooseFile": "Выбрать файл",
-  "settingsServerVersion": " · Версия {{version}}",
   "settingsSignedInAs": "Вы входите как {{username}}.",
   "settingsLastBackup": "Резервная копия сохранена: {{time}}.",
   "settingsMergeLabel": "Объединить с этим хранилищем",

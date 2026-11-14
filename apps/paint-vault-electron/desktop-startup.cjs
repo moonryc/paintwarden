@@ -8,9 +8,12 @@ const protectedPhase = (state) =>
 
 // Bounded storage, including a single very large output chunk. Private files can contain
 // recovery paths and the server's first-run setup code. Never forward raw output to the UI.
-function createServerLog(directory, { maxBytes = 2 * 1024 * 1024, copies = 3 } = {}) {
+function createServerLog(
+  directory,
+  { maxBytes = 2 * 1024 * 1024, copies = 3, filename = "vault-server.log" } = {},
+) {
   mkdirSync(directory, { recursive: true, mode: 0o700 });
-  const file = path.join(directory, "vault-server.log");
+  const file = path.join(directory, filename);
   let size;
   try {
     size = statSync(file).size;

@@ -11,6 +11,7 @@ import { translateServerError } from "@paint-vault/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { HelpAbout } from "../../Components/HelpAbout";
 import { PageHeader } from "../../Components/PageHeader";
 import { dialogPreloadHandlers } from "../../dialog-preload";
 import { Download, Extension, FileUp } from "../../icons";
@@ -67,7 +68,6 @@ export function SettingsScreen({
   const update = useDesktopUpdate();
   const requireSignIn = Boolean(auth?.requireSignIn);
   const username = auth?.username || t(FALLBACK_OWNER_NAME);
-  const serverVersion = useServerVersion();
 
   async function exportBackup() {
     setExporting(true);
@@ -213,7 +213,6 @@ export function SettingsScreen({
                   : serverAddress === "desktop"
                     ? t("settingsDesktopConnection")
                     : serverAddress}
-              {serverVersion && t("settingsServerVersion", { version: serverVersion })}
             </Box>
           }
           action={
@@ -248,6 +247,8 @@ export function SettingsScreen({
           />
         )}
       </SettingsSection>
+
+      <HelpAbout />
 
       <LanguagePicker />
 
@@ -428,22 +429,4 @@ export function SettingsScreen({
       />
     </Box>
   );
-}
-
-// The connected server's Paint Vault version, for bug reports and matching the desktop app.
-function useServerVersion() {
-  const [version, setVersion] = useState<string | null>(null);
-  useEffect(() => {
-    let current = true;
-    fetch("/api/version", { cache: "no-store" })
-      .then((response) => (response.ok ? (response.json() as Promise<{ version?: unknown }>) : null))
-      .then((body) => {
-        if (current && typeof body?.version === "string") setVersion(body.version);
-      })
-      .catch(() => undefined);
-    return () => {
-      current = false;
-    };
-  }, []);
-  return version;
 }

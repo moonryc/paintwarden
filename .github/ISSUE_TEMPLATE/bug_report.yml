@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a reproducible Paint Vault problem.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve Paint Vault. Please describe the problem in your preferred language.
+        **Never include passwords, tokens, setup codes, private server URLs, vault contents, or other secrets.**
+        Settings → Help & About can save an optional support bundle. Review it before attaching it below.
+        Desktop bundles contain a safe summary and sanitized logs; browser downloads contain a JSON summary only, not server logs.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Shown in Settings → Help & About.
+      placeholder: 1.0.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS / Windows / Linux / Other
+    validations:
+      required: true
+  - type: input
+    id: mode
+    attributes:
+      label: Connection mode
+      placeholder: local / remote
+    validations:
+      required: true
+  - type: input
+    id: language
+    attributes:
+      label: App language
+      placeholder: en
+    validations:
+      required: true
+  - type: input
+    id: server_version
+    attributes:
+      label: Server version (remote connections)
+      description: Shown in Help & About; do not include the server URL.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What did you do before the problem occurred?
+      placeholder: |
+        1. Open…
+        2. Select…
+        3. See…
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context and optional support bundle
+      description: Review attachments and screenshots for private information before sharing. Attaching a support bundle is optional.

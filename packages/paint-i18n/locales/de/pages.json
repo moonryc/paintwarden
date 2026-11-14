@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Aus Sicherung wiederherstellen",
   "settingsRestoreDescription": "Du siehst zuerst den Inhalt der Sicherung und wählst, wie du sie wiederherstellen möchtest. Vorher wird nichts geändert.",
   "settingsChooseFile": "Datei auswählen",
-  "settingsServerVersion": " · Version {{version}}",
   "settingsSignedInAs": "Du meldest dich als {{username}} an.",
   "settingsLastBackup": "Sicherung um {{time}} gespeichert.",
   "settingsMergeLabel": "Mit diesem Tresor zusammenführen",

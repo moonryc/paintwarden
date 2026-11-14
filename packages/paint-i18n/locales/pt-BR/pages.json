@@ -151,7 +151,6 @@
   "settingsRestoreBackup": "Restaurar de um backup",
   "settingsRestoreDescription": "Você verá o conteúdo do backup e escolherá como restaurá-lo antes de qualquer alteração.",
   "settingsChooseFile": "Escolher arquivo",
-  "settingsServerVersion": " · Versão {{version}}",
   "settingsSignedInAs": "Você entra como {{username}}.",
   "settingsLastBackup": "Backup salvo às {{time}}.",
   "settingsMergeLabel": "Mesclar a este cofre",

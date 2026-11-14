@@ -1,0 +1,107 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fn, userEvent, within } from "storybook/test";
+
+import type { SupportSummary } from "../utils/support";
+
+import { HelpAbout } from "./HelpAbout";
+
+const localSummary: SupportSummary = {
+  version: "1.0.0",
+  os: "macOS",
+  mode: "local" as const,
+  language: "en",
+  migrationState: "ready",
+};
+const meta = {
+  title: "Components/HelpAbout",
+  component: HelpAbout,
+  args: {
+    loadSummary: fn(async () => localSummary),
+    saveBundle: fn(async () => true),
+    report: fn(async () => undefined),
+    desktop: true,
+  },
+} satisfies Meta<typeof HelpAbout>;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Desktop: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("macOS")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Save support bundle" }));
+    const dialog = within(
+      await within(document.body).findByRole("dialog", { name: "Review support bundle" }),
+    );
+    await expect(args.saveBundle).not.toHaveBeenCalled();
+    await expect(dialog.getByText(/Nothing is uploaded automatically/)).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+    await expect(args.saveBundle).not.toHaveBeenCalled();
+    await userEvent.click(await canvas.findByRole("button", { name: "Save support bundle" }));
+    await userEvent.click(
+      within(await within(document.body).findByRole("dialog")).getByRole("button", { name: "Save file" }),
+    );
+    await expect(args.saveBundle).toHaveBeenCalledWith("en");
+    await expect(await canvas.findByText("Support bundle saved.")).toBeInTheDocument();
+  },
+};
+export const RemoteBrowser: Story = {
+  args: {
+    desktop: false,
+    loadSummary: fn(async () => ({
+      ...localSummary,
+      mode: "remote" as const,
+      os: "Linux",
+      serverVersion: "1.0.0",
+    })),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("Server version")).toBeInTheDocument();
+    await expect(canvas.getByText(/Server logs are not available in this version/)).toBeInTheDocument();
+  },
+};
+export const SummaryFailure: Story = {
+  args: {
+    loadSummary: fn(async () => {
+      throw new Error("Private internal failure");
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      "Could not complete this support action.",
+    );
+    await expect(canvas.getByRole("button", { name: "Save support bundle" })).toBeDisabled();
+    await expect(canvas.queryByText(/Private internal failure/)).not.toBeInTheDocument();
+  },
+};
+export const SaveFailure: Story = {
+  args: {
+    saveBundle: fn(async () => {
+      throw new Error("Private path /home/test/database.sqlite");
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("macOS")).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Save support bundle" }));
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await userEvent.click(dialog.getByRole("button", { name: "Save file" }));
+    await expect(
+      await dialog.findByText("Could not complete this support action. Please try again."),
+    ).toBeInTheDocument();
+    await expect(dialog.queryByText(/Private path/)).not.toBeInTheDocument();
+    await userEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+  },
+};
+export const Narrow: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ maxWidth: 280 }}>
+        <Story />
+      </div>
+    ),
+  ],
+};
+export const Pseudo: Story = { parameters: { locale: "en-XA" } };

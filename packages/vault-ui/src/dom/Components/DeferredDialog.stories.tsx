@@ -149,7 +149,9 @@ export const RejectedImport: Story = {
     await expect(canvas.getByText("Dialog import failed")).toBeInTheDocument();
     await expect(canvas.getByRole("button", { name: "Reload" })).toBeInTheDocument();
     await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
-    await expect(body.queryByRole("status")).not.toBeInTheDocument();
+    // The crash screen may independently load support metadata; only the dialog
+    // import status must disappear when the error boundary takes over.
+    await expect(body.queryByText(`Opening ${title}…`)).not.toBeInTheDocument();
   },
 };
 

@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Restore from a backup",
   "settingsRestoreDescription": "You'll see what the backup contains and choose how to restore it before anything changes.",
   "settingsChooseFile": "Choose file",
-  "settingsServerVersion": " · Version {{version}}",
   "settingsSignedInAs": "You sign in as {{username}}.",
   "settingsLastBackup": "Saved a backup at {{time}}.",
   "settingsMergeLabel": "Merge into this vault",

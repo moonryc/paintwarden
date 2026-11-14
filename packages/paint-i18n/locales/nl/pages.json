@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Herstellen vanuit een back-up",
   "settingsRestoreDescription": "Je ziet wat de back-up bevat en kiest hoe je deze wilt herstellen voordat er iets verandert.",
   "settingsChooseFile": "Bestand kiezen",
-  "settingsServerVersion": " · Versie {{version}}",
   "settingsSignedInAs": "Je logt in als {{username}}.",
   "settingsLastBackup": "Back-up opgeslagen om {{time}}.",
   "settingsMergeLabel": "Met deze kluis samenvoegen",

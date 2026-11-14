@@ -147,7 +147,6 @@
   "settingsRestoreBackup": "Restaurar desde una copia de seguridad",
   "settingsRestoreDescription": "Verás qué contiene la copia y elegirás cómo restaurarla antes de que cambie nada.",
   "settingsChooseFile": "Elegir archivo",
-  "settingsServerVersion": " · Versión {{version}}",
   "settingsSignedInAs": "Inicias sesión como {{username}}.",
   "settingsLastBackup": "Se ha guardado una copia de seguridad a las {{time}}.",
   "settingsMergeLabel": "Fusionar con este almacén",

@@ -66,6 +66,10 @@ function fakeBridge(state: DesktopUpdateState, overrides: Partial<DesktopBridge>
     return Promise.resolve(current);
   };
   return {
+    getSupportSummary: (language) =>
+      Promise.resolve({ version: "1.0.0", os: "macOS", mode: "local", language }),
+    saveSupportBundle: () => Promise.resolve(true),
+    openBugReport: () => Promise.resolve(true),
     getLanguage: () => Promise.resolve("en"),
     setLanguage: (language) => Promise.resolve(language),
     getConnection: () => Promise.resolve({ mode: "local" }),

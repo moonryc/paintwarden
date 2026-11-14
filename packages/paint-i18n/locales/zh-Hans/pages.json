@@ -143,7 +143,6 @@
   "settingsRestoreBackup": "从备份恢复",
   "settingsRestoreDescription": "在更改任何内容前，你可以查看备份内容，并选择恢复方式。",
   "settingsChooseFile": "选择文件",
-  "settingsServerVersion": " · 版本 {{version}}",
   "settingsSignedInAs": "你的登录用户名为 {{username}}。",
   "settingsLastBackup": "已于 {{time}} 保存备份。",
   "settingsMergeLabel": "合并到此资料库",
