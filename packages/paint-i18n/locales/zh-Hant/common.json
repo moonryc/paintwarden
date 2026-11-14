@@ -1,0 +1,10 @@
+{
+  "language": "語言",
+  "languageDescription": "選擇此裝置使用的語言。",
+  "languageSaveFailed": "無法儲存語言設定，請再試一次。",
+  "loading": "載入中…",
+  "cancel": "取消",
+  "save": "儲存",
+  "close": "關閉",
+  "retry": "再試一次"
+}
