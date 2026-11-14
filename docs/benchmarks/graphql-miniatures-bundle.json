@@ -3,7 +3,7 @@
   "node": "v22.22.2",
   "method": "Emitted .js assets only, summed raw bytes and per-file gzipSync default level 6. Excludes CSS/maps/fonts; not startup transfer or parse time.",
   "baseline": {
-    "directory": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-phase2-bundle-6Usu5Q/apps/paint-vault-web/dist",
+    "directory": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-phase2-bundle-6Usu5Q/apps/paintwarden-web/dist",
     "jsBytes": 1229603,
     "sumGzipBytes": 401980,
     "entry": {
@@ -151,7 +151,7 @@
     ]
   },
   "candidate": {
-    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paint-vault-web/dist",
+    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paintwarden-web/dist",
     "jsBytes": 1291985,
     "sumGzipBytes": 413247,
     "entry": {
@@ -549,5 +549,5 @@
   },
   "baselineSource": "e1f345a",
   "candidateSource": "421c564bfd20f4f3215a6d9653b110167f1c7ede",
-  "candidateWorkingTree": " M apps/paint-vault/graphql/miniature-schemes.test.ts\n M apps/paint-vault/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
+  "candidateWorkingTree": " M apps/paintwarden/graphql/miniature-schemes.test.ts\n M apps/paintwarden/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
 }

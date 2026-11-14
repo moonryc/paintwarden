@@ -3,7 +3,7 @@
 # dependencies
 /node_modules
 **/node_modules/
-/apps/paint-vault-electron/desktop-server/
+/apps/paintwarden-electron/desktop-server/
 /.pnp
 .pnp.*
 .yarn/*

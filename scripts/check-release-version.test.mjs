@@ -9,10 +9,10 @@ import { checkReleaseVersion } from "./check-release-version.mjs";
 // Keep the expected release surface independent of the discovery implementation.
 const directories = [
   "",
-  "apps/paint-vault",
-  "apps/paint-vault-web",
-  "apps/paint-vault-site",
-  "apps/paint-vault-electron",
+  "apps/paintwarden",
+  "apps/paintwarden-web",
+  "apps/paintwarden-site",
+  "apps/paintwarden-electron",
   "packages/paint-core",
   "packages/paint-i18n",
   "packages/vault-ui",
@@ -25,10 +25,10 @@ function fixture() {
     "package.json": {
       version,
       workspaces: [
-        "apps/paint-vault",
-        "apps/paint-vault-web",
-        "apps/paint-vault-site",
-        "apps/paint-vault-electron",
+        "apps/paintwarden",
+        "apps/paintwarden-web",
+        "apps/paintwarden-site",
+        "apps/paintwarden-electron",
         "packages/*",
       ],
     },
@@ -128,7 +128,7 @@ test("reports multiple version mismatches together", () => {
 });
 
 function cli(t, { tag, envTag, mutate = () => {} } = {}) {
-  const root = mkdtempSync(path.join(tmpdir(), "paint-vault-release-test-"));
+  const root = mkdtempSync(path.join(tmpdir(), "paintwarden-release-test-"));
   t.after(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(path.join(root, "scripts"));
   copyFileSync(

@@ -1,4 +1,4 @@
-import { i18n } from "@paint-vault/i18n/runtime";
+import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 
 import { WishlistPageDocument, type WishlistPageQuery } from "./generated/graphql";

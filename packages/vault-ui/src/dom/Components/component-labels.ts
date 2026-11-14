@@ -1,4 +1,4 @@
-import type { ColorCategory } from "@paint-vault/core/color-categories";
+import type { ColorCategory } from "@paintwarden/core/color-categories";
 
 import { i18n } from "../i18n";
 import { getSteps } from "../utils/constants";

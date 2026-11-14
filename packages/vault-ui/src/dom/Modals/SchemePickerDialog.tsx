@@ -2,7 +2,7 @@ import { colorCategoryLabel } from "../Components/component-labels";
 import { useTranslation } from "react-i18next";
 import { Alert, Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { COLOR_CATEGORIES, type ColorCategory } from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORIES, type ColorCategory } from "@paintwarden/core/color-categories";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "../Components/Modal";

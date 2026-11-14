@@ -1,5 +1,5 @@
 // Fixture-only server projections; never imported by production hooks.
-import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
 
 import type { MiniatureTemplate, MiniatureTemplateRecipe, State } from "../types";
 

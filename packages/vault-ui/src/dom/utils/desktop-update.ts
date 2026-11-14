@@ -1,11 +1,11 @@
-import { i18n, formatNumber } from "@paint-vault/i18n/runtime";
+import { i18n, formatNumber } from "@paintwarden/i18n/runtime";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { DesktopUpdateState } from "../types";
 
 // Follows the desktop app's self-update. Returns null in a normal browser, which has no updater.
 export function useDesktopUpdate() {
-  const bridge = typeof window === "undefined" ? undefined : window.paintVaultDesktop;
+  const bridge = typeof window === "undefined" ? undefined : window.paintwardenDesktop;
   const [state, setState] = useState<DesktopUpdateState | null>(null);
   const revision = useRef(0);
   useEffect(() => {

@@ -1,12 +1,12 @@
-// A stand-in for the Paint Vault server, so the whole app can render in Storybook with the
+// A stand-in for the Paintwarden server, so the whole app can render in Storybook with the
 // sample vault. Reads return fixture data; writes succeed without changing anything.
-import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
 import {
   defaultSubstitution,
   isPaintAvailable,
   resolvePaintChoice,
   resolveSubstitution,
-} from "@paint-vault/core/paint-substitutions";
+} from "@paintwarden/core/paint-substitutions";
 import type { Decorator } from "@storybook/react-vite";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";

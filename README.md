@@ -1,6 +1,6 @@
-# Paint Vault
+# Paintwarden
 
-Paint Vault is a miniature-paint inventory and project planner for desktop or a
+Paintwarden is a miniature-paint inventory and project planner for desktop or a
 self-hosted web server. It tracks paints and quantities, miniature paint recipes,
 wishlists, shopping lists, project photos, and reusable color schemes.
 
@@ -9,10 +9,10 @@ uploaded project photos are stored as ordinary files alongside it.
 
 ## License
 
-Paint Vault is **source-available**, under [PolyForm Noncommercial 1.0.0](LICENSE).
+Paintwarden is **source-available**, under [PolyForm Noncommercial 1.0.0](LICENSE).
 It is free for personal and other non-commercial use. Forking and modifying for
 non-commercial purposes are allowed. Commercial use needs permission from Ryan
-Moon; for now, request it through [GitHub Issues](https://github.com/moonryc/paint-tracker/issues).
+Moon; for now, request it through [GitHub Issues](https://github.com/moonryc/paintwarden/issues).
 The license text controls; third-party components retain their own licenses.
 See also the separate [trademark policy](TRADEMARKS.md) and
 [contribution terms / CLA](CONTRIBUTING.md).
@@ -28,8 +28,8 @@ See also the separate [trademark policy](TRADEMARKS.md) and
 ### Install
 
 ```sh
-git clone https://github.com/moonryc/paint-tracker.git
-cd paint-tracker
+git clone https://github.com/moonryc/paintwarden.git
+cd paintwarden
 docker compose up -d --build
 ```
 
@@ -45,7 +45,7 @@ network can claim a new vault first. The server prints it to its log, and a new
 code is printed on each start until the owner exists:
 
 ```sh
-docker compose logs paint-vault
+docker compose logs paintwarden
 ```
 
 The desktop app's local vault, and any server listening only on loopback
@@ -55,7 +55,7 @@ Useful commands:
 
 ```sh
 # Follow application logs
-docker compose logs -f paint-vault
+docker compose logs -f paintwarden
 
 # Stop without deleting data
 docker compose down
@@ -77,7 +77,7 @@ The defaults work without an `.env` file. To customize the host port, create
 `.env` beside `compose.yaml`:
 
 ```dotenv
-PAINT_VAULT_PORT=3000
+PAINTWARDEN_PORT=3000
 ```
 
 Apply changes with `docker compose up -d`.
@@ -94,22 +94,22 @@ read the vault. To use other names, such as `nas.home` or a domain behind a
 reverse proxy, list them in `.env` before turning off sign-in:
 
 ```dotenv
-PAINT_VAULT_ALLOWED_HOSTS=nas.home,paint.example.com
+PAINTWARDEN_ALLOWED_HOSTS=nas.home,paint.example.com
 ```
 
 Password attempts are limited per client. If the server runs behind a reverse
-proxy, add `PAINT_VAULT_TRUST_PROXY=1` to `.env` so each client is identified by
+proxy, add `PAINTWARDEN_TRUST_PROXY=1` to `.env` so each client is identified by
 the last `X-Forwarded-For` address the proxy adds, rather than all sharing the
 proxy's address. Leave it off when clients connect directly; otherwise a device
 on your network could claim a new address for every guess.
 
 ## Storage and backups
 
-Compose mounts the named `paint-vault-data` volume at `/data`. Its contents are
+Compose mounts the named `paintwarden-data` volume at `/data`. Its contents are
 simple, portable files:
 
 ```text
-/data/paint-vault.sqlite  App database
+/data/paintwarden.sqlite  App database
 /data/images/             Uploaded photos and plugin images
 /data/backups/            Copies saved before updates change the database
 /data/restore-uploads/    Temporary copy of a backup while it is being restored
@@ -121,23 +121,23 @@ into the vault or replaces the vault with it. The owner account isn't included.
 Backups are streamed, so they don't need much memory, but a restore needs free
 disk space for a temporary copy of the file. A restore accepts files up to 16 GB.
 
-When a new release needs to change an existing database, Paint Vault first saves
+When a new release needs to change an existing database, Paintwarden first saves
 a copy in `backups/` beside it and keeps the five most recent copies. If an
 update goes wrong, stop the server and copy the newest file over
-`paint-vault.sqlite`.
+`paintwarden.sqlite`.
 
 Create a full backup while the app is stopped:
 
 ```sh
-docker compose stop paint-vault
-docker compose run --rm --no-deps paint-vault \
-  tar -C /data -czf - . > paint-vault-data.tar.gz
-docker compose start paint-vault
+docker compose stop paintwarden
+docker compose run --rm --no-deps paintwarden \
+  tar -C /data -czf - . > paintwarden-data.tar.gz
+docker compose start paintwarden
 ```
 
 Store the archive somewhere outside the Docker host.
 
-To restore it, stop Paint Vault and extract the archive into the mounted data
+To restore it, stop Paintwarden and extract the archive into the mounted data
 volume. Restoring replaces the current app state, so preserve the current volume
 until you have verified the backup.
 
@@ -158,7 +158,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Development data stays in
 the repository-root `data/` directory, which is ignored by Git.
-Set `PAINT_VAULT_WEB_PORT` to use another frontend port; the API remains proxied
+Set `PAINTWARDEN_WEB_PORT` to use another frontend port; the API remains proxied
 to NestJS on port 3175.
 
 Common commands:
@@ -169,7 +169,7 @@ npm run lint         # Check backend, app, product website, shared UI, and Elect
 npm test             # Run the Node and Electron tests
 npm run build        # Build the app and product website through Nx
 npm run start        # Serve the built app frontend and API
-npm run db:generate  # Generate a migration after changing apps/paint-vault/db/schema.ts
+npm run db:generate  # Generate a migration after changing apps/paintwarden/db/schema.ts
 npm run storybook    # Browse the shared UI components at http://localhost:6006
 npm run codegen      # Regenerate typed GraphQL documents and resolver types
 npm run codegen:check # Reject stale generated output
@@ -196,7 +196,7 @@ npm run storybook:test   # Run every story as a test
 
 ## Product website
 
-`apps/paint-vault-site/` is the separate Astro and React product website. It has
+`apps/paintwarden-site/` is the separate Astro and React product website. It has
 an overview (`/`), how-to guide (`/docs/`), FAQ (`/faq/`), and desktop and
 self-hosted options (`/download/`). Astro route files live in `src/pages/`,
 while React and MUI content lives in `src/site/`. The generated hero picture and
@@ -204,11 +204,11 @@ labeled illustrative app previews live in `public/images/`.
 
 ```sh
 npm run site:dev    # Preview the website at http://127.0.0.1:4321
-npm run site:build  # Build static files in apps/paint-vault-site/dist/
+npm run site:build  # Build static files in apps/paintwarden-site/dist/
 ```
 
 `npm run dev` starts the app, not the product website. The root `npm run build`
-builds both. Deploy `apps/paint-vault-site/dist/` to a static host; the NestJS
+builds both. Deploy `apps/paintwarden-site/dist/` to a static host; the NestJS
 app server does not serve it. Desktop download buttons open this repository's
 Releases page; see [Releasing](#releasing) before presenting those buttons as
 direct downloads. Keep website setup steps and feature descriptions
@@ -221,14 +221,14 @@ The web app and the Electron app use the same React and MUI interface from
 web build and `/api` from the same address.
 
 On first desktop launch, choose **Use this computer** or connect to an existing
-Paint Vault server. In local mode, Electron starts its bundled NestJS server on
+Paintwarden server. In local mode, Electron starts its bundled NestJS server on
 the loopback interface. In remote mode, Electron runs the interface without
 starting a local server and sends vault requests to the selected server. The
 choice can be changed in Settings. Local vault data remains in
-`~/Library/Application Support/PaintVault/` on macOS or
-`%LOCALAPPDATA%\PaintVault\` on Windows, separate from the web server's `data/`
+`~/Library/Application Support/Paintwarden/` on macOS or
+`%LOCALAPPDATA%\Paintwarden\` on Windows, separate from the web server's `data/`
 folder. Existing local SQLite databases and images stay in those folders.
-Set `PAINT_VAULT_DESKTOP_DATA_DIR` to an absolute path before launch to use a
+Set `PAINTWARDEN_DESKTOP_DATA_DIR` to an absolute path before launch to use a
 different data folder. Electron keeps its cache in an `electron/` subfolder.
 
 Build the desktop app on its target operating system so the bundled SQLite
@@ -239,8 +239,8 @@ operating system. The `npm run macos` and `npm run windows` aliases launch the
 same Electron app on their respective systems.
 
 Database migrations are applied automatically when the app opens the database.
-After changing the schema, commit both `apps/paint-vault/db/schema.ts` and the
-generated files in `apps/paint-vault/drizzle/`.
+After changing the schema, commit both `apps/paintwarden/db/schema.ts` and the
+generated files in `apps/paintwarden/drizzle/`.
 
 Packaged desktop apps update themselves from this repository's published GitHub
 releases. They check shortly after launch and every six hours. In local mode,
@@ -253,7 +253,7 @@ manual check. Switching connections invalidates that consent. See the
 [desktop update policy](docs/desktop-update-policy.md) for the full behavior.
 Data & settings shows the app version and has
 **Check for updates**. Unpackaged runs never update, and setting
-`PAINT_VAULT_DISABLE_UPDATES=1` turns updates off for a packaged test run.
+`PAINTWARDEN_DISABLE_UPDATES=1` turns updates off for a packaged test run.
 
 ## Releasing
 
@@ -261,9 +261,9 @@ The desktop app connects only to a server of exactly its own version, so the app
 and server are always released together under one version number.
 
 1. Set the same `version` in the root manifest and every workspace manifest:
-   `package.json`, `apps/paint-vault/package.json`,
-   `apps/paint-vault-electron/package.json`, `apps/paint-vault-web/package.json`,
-   `apps/paint-vault-site/package.json`, `packages/paint-core/package.json`,
+   `package.json`, `apps/paintwarden/package.json`,
+   `apps/paintwarden-electron/package.json`, `apps/paintwarden-web/package.json`,
+   `apps/paintwarden-site/package.json`, `packages/paint-core/package.json`,
    `packages/paint-i18n/package.json`, and `packages/vault-ui/package.json`.
    The checker discovers workspaces from root `package.json`, including future packages.
    Run `npm install --package-lock-only` with
@@ -295,7 +295,7 @@ warn when the installer first runs; automatic updates still work.
 ## Plugins
 
 Paints, color schemes, and miniature templates come from plugins the owner installs in
-Settings → Plugins, from a public GitHub repository or an uploaded `.zip`. Paint Vault
+Settings → Plugins, from a public GitHub repository or an uploaded `.zip`. Paintwarden
 bundles no catalog of its own.
 
 - [docs/plugins.md](docs/plugins.md) explains how plugins are installed, updated, removed,
@@ -307,10 +307,10 @@ bundles no catalog of its own.
 ## Architecture
 
 - Nx manages the npm workspace, project graph, task orchestration, and build cache.
-- `apps/paint-vault/` contains the NestJS server, API handlers, and SQLite schema.
-- `apps/paint-vault-web/` contains the Vite web entry point and static assets.
-- `apps/paint-vault-site/` contains the Astro product website and guides.
-- `apps/paint-vault-electron/` contains the macOS and Windows desktop host.
+- `apps/paintwarden/` contains the NestJS server, API handlers, and SQLite schema.
+- `apps/paintwarden-web/` contains the Vite web entry point and static assets.
+- `apps/paintwarden-site/` contains the Astro product website and guides.
+- `apps/paintwarden-electron/` contains the macOS and Windows desktop host.
 - `packages/vault-ui/` contains the shared React and MUI interface rendered on web and in Electron.
 - `packages/paint-core/` contains reusable paint rules and search logic.
 - React, TypeScript, MUI, and MUI icons provide the shared interface.
@@ -337,7 +337,7 @@ Developer references: [architecture](docs/architecture.md), [screen data loading
 
 ```sh
 docker compose ps
-docker compose logs --tail=200 paint-vault
+docker compose logs --tail=200 paintwarden
 ```
 
 ### Port 3000 is already in use
@@ -345,7 +345,7 @@ docker compose logs --tail=200 paint-vault
 Set another host port in `.env`:
 
 ```dotenv
-PAINT_VAULT_PORT=8080
+PAINTWARDEN_PORT=8080
 ```
 
 Run `docker compose up -d`, then open `http://localhost:8080`.
@@ -366,3 +366,11 @@ restoring one brings them back. Older `.json` backups from before v1 include
 template images but not miniature photos. To recover those photos, or after
 restoring a volume archive without them, restore the complete volume backup,
 including the `images/` directory.
+
+## Upgrading from Paint Vault
+
+The desktop app is now **Paintwarden** (`com.moonryc.paintwarden`). Quit the old app
+before launching the new one. Its complete legacy profile is moved atomically to
+`Paintwarden` on first launch; conflicting profiles or filesystem errors stop startup
+and show recovery controls, never a new empty vault. See [rename migration](docs/paintwarden-migration.md).
+

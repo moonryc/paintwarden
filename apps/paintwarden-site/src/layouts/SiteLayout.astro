@@ -1,0 +1,59 @@
+---
+import fraunces from "@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2?url";
+import inter400 from "@fontsource/inter/files/inter-latin-400-normal.woff2?url";
+import inter500 from "@fontsource/inter/files/inter-latin-500-normal.woff2?url";
+import inter600 from "@fontsource/inter/files/inter-latin-600-normal.woff2?url";
+import inter700 from "@fontsource/inter/files/inter-latin-700-normal.woff2?url";
+import { themeVars } from "@paintwarden/ui/theme-tokens";
+
+import WebsitePage, { type Page } from "../site/WebsitePage";
+
+interface Props {
+  page: Page;
+  title: string;
+  description: string;
+}
+
+const { page, title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, "https://paintwarden.com").href;
+
+// Same font files and color tokens as the app, so the site and the app render identically.
+const fontFaces = [
+  ["Inter", inter400, "400"],
+  ["Inter", inter500, "500"],
+  ["Inter", inter600, "600"],
+  ["Inter", inter700, "700"],
+  ["Fraunces", fraunces, "100 900"],
+]
+  .map(
+    ([family, src, weight]) =>
+      `@font-face{font-family:"${family}";src:url(${src}) format("woff2");font-weight:${weight};font-style:normal;font-display:swap}`,
+  )
+  .join("");
+const tokens = Object.entries(themeVars)
+  .map(([name, value]) => `${name}:${value}`)
+  .join(";");
+const baseStyles = `${fontFaces}:root{${tokens};color-scheme:dark}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans);font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}::selection{background:var(--brand-soft);color:var(--ink)}`;
+---
+
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#202020" />
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="Paintwarden" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://paintwarden.com/images/paint-desk-hero.png" />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="preload" href={fraunces} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={inter400} as="font" type="font/woff2" crossorigin />
+    <title>{title}</title>
+    <style is:inline set:html={baseStyles} />
+  </head>
+  <body><WebsitePage page={page} client:load /></body>
+</html>

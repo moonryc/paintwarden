@@ -1,12 +1,12 @@
 import type { SupportSummary } from "./utils/support";
 
-import type { ColorCategory } from "@paint-vault/core/color-categories";
+import type { ColorCategory } from "@paintwarden/core/color-categories";
 import type {
   MiniaturePaintSubstitution,
   PaintSubstitution,
   PaintSubstitutionIngredient,
-} from "@paint-vault/core/paint-substitutions";
-import type { RecipeStep } from "@paint-vault/core/recipe-steps";
+} from "@paintwarden/core/paint-substitutions";
+import type { RecipeStep } from "@paintwarden/core/recipe-steps";
 
 export type PaintingStatus = "NOT_STARTED" | "ASSEMBLED" | "PRIMED" | "IN_PROGRESS" | "COMPLETE";
 
@@ -262,6 +262,6 @@ export type DesktopBridge = {
 
 declare global {
   interface Window {
-    paintVaultDesktop?: DesktopBridge;
+    paintwardenDesktop?: DesktopBridge;
   }
 }

@@ -127,7 +127,7 @@ async function main() {
   let volumeCreated = false;
   const name = `pv-phase4-smoke-${randomUUID()}`;
   const volume = `${name}-fixture`;
-  const label = `paint-vault.smoke.owner=${name}`;
+  const label = `paintwarden.smoke.owner=${name}`;
   const containerLogs = () => {
     const result = spawnSync("docker", ["logs", name], { encoding: "utf8", timeout: 30000 });
     assert.equal(result.status, 0, "Read owned container logs");
@@ -167,7 +167,7 @@ async function main() {
           "node",
           image.Id,
           "-e",
-          `const fs=require('node:fs'),p=require('node:path'),c=require('node:crypto');const root='/app/apps/paint-vault/dist';let files=[process.execPath];function walk(rel){for(const e of fs.readdirSync(rel,{withFileTypes:true})){const f=p.join(rel,e.name);if(e.isDirectory())walk(f);else if(e.isFile())files.push(f)}}walk(root);console.log(JSON.stringify({node:process.version,files:files.sort().map(file=>{const b=fs.readFileSync(file);return {path:file,bytes:b.length,sha256:c.createHash('sha256').update(b).digest('hex')}})}))`,
+          `const fs=require('node:fs'),p=require('node:path'),c=require('node:crypto');const root='/app/apps/paintwarden/dist';let files=[process.execPath];function walk(rel){for(const e of fs.readdirSync(rel,{withFileTypes:true})){const f=p.join(rel,e.name);if(e.isDirectory())walk(f);else if(e.isFile())files.push(f)}}walk(root);console.log(JSON.stringify({node:process.version,files:files.sort().map(file=>{const b=fs.readFileSync(file);return {path:file,bytes:b.length,sha256:c.createHash('sha256').update(b).digest('hex')}})}))`,
         ]),
       );
       assert.equal(report.imageArtifacts.node, "v22.22.2");
@@ -205,7 +205,7 @@ async function main() {
         "-e",
         "DATABASE_PATH=",
         "-e",
-        "PAINT_VAULT_DISABLE_UPDATES=1",
+        "PAINTWARDEN_DISABLE_UPDATES=1",
         image.Id,
       ]);
       containerCreated = true;
@@ -337,7 +337,7 @@ async function main() {
       try {
         // Never remove/stop a same-name container unless its unique ownership label matches.
         const current = JSON.parse(docker(["inspect", name]))[0];
-        assert.equal(current.Config.Labels["paint-vault.smoke.owner"], name);
+        assert.equal(current.Config.Labels["paintwarden.smoke.owner"], name);
         docker(["stop", "--time", "10", name]);
         const logs = containerLogs();
         await writeFile(

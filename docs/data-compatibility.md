@@ -2,7 +2,7 @@
 
 ## Frozen v1 baseline: forward only
 
-The v1 application-schema baseline is `apps/paint-vault/drizzle/0000_init.sql` and its original journal entry (timestamp `1794346014629`), frozen from commit `1f1c4e9`. A database's `__drizzle_migrations` rows record the applied migration hashes and timestamps; an app release number is **not** a database schema version.
+The v1 application-schema baseline is `apps/paintwarden/drizzle/0000_init.sql` and its original journal entry (timestamp `1794346014629`), frozen from commit `1f1c4e9`. A database's `__drizzle_migrations` rows record the applied migration hashes and timestamps; an app release number is **not** a database schema version.
 
 After release, never edit, renumber, remove or regenerate an applied migration, its journal entry or its schema snapshot. Append a new migration with a later timestamp, including for corrections to earlier migrations. `db/released-migrations.test.ts` checks the frozen SQL/snapshot hashes and journal prefix while permitting later migrations. When another migration is released, append its identity/hashes to the release ledger; do not regenerate the old baseline or overwrite old fixtures to make a failing test pass.
 
@@ -16,7 +16,7 @@ Pre-release databases predating this baseline are not certified for in-place upg
 
 | Container and version                                            | Current read rule | Limitations                                                                                  |
 | ---------------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------- |
-| ZIP, `paint-vault-backup`, version **1**                         | Replace and Merge | `backup.json` plus original files under `images/`; Replace requires every supported section. |
+| ZIP, `paintwarden-backup`, version **1**                         | Replace and Merge | `backup.json` plus original files under `images/`; Replace requires every supported section. |
 | Legacy single JSON, version **3** or **4**                       | Merge only        | Owner records, not a complete vault; reinstall any referenced catalog sources first.         |
 | Unknown format, future ZIP version, or other legacy JSON version | Reject            | Do not guess, relabel, or bypass the reader's version checks. Use a compatible newer app.    |
 
@@ -30,22 +30,22 @@ Legacy conversion maps owner paint/scheme IDs to `user:<uuid>`, preserves consis
 
 Before an update, export a ZIP and keep a **stopped full copy of the entire data directory** (or Docker volume), including its database, originals in `images/`, and other configuration. For desktop, fully quit the app, not just its window. For a server/container, stop it and confirm no process is using that directory before copying. Keep credentials and personal photos private; ZIP exports do not preserve credentials or desktop connection preferences.
 
-Before pending migrations on an existing vault, the server additionally writes a consistent SQLite `VACUUM INTO` recovery copy under `backups/`. Its filename stamps UTC time and the first pending migration, for example `paint-vault-YYYYMMDD-HHMMSS-before-0001_example.sqlite`. The copy contains the applied migration journal and includes database changes still in WAL. Only the newest five matching recovery copies are retained. These are **database-only** backups, not photo backups or a replacement for the full stopped copy.
+Before pending migrations on an existing vault, the server additionally writes a consistent SQLite `VACUUM INTO` recovery copy under `backups/`. Its filename stamps UTC time and the first pending migration, for example `paintwarden-YYYYMMDD-HHMMSS-before-0001_example.sqlite`. The copy contains the applied migration journal and includes database changes still in WAL. Only the newest five matching recovery copies are retained. These are **database-only** backups, not photo backups or a replacement for the full stopped copy.
 
 If an upgrade fails:
 
 1. Record the error and exact recovery-copy path from the server log (desktop: Open logs). Retry alone does not repair faulty migration SQL.
 2. Fully quit the desktop app or stop the server/container. Preserve a separate copy of the **entire failed data directory**, including its database and any `-wal`/`-shm` files, before changing anything.
-3. With every process stopped, copy the logged pre-migration `.sqlite` recovery file over the vault database (`paint-vault.sqlite`, or the configured database path). Remove that destination database's stale `-wal` and `-shm` sidecars **only while stopped and after preserving them**; do not copy those stale sidecars onto the recovery file. Keep `images/` and the recovery original intact.
+3. With every process stopped, copy the logged pre-migration `.sqlite` recovery file over the vault database (`paintwarden.sqlite`, or the configured database path). Remove that destination database's stale `-wal` and `-shm` sidecars **only while stopped and after preserving them**; do not copy those stale sidecars onto the recovery file. Keep `images/` and the recovery original intact.
 4. Start the previous working app against its pre-upgrade copy, or use a corrected migration/release. Verify records and photos before resuming edits. Keep the failed-directory copy and recovery originals until the incident is resolved.
 
 Do not delete/rewrite migration journal rows to force a retry, manually mark failed work applied, or run an older app against an unknown newer schema.
 
 ## Golden compatibility checks and provenance
 
-Fixtures live in `apps/paint-vault/test-fixtures/data-compatibility/`; see its [README](../apps/paint-vault/test-fixtures/data-compatibility/README.md). All rows are synthetic and the single pixel is generated test artwork. No catalog dump, owner vault, real credential or user photo was copied. Tests always create a temporary `DATA_DIR`; no development server or production vault is used.
+Fixtures live in `apps/paintwarden/test-fixtures/data-compatibility/`; see its [README](../apps/paintwarden/test-fixtures/data-compatibility/README.md). All rows are synthetic and the single pixel is generated test artwork. No catalog dump, owner vault, real credential or user photo was copied. Tests always create a temporary `DATA_DIR`; no development server or production vault is used.
 
-From `apps/paint-vault`, with Node 22.22.2 and installed dependencies:
+From `apps/paintwarden`, with Node 22.22.2 and installed dependencies:
 
 ```sh
 node --import tsx --test db/released-migrations.test.ts lib/backup-golden.test.ts

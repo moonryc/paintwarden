@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Phase 4 actual packaged macOS app; never builds or touches the user's vault.
- * Node 22.22.2: scripts/graphql-phase4-native.mjs EVIDENCE_DIR --app '/path/Paint Vault.app' [--profile realistic|stress] [--run]
+ * Node 22.22.2: scripts/graphql-phase4-native.mjs EVIDENCE_DIR --app '/path/Paintwarden.app' [--profile realistic|stress] [--run]
  * Default writes NOT RUN only. Explicit --run retains isolated desktop/server DATA dirs,
  * identities for every packaged web asset, raw requests, fixture records and owned-process logs.
  */
@@ -152,7 +152,7 @@ async function main() {
     const app = path.resolve(options.app);
     assert.ok(app.endsWith(".app"), "Use a packaged .app, not development Electron");
     const resources = path.join(app, "Contents/Resources");
-    const executable = path.join(app, "Contents/MacOS/Paint Vault");
+    const executable = path.join(app, "Contents/MacOS/Paintwarden");
     report.packagedApp = app;
     report.packagedNode = execFileSync(path.join(resources, "server/node"), ["--version"], {
       encoding: "utf8",
@@ -207,7 +207,7 @@ async function main() {
           PORT: String(remotePort),
           DATA_DIR: remoteData,
           WEB_DIST: path.join(resources, "web-dist"),
-          PAINT_VAULT_DISABLE_UPDATES: "1",
+          PAINTWARDEN_DISABLE_UPDATES: "1",
         },
       },
       path.join(evidence, "remote-server.log"),
@@ -226,9 +226,9 @@ async function main() {
           env: {
             ...process.env,
             DATABASE_PATH: "",
-            PAINT_VAULT_DESKTOP_DATA_DIR: dataDir,
+            PAINTWARDEN_DESKTOP_DATA_DIR: dataDir,
             WEB_DIST: path.join(resources, "web-dist"),
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(evidence, `${mode}-electron.log`),
@@ -241,7 +241,7 @@ async function main() {
       currentPage = page;
       const recorder = attachLibraryRecorder(page);
       recordings.push({ label: `native-${mode}`, recorder });
-      await page.waitForURL("paintvault://app/**");
+      await page.waitForURL("paintwarden://app/**");
       if (mode === "local")
         await page.getByRole("button", { name: "Use this computer", exact: true }).click();
       else {
@@ -266,7 +266,7 @@ async function main() {
         evidenceDir: evidence,
         label: `native-${mode}`,
         initialNavigate: async () => {
-          await page.goto("paintvault://app/");
+          await page.goto("paintwarden://app/");
           await page.reload(); // Hash-only navigation does not remount the initial-tab store.
         },
         secondClientWrite,
@@ -306,9 +306,9 @@ async function main() {
           env: {
             ...process.env,
             DATABASE_PATH: "",
-            PAINT_VAULT_DESKTOP_DATA_DIR: dataDir,
+            PAINTWARDEN_DESKTOP_DATA_DIR: dataDir,
             WEB_DIST: path.join(resources, "web-dist"),
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(evidence, `${mode}-relaunch.log`),
@@ -320,7 +320,7 @@ async function main() {
       const relaunchedPage = relaunchedContext.pages()[0] || (await relaunchedContext.waitForEvent("page"));
       currentPage = relaunchedPage;
       recordings.push({ label: `native-${mode}-relaunch`, recorder: attachLibraryRecorder(relaunchedPage) });
-      await relaunchedPage.waitForFunction(() => Boolean(window.paintVaultDesktop));
+      await relaunchedPage.waitForFunction(() => Boolean(window.paintwardenDesktop));
       await relaunchedPage.waitForFunction(
         async () => {
           try {
@@ -334,7 +334,7 @@ async function main() {
         { timeout: 30000 },
       );
       const retained = await relaunchedPage.evaluate(async () => ({
-        connection: await window.paintVaultDesktop.getConnection(),
+        connection: await window.paintwardenDesktop.getConnection(),
         auth: await (await fetch("/api/auth/status")).json(),
       }));
       assert.equal(retained.connection.mode, mode);

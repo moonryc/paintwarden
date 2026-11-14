@@ -2,7 +2,7 @@
 
 Tested November 10, 2026, about 17:15 CST on macOS arm64, against the production build of commit
 `dcedf871` plus the then-uncommitted vault load error and server check changes. The server ran
-from `apps/paint-vault/dist` on `127.0.0.1:3391` with an isolated `DATA_DIR`; no original vault
+from `apps/paintwarden/dist` on `127.0.0.1:3391` with an isolated `DATA_DIR`; no original vault
 data was used. Checks were driven by Playwright in headless Chromium at 1440×900 and at 390×844
 with touch and mobile emulation. Saves were confirmed through `/api/state`, and by reloading the
 page where noted.

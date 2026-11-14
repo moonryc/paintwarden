@@ -30,7 +30,7 @@ declare module "i18next" {
 export { languages, resolveLanguage };
 export type { Language };
 export const i18n = createInstance();
-const storageKey = "paint-vault-language";
+const storageKey = "paintwarden-language";
 const namespaces = ["common", "glossary", "pages", "components", "shell", "errors"];
 const accents: Record<string, string> = {
   a: "á",

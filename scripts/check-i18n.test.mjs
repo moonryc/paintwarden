@@ -38,7 +38,7 @@ test("locale validation uses CLDR cardinal categories, not English key equality"
 test("raw JSX checker catches text and accessible attributes, allows explicit exceptions", () => {
   assert.equal(rawJSX('<Button aria-label="Add paint">Add paint</Button>', "test.tsx").length, 2);
   assert.deepEqual(rawJSX('<Button aria-label={t("addPaint")}>{t("addPaint")}</Button>', "test.tsx"), []);
-  assert.deepEqual(rawJSX("<span>Paint Vault</span>", "test.tsx"), []);
+  assert.deepEqual(rawJSX("<span>Paintwarden</span>", "test.tsx"), []);
   assert.deepEqual(
     rawJSX("{/* i18n-allow: official product name */}\n<span>Brand Name</span>", "test.tsx"),
     [],

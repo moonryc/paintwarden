@@ -1,5 +1,5 @@
-import { i18n } from "@paint-vault/i18n/runtime";
-import { RECIPE_STEPS } from "@paint-vault/core/recipe-steps";
+import { i18n } from "@paintwarden/i18n/runtime";
+import { RECIPE_STEPS } from "@paintwarden/core/recipe-steps";
 
 import type { PaintingStatus, RecipeStep, State } from "../types";
 

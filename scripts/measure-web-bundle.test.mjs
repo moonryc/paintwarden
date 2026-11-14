@@ -9,7 +9,7 @@ import { gzipSync } from "node:zlib";
 
 const script = fileURLToPath(new URL("./measure-web-bundle.mjs", import.meta.url));
 function fixtures() {
-  const root = mkdtempSync(path.join(tmpdir(), "paint-vault-bundle-test-"));
+  const root = mkdtempSync(path.join(tmpdir(), "paintwarden-bundle-test-"));
   const dirs = ["baseline", "candidate"].map((name) => path.join(root, name));
   for (const dir of dirs) {
     mkdirSync(path.join(dir, "assets"), { recursive: true });

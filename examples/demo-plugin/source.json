@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
-  "name": "Paint Vault demo plugin",
+  "name": "Paintwarden demo plugin",
   "version": "1.0.0",
   "license": "CC0-1.0",
-  "attribution": "Made-up paints and recipes for trying out Paint Vault plugins",
+  "attribution": "Made-up paints and recipes for trying out Paintwarden plugins",
   "minimumAppVersion": "1.0.0",
   "dependencies": [],
   "catalog": "catalog.json",

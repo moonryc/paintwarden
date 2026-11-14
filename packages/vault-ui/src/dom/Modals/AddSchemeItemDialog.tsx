@@ -1,7 +1,7 @@
 import { dividerLabel } from "../Components/component-labels";
 import { useTranslation } from "react-i18next";
 import { Box, Button, MenuItem, TextField } from "@mui/material";
-import { RECIPE_STEPS, SCHEME_MILESTONES } from "@paint-vault/core/recipe-steps";
+import { RECIPE_STEPS, SCHEME_MILESTONES } from "@paintwarden/core/recipe-steps";
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";

@@ -20,7 +20,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const [
   mode,
   evidence,
-  target = path.join(root, "dist/electron/mac-arm64/Paint Vault.app/Contents/MacOS/Paint Vault"),
+  target = path.join(root, "dist/electron/mac-arm64/Paintwarden.app/Contents/MacOS/Paintwarden"),
 ] = process.argv.slice(2);
 assert.ok(evidence);
 await mkdir(evidence, { recursive: true });
@@ -63,7 +63,7 @@ async function imageScenario({ base, photoBase64 }) {
   const upload = await fetch(`${base}/api/miniatures/${id}/image`, { method: "POST", headers, body: form });
   check(upload.status === 200, `upload ${upload.status}`);
   const { imageUrl } = await upload.json();
-  const scope = upload.headers.get("x-paint-vault-image-scope");
+  const scope = upload.headers.get("x-paintwarden-image-scope");
   const variants = [];
   for (const width of [160, 320, 640]) {
     const url = new URL(imageUrl, base);
@@ -178,8 +178,8 @@ try {
           ...process.env,
           DATA_DIR: "",
           DATABASE_PATH: "",
-          PAINT_VAULT_DESKTOP_DATA_DIR: data,
-          PAINT_VAULT_DISABLE_UPDATES: "1",
+          PAINTWARDEN_DESKTOP_DATA_DIR: data,
+          PAINTWARDEN_DISABLE_UPDATES: "1",
         },
         timeout: 60000,
       });
@@ -192,10 +192,10 @@ try {
       const page = await app.firstWindow();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.waitForURL("paintvault://app/");
+      await page.waitForURL("paintwarden://app/");
       await page.waitForFunction(async () => (await fetch("/api/auth/status")).ok);
       const result = await page.evaluate(imageScenario, {
-        base: "paintvault://app",
+        base: "paintwarden://app",
         photoBase64: photo.toString("base64"),
       });
       report.result = await verify(result);
@@ -240,13 +240,13 @@ try {
           ...process.env,
           DATA_DIR: "",
           DATABASE_PATH: "",
-          PAINT_VAULT_DESKTOP_DATA_DIR: data,
-          PAINT_VAULT_DISABLE_UPDATES: "1",
+          PAINTWARDEN_DESKTOP_DATA_DIR: data,
+          PAINTWARDEN_DISABLE_UPDATES: "1",
         },
         timeout: 60000,
       });
       const relaunched = await app.firstWindow();
-      await relaunched.waitForURL("paintvault://app/");
+      await relaunched.waitForURL("paintwarden://app/");
       await relaunched.waitForFunction(async () => (await fetch("/api/auth/status")).ok);
       const loginStatus = await relaunched.evaluate(
         async () =>

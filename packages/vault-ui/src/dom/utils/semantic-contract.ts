@@ -1,6 +1,6 @@
 // Shared screen derivations. Keep these independent of React so the pre-migration
 // semantic acceptance suite exercises the same rules that the screens render.
-import { COLOR_CATEGORY_LABELS, type ColorCategory } from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORY_LABELS, type ColorCategory } from "@paintwarden/core/color-categories";
 
 import type { ColorScheme, Miniature, Paint, State } from "../types";
 

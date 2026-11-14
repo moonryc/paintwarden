@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { ServerError, CombinedGraphQLErrors } from "@apollo/client/errors";
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 
 import { createVaultStore } from "../store/vault-store";
 

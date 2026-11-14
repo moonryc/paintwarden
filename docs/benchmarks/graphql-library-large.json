@@ -3,8 +3,8 @@
   "node": "v22.22.2",
   "profile": "large",
   "fixture": {
-    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-large-0pbmyH",
-    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-large-0pbmyH/snapshot.json",
+    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-library-large-0pbmyH",
+    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-library-large-0pbmyH/snapshot.json",
     "baseline": {
       "measuredAt": "2026-11-13T18:28:49.634Z",
       "node": "v22.22.2",
@@ -15,7 +15,7 @@
         "schemes": 300,
         "templates": 500
       },
-      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-large-aaQRTI",
+      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-startup-large-aaQRTI",
       "seedMs": 246.96041599999995,
       "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
       "snapshot": {
@@ -43,7 +43,7 @@
       "snapshotStartupDataBytes": 6518884,
       "snapshotPlusTemplateSummariesBytes": 6652340
     },
-    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-large-aaQRTI"
+    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-startup-large-aaQRTI"
   },
   "method": "Identical Phase 0 synthetic fixture. Full production LibraryPage document via GraphQL execute + JSON serialization. 11 fresh-process first operations (cold derived cache, NOT cold disk); warm 1 warmup + 11 samples. SQL instruments actual statement methods; transaction helper BEGIN/COMMIT excluded. setImmediate delay observes synchronous operation blocking, not a production event-loop histogram. No HTTP/auth/browser/Electron time. Mutation invalidation measured separately after warm samples.",
   "coldSamples": [

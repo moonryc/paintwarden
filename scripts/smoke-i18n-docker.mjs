@@ -9,7 +9,7 @@ assert.equal(process.version, "v22.22.2");
 const [evidence] = process.argv.slice(2);
 assert.ok(evidence);
 await mkdir(evidence, { recursive: true });
-const image = `paint-vault:i18n-smoke-${process.pid}`;
+const image = `paintwarden:i18n-smoke-${process.pid}`;
 async function command(args, filename, input) {
   const child = spawn("docker", args, { cwd: root, stdio: ["pipe", "pipe", "pipe"] });
   let output = "";

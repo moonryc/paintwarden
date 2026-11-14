@@ -1,4 +1,4 @@
-import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
+import { rankPaintsByColor } from "@paintwarden/core/paint-color-similarity";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 import { column } from "../storybook/decorators";

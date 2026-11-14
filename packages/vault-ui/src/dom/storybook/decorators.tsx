@@ -101,12 +101,12 @@ function WithBridge({
 }) {
   // Installed before the first render so the component sees the bridge as it would in Electron.
   const [installed] = useState(() => {
-    window.paintVaultDesktop = fakeBridge(state, overrides);
+    window.paintwardenDesktop = fakeBridge(state, overrides);
     return true;
   });
   useEffect(
     () => () => {
-      delete window.paintVaultDesktop;
+      delete window.paintwardenDesktop;
     },
     [],
   );

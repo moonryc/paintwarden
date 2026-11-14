@@ -1,7 +1,7 @@
 // Complete-State fixture projections shared by whole-app and isolated Apollo stories only.
-import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
-import { imageThumbnailUrl } from "@paint-vault/core/image-thumbnails";
-import { isPaintAvailable } from "@paint-vault/core/paint-substitutions";
+import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
+import { imageThumbnailUrl } from "@paintwarden/core/image-thumbnails";
+import { isPaintAvailable } from "@paintwarden/core/paint-substitutions";
 
 import type { Paint, PaintingStatus, State } from "../types";
 import { schemeCardSummary, sortedSchemes } from "../utils/semantic-contract";

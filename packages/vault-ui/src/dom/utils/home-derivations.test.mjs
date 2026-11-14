@@ -11,8 +11,8 @@ const bundled = await build({
       export * from "../Pages/home.utils.ts";
       export * from "./vault-data.ts";
       export { emptyState } from "./constants.ts";
-      export { resolvePaintChoice } from "@paint-vault/core/paint-substitutions";
-      export { fuzzyFilter } from "@paint-vault/core/fuzzy-search";
+      export { resolvePaintChoice } from "@paintwarden/core/paint-substitutions";
+      export { fuzzyFilter } from "@paintwarden/core/fuzzy-search";
     `,
     resolveDir: fileURLToPath(new URL(".", import.meta.url)),
   },

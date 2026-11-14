@@ -1,4 +1,4 @@
-import { stepFromDivider, type RecipeStep } from "@paint-vault/core/recipe-steps";
+import { stepFromDivider, type RecipeStep } from "@paintwarden/core/recipe-steps";
 
 type ManualPaint = { paintId: string; step: RecipeStep; notes: string; sortOrder: number };
 type SchemeEntry =

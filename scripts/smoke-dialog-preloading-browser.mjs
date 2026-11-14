@@ -22,7 +22,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const evidence = process.argv[2];
 assert.ok(evidence, "Provide an evidence directory");
 await mkdir(evidence, { recursive: true });
-const web = path.join(root, "apps/paint-vault-web/dist");
+const web = path.join(root, "apps/paintwarden-web/dist");
 const assetNames = await readdir(path.join(web, "assets"));
 const entries = Object.fromEntries(
   Object.entries({
@@ -57,7 +57,7 @@ const server = launchOwned(
     'process.env.NODE_ENV="test";const {startServer}=await import("./server.mjs");process.env.NODE_ENV="production";await startServer();console.log("DIALOG_SMOKE_READY");',
   ],
   {
-    cwd: path.join(root, "apps/paint-vault/dist"),
+    cwd: path.join(root, "apps/paintwarden/dist"),
     env: {
       ...process.env,
       NODE_ENV: "production",
@@ -66,8 +66,8 @@ const server = launchOwned(
       HOST: "127.0.0.1",
       PORT: String(port),
       WEB_DIST: web,
-      PAINT_VAULT_ALLOWED_HOSTS: "",
-      PAINT_VAULT_DISABLE_UPDATES: "1",
+      PAINTWARDEN_ALLOWED_HOSTS: "",
+      PAINTWARDEN_DISABLE_UPDATES: "1",
     },
   },
   path.join(evidence, "browser-server.log"),

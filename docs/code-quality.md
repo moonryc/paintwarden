@@ -58,7 +58,7 @@ same look repeats.
   imports. These replace the handoff's custom rules without carrying over its unsafe autofixer for
   aliased Lodash imports.
 - GraphQL rules, source-specific import restrictions, project paths, and its Yarn and Husky hooks do
-  not apply to Paint Vault. Nx retains this repository's existing targets; no dependency install or
+  not apply to Paintwarden. Nx retains this repository's existing targets; no dependency install or
   database migration runs from a Git hook.
 
 The format pass is intentionally a separate source-wide change. Review formatting differences

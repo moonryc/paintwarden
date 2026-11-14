@@ -11,7 +11,7 @@ import path from "node:path";
 import { _electron as electron } from "playwright";
 
 const root = path.resolve(import.meta.dirname, "..");
-const require = createRequire(path.join(root, "apps/paint-vault/package.json"));
+const require = createRequire(path.join(root, "apps/paintwarden/package.json"));
 const Database = require("better-sqlite3");
 const { drizzle } = require("drizzle-orm/better-sqlite3");
 const { migrate } = require("drizzle-orm/better-sqlite3/migrator");
@@ -20,15 +20,15 @@ assert.equal(process.platform, "darwin");
 const evidence = process.argv[2];
 assert.ok(evidence, "pass an evidence directory");
 await mkdir(evidence, { recursive: true });
-const resources = path.join(root, "dist/electron/mac-arm64/Paint Vault.app/Contents/Resources");
-const executablePath = path.resolve(resources, "../MacOS/Paint Vault");
+const resources = path.join(root, "dist/electron/mac-arm64/Paintwarden.app/Contents/Resources");
+const executablePath = path.resolve(resources, "../MacOS/Paintwarden");
 const migrationsFolder = path.join(resources, "server/drizzle");
 const journalPath = path.join(migrationsFolder, "meta/_journal.json");
 const savedJournal = await readFile(journalPath);
 const tag = "9999_synthetic_failure_smoke";
 const sqlPath = path.join(migrationsFolder, `${tag}.sql`);
-const data = await mkdtemp(path.join(os.tmpdir(), "paint-vault-migration-failure-"));
-const databasePath = path.join(data, "paint-vault.sqlite");
+const data = await mkdtemp(path.join(os.tmpdir(), "paintwarden-migration-failure-"));
+const databasePath = path.join(data, "paintwarden.sqlite");
 const report = {
   checks: [],
   errors: [],
@@ -64,10 +64,10 @@ async function launch() {
       DATA_DIR: "",
       DATABASE_PATH: "",
       NODE_ENV: "production",
-      PAINT_VAULT_DESKTOP_DATA_DIR: data,
-      PAINT_VAULT_DISABLE_UPDATES: "1",
-      PAINT_VAULT_TEST_STARTUP: "0",
-      PAINT_VAULT_DESKTOP_PORT: "0",
+      PAINTWARDEN_DESKTOP_DATA_DIR: data,
+      PAINTWARDEN_DISABLE_UPDATES: "1",
+      PAINTWARDEN_TEST_STARTUP: "0",
+      PAINTWARDEN_DESKTOP_PORT: "0",
     },
     timeout: 45_000,
   });
@@ -78,7 +78,7 @@ async function launch() {
 }
 async function phase(page, name) {
   await page.waitForFunction(
-    async (phase) => (await window.paintVaultDesktop.getStartupState()).phase === phase,
+    async (phase) => (await window.paintwardenDesktop.getStartupState()).phase === phase,
     name,
     { timeout: 30_000 },
   );
@@ -137,7 +137,7 @@ ALTER TABLE __new_synthetic_parent RENAME TO synthetic_parent;`;
       await page.evaluate(() => {
         window.__retryFailed = false;
         let starting = false;
-        window.paintVaultDesktop.onStartupState((state) => {
+        window.paintwardenDesktop.onStartupState((state) => {
           if (state.phase === "starting") starting = true;
           if (state.phase === "failed" && starting) window.__retryFailed = true;
         });

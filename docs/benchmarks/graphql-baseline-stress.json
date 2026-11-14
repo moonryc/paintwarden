@@ -8,7 +8,7 @@
     "schemes": 3000,
     "templates": 5000
   },
-  "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-XHyVGU",
+  "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-startup-stress-XHyVGU",
   "seedMs": 2104.9065,
   "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
   "snapshot": {

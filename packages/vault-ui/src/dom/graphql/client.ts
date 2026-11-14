@@ -3,7 +3,7 @@ import { CombinedGraphQLErrors, ServerError } from "@apollo/client/errors";
 import { SetContextLink } from "@apollo/client/link/context";
 import { ErrorLink } from "@apollo/client/link/error";
 import { getMainDefinition } from "@apollo/client/utilities";
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 import { print } from "graphql";
 import { createClient } from "graphql-sse";
 import { Observable, catchError, map, throwError } from "rxjs";

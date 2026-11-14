@@ -37,9 +37,9 @@ function runtimeIdentity() {
     }
   };
   for (const directory of [
-    "apps/paint-vault/graphql",
-    "apps/paint-vault/lib",
-    "apps/paint-vault/db",
+    "apps/paintwarden/graphql",
+    "apps/paintwarden/lib",
+    "apps/paintwarden/db",
     "packages/paint-core",
   ])
     visit(directory);
@@ -104,7 +104,7 @@ if (process.argv[2] !== "--worker") {
           i === n - 1 ? "warm" : "cold",
         ],
         {
-          cwd: path.join(root, "apps/paint-vault"),
+          cwd: path.join(root, "apps/paintwarden"),
           encoding: "utf8",
           timeout: 240000,
           maxBuffer: 16 * 1024 * 1024,
@@ -165,14 +165,14 @@ if (process.argv[2] !== "--worker") {
 } else {
   // Internal path only: freshly created synthetic fixture root, not arbitrary DB input.
   const dataDir = path.resolve(process.argv[3]);
-  assert.ok(dataDir.startsWith(path.join(tmpdir(), "paint-vault-startup-")));
+  assert.ok(dataDir.startsWith(path.join(tmpdir(), "paintwarden-startup-")));
   process.env.DATA_DIR = dataDir;
   delete process.env.DATABASE_PATH;
   process.env.NODE_ENV = "test";
   const identity = runtimeIdentity();
-  const { getSqlite } = await import("../apps/paint-vault/db/index.ts");
-  const { schema } = await import("../apps/paint-vault/graphql/server.ts");
-  const { miniatureProjectionDiagnostics } = await import("../apps/paint-vault/graphql/miniatures.ts");
+  const { getSqlite } = await import("../apps/paintwarden/db/index.ts");
+  const { schema } = await import("../apps/paintwarden/graphql/server.ts");
+  const { miniatureProjectionDiagnostics } = await import("../apps/paintwarden/graphql/miniatures.ts");
   const db = getSqlite();
   const listFile = path.join(root, "packages/vault-ui/src/dom/graphql/miniature-list.graphql");
   const navigationFile = path.join(root, "packages/vault-ui/src/dom/graphql/navigation.graphql");
@@ -270,7 +270,7 @@ if (process.argv[2] !== "--worker") {
       ownershipCounts: view.ownershipCounts,
       stageCounts: view.stageCounts,
     };
-    const profileMiniatures = path.basename(dataDir).startsWith("paint-vault-startup-large-") ? 1500 : 10000;
+    const profileMiniatures = path.basename(dataDir).startsWith("paintwarden-startup-large-") ? 1500 : 10000;
     assert.equal(
       observations.totalCount,
       operation === "miniatures" ? profileMiniatures : profileMiniatures * 0.8,
@@ -307,7 +307,7 @@ if (process.argv[2] !== "--worker") {
         measured[label] = { variables, samples, summary: summary(samples), diagnostics: { before, after } };
       }
       if (operation === "home") {
-        const { setPaintStock } = await import("../apps/paint-vault/lib/paint-stock.ts");
+        const { setPaintStock } = await import("../apps/paintwarden/lib/paint-stock.ts");
         const samples = [],
           reused = [],
           writes = [];

@@ -14,7 +14,7 @@ function importedPackages() {
   const files = [
     path.join(here, "preview.tsx"),
     // The startup-recovery story exercises the real desktop connection screen.
-    path.join(here, "../../../apps/paint-vault-web/src/desktop-connection.tsx"),
+    path.join(here, "../../../apps/paintwarden-web/src/desktop-connection.tsx"),
   ];
   for (const entry of readdirSync(path.join(here, "../src/dom"), { recursive: true, withFileTypes: true }))
     if (entry.isFile() && /\.tsx?$/.test(entry.name)) files.push(path.join(entry.parentPath, entry.name));
@@ -23,7 +23,7 @@ function importedPackages() {
     for (const [, specifier] of readFileSync(file, "utf8").matchAll(
       /^import (?!type )[^;]*?from "([^".][^"?]*)";/gm,
     ))
-      if (!/^(@paint-vault\/|@storybook\/|storybook\/|node:)/.test(specifier)) packages.add(specifier);
+      if (!/^(@paintwarden\/|@storybook\/|storybook\/|node:)/.test(specifier)) packages.add(specifier);
   return [...packages].sort();
 }
 

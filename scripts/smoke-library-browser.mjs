@@ -29,7 +29,7 @@ assert.ok(
 );
 const evidence = path.resolve(process.argv[3]);
 await mkdir(evidence, { recursive: true });
-const webDist = path.resolve(process.argv[4] ?? path.join(root, "apps/paint-vault-web/dist"));
+const webDist = path.resolve(process.argv[4] ?? path.join(root, "apps/paintwarden-web/dist"));
 const fixture = await createLibraryFixture(root, profile);
 const port = await freePort();
 const host = "phase2-library.localhost";
@@ -52,7 +52,7 @@ const server = launchOwned(
     'process.env.NODE_ENV="test"; const {startServer}=await import("./server.mjs"); process.env.NODE_ENV="production"; await startServer(); console.log("PHASE2_READY_LISTENING");',
   ],
   {
-    cwd: path.join(root, "apps/paint-vault/dist"),
+    cwd: path.join(root, "apps/paintwarden/dist"),
     env: {
       ...process.env,
       NODE_ENV: "production",
@@ -61,8 +61,8 @@ const server = launchOwned(
       HOST: "127.0.0.1",
       PORT: String(port),
       WEB_DIST: webDist,
-      PAINT_VAULT_ALLOWED_HOSTS: host,
-      PAINT_VAULT_DISABLE_UPDATES: "1",
+      PAINTWARDEN_ALLOWED_HOSTS: host,
+      PAINTWARDEN_DISABLE_UPDATES: "1",
     },
   },
   path.join(evidence, `${profile}-server.log`),
@@ -122,7 +122,7 @@ try {
   assert.ok(candidate);
   const require = createRequire(import.meta.url);
   const Database = require("better-sqlite3");
-  const sqlite = new Database(path.join(fixture.dataDir, "paint-vault.sqlite"));
+  const sqlite = new Database(path.join(fixture.dataDir, "paintwarden.sqlite"));
   try {
     sqlite.pragma("busy_timeout = 5000");
     sqlite

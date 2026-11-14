@@ -1,11 +1,11 @@
 name: Bug report
-description: Report a reproducible Paint Vault problem.
+description: Report a reproducible Paintwarden problem.
 title: "[Bug]: "
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for helping improve Paint Vault. Please describe the problem in your preferred language.
+        Thank you for helping improve Paintwarden. Please describe the problem in your preferred language.
         **Never include passwords, tokens, setup codes, private server URLs, vault contents, or other secrets.**
         Settings → Help & About can save an optional support bundle. Review it before attaching it below.
         Desktop bundles contain a safe summary and sanitized logs; browser downloads contain a JSON summary only, not server logs.

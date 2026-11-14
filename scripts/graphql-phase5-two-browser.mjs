@@ -23,7 +23,7 @@ assert.ok(
   "large|stress EVIDENCE --run",
 );
 const dir = path.resolve(output),
-  dist = path.join(root, "apps/paint-vault/dist");
+  dist = path.join(root, "apps/paintwarden/dist");
 await mkdir(dir, { recursive: true });
 const report = {
   startedAt: new Date().toISOString(),
@@ -60,7 +60,7 @@ try {
         DATABASE_PATH: "",
         HOST: "127.0.0.1",
         PORT: String(port),
-        PAINT_VAULT_ALLOWED_HOSTS: host,
+        PAINTWARDEN_ALLOWED_HOSTS: host,
       },
     },
     path.join(dir, "server.log"),

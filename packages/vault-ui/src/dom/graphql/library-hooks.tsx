@@ -1,4 +1,4 @@
-import { i18n } from "@paint-vault/i18n/runtime";
+import { i18n } from "@paintwarden/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { getFragmentData } from "./generated/fragment-masking";

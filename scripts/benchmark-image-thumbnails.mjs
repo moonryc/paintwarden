@@ -2,8 +2,8 @@
 // Isolated production browser comparison. Never builds or opens a personal vault.
 // node scripts/benchmark-image-thumbnails.mjs seed
 // node scripts/benchmark-image-thumbnails.mjs measure baseline /tmp/paint-thumbnails-baseline/dist 3218
-// node scripts/benchmark-image-thumbnails.mjs measure after apps/paint-vault/dist 3219
-// node scripts/benchmark-image-thumbnails.mjs verify after apps/paint-vault/dist 3219
+// node scripts/benchmark-image-thumbnails.mjs measure after apps/paintwarden/dist 3219
+// node scripts/benchmark-image-thumbnails.mjs verify after apps/paintwarden/dist 3219
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
@@ -27,7 +27,7 @@ const mode = process.argv[2];
 if (mode === "seed") {
   const baselinePath = path.join(evidence, "large-fixture.json");
   execFileSync(process.execPath, ["--import", "tsx", "../../scripts/seed-benchmark-vault.mts", "large"], {
-    cwd: path.join(root, "apps/paint-vault"),
+    cwd: path.join(root, "apps/paintwarden"),
     env: { ...process.env, BENCH_REPORT: baselinePath },
     stdio: "inherit",
     timeout: 120000,
@@ -69,7 +69,7 @@ if (mode === "seed") {
       sha256: createHash("sha256").update(bytes).digest("hex"),
     });
   }
-  const db = new Database(path.join(baseline.dataDir, "paint-vault.sqlite"));
+  const db = new Database(path.join(baseline.dataDir, "paintwarden.sqlite"));
   db.pragma("foreign_keys = ON");
   db.transaction(() => {
     for (const table of ["miniatures", "miniature_templates"]) {
@@ -108,7 +108,7 @@ if (mode === "seed") {
   assert.ok([1, 2, 3].includes(deviceScaleFactor));
   assert.ok(port > 3200 && port < 65535, "Never use normal development ports");
   const fixture = JSON.parse(await readFile(fixturePath, "utf8"));
-  assert.ok(fixture.dataDir.startsWith(path.join(tmpdir(), "paint-vault-startup-")));
+  assert.ok(fixture.dataDir.startsWith(path.join(tmpdir(), "paintwarden-startup-")));
   const dataDir = await mkdtemp(path.join(tmpdir(), `paint-thumbnails-${label}-`));
   await cp(fixture.dataDir, dataDir, { recursive: true });
   await symlink(path.join(root, "node_modules"), path.join(dist, "node_modules"), "dir").catch((error) => {
@@ -133,8 +133,8 @@ if (mode === "seed") {
         DATA_DIR: dataDir,
         DATABASE_PATH: "",
         WEB_DIST: path.join(dist, "web-dist"),
-        PAINT_VAULT_ALLOWED_HOSTS: host,
-        PAINT_VAULT_DISABLE_UPDATES: "1",
+        PAINTWARDEN_ALLOWED_HOSTS: host,
+        PAINTWARDEN_DISABLE_UPDATES: "1",
       },
     },
     path.join(evidence, `${outputLabel}-server.log`),

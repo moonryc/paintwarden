@@ -256,7 +256,7 @@ async function main() {
   const args = process.argv.slice(2);
   if (args.includes("--help")) {
     console.log(
-      "Usage: node scripts/i18n-bundle-report.mjs --baseline <dist> --output <json> [--current <dist>] [--baseline-metadata <json>] [--baseline-only]\nDefault current: apps/paint-vault-web/dist. Explicit --output is required; put audit evidence outside the source worktree. Baseline metadata defaults to baseline-build-metadata.json beside the output.\nUse --self-test for isolated synthetic parser/accounting tests. Existing clean outputs only; no builds.",
+      "Usage: node scripts/i18n-bundle-report.mjs --baseline <dist> --output <json> [--current <dist>] [--baseline-metadata <json>] [--baseline-only]\nDefault current: apps/paintwarden-web/dist. Explicit --output is required; put audit evidence outside the source worktree. Baseline metadata defaults to baseline-build-metadata.json beside the output.\nUse --self-test for isolated synthetic parser/accounting tests. Existing clean outputs only; no builds.",
     );
     return;
   }
@@ -283,7 +283,7 @@ async function main() {
   const baseline = await measure(options["--baseline"]);
   const current = options["--baseline-only"]
     ? null
-    : await measure(options["--current"] || path.join(root, "apps/paint-vault-web/dist"));
+    : await measure(options["--current"] || path.join(root, "apps/paintwarden-web/dist"));
   let baselineBuild = null;
   const metadataFile =
     options["--baseline-metadata"] || path.join(path.dirname(output), "baseline-build-metadata.json");

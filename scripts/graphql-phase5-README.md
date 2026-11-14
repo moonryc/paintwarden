@@ -16,7 +16,7 @@ node scripts/graphql-phase5-docker.mjs /absolute/evidence/phase5-docker \
 
 # Actual approved packaged macOS app; ONE fresh profile for the whole switch cycle.
 node scripts/graphql-phase5-native.mjs /absolute/evidence/phase5-native \
-  --app '/absolute/path/Paint Vault.app' --run
+  --app '/absolute/path/Paintwarden.app' --run
 ```
 
 Do not reuse an evidence directory across concurrent runs. Evidence paths should be outside the repository. All commands without `--run` are plans. `--plan --run` and unknown flags fail. Runners exit nonzero on a failed check/cleanup/stability check. Unreached checks remain `NOT RUN`; one early failure does not become a broad exclusion or a pass.
@@ -38,7 +38,7 @@ The fixture is deliberately compact, not a large-vault performance benchmark. Th
 
 ## Packaged native acceptance
 
-`graphql-phase5-native.mjs` launches the actual `.app`, with updates disabled and exactly **one** new `PAINT_VAULT_DESKTOP_DATA_DIR`. Its remote server uses another fresh `DATA_DIR` and the same app's packaged Node/server/web assets.
+`graphql-phase5-native.mjs` launches the actual `.app`, with updates disabled and exactly **one** new `PAINTWARDEN_DESKTOP_DATA_DIR`. Its remote server uses another fresh `DATA_DIR` and the same app's packaged Node/server/web assets.
 
 - First-run chooser → **Use this computer**, owner setup, unique local marker.
 - Intentional window close/clean process exit → relaunch: retained local connection, normal owner sign-in, persisted marker.

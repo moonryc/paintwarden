@@ -17,7 +17,7 @@ import {
 } from "./graphql-phase5-support.mjs";
 
 export function parseOptions(args, kind) {
-  const options = { run: false, webDist: path.join(root, "apps/paint-vault-web/dist") };
+  const options = { run: false, webDist: path.join(root, "apps/paintwarden-web/dist") };
   let plan = false;
   while (args.length) {
     const arg = args.shift();
@@ -82,7 +82,7 @@ export async function runRuntime(kind, args) {
         const port = await freePort();
         baseUrl = `http://127.0.0.1:${port}`;
         for (const file of ["server.mjs", "schema.graphql"])
-          report.artifacts.push(await identity(path.join(root, "apps/paint-vault/dist", file)));
+          report.artifacts.push(await identity(path.join(root, "apps/paintwarden/dist", file)));
         for (const entry of await readdir(options.webDist, { recursive: true, withFileTypes: true }))
           if (entry.isFile()) report.artifacts.push(await identity(path.join(entry.parentPath, entry.name)));
         const server = launchOwned(
@@ -93,7 +93,7 @@ export async function runRuntime(kind, args) {
             'process.env.NODE_ENV="test"; const {startServer}=await import("./server.mjs"); process.env.NODE_ENV="production"; await startServer(); console.log("PHASE5_READY_LISTENING");',
           ],
           {
-            cwd: path.join(root, "apps/paint-vault/dist"),
+            cwd: path.join(root, "apps/paintwarden/dist"),
             env: {
               ...process.env,
               NODE_ENV: "production",
@@ -102,7 +102,7 @@ export async function runRuntime(kind, args) {
               HOST: "127.0.0.1",
               PORT: String(port),
               WEB_DIST: options.webDist,
-              PAINT_VAULT_DISABLE_UPDATES: "1",
+              PAINTWARDEN_DISABLE_UPDATES: "1",
             },
           },
           path.join(dir, "browser-server.log"),
@@ -124,7 +124,7 @@ export async function runRuntime(kind, args) {
           "--version",
         ]);
         assert.equal(node, "v22.22.2");
-        const label = `paint-vault.smoke.owner=${name}`;
+        const label = `paintwarden.smoke.owner=${name}`;
         docker(["volume", "create", "--label", label, volume]);
         report.fixture = { volume, label, retained: true };
         docker([
@@ -143,7 +143,7 @@ export async function runRuntime(kind, args) {
           "-e",
           "DATABASE_PATH=",
           "-e",
-          "PAINT_VAULT_DISABLE_UPDATES=1",
+          "PAINTWARDEN_DISABLE_UPDATES=1",
           image.Id,
         ]);
         containerCreated = true;

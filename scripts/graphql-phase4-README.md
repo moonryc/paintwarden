@@ -6,11 +6,11 @@ Use **Node 22.22.2** in this isolated worktree. No runner builds or packages. De
 E=/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-audit/graphql-phase-4-evidence
 node scripts/graphql-phase4-browser.mjs "$E/browser/ATTEMPT" --profile realistic
 node scripts/graphql-phase4-browser.mjs "$E/browser/ATTEMPT" --profile stress
-node scripts/graphql-phase4-native.mjs "$E/native/ATTEMPT" --app '/absolute/path/Paint Vault.app'
+node scripts/graphql-phase4-native.mjs "$E/native/ATTEMPT" --app '/absolute/path/Paintwarden.app'
 node scripts/graphql-phase4-docker.mjs "$E/docker/ATTEMPT" --image EXISTING_IMAGE_ID
 ```
 
-Append `--run` only when approved. Browser accepts `--web-dist /absolute/production/web-dist`; server comes from `apps/paint-vault/dist`. Give each attempt its own directory; do not overwrite exploratory failures or Phase3 evidence. Native runs the actual provided macOS `.app` in **local and remote** modes and tests intentional quit/relaunch. Docker requires an existing image and daemon; it never builds/pulls or uses Compose/user volumes.
+Append `--run` only when approved. Browser accepts `--web-dist /absolute/production/web-dist`; server comes from `apps/paintwarden/dist`. Give each attempt its own directory; do not overwrite exploratory failures or Phase3 evidence. Native runs the actual provided macOS `.app` in **local and remote** modes and tests intentional quit/relaunch. Docker requires an existing image and daemon; it never builds/pulls or uses Compose/user volumes.
 
 ## Scope and interfaces
 

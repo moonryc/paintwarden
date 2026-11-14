@@ -17,7 +17,7 @@ import {
   zhCN,
   zhTW,
 } from "@mui/material/locale";
-import { i18n, i18nReady, resolveLanguage } from "@paint-vault/i18n/runtime";
+import { i18n, i18nReady, resolveLanguage } from "@paintwarden/i18n/runtime";
 import { theme } from "./theme";
 
 // Explicit imports let Vite discard MUI's other, unsupported language catalogs.
@@ -31,9 +31,9 @@ export {
   formatDate,
   formatRelativeTime,
   translateServerError,
-} from "@paint-vault/i18n/runtime";
-export type { Language } from "@paint-vault/i18n/runtime";
-const storageKey = "paint-vault-language";
+} from "@paintwarden/i18n/runtime";
+export type { Language } from "@paintwarden/i18n/runtime";
+const storageKey = "paintwarden-language";
 type LanguageBridge = {
   getLanguage?: () => Promise<string>;
   setLanguage?: (language: string) => Promise<unknown>;
@@ -41,7 +41,7 @@ type LanguageBridge = {
 function desktopBridge(): LanguageBridge | undefined {
   return typeof window === "undefined"
     ? undefined
-    : (window as Window & { paintVaultDesktop?: LanguageBridge }).paintVaultDesktop;
+    : (window as Window & { paintwardenDesktop?: LanguageBridge }).paintwardenDesktop;
 }
 const defaultLanguage = { language: "en", setLanguage: async (_language: string): Promise<void> => {} };
 const LanguageContext = createContext<typeof defaultLanguage | null>(null);

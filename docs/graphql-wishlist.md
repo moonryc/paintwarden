@@ -21,4 +21,4 @@ Only Storybook supplies `WishlistFixtureContext` from its complete fixture. Prod
 
 ## Checks
 
-`node --import tsx --test packages/vault-ui/src/dom/graphql/wishlist-loader.test.ts` checks independent connection depths, access beyond five pages, unchanged global totals, no premature normalization, stale-cursor reset, mixed-revision rejection, and malformed cursors. Server semantics and database generation tests live in `apps/paint-vault/graphql/wishlist.test.ts`. Wishlist page stories cover stock retention, repair reasons, search, sharing, project associations and keyboard/windowed interaction.
+`node --import tsx --test packages/vault-ui/src/dom/graphql/wishlist-loader.test.ts` checks independent connection depths, access beyond five pages, unchanged global totals, no premature normalization, stale-cursor reset, mixed-revision rejection, and malformed cursors. Server semantics and database generation tests live in `apps/paintwarden/graphql/wishlist.test.ts`. Wishlist page stories cover stock retention, repair reasons, search, sharing, project associations and keyboard/windowed interaction.

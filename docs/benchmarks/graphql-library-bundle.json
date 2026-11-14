@@ -3,7 +3,7 @@
   "node": "v22.22.2",
   "method": "Emitted .js assets only, summed raw bytes and per-file gzipSync default level 6. Excludes CSS/maps/fonts; not startup transfer or parse time.",
   "baseline": {
-    "directory": "/tmp/paint-vault-phase01-bundle-0Hmoie/dist",
+    "directory": "/tmp/paintwarden-phase01-bundle-0Hmoie/dist",
     "jsBytes": 1003108,
     "sumGzipBytes": 335480,
     "entry": {
@@ -156,7 +156,7 @@
     ]
   },
   "candidate": {
-    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paint-vault-web/dist",
+    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paintwarden-web/dist",
     "jsBytes": 1229603,
     "sumGzipBytes": 401980,
     "entry": {

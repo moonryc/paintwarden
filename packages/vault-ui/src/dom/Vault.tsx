@@ -9,7 +9,7 @@ import {
   useScrollTrigger,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -199,7 +199,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                 fontWeight: 600,
               }}
             >
-              {auth.setupRequired ? i18n.t("shell:setUpPaintVault") : i18n.t("shell:signInToPaintVault")}
+              {auth.setupRequired ? i18n.t("shell:setUpPaintwarden") : i18n.t("shell:signInToPaintwarden")}
             </Box>
             <Box
               component="p"

@@ -1,17 +1,19 @@
 services:
-  paint-vault:
+  paintwarden:
     build: .
-    container_name: paint-vault
+    image: paintwarden:local
+    container_name: paintwarden
     restart: unless-stopped
     ports:
-      - "${PAINT_VAULT_PORT:-3000}:3000"
+      - "${PAINTWARDEN_PORT:-3000}:3000"
     environment:
       PORT: "3000"
       DATA_DIR: /data
-      PAINT_VAULT_TRUST_PROXY: "${PAINT_VAULT_TRUST_PROXY:-0}"
-      PAINT_VAULT_ALLOWED_HOSTS: "${PAINT_VAULT_ALLOWED_HOSTS:-}"
+      PAINTWARDEN_TRUST_PROXY: "${PAINTWARDEN_TRUST_PROXY:-0}"
+      PAINTWARDEN_ALLOWED_HOSTS: "${PAINTWARDEN_ALLOWED_HOSTS:-}"
     volumes:
-      - paint-vault-data:/data
+      - paintwarden-data:/data
 
 volumes:
-  paint-vault-data:
+  paintwarden-data:
+    name: "${PAINTWARDEN_VOLUME:-paintwarden-data}"

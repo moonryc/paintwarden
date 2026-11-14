@@ -1,6 +1,6 @@
 # Project licensing maintenance
 
-Paint Vault is source-available under [PolyForm Noncommercial 1.0.0](../LICENSE),
+Paintwarden is source-available under [PolyForm Noncommercial 1.0.0](../LICENSE),
 not under an OSI-approved license. The [trademark policy](../TRADEMARKS.md) is separate.
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for the Contributor License Agreement.
 Third-party components retain their own licenses; the project license does not
@@ -46,7 +46,7 @@ LICENSE files contained MIT terms.
 The production npm screen found permissive licenses, OFL font licenses, MPL-2.0
 file-level copyleft, and LGPL-3.0-or-later native libvips components; no GPL/AGPL
 npm dependency was found. sharp is Apache-2.0 and dynamically links libvips.
-These components keep their own terms, and do not require Paint Vault's own code
+These components keep their own terms, and do not require Paintwarden's own code
 to be distributed under GPL. Do not apply PolyForm restrictions to third-party
 components or their separately licensed source files.
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Isolated production website smoke (never builds/serves the app or touches a vault).
  * Node 22.22.2: node scripts/smoke-i18n-site.mjs /absolute/evidence-directory
- * Builds only paint-vault-site, snapshots its static output into disposable storage,
+ * Builds only paintwarden-site, snapshots its static output into disposable storage,
  * uses a random loopback port and a fresh Chromium context, then removes its storage.
  */
 import assert from "node:assert/strict";
@@ -109,7 +109,7 @@ async function inspect(code, route, phase, mobile) {
     description: document.querySelector('meta[name="description"]')?.content,
     ogTitle: document.querySelector('meta[property="og:title"]')?.content,
     ogDescription: document.querySelector('meta[property="og:description"]')?.content,
-    savedLanguage: localStorage.getItem("paint-vault-language"),
+    savedLanguage: localStorage.getItem("paintwarden-language"),
   }));
   row.metadata = metadata;
   assert.equal(metadata.title, catalogs[code][`meta.${route.page}Title`]);
@@ -214,7 +214,7 @@ try {
     }
     dictionaries[code] = await translationDictionary(code);
   }
-  console.log("All 13 site catalogs valid; building ONLY paint-vault-site");
+  console.log("All 13 site catalogs valid; building ONLY paintwarden-site");
   const build = launchOwned(
     process.execPath,
     [
@@ -222,7 +222,7 @@ try {
       "run",
       "build",
       "--workspace",
-      "paint-vault-site",
+      "paintwarden-site",
     ],
     {
       cwd: root,
@@ -249,7 +249,7 @@ try {
   await build.save();
   temporary = await mkdtemp(path.join(os.tmpdir(), "pv-i18n-site-"));
   const production = path.join(temporary, "dist");
-  await cp(path.join(root, "apps/paint-vault-site/dist"), production, { recursive: true });
+  await cp(path.join(root, "apps/paintwarden-site/dist"), production, { recursive: true });
   const mime = {
     ".html": "text/html",
     ".js": "text/javascript",

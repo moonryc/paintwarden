@@ -1,6 +1,6 @@
-import { i18n, i18nReady } from "@paint-vault/i18n/runtime";
-import { isUserId } from "@paint-vault/core/vault-ids";
-import { readZipDirectory, readZipEntryData, type ZipSource } from "@paint-vault/core/zip-reader";
+import { i18n, i18nReady } from "@paintwarden/i18n/runtime";
+import { isUserId } from "@paintwarden/core/vault-ids";
+import { readZipDirectory, readZipEntryData, type ZipSource } from "@paintwarden/core/zip-reader";
 import { inflateSync, strFromU8 } from "fflate";
 
 export type BackupSummary =
@@ -75,7 +75,9 @@ export async function summarizeBackup(file: Blob): Promise<BackupSummary> {
   if (!body || typeof body !== "object" || Array.isArray(body))
     return { ok: false, error: i18n.t("shell:backupInvalid") };
   const record = body as Record<string, unknown>;
-  if (record.format !== "paint-vault-backup") return { ok: false, error: i18n.t("shell:backupInvalid") };
+  // Migration compatibility: old backups retain their original on-disk identifier.
+  if (record.format !== "paintwarden-backup" && record.format !== "paint-vault-backup")
+    return { ok: false, error: i18n.t("shell:backupInvalid") };
   const legacy = !zip && (record.version === 3 || record.version === 4);
   if (!legacy && !(zip && record.version === 1)) return { ok: false, error: i18n.t("shell:backupVersion") };
   const exported = typeof record.exportedAt === "string" ? new Date(record.exportedAt) : null;

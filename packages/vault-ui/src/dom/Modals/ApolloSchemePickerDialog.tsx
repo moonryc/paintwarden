@@ -1,4 +1,4 @@
-import { COLOR_CATEGORIES } from "@paint-vault/core/color-categories";
+import { COLOR_CATEGORIES } from "@paintwarden/core/color-categories";
 import { useMemo, useState } from "react";
 
 import { useSchemeOptions } from "../graphql/miniature-scheme-hooks";

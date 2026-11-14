@@ -21,7 +21,7 @@ export function HelpAbout({
   loadSummary = getSupportSummary,
   saveBundle = saveSupportBundle,
   report,
-  desktop = Boolean(window.paintVaultDesktop),
+  desktop = Boolean(window.paintwardenDesktop),
   embedded = false,
 }: Props) {
   const { t, i18n } = useTranslation("components");

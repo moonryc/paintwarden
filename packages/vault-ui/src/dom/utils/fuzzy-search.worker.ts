@@ -1,4 +1,4 @@
-import { createFuzzyIndex, searchFuzzyIndex, type FuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { createFuzzyIndex, searchFuzzyIndex, type FuzzyIndex } from "@paintwarden/core/fuzzy-search";
 
 let index: FuzzyIndex<number> = createFuzzyIndex([], String);
 // Only text crosses the boundary on table changes; keystrokes send a tiny message.

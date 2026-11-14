@@ -14,9 +14,9 @@ const bundle = await build({
       export * from "./recipe-merge.ts";
       export { schemeOrderEntries } from "./scheme-order.ts";
       export { emptyState } from "./constants.ts";
-      export { isPaintOwned } from "@paint-vault/core/paint-state";
-      export { isPaintAvailable, resolvePaintChoice } from "@paint-vault/core/paint-substitutions";
-      export { fuzzyFilter } from "@paint-vault/core/fuzzy-search";
+      export { isPaintOwned } from "@paintwarden/core/paint-state";
+      export { isPaintAvailable, resolvePaintChoice } from "@paintwarden/core/paint-substitutions";
+      export { fuzzyFilter } from "@paintwarden/core/fuzzy-search";
     `,
     resolveDir: fileURLToPath(new URL(".", import.meta.url)),
   },

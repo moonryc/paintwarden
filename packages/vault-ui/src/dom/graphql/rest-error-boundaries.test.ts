@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 
 import { createVaultStore } from "../store/vault-store";
 import { exportBackupFile } from "../utils/backup-export";
@@ -104,7 +104,7 @@ void test("backup export hides network/body/desktop diagnostics and preserves de
     }
     Object.defineProperty(globalThis, "window", {
       configurable: true,
-      value: { paintVaultDesktop: { saveBackup: () => Promise.reject(new Error("private desktop path")) } },
+      value: { paintwardenDesktop: { saveBackup: () => Promise.reject(new Error("private desktop path")) } },
     });
     await assert.rejects(
       exportBackupFile(() => ({})),
@@ -112,7 +112,7 @@ void test("backup export hides network/body/desktop diagnostics and preserves de
     );
     Object.defineProperty(globalThis, "window", {
       configurable: true,
-      value: { paintVaultDesktop: { saveBackup: async () => false } },
+      value: { paintwardenDesktop: { saveBackup: async () => false } },
     });
     assert.equal(await exportBackupFile(() => ({})), false);
   } finally {

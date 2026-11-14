@@ -69,7 +69,7 @@ try {
   report.phase0 = JSON.parse(
     await readFile(path.join(root, `docs/benchmarks/graphql-baseline-${profile}.json`), "utf8"),
   );
-  const dist = path.join(root, "apps/paint-vault/dist");
+  const dist = path.join(root, "apps/paintwarden/dist");
   for (const file of ["server.mjs", "schema.graphql"])
     report.artifacts.push(await identity(path.join(dist, file)));
   for (const entry of await readdir(path.join(dist, "web-dist"), { recursive: true, withFileTypes: true }))
@@ -96,8 +96,8 @@ try {
           DATABASE_PATH: "",
           HOST: "127.0.0.1",
           PORT: String(port),
-          PAINT_VAULT_ALLOWED_HOSTS: host,
-          PAINT_VAULT_DISABLE_UPDATES: "1",
+          PAINTWARDEN_ALLOWED_HOSTS: host,
+          PAINTWARDEN_DISABLE_UPDATES: "1",
         },
       },
       path.join(dir, `server-${owned.length}.log`),

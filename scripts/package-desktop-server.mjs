@@ -17,15 +17,15 @@ if (process.versions.node !== pinned) {
   );
 }
 
-const output = path.join(root, "apps/paint-vault-electron/desktop-server");
-const dist = path.join(root, "apps/paint-vault/dist");
+const output = path.join(root, "apps/paintwarden-electron/desktop-server");
+const dist = path.join(root, "apps/paintwarden/dist");
 await readFile(path.join(dist, "server.mjs"));
 
 // Install the server's production dependencies from the root lockfile, the same versions the web
 // server and Docker image use, in a staging copy of the workspace manifests.
 const lockfile = JSON.parse(await readFile(path.join(root, "package-lock.json"), "utf8"));
 const workspaces = Object.keys(lockfile.packages).filter((key) => key && !key.includes("node_modules"));
-const staging = await mkdtemp(path.join(os.tmpdir(), "paint-vault-desktop-server-"));
+const staging = await mkdtemp(path.join(os.tmpdir(), "paintwarden-desktop-server-"));
 try {
   await cp(path.join(root, "package.json"), path.join(staging, "package.json"));
   await cp(path.join(root, "package-lock.json"), path.join(staging, "package-lock.json"));
@@ -38,7 +38,7 @@ try {
     npm,
     // sharp distributes its platform-native addon/libvips as optional dependencies.
     // Keep them: npm selects macOS arm64/x64, Windows or Linux for this build host.
-    ["ci", "--omit=dev", "--workspace", "paint-vault", "--no-audit", "--no-fund"],
+    ["ci", "--omit=dev", "--workspace", "paintwarden", "--no-audit", "--no-fund"],
     { cwd: staging, stdio: "inherit", shell: process.platform === "win32" },
   );
   if (result.status !== 0) throw new Error("Desktop server dependency install failed");
@@ -53,7 +53,7 @@ try {
   // A lockfile can place a server dependency here when another workspace uses a
   // different version (e.g. Astro's optional sharp). Keep the server's resolution
   // precedence rather than accidentally resolving a developer checkout's modules.
-  const serverModules = path.join(staging, "apps/paint-vault/node_modules");
+  const serverModules = path.join(staging, "apps/paintwarden/node_modules");
   if (
     await lstat(serverModules).then(
       () => true,
@@ -65,7 +65,7 @@ try {
   await rm(staging, { recursive: true, force: true });
 }
 
-await cp(path.join(root, "apps/paint-vault/package.json"), path.join(output, "package.json"));
+await cp(path.join(root, "apps/paintwarden/package.json"), path.join(output, "package.json"));
 await cp(path.join(dist, "server.mjs"), path.join(output, "server.mjs"));
 await cp(path.join(dist, "schema.graphql"), path.join(output, "schema.graphql"));
 await cp(path.join(dist, "web-dist"), path.join(output, "web-dist"), { recursive: true });
@@ -93,7 +93,7 @@ const sharpCheck = spawnSync(
 if (sharpCheck.status !== 0) throw new Error("Bundled sharp native binary failed its smoke test");
 await writeFile(
   path.join(output, "README.txt"),
-  "Paint Vault local server. Data is stored outside this application folder.\n",
+  "Paintwarden local server. Data is stored outside this application folder.\n",
 );
 console.log(`Packaged Electron server at ${output}`);
 

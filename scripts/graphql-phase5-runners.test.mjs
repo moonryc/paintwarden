@@ -17,7 +17,7 @@ import { parseOptions as nativeOptions, nativeCheckNames } from "./graphql-phase
 const backup = (tables, image = [1, 2, 3]) =>
   Buffer.from(
     zipSync({
-      "backup.json": Buffer.from(JSON.stringify({ format: "paint-vault-backup", tables })),
+      "backup.json": Buffer.from(JSON.stringify({ format: "paintwarden-backup", tables })),
       "images/fixture.png": new Uint8Array(image),
     }),
   );
@@ -76,7 +76,7 @@ test("backup verifier accepts row/key order changes but rejects lost/changed dat
 test("actual demo ZIP contains the manifest, catalog, logo and every declared asset", async () => {
   const files = unzipSync(await demoPluginZip());
   const json = (name) => JSON.parse(strFromU8(files[`demo-plugin/${name}`]));
-  assert.equal(json("source.json").name, "Paint Vault demo plugin");
+  assert.equal(json("source.json").name, "Paintwarden demo plugin");
   const catalog = json("catalog.json");
   assert.equal(catalog.paints.length, 8);
   assert.equal(catalog.schemes.length, 2);
@@ -102,10 +102,10 @@ test("native switch actions use real UI controls; production bridge is read-only
   assert.match(source, /name: "Change server"/);
   assert.match(source, /name: "Use this computer"/);
   assert.match(source, /name: "Connect to server"/);
-  assert.match(source, /window\.paintVaultDesktop\.getConnection\(\)/);
+  assert.match(source, /window\.paintwardenDesktop\.getConnection\(\)/);
   assert.doesNotMatch(
     source,
-    /paintVaultDesktop\.setConnection|localStorage\.setItem|addInitScript|executeJavaScript/,
+    /paintwardenDesktop\.setConnection|localStorage\.setItem|addInitScript|executeJavaScript/,
   );
   assert.match(source, /profileCount: 1/);
   assert.match(source, /relaunch\("remote"/);

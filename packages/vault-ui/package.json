@@ -1,5 +1,5 @@
 {
-  "name": "@paint-vault/ui",
+  "name": "@paintwarden/ui",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -21,7 +21,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.4.0",
-    "@paint-vault/core": "*",
+    "@paintwarden/core": "*",
     "fflate": "^0.8.3",
     "graphql": "^17.1.0",
     "graphql-sse": "^2.6.3",
@@ -30,7 +30,7 @@
     "react-i18next": "^18.0.1",
     "rxjs": "^7.8.2",
     "zustand": "^5.1.0",
-    "@paint-vault/i18n": "*"
+    "@paintwarden/i18n": "*"
   },
   "peerDependencies": {
     "react": "^19.2.0"

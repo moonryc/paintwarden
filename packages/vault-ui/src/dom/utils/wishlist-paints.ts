@@ -1,4 +1,4 @@
-import { isPaintOwned } from "@paint-vault/core/paint-state";
+import { isPaintOwned } from "@paintwarden/core/paint-state";
 
 type PaintRecord = {
   state: "OWNED" | "WISHLIST";

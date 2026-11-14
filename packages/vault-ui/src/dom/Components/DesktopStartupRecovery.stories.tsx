@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
-import DesktopConnection from "../../../../../apps/paint-vault-web/src/desktop-connection";
+import DesktopConnection from "../../../../../apps/paintwarden-web/src/desktop-connection";
 import { desktopBridge } from "../storybook/decorators";
 
 const openBugReport = fn(async () => true);
@@ -24,7 +24,7 @@ const meta = {
       },
     ),
   ],
-  render: () => <DesktopConnection bridge={window.paintVaultDesktop!} />,
+  render: () => <DesktopConnection bridge={window.paintwardenDesktop!} />,
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;

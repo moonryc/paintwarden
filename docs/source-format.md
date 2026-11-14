@@ -2,7 +2,7 @@
 
 This is the formal specification of the plugin files. [Plugins](plugins.md) explains how the app installs, updates and removes them. [`examples/demo-plugin/`](../examples/demo-plugin/) is a complete example.
 
-A catalog source (shown in the app as a plugin) adds paints, color schemes and miniature templates to Paint Vault. It is a public GitHub repository with these files at its root:
+A catalog source (shown in the app as a plugin) adds paints, color schemes and miniature templates to Paintwarden. It is a public GitHub repository with these files at its root:
 
 | File           | Required | Contents                                                    |
 | -------------- | -------- | ----------------------------------------------------------- |
@@ -12,31 +12,31 @@ A catalog source (shown in the app as a plugin) adds paints, color schemes and m
 | `images/`      | If used  | The image files listed in `assets.json`.                    |
 | `logo.svg`     | No       | A standalone SVG document, up to 100 KB, shown as the logo. |
 
-Paint Vault reads the default branch. It downloads `catalog.json` and the images only when `version` in `source.json` changes.
+Paintwarden reads the default branch. It downloads `catalog.json` and the images only when `version` in `source.json` changes.
 
 ## Versions and updates
 
 An installed plugin only moves forward:
 
-- **From GitHub.** The repository identifies the plugin. A higher `version` updates it; the same version changes nothing. If the repository's `version` drops below the installed one, Paint Vault keeps the installed version and shows an error in Settings → Plugins.
+- **From GitHub.** The repository identifies the plugin. A higher `version` updates it; the same version changes nothing. If the repository's `version` drops below the installed one, Paintwarden keeps the installed version and shows an error in Settings → Plugins.
 - **From a .zip.** The same files can be uploaded as a .zip, at its root or inside one folder. The plugin's `name` identifies it, ignoring case, accents and punctuation, so `My Schemes` and `my-schemes` are the same plugin. A .zip with a higher `version` replaces the installed plugin, the same version changes nothing, and a lower version is refused. To go back to an older version, remove the plugin first. A plugin installed from a .zip is never checked online, and other plugins can't list it in `dependencies`.
 
 ## Validation rules
 
-Paint Vault rejects a source that breaks any rule below, and shows which item and field is wrong. There are no warnings and nothing is skipped:
+Paintwarden rejects a source that breaks any rule below, and shows which item and field is wrong. There are no warnings and nothing is skipped:
 
 - Every object may contain only the fields listed for it. An unknown field is an error, so a field that a later format adds can never be ignored silently by an older app.
 - Required fields must be present. Optional fields may be left out or, where noted, set to `null`.
 - Text fields must be strings within the stated length. Fields marked _non-empty_ must contain more than whitespace.
 
-A source that needs features from a newer Paint Vault release should set `minimumAppVersion`. Older apps then explain that they need updating instead of rejecting the source as invalid.
+A source that needs features from a newer Paintwarden release should set `minimumAppVersion`. Older apps then explain that they need updating instead of rejecting the source as invalid.
 
 ## IDs
 
 Every paint, scheme, template and scheme entry has an ID. Recipes, backups and other sources refer to these IDs, so **never change an ID after publishing it**.
 
 - An ID is a random UUID in lowercase, such as `0f8b3c1e-2d4a-4b6c-9e7f-1a2b3c4d5e6f`. Generate a new one for each item (for example with `uuidgen | tr A-Z a-z` or `crypto.randomUUID()`); don't derive them from names, so two sources never collide by accident.
-- Paint Vault stores the owner's own items as `user:` followed by a UUID. Sources use bare UUIDs, so they can never take one of those IDs.
+- Paintwarden stores the owner's own items as `user:` followed by a UUID. Sources use bare UUIDs, so they can never take one of those IDs.
 
 Two sources may ship the same paint ID only when the paint's brand, range, name and color match. To build on another source's paints or schemes, list that source in `dependencies` and refer to its IDs.
 
@@ -63,12 +63,12 @@ Two sources may ship the same paint ID only when the paint's brand, range, name 
 | `version`           | Yes      | `major.minor.patch`. Increase it whenever the catalog or images change.                 |
 | `license`           | No       | Up to 100 characters, such as an SPDX identifier. Shown in Settings → Plugins.          |
 | `attribution`       | No       | Up to 1,000 characters crediting the data's authors. Shown in Settings → Plugins.       |
-| `minimumAppVersion` | No       | `major.minor.patch`. Older Paint Vault releases refuse the source with a clear message. |
+| `minimumAppVersion` | No       | `major.minor.patch`. Older Paintwarden releases refuse the source with a clear message. |
 | `dependencies`      | Yes      | A list, possibly empty. Each item has `repository` and optionally `minimumVersion`.     |
 | `catalog`           | Yes      | `"catalog.json"`.                                                                       |
 | `assets`            | Yes      | `"assets.json"`.                                                                        |
 
-A dependency's `repository` is a GitHub URL or `owner/name` shorthand, and `minimumVersion` is `major.minor.patch`. Paint Vault installs dependencies first.
+A dependency's `repository` is a GitHub URL or `owner/name` shorthand, and `minimumVersion` is `major.minor.patch`. Paintwarden installs dependencies first.
 
 ## catalog.json
 
@@ -190,7 +190,7 @@ A template may use the same paint in several steps, but only once within a step.
 ```
 
 - An image path is `images/` followed by a file name of letters, digits, `.`, `_` and `-`, ending in `.avif`, `.gif`, `.jpg`, `.jpeg`, `.png` or `.webp`.
-- `sha256` is required: the file's SHA-256 hash, in hex. Paint Vault checks it after downloading.
+- `sha256` is required: the file's SHA-256 hash, in hex. Paintwarden checks it after downloading.
 - `originalUrl` is optional text recording where the image came from.
 
 ## Sharing from the app

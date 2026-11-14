@@ -336,13 +336,13 @@
     "parameters": []
   },
   {
-    "code": "THIS_ISN_T_A_PAINT_VAULT_BACKUP",
-    "pattern": "^This isn't a Paint Vault backup$",
+    "code": "THIS_ISN_T_A_PAINTWARDEN_BACKUP",
+    "pattern": "^This isn't a Paintwarden backup$",
     "parameters": []
   },
   {
-    "code": "THIS_BACKUP_WAS_MADE_BY_A_DIFFERENT_VERSION_OF_PAINT_VAULT",
-    "pattern": "^This backup was made by a different version of Paint Vault$",
+    "code": "THIS_BACKUP_WAS_MADE_BY_A_DIFFERENT_VERSION_OF_PAINTWARDEN",
+    "pattern": "^This backup was made by a different version of Paintwarden$",
     "parameters": []
   },
   {
@@ -371,8 +371,8 @@
     "parameters": []
   },
   {
-    "code": "CHOOSE_A_PAINT_VAULT_BACKUP_ZIP_FILE",
-    "pattern": "^Choose a Paint Vault backup \\(\\.zip\\) file$",
+    "code": "CHOOSE_A_PAINTWARDEN_BACKUP_ZIP_FILE",
+    "pattern": "^Choose a Paintwarden backup \\(\\.zip\\) file$",
     "parameters": []
   },
   {
@@ -474,8 +474,8 @@
     ]
   },
   {
-    "code": "THIS_ZIP_HAS_NO_SOURCE_JSON_CHOOSE_A_PAINT_VAULT_PLUGIN",
-    "pattern": "^This \\.zip has no source\\.json\\. Choose a Paint Vault plugin$",
+    "code": "THIS_ZIP_HAS_NO_SOURCE_JSON_CHOOSE_A_PAINTWARDEN_PLUGIN",
+    "pattern": "^This \\.zip has no source\\.json\\. Choose a Paintwarden plugin$",
     "parameters": []
   },
   {
@@ -792,8 +792,8 @@
     ]
   },
   {
-    "code": "NEEDS_PAINT_VAULT_OR_NEWER_THIS_IS",
-    "pattern": "^(.+?) needs Paint Vault (.+?) or newer \\(this is (.+?)\\)$",
+    "code": "NEEDS_PAINTWARDEN_OR_NEWER_THIS_IS",
+    "pattern": "^(.+?) needs Paintwarden (.+?) or newer \\(this is (.+?)\\)$",
     "parameters": [
       "value1",
       "value2",

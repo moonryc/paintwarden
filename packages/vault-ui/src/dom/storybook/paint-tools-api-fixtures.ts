@@ -1,7 +1,7 @@
 // Complete fixture snapshots are projected only in Storybook, never in runtime hooks.
-import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
-import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
-import { paintType, rankOwnedPaintMatches, suggestedOwnedPaint } from "@paint-vault/core/recipe-converter";
+import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
+import { rankPaintsByColor } from "@paintwarden/core/paint-color-similarity";
+import { paintType, rankOwnedPaintMatches, suggestedOwnedPaint } from "@paintwarden/core/recipe-converter";
 
 import type { Paint, State } from "../types";
 import { owns } from "../utils/vault-data";

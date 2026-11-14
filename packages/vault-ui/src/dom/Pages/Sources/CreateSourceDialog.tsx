@@ -1,6 +1,6 @@
 import CloudDownloadOutlinedIcon from "@mui/icons-material/CloudDownloadOutlined";
 import { Alert, Box, Button, Checkbox, InputAdornment, TextField, Tooltip } from "@mui/material";
-import { translateServerError } from "@paint-vault/i18n/runtime";
+import { translateServerError } from "@paintwarden/i18n/runtime";
 import { type ReactNode, useId, useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -85,7 +85,7 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
   const kinds = KINDS.filter((kind) => shareable[kind].length > 0);
   const versionValid = SEMVER.test(version.trim());
   const nameMissing = !name.trim();
-  const filename = `${slugify(name) || "paint-vault-plugin"}-${versionValid ? version.trim() : "x.y.z"}.zip`;
+  const filename = `${slugify(name) || "paintwarden-plugin"}-${versionValid ? version.trim() : "x.y.z"}.zip`;
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return Object.fromEntries(
@@ -145,13 +145,13 @@ export function CreateSourceDialog({ shareable, onClose }: { shareable: Shareabl
         throw new PublicError(translateServerError(result));
       }
       const blob = await response.blob();
-      if (window.paintVaultDesktop) {
+      if (window.paintwardenDesktop) {
         const bytes = new Uint8Array(await blob.arrayBuffer());
         if (
-          !(await window.paintVaultDesktop.saveBinary({
+          !(await window.paintwardenDesktop.saveBinary({
             bytes,
             filename,
-            title: t("sourcesExportPaintVaultPlugin"),
+            title: t("sourcesExportPaintwardenPlugin"),
           }))
         )
           return;

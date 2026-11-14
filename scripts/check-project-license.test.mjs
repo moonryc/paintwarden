@@ -38,7 +38,7 @@ test("root and every workspace manifest and lock entry declare the project licen
 });
 
 test("desktop, offline About, and Docker ship the project license", () => {
-  const desktop = json("apps/paint-vault-electron/package.json");
+  const desktop = json("apps/paintwarden-electron/package.json");
   assert.ok(
     desktop.build.extraResources.some((item) => item.from === "../../LICENSE" && item.to === "LICENSE"),
   );

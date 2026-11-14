@@ -2,7 +2,7 @@
   "paints": [
     {
       "id": "aa642d26-a431-400f-b3fa-36ed3f224847",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Primers",
       "name": "Demo Black Primer",
       "type": "PRIMER",
@@ -10,7 +10,7 @@
     },
     {
       "id": "129b95b2-e59f-44fc-95b9-09106653fc1c",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Base",
       "name": "Harbor Blue",
       "type": "BASE",
@@ -18,7 +18,7 @@
     },
     {
       "id": "0259b087-548b-4d1d-a785-e92aec34e94c",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Base",
       "name": "Gull Grey",
       "type": "BASE",
@@ -26,7 +26,7 @@
     },
     {
       "id": "0600ccaa-6bb2-4a92-9692-05a9469e9322",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Washes",
       "name": "Deep Umber Wash",
       "type": "SHADE",
@@ -34,7 +34,7 @@
     },
     {
       "id": "90f3446f-f490-4fe2-b240-0360646e4723",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Layer",
       "name": "Sky Highlight",
       "type": "LAYER",
@@ -42,7 +42,7 @@
     },
     {
       "id": "359e0dbd-85ca-4741-8028-46f9f89cb2cc",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Metallics",
       "name": "Brass Trim",
       "type": "METALLIC",
@@ -50,7 +50,7 @@
     },
     {
       "id": "2133c8d7-7eda-4770-b3d3-7634a928226e",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Base",
       "name": "Old Bone",
       "type": "BASE",
@@ -61,7 +61,7 @@
     },
     {
       "id": "692ad601-4bc8-491a-9739-a59e97c3f0bc",
-      "brand": "Paint Vault Demo",
+      "brand": "Paintwarden Demo",
       "range": "Finishes",
       "name": "Matte Varnish",
       "type": "VARNISH",
@@ -206,7 +206,7 @@
     {
       "id": "65eb4203-ce43-4295-aed2-3b035877a0ab",
       "name": "Demo Sentinel",
-      "manufacturer": "Paint Vault",
+      "manufacturer": "Paintwarden",
       "faction": "Demo Collection",
       "categories": ["Demo Collection", "Sci-fi"],
       "imageUrl": "images/demo-sentinel.png",

@@ -38,7 +38,7 @@ if (!worker) {
         i === 10 ? "warm" : "cold",
       ],
       {
-        cwd: path.join(root, "apps/paint-vault"),
+        cwd: path.join(root, "apps/paintwarden"),
         encoding: "utf8",
         timeout: 300000,
         env: { ...process.env, DATA_DIR: fixture.dataDir, DATABASE_PATH: "", NODE_ENV: "test" },
@@ -76,12 +76,12 @@ if (!worker) {
   console.log(JSON.stringify(report, null, 2));
 } else {
   // Only the parent may supply its freshly generated fixture to internal workers.
-  assert.ok(path.basename(process.argv[3]).startsWith("paint-vault-startup-"));
+  assert.ok(path.basename(process.argv[3]).startsWith("paintwarden-startup-"));
   process.env.DATA_DIR = process.argv[3];
   delete process.env.DATABASE_PATH;
   process.env.NODE_ENV = "test";
-  const { getSqlite } = await import("../apps/paint-vault/db/index.ts");
-  const { schema } = await import("../apps/paint-vault/graphql/server.ts");
+  const { getSqlite } = await import("../apps/paintwarden/db/index.ts");
+  const { schema } = await import("../apps/paintwarden/graphql/server.ts");
   const db = getSqlite();
   const document = parse(
     readFileSync(path.join(root, "packages/vault-ui/src/dom/graphql/library.graphql"), "utf8"),
@@ -155,7 +155,7 @@ if (!worker) {
         };
       }
       const page = first.result.data!.library as { nodes: { id: string }[] };
-      const { setPaintStock } = await import("../apps/paint-vault/lib/paint-stock.ts");
+      const { setPaintStock } = await import("../apps/paintwarden/lib/paint-stock.ts");
       setPaintStock({ paintId: page.nodes[0].id, state: "OWNED", quantity: 7 });
       const { result: _data, ...afterWrite } = await run();
       (warm as Record<string, unknown>).afterStockInvalidation = afterWrite;

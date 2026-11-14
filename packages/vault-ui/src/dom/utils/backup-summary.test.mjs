@@ -13,7 +13,7 @@ test("summarizes the contents of a zip backup", async () => {
   const summary = await summarize(
     zipBackup(
       {
-        format: "paint-vault-backup",
+        format: "paintwarden-backup",
         version: 1,
         exportedAt: "2026-10-01T12:00:00.000Z",
         images: ["a.png"],
@@ -46,7 +46,7 @@ test("recognizes pre-release JSON backups, which can only be merged", async () =
   const summary = await summarize(
     strToU8(
       JSON.stringify({
-        format: "paint-vault-backup",
+        format: "paintwarden-backup",
         version: 4,
         miniatures: [{}],
         colorSchemes: [
@@ -68,12 +68,24 @@ test("rejects other files and versions", async () => {
   assert.equal((await summarize(strToU8("not a backup"))).ok, false);
   assert.equal((await summarize(zipSync({ "other.txt": strToU8("x") }))).ok, false);
   assert.equal(
-    (await summarize(zipBackup({ format: "paint-vault-backup", version: 2, tables: {} }))).ok,
+    (await summarize(zipBackup({ format: "paintwarden-backup", version: 2, tables: {} }))).ok,
     false,
   );
   assert.equal(
-    (await summarize(strToU8(JSON.stringify({ format: "paint-vault-backup", version: 1 })))).ok,
+    (await summarize(strToU8(JSON.stringify({ format: "paintwarden-backup", version: 1 })))).ok,
     false,
   );
   assert.equal((await summarize(zipBackup({ format: "something-else", version: 1 }))).ok, false);
+});
+
+test("migration preview accepts original JSON and ZIP format identifiers", async () => {
+  for (const version of [3, 4])
+    assert.equal(
+      (await summarize(strToU8(JSON.stringify({ format: "paint-vault-backup", version })))).ok,
+      true,
+    );
+  assert.equal(
+    (await summarize(zipBackup({ format: "paint-vault-backup", version: 1, tables: {} }))).ok,
+    true,
+  );
 });

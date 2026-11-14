@@ -1,4 +1,4 @@
-import { i18n } from "@paint-vault/i18n/runtime";
+import { i18n } from "@paintwarden/i18n/runtime";
 import type { TypedDocumentNode } from "@apollo/client";
 
 import {

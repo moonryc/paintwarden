@@ -1,4 +1,4 @@
-import { i18n } from "@paint-vault/i18n/runtime";
+import { i18n } from "@paintwarden/i18n/runtime";
 import { createContext, useContext, useMemo } from "react";
 
 import type { PaintFormValues } from "../Modals/PaintForm";

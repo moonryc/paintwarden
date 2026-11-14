@@ -1,6 +1,6 @@
 import { Alert, Autocomplete, Box, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
-import { COLOR_CATEGORIES, type ColorCategory } from "@paint-vault/core/color-categories";
-import { paintType, rankOwnedPaintMatches } from "@paint-vault/core/recipe-converter";
+import { COLOR_CATEGORIES, type ColorCategory } from "@paintwarden/core/color-categories";
+import { paintType, rankOwnedPaintMatches } from "@paintwarden/core/recipe-converter";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 

@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import { _electron as electron } from "playwright";
 
 const root = path.resolve(import.meta.dirname, "..");
-const require = createRequire(path.join(root, "apps/paint-vault/package.json"));
+const require = createRequire(path.join(root, "apps/paintwarden/package.json"));
 const Database = require("better-sqlite3");
 const evidence = process.argv[2];
 assert.ok(evidence);
@@ -22,11 +22,11 @@ const report = process.argv.includes("--recovery-only")
       errors: [],
       signing: "Unsigned isolated macOS app; not distribution certification",
     };
-const packaged = path.join(root, "dist/electron/mac-arm64/Paint Vault.app/Contents/MacOS/Paint Vault");
-const development = createRequire(path.join(root, "apps/paint-vault-electron/package.json"))("electron");
+const packaged = path.join(root, "dist/electron/mac-arm64/Paintwarden.app/Contents/MacOS/Paintwarden");
+const development = createRequire(path.join(root, "apps/paintwarden-electron/package.json"))("electron");
 async function fixture(name, broken = false) {
-  const data = await mkdtemp(path.join(os.tmpdir(), `paint-vault-${name}-`));
-  const db = new Database(path.join(data, "paint-vault.sqlite"));
+  const data = await mkdtemp(path.join(os.tmpdir(), `paintwarden-${name}-`));
+  const db = new Database(path.join(data, "paintwarden.sqlite"));
   db.exec("CREATE TABLE fixture_notes(body text); INSERT INTO fixture_notes VALUES ('keep me');");
   db.close();
   await writeFile(
@@ -39,17 +39,17 @@ async function fixture(name, broken = false) {
 async function launch(executablePath, data, delay) {
   return electron.launch({
     executablePath,
-    args: executablePath === development ? [path.join(root, "apps/paint-vault-electron")] : [],
+    args: executablePath === development ? [path.join(root, "apps/paintwarden-electron")] : [],
     env: {
       ...process.env,
       DATA_DIR: "",
       DATABASE_PATH: "",
       NODE_ENV: "production",
-      PAINT_VAULT_DESKTOP_DATA_DIR: data,
-      PAINT_VAULT_DISABLE_UPDATES: "1",
-      PAINT_VAULT_TEST_STARTUP: "1",
-      PAINT_VAULT_TEST_STARTUP_DELAY_MS: String(delay),
-      PAINT_VAULT_DESKTOP_PORT: "0",
+      PAINTWARDEN_DESKTOP_DATA_DIR: data,
+      PAINTWARDEN_DISABLE_UPDATES: "1",
+      PAINTWARDEN_TEST_STARTUP: "1",
+      PAINTWARDEN_TEST_STARTUP_DELAY_MS: String(delay),
+      PAINTWARDEN_DESKTOP_PORT: "0",
     },
     timeout: 45_000,
   });
@@ -59,15 +59,15 @@ async function phase(page, name, timeout = 120_000) {
     if (window.__startupSmoke) return;
     window.__startupSmoke = { phase: "unknown" };
     let received = false;
-    window.paintVaultDesktop.onStartupState((state) => {
+    window.paintwardenDesktop.onStartupState((state) => {
       received = true;
       window.__startupSmoke = state;
     });
-    const state = await window.paintVaultDesktop.getStartupState();
+    const state = await window.paintwardenDesktop.getStartupState();
     if (!received) window.__startupSmoke = state;
   });
   await page.waitForFunction((name) => window.__startupSmoke.phase === name, name, { timeout });
-  assert.equal((await page.evaluate(() => window.paintVaultDesktop.getStartupState())).phase, name);
+  assert.equal((await page.evaluate(() => window.paintwardenDesktop.getStartupState())).phase, name);
 }
 let app;
 try {
@@ -110,7 +110,7 @@ try {
         0,
       );
       backup.close();
-      const db = new Database(path.join(data, "paint-vault.sqlite"), { readonly: true });
+      const db = new Database(path.join(data, "paintwarden.sqlite"), { readonly: true });
       assert.equal(db.prepare("SELECT body FROM fixture_notes").pluck().get(), "keep me");
       assert.ok(db.prepare("SELECT count(*) FROM __drizzle_migrations").pluck().get() > 0);
       db.close();

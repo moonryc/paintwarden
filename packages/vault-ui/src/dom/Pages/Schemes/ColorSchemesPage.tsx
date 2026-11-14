@@ -1,6 +1,6 @@
 import { Alert, Autocomplete, Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { isColorCategory } from "@paint-vault/core/color-categories";
+import { isColorCategory } from "@paintwarden/core/color-categories";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 

@@ -17,7 +17,7 @@ assert.ok(process.argv[2], "Usage: node scripts/smoke-updater-native.mjs EVIDENC
 assert.equal(process.version, "v22.22.2");
 assert.equal(process.platform, "darwin");
 await mkdir(evidence, { recursive: true });
-const executable = path.join(root, "dist/electron/mac-arm64/Paint Vault.app/Contents/MacOS/Paint Vault");
+const executable = path.join(root, "dist/electron/mac-arm64/Paintwarden.app/Contents/MacOS/Paintwarden");
 const asar = path.join(executable, "../../Resources/app.asar");
 const report = {
   startedAt: new Date().toISOString(),
@@ -41,7 +41,7 @@ async function server(name) {
   await new Promise((resolve) => listener.close(resolve));
   const data = await mkdtemp(path.join(os.tmpdir(), `pv-updater-server-${name}-`));
   const child = spawn(process.execPath, ["server.mjs"], {
-    cwd: path.join(root, "apps/paint-vault/dist"),
+    cwd: path.join(root, "apps/paintwarden/dist"),
     env: {
       ...process.env,
       DATA_DIR: data,
@@ -65,7 +65,7 @@ async function server(name) {
     });
     child.stdout.on("data", (chunk) => {
       entry.log += chunk;
-      if (entry.log.includes('PAINT_VAULT_STARTUP {"phase":"ready"}')) {
+      if (entry.log.includes('PAINTWARDEN_STARTUP {"phase":"ready"}')) {
         clearTimeout(timeout);
         resolve();
       }
@@ -84,9 +84,9 @@ async function launch(name, choice) {
       ...process.env,
       DATA_DIR: "",
       DATABASE_PATH: "",
-      PAINT_VAULT_DESKTOP_DATA_DIR: data,
+      PAINTWARDEN_DESKTOP_DATA_DIR: data,
       // Policy must be enabled. Inject immediately, before its first 10-second check.
-      PAINT_VAULT_DISABLE_UPDATES: "0",
+      PAINTWARDEN_DISABLE_UPDATES: "0",
       NODE_ENV: "production",
     },
     timeout: 45000,
@@ -148,7 +148,7 @@ async function launch(name, choice) {
   await page.reload();
   await page.getByRole("heading", { name: "Workbench", exact: true }).waitFor();
   await page.waitForFunction(
-    async () => (await window.paintVaultDesktop.getUpdateState()).status !== "disabled",
+    async () => (await window.paintwardenDesktop.getUpdateState()).status !== "disabled",
   );
   report.checks.push({
     name: `${name}: actual packaged app and safe native flags`,
@@ -168,8 +168,8 @@ async function close(resultFile, installs) {
   assert.equal(result.autoInstallOnAppQuit, false);
   return result;
 }
-const getState = (page) => page.evaluate(() => window.paintVaultDesktop.getUpdateState());
-const check = (page) => page.evaluate(() => window.paintVaultDesktop.checkForUpdates());
+const getState = (page) => page.evaluate(() => window.paintwardenDesktop.getUpdateState());
+const check = (page) => page.evaluate(() => window.paintwardenDesktop.checkForUpdates());
 async function prompt(page) {
   const dialog = page.getByRole("dialog", { name: "Update may disconnect from server" });
   await dialog.waitFor();
@@ -179,7 +179,7 @@ async function prompt(page) {
 }
 async function ready(page) {
   await page.waitForFunction(
-    async () => (await window.paintVaultDesktop.getUpdateState()).status === "ready",
+    async () => (await window.paintwardenDesktop.getUpdateState()).status === "ready",
   );
 }
 try {
@@ -202,7 +202,7 @@ try {
     await ready(page);
     assert.equal((await stats()).downloads, 1);
     await page.evaluate(
-      (serverUrl) => window.paintVaultDesktop.setConnection({ mode: "remote", serverUrl }),
+      (serverUrl) => window.paintwardenDesktop.setConnection({ mode: "remote", serverUrl }),
       remoteB,
     );
     dialog = await prompt(page);
@@ -210,7 +210,7 @@ try {
     assert.notEqual(old.consentId, switched.consentId);
     await page.evaluate(
       (old) =>
-        window.paintVaultDesktop.respondToUpdate({
+        window.paintwardenDesktop.respondToUpdate({
           version: old.version,
           consentId: old.consentId,
           action: "download",
@@ -218,7 +218,7 @@ try {
       old,
     );
     assert.equal((await getState(page)).status, "consent-required");
-    assert.equal(await page.evaluate(() => window.paintVaultDesktop.installUpdate()), false);
+    assert.equal(await page.evaluate(() => window.paintwardenDesktop.installUpdate()), false);
     await page.keyboard.press("Escape");
     await dialog.waitFor({ state: "hidden" });
     const result = await close(resultFile, 0);
@@ -247,7 +247,7 @@ try {
   {
     const { page, resultFile } = await launch("local-ready-switch", { mode: "local" });
     await page.waitForFunction(
-      async () => (await window.paintVaultDesktop.getStartupState()).phase === "ready",
+      async () => (await window.paintwardenDesktop.getStartupState()).phase === "ready",
     );
     await check(page);
     await ready(page);
@@ -255,7 +255,7 @@ try {
     assert.equal(await page.getByRole("dialog", { name: "Update may disconnect from server" }).count(), 0);
     await page.screenshot({ path: path.join(evidence, "local-automatic-ready.png"), animations: "disabled" });
     await page.evaluate(
-      (serverUrl) => window.paintVaultDesktop.setConnection({ mode: "remote", serverUrl }),
+      (serverUrl) => window.paintwardenDesktop.setConnection({ mode: "remote", serverUrl }),
       remoteA,
     );
     await prompt(page);
@@ -273,7 +273,7 @@ try {
   {
     const { page, resultFile } = await launch("local-automatic-quit", { mode: "local" });
     await page.waitForFunction(
-      async () => (await window.paintVaultDesktop.getStartupState()).phase === "ready",
+      async () => (await window.paintwardenDesktop.getStartupState()).phase === "ready",
     );
     await check(page);
     await ready(page);

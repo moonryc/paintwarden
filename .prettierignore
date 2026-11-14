@@ -5,8 +5,8 @@ node_modules/
 **/build/
 .nx/
 data/
-apps/paint-vault/drizzle/
-apps/paint-vault-electron/desktop-server/
+apps/paintwarden/drizzle/
+apps/paintwarden-electron/desktop-server/
 package-lock.json
 **/package-lock.json
 *.tsbuildinfo

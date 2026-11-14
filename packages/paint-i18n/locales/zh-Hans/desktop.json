@@ -30,16 +30,16 @@
     "zoom": "缩放",
     "front": "前置全部窗口",
     "help": "帮助",
-    "website": "GitHub 上的 Paint Vault"
+    "website": "GitHub 上的 Paintwarden"
   },
   "errors": {
     "enterUrl": "输入服务器 URL",
     "serverOrigin": "输入服务器源地址，例如 https://vault.example.com",
     "portUsed": "端口 {{port}} 已被其他服务器占用。",
-    "missingServer": "缺少内置的 Paint Vault 服务器，请重新构建桌面应用。",
-    "startServer": "无法启动内置的 Paint Vault 服务器。",
+    "missingServer": "缺少内置的 Paintwarden 服务器，请重新构建桌面应用。",
+    "startServer": "无法启动内置的 Paintwarden 服务器。",
     "connectionMode": "选择连接方式",
-    "notServer": "此地址不是 Paint Vault 服务器",
+    "notServer": "此地址不是 Paintwarden 服务器",
     "serverVersion": "无法检查服务器版本",
     "chooseServer": "请先选择服务器，再使用资料库",
     "connectionChanged": "连接已更改",
@@ -48,19 +48,19 @@
     "unavailable": "服务器不可用",
     "forbidden": "禁止访问",
     "notFound": "未找到",
-    "outsideApp": "仅在 Paint Vault 中可用",
+    "outsideApp": "仅在 Paintwarden 中可用",
     "invalidExport": "无效的导出",
     "exportFailed": "导出失败",
     "invalidRestore": "无效的恢复",
     "restoreFailed": "恢复失败",
     "invalidLanguage": "请选择支持的语言",
-    "olderServer": "此服务器运行的是旧版 Paint Vault，请将服务器更新至 {{appVersion}} 后再连接。",
-    "updateServer": "此服务器运行 Paint Vault {{serverVersion}}，应用版本为 {{appVersion}}。请将服务器更新至 {{appVersion}} 后再连接。",
-    "updateApp": "此服务器运行 Paint Vault {{serverVersion}}，应用版本为 {{appVersion}}。请将应用更新至 {{serverVersion}} 后再连接。"
+    "olderServer": "此服务器运行的是旧版 Paintwarden，请将服务器更新至 {{appVersion}} 后再连接。",
+    "updateServer": "此服务器运行 Paintwarden {{serverVersion}}，应用版本为 {{appVersion}}。请将服务器更新至 {{appVersion}} 后再连接。",
+    "updateApp": "此服务器运行 Paintwarden {{serverVersion}}，应用版本为 {{appVersion}}。请将应用更新至 {{serverVersion}} 后再连接。"
   },
   "dialogs": {
-    "exportFile": "导出 Paint Vault 文件",
-    "exportBackup": "导出 Paint Vault 备份",
+    "exportFile": "导出 Paintwarden 文件",
+    "exportBackup": "导出 Paintwarden 备份",
     "zip": "ZIP 压缩包",
     "save": "保存"
   },

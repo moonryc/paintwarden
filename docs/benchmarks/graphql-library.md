@@ -46,14 +46,14 @@ Both profiles at `1d1d666`: **7 PASS / 0 FAIL**. These table samples and raw bro
 
 ## Packaged macOS and Docker
 
-Actual unsigned macOS app: `/tmp/paint-vault-graphql-phase2-release-7fPpcD/mac-arm64/Paint Vault.app`. Updates disabled. Each local/remote run uses a fresh absolute `PAINT_VAULT_DESKTOP_DATA_DIR`; remote uses the bundled Node/server executable on another random loopback port with fresh data. Native fixture: 130 invented paints, all owned; **not large-vault native performance**.
+Actual unsigned macOS app: `/tmp/paintwarden-graphql-phase2-release-7fPpcD/mac-arm64/Paintwarden.app`. Updates disabled. Each local/remote run uses a fresh absolute `PAINTWARDEN_DESKTOP_DATA_DIR`; remote uses the bundled Node/server executable on another random loopback port with fresh data. Native fixture: 130 invented paints, all owned; **not large-vault native performance**.
 
 Native checklist: **21 PASS, 1 PARTIAL, 1 NOT RUN, 0 FAIL**. Each mode additionally sends 101 actual paint IDs to the production picker and verifies none are returned and exactly 29 of the 130 fixture paints remain. Both local and remote exercise production Library without initial snapshot, visible stock edits, two-page SSE refresh/scroll, legacy Home and return, imported broken chip plus details warning, intentional quit, retained connection/owner relaunch and final intentional quit. Local's independent write uses a separate request through the production renderer proxy, not a distinct client/session: PARTIAL. Remote uses an independent Node HTTP bearer session: PASS. Full native controls, Windows executable, signing/notarization and distribution install: NOT RUN. Packaged resource hashes and timestamps are retained in `native/final/native-results.json`; the unchanged app host archive alone does not identify the renderer build. Every packaged web resource was independently matched to the final web build.
 
 - `app.asar` SHA-256: `08a16536d79712d3b1d31f60e539b2c15fc6e4c8c510b6ea1105fcf2ba1c40c5`
 - bundled server SHA-256: `e459f04588dd60f33eaa767e429eb0adbbb1076913be6c2a9761e3729563eb8d`
 
-Final production Docker image `paint-vault:graphql-phase2`, immutable ID `sha256:6545ee40feb961cbec5567cc01f3b3c3324e083c49c8968ac3441854e2e8b9f9`: **8 PASS / 0 FAIL** on its own 130-paint fixture, including the shared browser Library scenario and owned-container cleanup. Fresh uniquely labelled volume retained; container removed. This is not Docker large-vault performance. No Compose defaults or user volumes were used.
+Final production Docker image `paintwarden:graphql-phase2`, immutable ID `sha256:6545ee40feb961cbec5567cc01f3b3c3324e083c49c8968ac3441854e2e8b9f9`: **8 PASS / 0 FAIL** on its own 130-paint fixture, including the shared browser Library scenario and owned-container cleanup. Fresh uniquely labelled volume retained; container removed. This is not Docker large-vault performance. No Compose defaults or user volumes were used.
 
 Final `ee83588` removes the arbitrary 100-ID picker exclusion cap while keeping the existing 128 KiB request-body, 32 KiB operation, 256-character-per-ID and 30-result bounds. Native and Docker now include real 101-exclusion requests. The projection/client document and all 41 packaged renderer resources are unchanged, so the prior execute/stress/bundle measurements remain labelled `1d1d666`, not falsely remeasured. Final root build passed (unchanged web/site restored from Nx cache; changed server rebuilt), followed by fresh package and Docker builds. `verification/runtime-sources.json` records this split.
 
@@ -83,10 +83,10 @@ node scripts/smoke-library-browser.mjs large /tmp/library-browser-large
 node scripts/smoke-library-browser.mjs stress /tmp/library-browser-stress
 node scripts/package-desktop-server.mjs electron
 # Build an actual .app using the normal electron-builder package target, then:
-node scripts/smoke-library-native.mjs /tmp/library-native --app '/path/Paint Vault.app' --run
+node scripts/smoke-library-native.mjs /tmp/library-native --app '/path/Paintwarden.app' --run
 # Build an explicitly named image first, then:
-node scripts/smoke-library-docker.mjs /tmp/library-docker --image paint-vault:graphql-phase2 --run
-node scripts/measure-web-bundle.mjs /path/clean-baseline-dist apps/paint-vault-web/dist
+node scripts/smoke-library-docker.mjs /tmp/library-docker --image paintwarden:graphql-phase2 --run
+node scripts/measure-web-bundle.mjs /path/clean-baseline-dist apps/paintwarden-web/dist
 node --test scripts/library-smoke-support.test.mjs scripts/smoke-library-native.test.mjs
 ```
 

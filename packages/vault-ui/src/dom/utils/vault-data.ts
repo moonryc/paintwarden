@@ -1,5 +1,5 @@
-import { isPaintOwned } from "@paint-vault/core/paint-state";
-import { createPaintChoiceResolver } from "@paint-vault/core/paint-substitutions";
+import { isPaintOwned } from "@paintwarden/core/paint-state";
+import { createPaintChoiceResolver } from "@paintwarden/core/paint-substitutions";
 
 import type { ColorScheme, Miniature, State } from "../types";
 

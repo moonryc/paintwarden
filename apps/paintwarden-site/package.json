@@ -1,0 +1,34 @@
+{
+  "name": "paintwarden-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 127.0.0.1 --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --host 127.0.0.1 --port 4321",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "code-lint": "eslint src/site --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@astrojs/react": "7.1.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@fontsource-variable/fraunces": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@mui/icons-material": "^9.5.0",
+    "@mui/material": "^9.4.0",
+    "@paintwarden/ui": "*",
+    "astro": "7.4.0",
+    "i18next": "^27.1.1",
+    "i18next-resources-to-backend": "^1.2.4",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "typescript": "5.9.3"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0"
+}

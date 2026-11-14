@@ -1,10 +1,10 @@
 # Plugins
 
-A plugin adds paints, color schemes and miniature templates to a Paint Vault. Paint Vault ships with no catalog of its own. Everything in the shared catalog comes from plugins the owner installs in **Settings → Plugins**.
+A plugin adds paints, color schemes and miniature templates to a Paintwarden. Paintwarden ships with no catalog of its own. Everything in the shared catalog comes from plugins the owner installs in **Settings → Plugins**.
 
 This guide explains how plugins behave: how they are installed, updated, removed and backed up, and how to make one. [The catalog source format](source-format.md) is the formal specification of the files and the rules each field must follow. In the code and that specification, a plugin is called a _catalog source_.
 
-A working example is in [`examples/demo-plugin/`](../examples/demo-plugin/). Its test, `apps/paint-vault/lib/demo-plugin.test.ts`, installs it on every test run, so it always matches the current format.
+A working example is in [`examples/demo-plugin/`](../examples/demo-plugin/). Its test, `apps/paintwarden/lib/demo-plugin.test.ts`, installs it on every test run, so it always matches the current format.
 
 ## What a plugin contains
 
@@ -32,7 +32,7 @@ cd examples && zip -r ../demo-plugin.zip demo-plugin && cd ..
 
 In the app, open **Settings → Plugins → Upload .zip** and choose `demo-plugin.zip`. The vault gains:
 
-- 8 paints from a made-up brand, _Paint Vault Demo_. One is a varnish with no color, and _Old Bone_ is marked discontinued.
+- 8 paints from a made-up brand, _Paintwarden Demo_. One is a varnish with no color, and _Old Bone_ is marked discontinued.
 - 2 schemes. _Harbor Blue Armor_ has step headings, milestones, and an image with a thumbnail. _Brass and Bone_ lists two paints under one step.
 - 1 template, _Demo Sentinel_. Its recipe links _Harbor Blue Armor_ and uses _Gull Grey_ in two steps.
 
@@ -44,7 +44,7 @@ To remove it, use the plugin's remove action in **Settings → Plugins**.
 
 ### From GitHub
 
-The owner enters a public repository as a URL, `owner/name`, or `github:owner/name`. Paint Vault then:
+The owner enters a public repository as a URL, `owner/name`, or `github:owner/name`. Paintwarden then:
 
 1. Remembers the repository's default branch and reads `source.json` at that branch's latest commit.
 2. Installs each dependency first, following the same steps. It refuses a circular dependency, and a dependency older than its `minimumVersion`.
@@ -127,7 +127,7 @@ Owner items have `user:<uuid>` IDs in the vault. The export uses the bare UUID, 
 
 1. Copy `examples/demo-plugin/` or start from a **Create plugin** export.
 2. Give every paint, scheme, template and scheme entry a new random lowercase UUID, for example with `uuidgen | tr A-Z a-z`. If you start from the demo, replace all of its IDs. Otherwise your plugin conflicts with the demo, or with anyone else who copied it.
-3. Set `name`, `version`, `license` and `attribution` in `source.json`. Set `minimumAppVersion` when the plugin needs features from a newer Paint Vault release.
+3. Set `name`, `version`, `license` and `attribution` in `source.json`. Set `minimumAppVersion` when the plugin needs features from a newer Paintwarden release.
 4. Put images in `images/` and record each one in `assets.json` with its hash, for example from `shasum -a 256 images/my-scheme.jpg`.
 5. Test the plugin with **Upload .zip** in a test vault. It reports the first validation error with the item and field.
 6. Publish it as a public GitHub repository with the files at its root.

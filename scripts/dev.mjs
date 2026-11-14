@@ -3,17 +3,17 @@ import path from "node:path";
 
 const root = path.resolve(import.meta.dirname, "..");
 const processes = [
-  spawn("npm", ["run", "dev", "--workspace", "paint-vault"], {
+  spawn("npm", ["run", "dev", "--workspace", "paintwarden"], {
     cwd: root,
     stdio: "inherit",
     env: {
       ...process.env,
       HOST: process.env.HOST || "127.0.0.1",
-      PORT: process.env.PAINT_VAULT_API_PORT || "3175",
+      PORT: process.env.PAINTWARDEN_API_PORT || "3175",
     },
     shell: process.platform === "win32",
   }),
-  spawn("npm", ["run", "dev", "--workspace", "paint-vault-web"], {
+  spawn("npm", ["run", "dev", "--workspace", "paintwarden-web"], {
     cwd: root,
     stdio: "inherit",
     shell: process.platform === "win32",

@@ -30,16 +30,16 @@
     "zoom": "Изменить масштаб",
     "front": "Все окна на передний план",
     "help": "Справка",
-    "website": "Paint Vault на GitHub"
+    "website": "Paintwarden на GitHub"
   },
   "errors": {
     "enterUrl": "Введите URL сервера",
     "serverOrigin": "Введите адрес сервера, например https://vault.example.com",
     "portUsed": "Порт {{port}} уже занят другим сервером.",
-    "missingServer": "Встроенный сервер Paint Vault отсутствует. Пересоберите настольное приложение.",
-    "startServer": "Не удалось запустить встроенный сервер Paint Vault.",
+    "missingServer": "Встроенный сервер Paintwarden отсутствует. Пересоберите настольное приложение.",
+    "startServer": "Не удалось запустить встроенный сервер Paintwarden.",
     "connectionMode": "Выберите режим подключения",
-    "notServer": "По этому адресу нет сервера Paint Vault",
+    "notServer": "По этому адресу нет сервера Paintwarden",
     "serverVersion": "Не удалось проверить версию сервера",
     "chooseServer": "Выберите сервер, прежде чем открывать хранилище",
     "connectionChanged": "Подключение изменилось",
@@ -48,19 +48,19 @@
     "unavailable": "Сервер недоступен",
     "forbidden": "Доступ запрещён",
     "notFound": "Не найдено",
-    "outsideApp": "Недоступно вне Paint Vault",
+    "outsideApp": "Недоступно вне Paintwarden",
     "invalidExport": "Некорректный экспорт",
     "exportFailed": "Не удалось выполнить экспорт",
     "invalidRestore": "Некорректное восстановление",
     "restoreFailed": "Не удалось восстановить данные",
     "invalidLanguage": "Выберите поддерживаемый язык",
-    "olderServer": "На этом сервере установлена старая версия Paint Vault. Для подключения обновите сервер до {{appVersion}}.",
-    "updateServer": "На сервере установлен Paint Vault {{serverVersion}}, а версия приложения — {{appVersion}}. Для подключения обновите сервер до {{appVersion}}.",
-    "updateApp": "На сервере установлен Paint Vault {{serverVersion}}, а версия приложения — {{appVersion}}. Для подключения обновите приложение до {{serverVersion}}."
+    "olderServer": "На этом сервере установлена старая версия Paintwarden. Для подключения обновите сервер до {{appVersion}}.",
+    "updateServer": "На сервере установлен Paintwarden {{serverVersion}}, а версия приложения — {{appVersion}}. Для подключения обновите сервер до {{appVersion}}.",
+    "updateApp": "На сервере установлен Paintwarden {{serverVersion}}, а версия приложения — {{appVersion}}. Для подключения обновите приложение до {{serverVersion}}."
   },
   "dialogs": {
-    "exportFile": "Экспорт файла Paint Vault",
-    "exportBackup": "Экспорт резервной копии Paint Vault",
+    "exportFile": "Экспорт файла Paintwarden",
+    "exportBackup": "Экспорт резервной копии Paintwarden",
     "zip": "ZIP-архив",
     "save": "Сохранить"
   },

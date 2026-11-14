@@ -1,5 +1,5 @@
 import { Alert, Autocomplete, Box, Button, Card, Divider, TextField } from "@mui/material";
-import { rankPaintsByColor } from "@paint-vault/core/paint-color-similarity";
+import { rankPaintsByColor } from "@paintwarden/core/paint-color-similarity";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 

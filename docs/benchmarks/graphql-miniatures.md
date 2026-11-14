@@ -117,9 +117,9 @@ node --import tsx scripts/benchmark-miniatures-bundle.mts baseline /tmp/miniatur
 # Read /tmp/miniatures-bundle/phase2-baseline.json for the retained baseline dist.
 
 # Coordinate this normal candidate build with other build/browser owners first.
-npm run build --workspace paint-vault-web
+npm run build --workspace paintwarden-web
 node --import tsx scripts/benchmark-miniatures-bundle.mts compare \
-  /path/from/phase2-baseline.json/dist apps/paint-vault-web/dist /tmp/miniatures-bundle.json
+  /path/from/phase2-baseline.json/dist apps/paintwarden-web/dist /tmp/miniatures-bundle.json
 node --test scripts/measure-web-bundle.test.mjs
 
 # Actual browser observations, separate from in-process n11 measurements:

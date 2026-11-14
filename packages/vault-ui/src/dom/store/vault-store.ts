@@ -1,4 +1,4 @@
-import { i18n, translateServerError } from "@paint-vault/i18n/runtime";
+import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 // Zustand contains credentials, actions and screen state only. Apollo owns server data.
 import { createStore } from "zustand/vanilla";
 
@@ -146,7 +146,7 @@ export function createVaultStore(overrides: Partial<VaultStore> = {}) {
       },
       dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((toast) => toast.id !== id) })),
 
-      // A small direct-entry link works in HTTP and paintvault://app alike.
+      // A small direct-entry link works in HTTP and paintwarden://app alike.
       // Navigation itself remains unchanged; no persisted screen preference.
       tab: typeof window !== "undefined" && window.location.hash === "#paints" ? "paints" : "dashboard",
       go: (tab) => {

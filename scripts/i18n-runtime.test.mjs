@@ -13,7 +13,7 @@ import {
   formatRelativeTime,
   translateServerError,
 } from "../packages/paint-i18n/runtime.ts";
-import { publicError, withPublicError } from "../apps/paint-vault/lib/public-errors.ts";
+import { publicError, withPublicError } from "../apps/paintwarden/lib/public-errors.ts";
 
 test("language detection resolves regional variants and Chinese scripts", () => {
   for (const [tag, expected] of [

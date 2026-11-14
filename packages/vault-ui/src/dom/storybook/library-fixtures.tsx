@@ -1,11 +1,11 @@
 // Storybook-only sample-data projections. It projects complete sample vaults; the production
 // Library never imports this module or manufactures a partial State.
-import { createFuzzyIndex, searchFuzzyIndex } from "@paint-vault/core/fuzzy-search";
+import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
 import {
   defaultSubstitution,
   isPaintAvailable,
   resolvePaintChoice,
-} from "@paint-vault/core/paint-substitutions";
+} from "@paintwarden/core/paint-substitutions";
 import { useMemo, type ReactNode } from "react";
 
 import {

@@ -3,7 +3,7 @@ import test from "node:test";
 import { createRequire } from "node:module";
 import { buildBugReportUrl } from "./support.ts";
 const require = createRequire(import.meta.url);
-const desktop = require("../../../../../apps/paint-vault-electron/desktop-support.cjs");
+const desktop = require("../../../../../apps/paintwarden-electron/desktop-support.cjs");
 test("issue URL includes only template and safe prefillable diagnostic fields; desktop parity", () => {
   for (const language of ["en", "de", "ja", "zh-Hant", "private@example.invalid"]) {
     const input = {
@@ -19,7 +19,7 @@ test("issue URL includes only template and safe prefillable diagnostic fields; d
     assert.equal(url, desktop.buildBugReportUrl(input));
     assert.equal(
       new URL(url).origin + new URL(url).pathname,
-      "https://github.com/moonryc/paint-tracker/issues/new",
+      "https://github.com/moonryc/paintwarden/issues/new",
     );
     assert.deepEqual(
       [...new URL(url).searchParams.keys()],
@@ -88,7 +88,7 @@ test("browser summary/download never reads vault, secrets, addresses or raw erro
   };
   globalThis.document = { createElement: () => link };
   assert.equal(await saveSupportBundle("ja"), true);
-  assert.equal(link.download, "paint-vault-support.json");
+  assert.equal(link.download, "paintwarden-support.json");
   assert.equal(link.clicked, true);
   assert.deepEqual(JSON.parse(await savedBlob.text()), summary);
 });
@@ -102,7 +102,7 @@ test("desktop support actions delegate only a validated language, never renderer
   });
   const calls = [];
   globalThis.window = {
-    paintVaultDesktop: {
+    paintwardenDesktop: {
       getSupportSummary: async (language) => {
         calls.push(["summary", language]);
         return { version: "1.0.0" };

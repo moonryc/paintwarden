@@ -10,7 +10,7 @@ export type SupportSummary = {
   recentErrors?: string[];
 };
 
-const issueUrl = "https://github.com/moonryc/paint-tracker/issues/new";
+const issueUrl = "https://github.com/moonryc/paintwarden/issues/new";
 const safeVersion = (value: unknown): string =>
   typeof value === "string" && /^\d{1,4}\.\d{1,4}\.\d{1,4}(?:-(?:alpha|beta|rc)\.\d{1,4})?$/.test(value)
     ? value
@@ -33,7 +33,7 @@ export function buildBugReportUrl(summary: SupportSummary): string {
 }
 
 export async function getSupportSummary(language: string): Promise<SupportSummary> {
-  if (window.paintVaultDesktop) return window.paintVaultDesktop.getSupportSummary(safeLanguage(language));
+  if (window.paintwardenDesktop) return window.paintwardenDesktop.getSupportSummary(safeLanguage(language));
   // Do not export userAgent, URLs, hostname, cookies, storage, errors, or vault data.
   const platform = navigator.platform;
   const summary: SupportSummary = {
@@ -61,8 +61,8 @@ export async function getSupportSummary(language: string): Promise<SupportSummar
 }
 
 export async function reportBug(language: string): Promise<void> {
-  if (window.paintVaultDesktop) {
-    await window.paintVaultDesktop.openBugReport(safeLanguage(language));
+  if (window.paintwardenDesktop) {
+    await window.paintwardenDesktop.openBugReport(safeLanguage(language));
     return;
   }
   // No await before window.open: retain the user's activation for popup protection.
@@ -83,13 +83,13 @@ export async function reportBug(language: string): Promise<void> {
 }
 
 export async function saveSupportBundle(language: string): Promise<boolean> {
-  if (window.paintVaultDesktop) return window.paintVaultDesktop.saveSupportBundle(safeLanguage(language));
+  if (window.paintwardenDesktop) return window.paintwardenDesktop.saveSupportBundle(safeLanguage(language));
   const summary = await getSupportSummary(language);
   const url = URL.createObjectURL(new Blob([JSON.stringify(summary, null, 2)], { type: "application/json" }));
   try {
     const link = document.createElement("a");
     link.href = url;
-    link.download = "paint-vault-support.json";
+    link.download = "paintwarden-support.json";
     link.click();
   } finally {
     setTimeout(() => URL.revokeObjectURL(url), 1000);

@@ -18,10 +18,10 @@ These are emitted `.js` bytes, not initial transfer, disk install size, memory o
 From the repository root, with pinned Node on PATH and no concurrent builds writing the default output:
 
 ```sh
-npm run build --workspace paint-vault-web
-flagdir=$(mktemp -d /tmp/paint-vault-graphql-bundle-XXXXXX)
-VITE_GRAPHQL_LIBRARY_DEBUG=true npm run build --workspace paint-vault-web -- --outDir "$flagdir" --emptyOutDir
-node scripts/measure-web-bundle.mjs apps/paint-vault-web/dist "$flagdir"
+npm run build --workspace paintwarden-web
+flagdir=$(mktemp -d /tmp/paintwarden-graphql-bundle-XXXXXX)
+VITE_GRAPHQL_LIBRARY_DEBUG=true npm run build --workspace paintwarden-web -- --outDir "$flagdir" --emptyOutDir
+node scripts/measure-web-bundle.mjs apps/paintwarden-web/dist "$flagdir"
 ```
 
 `--emptyOutDir` matters for an out-of-project build: Vite otherwise retains old hashed chunks and a directory sum overcounts them. The measurement script rejects multiple web entry files, with regression coverage in `scripts/measure-web-bundle.test.mjs`.

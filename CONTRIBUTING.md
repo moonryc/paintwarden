@@ -18,7 +18,7 @@ it with `git config user.email` before committing.
 
 ## Contributor License Agreement (CLA)
 
-By submitting a contribution to Paint Vault, you agree that:
+By submitting a contribution to Paintwarden, you agree that:
 
 - You grant Ryan Moon a non-exclusive, perpetual, worldwide, irrevocable,
   royalty-free license to use, reproduce, modify, distribute, sublicense, and

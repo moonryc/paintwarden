@@ -57,7 +57,7 @@ void test("portable fixture commands create a physically-owned broken substituti
   `,
     ],
     {
-      cwd: fileURLToPath(new URL("../apps/paint-vault", import.meta.url)),
+      cwd: fileURLToPath(new URL("../apps/paintwarden", import.meta.url)),
       env: { ...process.env, DATA_DIR: "", DATABASE_PATH: "" },
       encoding: "utf8",
       timeout: 60000,

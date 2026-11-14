@@ -7,7 +7,7 @@ Browse installed plugin templates and manage reusable user templates without bun
 ## Requirements
 
 ### Requirement: Browse all miniature templates
-The system SHALL present every installed plugin miniature template and every user template on a Templates page with search and category filtering. Plugin entries SHALL be read-only in template management. Paint Vault SHALL NOT bundle or seed a miniature template catalog.
+The system SHALL present every installed plugin miniature template and every user template on a Templates page with search and category filtering. Plugin entries SHALL be read-only in template management. Paintwarden SHALL NOT bundle or seed a miniature template catalog.
 
 #### Scenario: Browse installed plugin catalog
 - **WHEN** the user opens Templates after installing a plugin with miniature templates

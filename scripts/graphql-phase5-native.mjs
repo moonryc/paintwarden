@@ -78,7 +78,7 @@ async function main() {
       assert.ok(options.app?.endsWith(".app"), "--app must name an existing packaged .app");
       const app = path.resolve(options.app);
       const resources = path.join(app, "Contents/Resources");
-      const executable = path.join(app, "Contents/MacOS/Paint Vault");
+      const executable = path.join(app, "Contents/MacOS/Paintwarden");
       report.packagedApp = app;
       assert.equal(
         execFileSync(path.join(resources, "server/node"), ["--version"], {
@@ -116,7 +116,7 @@ async function main() {
             PORT: String(port),
             DATA_DIR: remoteData,
             WEB_DIST: path.join(resources, "web-dist"),
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(dir, "remote-server.log"),
@@ -132,9 +132,9 @@ async function main() {
             env: {
               ...process.env,
               DATABASE_PATH: "",
-              PAINT_VAULT_DESKTOP_DATA_DIR: desktopData,
+              PAINTWARDEN_DESKTOP_DATA_DIR: desktopData,
               WEB_DIST: path.join(resources, "web-dist"),
-              PAINT_VAULT_DISABLE_UPDATES: "1",
+              PAINTWARDEN_DISABLE_UPDATES: "1",
             },
           },
           path.join(dir, `${label}-electron.log`),
@@ -146,7 +146,7 @@ async function main() {
         page = context.pages()[0] ?? (await context.waitForEvent("page"));
         const recorder = attachLibraryRecorder(page);
         recordings.push({ label, recorder });
-        await page.waitForURL("paintvault://app/**");
+        await page.waitForURL("paintwarden://app/**");
         return recorder;
       };
       const quit = async () => {
@@ -190,7 +190,7 @@ async function main() {
         await librarySearch(page, marker(mode === "local" ? "remote" : "local"), false, recorder);
         await librarySearch(page, marker(mode), true, recorder);
         // Production getConnection is read-only observation, never used to change connection.
-        const connection = await page.evaluate(() => window.paintVaultDesktop.getConnection());
+        const connection = await page.evaluate(() => window.paintwardenDesktop.getConnection());
         assert.equal(connection.mode, mode);
         if (mode === "remote") assert.equal(connection.serverUrl, remoteBase);
         const screenshot = path.join(dir, `native-${recordings.at(-1).label}-${mode}.png`);

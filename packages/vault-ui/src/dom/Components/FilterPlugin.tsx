@@ -38,7 +38,7 @@ export function useFilterPlugin(items: readonly FromPlugin[]) {
     plugins,
     setPlugin,
     active: plugin !== ALL_PLUGINS,
-    // A phrase for empty states, such as "from Paint Vault test source".
+    // A phrase for empty states, such as "from Paintwarden test source".
     description:
       plugin === ALL_PLUGINS
         ? null

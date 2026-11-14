@@ -12,7 +12,7 @@ import {
   isPaintAvailable,
   resolvePaintChoice,
   selectedSubstitution,
-} from "@paint-vault/core/paint-substitutions";
+} from "@paintwarden/core/paint-substitutions";
 import { VaultGraphQLProvider } from "../graphql/provider";
 import { mockApi } from "../storybook/mock-api";
 import { Modal } from "./Modal";

@@ -9,7 +9,7 @@ This is infrastructure plus an **internal experiment**, not a screen migration. 
 
 ## Develop
 
-Use the pinned `.nvmrc` Node version and an invented temporary `DATA_DIR`, never an existing vault for testing. The schema is `apps/paint-vault/graphql/schema.graphql`; operations/fragments live in `packages/vault-ui/src/dom/graphql/*.graphql`.
+Use the pinned `.nvmrc` Node version and an invented temporary `DATA_DIR`, never an existing vault for testing. The schema is `apps/paintwarden/graphql/schema.graphql`; operations/fragments live in `packages/vault-ui/src/dom/graphql/*.graphql`.
 
 ```sh
 npm run codegen       # client preset + fragment masking, server resolver types

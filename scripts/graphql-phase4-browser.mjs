@@ -32,7 +32,7 @@ assert.ok(args[0] && !args[0].startsWith("--"), "An evidence directory is requir
 const evidenceDir = path.resolve(args.shift());
 let run = false,
   profile = "realistic",
-  webDist = path.join(root, "apps/paint-vault-web/dist");
+  webDist = path.join(root, "apps/paintwarden-web/dist");
 while (args.length) {
   const arg = args.shift();
   if (arg === "--run") run = true;
@@ -64,7 +64,7 @@ try {
     report.sourceManifest = await sourceManifest();
     report.artifacts.push(await identity(process.execPath));
     for (const file of ["server.mjs", "schema.graphql"])
-      report.artifacts.push(await identity(path.join(root, "apps/paint-vault/dist", file)));
+      report.artifacts.push(await identity(path.join(root, "apps/paintwarden/dist", file)));
     for (const entry of await readdir(webDist, { recursive: true, withFileTypes: true }))
       if (entry.isFile()) report.artifacts.push(await identity(path.join(entry.parentPath, entry.name)));
     const baseline = await createLibraryFixture(root, profile === "realistic" ? "large" : "stress");
@@ -83,7 +83,7 @@ try {
           'process.env.NODE_ENV="test"; const {startServer}=await import("./server.mjs"); process.env.NODE_ENV="production"; await startServer(); console.log("PHASE4_READY_LISTENING");',
         ],
         {
-          cwd: path.join(root, "apps/paint-vault/dist"),
+          cwd: path.join(root, "apps/paintwarden/dist"),
           env: {
             ...process.env,
             NODE_ENV: "production",
@@ -92,8 +92,8 @@ try {
             HOST: "127.0.0.1",
             PORT: String(port),
             WEB_DIST: webDist,
-            PAINT_VAULT_ALLOWED_HOSTS: host,
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_ALLOWED_HOSTS: host,
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(evidenceDir, `${profile}-${name}-server.log`),

@@ -9,7 +9,7 @@ import { build } from "esbuild";
 const bundled = await build({
   stdin: {
     contents: `
-      export * from "@paint-vault/core/paint-substitutions";
+      export * from "@paintwarden/core/paint-substitutions";
       export { readiness, createHomeDerivations } from "../Pages/home.utils.ts";
       export { resolvedPaintIds, missingProjectPaintIds, projectPaintIssues } from "./vault-data.ts";
       export { shoppingRows, missingShoppingPaints, retainedShoppingRows } from "./semantic-contract.ts";

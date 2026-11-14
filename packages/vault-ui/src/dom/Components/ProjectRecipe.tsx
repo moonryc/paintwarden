@@ -113,7 +113,7 @@ export function ProjectRecipeView({
   const [lastStep, setLastStep] = useState<RecipeStep>("BASECOAT");
   const [showSchemePaints, setShowSchemePaints] = useState(() => {
     try {
-      return localStorage.getItem("paint-vault:show-scheme-paints-in-steps") === "true";
+      return localStorage.getItem("paintwarden:show-scheme-paints-in-steps") === "true";
     } catch {
       return false;
     }
@@ -121,7 +121,7 @@ export function ProjectRecipeView({
   const changeShowSchemePaints = (value: boolean) => {
     setShowSchemePaints(value);
     try {
-      localStorage.setItem("paint-vault:show-scheme-paints-in-steps", String(value));
+      localStorage.setItem("paintwarden:show-scheme-paints-in-steps", String(value));
     } catch {
       /* Viewing still works when storage is unavailable. */
     }

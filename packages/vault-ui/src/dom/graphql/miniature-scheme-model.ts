@@ -1,5 +1,5 @@
-import { i18n } from "@paint-vault/i18n/runtime";
-import { COLOR_CATEGORIES } from "@paint-vault/core/color-categories";
+import { i18n } from "@paintwarden/i18n/runtime";
+import { COLOR_CATEGORIES } from "@paintwarden/core/color-categories";
 
 import type { ColorScheme, Paint, SchemeOrderEntry } from "../types";
 

@@ -32,7 +32,7 @@ Versioned image responses keep private immutable cache headers. The existing Ele
 
 Sharp is external to the bundled ESM server. It uses npm's platform-specific optional `@img/sharp-*` and libvips packages. **Do not omit optional dependencies.** Build on the target OS/architecture. The desktop server lives under Electron `extraResources/server`, outside `app.asar`; its addons therefore need no `asarUnpack` pattern. The packaging script verifies that sharp resolves *inside* the packaged server and performs a WebP encode using its copied Node binary.
 
-Preserve both hoisted `node_modules` and `apps/paint-vault/node_modules`. Another workspace can use a different optional sharp version; copying only the hoisted folder then silently loses the server's sharp and may accidentally resolve a developer checkout's dependencies. Verification reproduced this with the initial 0.34.5 dependency; the final patched 0.35.5 is coalesced at root with Astro's version. Keep the nested-dependency support for future lockfile changes. Docker preserves the server's workspace directory; desktop staging overlays its nested production modules into the standalone server's module folder. macOS arm64 and Linux arm64 were run for this change; Windows/x64 packaging follows sharp's supported prebuilt distributions but is not certified by those smokes.
+Preserve both hoisted `node_modules` and `apps/paintwarden/node_modules`. Another workspace can use a different optional sharp version; copying only the hoisted folder then silently loses the server's sharp and may accidentally resolve a developer checkout's dependencies. Verification reproduced this with the initial 0.34.5 dependency; the final patched 0.35.5 is coalesced at root with Astro's version. Keep the nested-dependency support for future lockfile changes. Docker preserves the server's workspace directory; desktop staging overlays its nested production modules into the standalone server's module folder. macOS arm64 and Linux arm64 were run for this change; Windows/x64 packaging follows sharp's supported prebuilt distributions but is not certified by those smokes.
 
 ## Reproducing measurements/smokes
 
@@ -40,10 +40,10 @@ Use `.nvmrc` Node 22.22.2, separate temporary data directories, and no personal 
 
 ```
 node scripts/benchmark-image-thumbnails.mjs seed
-node scripts/benchmark-image-thumbnails.mjs measure after apps/paint-vault/dist 3219
-(cd apps/paint-vault && node --import tsx ../../scripts/benchmark-image-thumbnails-cpu.mts)
+node scripts/benchmark-image-thumbnails.mjs measure after apps/paintwarden/dist 3219
+(cd apps/paintwarden && node --import tsx ../../scripts/benchmark-image-thumbnails-cpu.mts)
 node scripts/smoke-image-thumbnails.mjs native /absolute/evidence/directory
-node scripts/smoke-image-thumbnails.mjs docker /absolute/evidence/directory paint-vault:thumbnails-smoke
+node scripts/smoke-image-thumbnails.mjs docker /absolute/evidence/directory paintwarden:thumbnails-smoke
 ```
 
 The harnesses retain synthetic fixtures and recovery ZIPs. The native smoke requires a freshly built actual `.app`; Docker smoke requires an already-built image and runs offline with no host port and tmpfs data. They exercise upload, every variant, immutable proxy headers/cache equality, exact full-original hashes, deletion, 19-section backup/Replace roundtrip and lazy regeneration. They are focused image checks, not full native-control or distribution/signing certification.

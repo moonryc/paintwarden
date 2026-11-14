@@ -2,7 +2,7 @@ import { formatNumber } from "../i18n";
 import { useTranslation } from "react-i18next";
 import { Button, Card, IconButton } from "@mui/material";
 import Box from "@mui/material/Box";
-import type { RecipeStep } from "@paint-vault/core/recipe-steps";
+import type { RecipeStep } from "@paintwarden/core/recipe-steps";
 import type { ReactNode } from "react";
 
 import { Plus, X } from "../icons";

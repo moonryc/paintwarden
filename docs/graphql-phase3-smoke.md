@@ -26,11 +26,11 @@ against that output; fix runtime errors and repeat before packaging. Once stabil
 
 ```sh
 node scripts/package-desktop-server.mjs electron
-RELEASE=$(mktemp -d /tmp/paint-vault-graphql-phase3-release-XXXXXX)
-(cd apps/paint-vault-electron && CSC_IDENTITY_AUTO_DISCOVERY=false \
+RELEASE=$(mktemp -d /tmp/paintwarden-graphql-phase3-release-XXXXXX)
+(cd apps/paintwarden-electron && CSC_IDENTITY_AUTO_DISCOVERY=false \
   ../../node_modules/.bin/electron-builder --mac --dir --arm64 --publish never \
   -c.mac.identity=null -c.mac.notarize=false -c.directories.output="$RELEASE")
-# Expected app: "$RELEASE/mac-arm64/Paint Vault.app"
+# Expected app: "$RELEASE/mac-arm64/Paintwarden.app"
 ```
 
 This produces a real `.app` with the production preload/main process and freshly
@@ -41,7 +41,7 @@ hashes the executable, ASAR, server, schema, Node binary, and every packaged web
 Build a uniquely tagged Docker image only after approval:
 
 ```sh
-docker build --tag paint-vault:graphql-phase3-smoke .
+docker build --tag paintwarden:graphql-phase3-smoke .
 ```
 
 The Docker runner accepts an **existing inspected image ID**; it never builds or
@@ -56,13 +56,13 @@ Use new evidence subdirectories for each attempt, including failed attempts:
 node scripts/smoke-home-miniatures-browser.mjs "$EVIDENCE/browser/run1" --profile large --run
 node scripts/smoke-home-miniatures-browser.mjs "$EVIDENCE/browser/run1" --profile stress --run
 node scripts/smoke-home-miniatures-native.mjs "$EVIDENCE/native/run1" \
-  --app "$RELEASE/mac-arm64/Paint Vault.app" --run
+  --app "$RELEASE/mac-arm64/Paintwarden.app" --run
 node scripts/smoke-home-miniatures-docker.mjs "$EVIDENCE/docker/run1" \
   --image 'sha256:EXPLICIT_APPROVED_IMAGE_ID' --run
 ```
 
 Browser optionally accepts `--web-dist ABSOLUTE_PATH`. Its server is the existing
-`apps/paint-vault/dist/server.mjs`; both must correspond to the same build.
+`apps/paintwarden/dist/server.mjs`; both must correspond to the same build.
 
 ### Fixture and isolation contracts
 

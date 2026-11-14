@@ -2,7 +2,7 @@ import {
   IMAGE_THUMBNAIL_WIDTHS,
   imageThumbnailUrl,
   isLocalThumbnailImage,
-} from "@paint-vault/core/image-thumbnails";
+} from "@paintwarden/core/image-thumbnails";
 
 import { imageUrl } from "./utils/image-cache.ts";
 

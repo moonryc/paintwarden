@@ -30,9 +30,9 @@ test("desktop thumbnail candidates retain the active server/account namespace", 
   try {
     Object.defineProperty(globalThis, "location", {
       configurable: true,
-      value: new URL("paintvault://app/"),
+      value: new URL("paintwarden://app/"),
     });
-    rememberImageScope(new Response("", { headers: { "x-paint-vault-image-scope": "server-account" } }));
+    rememberImageScope(new Response("", { headers: { "x-paintwarden-image-scope": "server-account" } }));
     const props = thumbnailImageProps("/api/miniatures/model/image?v=key.webp", "160px");
     assert.equal(props.src, "/api/miniatures/model/image?v=key.webp&w=320&_pv_scope=server-account");
     assert.equal(props.srcSet.split(", ").length, 3);

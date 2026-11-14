@@ -1,7 +1,7 @@
 import { i18n, formatNumber } from "../i18n";
 import { useTranslation } from "react-i18next";
 import { Box } from "@mui/material";
-import type { RankedPaint } from "@paint-vault/core/paint-color-similarity";
+import type { RankedPaint } from "@paintwarden/core/paint-color-similarity";
 import { useState } from "react";
 
 import type { Paint } from "../types";

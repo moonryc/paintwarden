@@ -3,195 +3,195 @@
     "sha256": "eebf5ba40bf8c69135ea08e5f60d60d222da5a6adf67dadc27981a255c209de1",
     "files": [
       {
-        "file": "apps/paint-vault/db/change-log.ts",
+        "file": "apps/paintwarden/db/change-log.ts",
         "sha256": "e783f9a7e628d27b58b83596df8cf6bb22d306893eedf2e67dd3dd00424b1338"
       },
       {
-        "file": "apps/paint-vault/db/index.ts",
+        "file": "apps/paintwarden/db/index.ts",
         "sha256": "ab3444ad7f2019ceaa6b7ca4ac3a9352f5ab5fc9a2e498e772f3a3bd0cfd954b"
       },
       {
-        "file": "apps/paint-vault/db/migrate.ts",
+        "file": "apps/paintwarden/db/migrate.ts",
         "sha256": "dfc9c9135c398fd8f0d83357d03758a095c1d16fcbabc34bdfff528d44d30730"
       },
       {
-        "file": "apps/paint-vault/db/migration-backup.ts",
+        "file": "apps/paintwarden/db/migration-backup.ts",
         "sha256": "9de2ecde123fc51e46ebdf98f4f6820165b4cb4d3b1a527192c17b13ad2a82ff"
       },
       {
-        "file": "apps/paint-vault/db/schema-checks.ts",
+        "file": "apps/paintwarden/db/schema-checks.ts",
         "sha256": "fc7ec251de6577cc3880ddade8979b219872c911340dd902baac6e88e924937c"
       },
       {
-        "file": "apps/paint-vault/db/schema.ts",
+        "file": "apps/paintwarden/db/schema.ts",
         "sha256": "a6a0ea8a9bea4a3a942916e219fbebdfa0e8692e53ea86e33fc571f64255633d"
       },
       {
-        "file": "apps/paint-vault/graphql/budgets.ts",
+        "file": "apps/paintwarden/graphql/budgets.ts",
         "sha256": "dd5bb2878f996345beffa2ba759edc435a5145a3dfa80e86599728f2d05d30e1"
       },
       {
-        "file": "apps/paint-vault/graphql/changes.ts",
+        "file": "apps/paintwarden/graphql/changes.ts",
         "sha256": "b6e3c4a7932a3a048ba8f588076c7f42c06c3a3bac043ecc2fe1d0c6b09029d8"
       },
       {
-        "file": "apps/paint-vault/graphql/context.ts",
+        "file": "apps/paintwarden/graphql/context.ts",
         "sha256": "f5840e539a32bcc75c63a955846f3fc00be562a4b45b99dbaadcc751318d591e"
       },
       {
-        "file": "apps/paint-vault/graphql/generated/resolvers.ts",
+        "file": "apps/paintwarden/graphql/generated/resolvers.ts",
         "sha256": "311d4aff7e938fcdb3b3fa4a184f4fe43954930055d2ab58939c9246b2032a55"
       },
       {
-        "file": "apps/paint-vault/graphql/library.ts",
+        "file": "apps/paintwarden/graphql/library.ts",
         "sha256": "44cf28405a8c1555b548cc5f32f63e9a453f152e5996b50e497a8914e21ad53e"
       },
       {
-        "file": "apps/paint-vault/graphql/miniature-mutations.ts",
+        "file": "apps/paintwarden/graphql/miniature-mutations.ts",
         "sha256": "a15a8c55b520b6153ef3167182869d6a5347c49b0d7fd9441c994648e9c5b571"
       },
       {
-        "file": "apps/paint-vault/graphql/miniature-schemes.ts",
+        "file": "apps/paintwarden/graphql/miniature-schemes.ts",
         "sha256": "08fe0a09d700e1da59e33cfcea01dc5ca2bf70af958607e14f6dd0c8d21f1c6f"
       },
       {
-        "file": "apps/paint-vault/graphql/miniatures.ts",
+        "file": "apps/paintwarden/graphql/miniatures.ts",
         "sha256": "698f92f1744aae96a3b8247909a2b7af7eec48e1ba92fb00b6faa779d763d725"
       },
       {
-        "file": "apps/paint-vault/graphql/rate-limit.ts",
+        "file": "apps/paintwarden/graphql/rate-limit.ts",
         "sha256": "d7d321cfb519ddc3889acfb0070ccfb906a9f56e6406092cc5f9d9e184ec6135"
       },
       {
-        "file": "apps/paint-vault/graphql/schema.graphql",
+        "file": "apps/paintwarden/graphql/schema.graphql",
         "sha256": "0070f52db71d323700f1efb386a74875bb468224e310932b29af8d27d6c6743a"
       },
       {
-        "file": "apps/paint-vault/graphql/sequence.ts",
+        "file": "apps/paintwarden/graphql/sequence.ts",
         "sha256": "26b123229902a2c6d33d449a1bc1667863652b1b0ff521d1325909ffaecc6613"
       },
       {
-        "file": "apps/paint-vault/graphql/server.ts",
+        "file": "apps/paintwarden/graphql/server.ts",
         "sha256": "bc56a2b7d7fdeb598fc6755fe975c30de735bbfba66b422ad1e4d9857bcf6364"
       },
       {
-        "file": "apps/paint-vault/lib/app-version.ts",
+        "file": "apps/paintwarden/lib/app-version.ts",
         "sha256": "5cc085950d571a5aaaf5d1165d414689669ca109d8ea58ba9fa7110a2f923406"
       },
       {
-        "file": "apps/paint-vault/lib/auth.ts",
+        "file": "apps/paintwarden/lib/auth.ts",
         "sha256": "6af2b95e26866a2d33c65e5927c94b7162c931bd76c225a5e0ef1222d89c37b8"
       },
       {
-        "file": "apps/paint-vault/lib/backup-format.ts",
+        "file": "apps/paintwarden/lib/backup-format.ts",
         "sha256": "30c1e7767b93d120feebcaf18fbafa1f297436f58630189ce97d8a4c302ce8dd"
       },
       {
-        "file": "apps/paint-vault/lib/backup.ts",
+        "file": "apps/paintwarden/lib/backup.ts",
         "sha256": "7986a758d653dffe35d7b1da4c6ca15956f7cc17883ac23f35c3ce3355336dd0"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-source-assets.ts",
+        "file": "apps/paintwarden/lib/catalog-source-assets.ts",
         "sha256": "7b6933a8fbd4197ba77b819510318751b0316ee23c682d394c1680bce22325a2"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-source-dropped.ts",
+        "file": "apps/paintwarden/lib/catalog-source-dropped.ts",
         "sha256": "382c1f383c8c3fd2edaa2259377273b5fccc84c62fb41097a37bd01e3a94cdbb"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-source-install.ts",
+        "file": "apps/paintwarden/lib/catalog-source-install.ts",
         "sha256": "4f050e8c20c1b30a680bd9d721fa16fc8ca13d5f271494a4193962878021aba2"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-source-removal.ts",
+        "file": "apps/paintwarden/lib/catalog-source-removal.ts",
         "sha256": "8f8a70b44c68d9f6ea640d98df3246c754d5f8ba7d9ca30bbc66fb3c4edc1296"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-source-upload.ts",
+        "file": "apps/paintwarden/lib/catalog-source-upload.ts",
         "sha256": "fad477cd391ca92f78679eeafa7db005d3d31576ddfa451bb042d4010c4f5532"
       },
       {
-        "file": "apps/paint-vault/lib/catalog-sources.ts",
+        "file": "apps/paintwarden/lib/catalog-sources.ts",
         "sha256": "b0298a804fe1c4e57db64920cbc2fa0daa6e74c672608a10c661173381997276"
       },
       {
-        "file": "apps/paint-vault/lib/client-config.ts",
+        "file": "apps/paintwarden/lib/client-config.ts",
         "sha256": "92a5b13a6b9fdb0ef098fddad392b04c4caed3fd970d282ea7692f37be1b8a89"
       },
       {
-        "file": "apps/paint-vault/lib/commands/miniature-recipe.ts",
+        "file": "apps/paintwarden/lib/commands/miniature-recipe.ts",
         "sha256": "3b454d04458cd583d551cc556b7937e2ec84339bc9988de54790bde00755e888"
       },
       {
-        "file": "apps/paint-vault/lib/commands/miniatures.ts",
+        "file": "apps/paintwarden/lib/commands/miniatures.ts",
         "sha256": "b1a7e4edd583db3ecd22db39357247a0de2b27838f2fde6a48f10cf2b88662a9"
       },
       {
-        "file": "apps/paint-vault/lib/github-source.ts",
+        "file": "apps/paintwarden/lib/github-source.ts",
         "sha256": "72133facbb9955f46a538677a34891067f93ee4a7563121f5b0e404d4432f3fc"
       },
       {
-        "file": "apps/paint-vault/lib/http-compression.ts",
+        "file": "apps/paintwarden/lib/http-compression.ts",
         "sha256": "360d91a2dbdee3d5aa32ff203dd32a1053ee7830a13b9c9cd0c0e2d620b2c962"
       },
       {
-        "file": "apps/paint-vault/lib/image-mutations.ts",
+        "file": "apps/paintwarden/lib/image-mutations.ts",
         "sha256": "d81435f0448d5ecfa73e6b5ef0f6346e1f27c387f625b640103a5339e7574aa7"
       },
       {
-        "file": "apps/paint-vault/lib/image-store.ts",
+        "file": "apps/paintwarden/lib/image-store.ts",
         "sha256": "22dd1738131e8c703384948ac4c02348b5e828b0987f0b90a6b6351e1219b88f"
       },
       {
-        "file": "apps/paint-vault/lib/legacy-backup.ts",
+        "file": "apps/paintwarden/lib/legacy-backup.ts",
         "sha256": "359f505377e405b7fcdd4923b6d339adad54f5c6ef39007b7d2dbeda9ad61df8"
       },
       {
-        "file": "apps/paint-vault/lib/paint-stock.ts",
+        "file": "apps/paintwarden/lib/paint-stock.ts",
         "sha256": "dca6139d3d09e13f735911ee624ff5433817d92aac1f24154405b49075973522"
       },
       {
-        "file": "apps/paint-vault/lib/password-hash.ts",
+        "file": "apps/paintwarden/lib/password-hash.ts",
         "sha256": "f4aa633229eff9c916389a07ff5b756ca16bda694b4b066ed284ddd549d44fdd"
       },
       {
-        "file": "apps/paint-vault/lib/public-fetch.ts",
+        "file": "apps/paintwarden/lib/public-fetch.ts",
         "sha256": "982bf12e3dce6c030a87a287e46bd9245eb5421e4b59466290b434bac466258f"
       },
       {
-        "file": "apps/paint-vault/lib/request-limits.ts",
+        "file": "apps/paintwarden/lib/request-limits.ts",
         "sha256": "8d1bf21584f68a33c81fb8b53540009e8ca8ee4c7ca0d5b06d29eb8c43efbda4"
       },
       {
-        "file": "apps/paint-vault/lib/source-format.ts",
+        "file": "apps/paintwarden/lib/source-format.ts",
         "sha256": "0c97fcbf6380e7ddbbbac8ac5039ea601a24c9712f428992983b48f114957b47"
       },
       {
-        "file": "apps/paint-vault/lib/sqlite-read-cache.ts",
+        "file": "apps/paintwarden/lib/sqlite-read-cache.ts",
         "sha256": "f8c200107601d3c0143963bac37052b41e0955e929d75efddf2d69399b1ebcf8"
       },
       {
-        "file": "apps/paint-vault/lib/template-recipes.ts",
+        "file": "apps/paintwarden/lib/template-recipes.ts",
         "sha256": "f71d27f13cf6a306d10bc84f7e21e2b02434b46d79c5d65e7fa6a205952e230d"
       },
       {
-        "file": "apps/paint-vault/lib/test-ids.ts",
+        "file": "apps/paintwarden/lib/test-ids.ts",
         "sha256": "b5bca3e4ef1c413ce20150ac2a3e75a2f61d33899e0cc353310e11ad8b41261e"
       },
       {
-        "file": "apps/paint-vault/lib/text-limits.ts",
+        "file": "apps/paintwarden/lib/text-limits.ts",
         "sha256": "2ac8bfa3b458c84c9983c78c7f8cee8e5ce5f5b1cec0e1736ea10d9b9da7d8b2"
       },
       {
-        "file": "apps/paint-vault/lib/vault-state.ts",
+        "file": "apps/paintwarden/lib/vault-state.ts",
         "sha256": "66b3dcfebf6e78e1350fdc9e62db5873ccc72545c37a1105aff2be37362cae94"
       },
       {
-        "file": "apps/paint-vault/lib/zip-entry.ts",
+        "file": "apps/paintwarden/lib/zip-entry.ts",
         "sha256": "ed859a80fc1c46db25ac74e0502bdebbc8658ef16baa797e2e8e261eb58bd81d"
       },
       {
-        "file": "apps/paint-vault/lib/zip-writer.ts",
+        "file": "apps/paintwarden/lib/zip-writer.ts",
         "sha256": "3b50f7a05224dfc6cfb763456ef45ab572a7f9d50a2e43d7c1ff469d54bcd7ff"
       },
       {
@@ -264,8 +264,8 @@
   "node": "v22.22.2",
   "profile": "stress",
   "fixture": {
-    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-stress-O6Emjr",
-    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-library-stress-O6Emjr/snapshot.json",
+    "evidence": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-library-stress-O6Emjr",
+    "baselinePath": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-library-stress-O6Emjr/snapshot.json",
     "baseline": {
       "measuredAt": "2026-11-13T19:15:56.841Z",
       "node": "v22.22.2",
@@ -276,7 +276,7 @@
         "schemes": 3000,
         "templates": 5000
       },
-      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-zMhGsP",
+      "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-startup-stress-zMhGsP",
       "seedMs": 1975.4091250000001,
       "method": "Invented plugin and custom catalog; synchronous SQLite read + JSON serialization, 1 first read + 1 warmup + 11 samples. First read is NOT cold disk (fixture just seeded). No auth/Nest/TCP/compression time/Electron/React render. Gzip size only. SQL count includes executed prepared statements, excludes BEGIN/COMMIT issued by transaction helper. Template summaries measured separately; lazy recipes excluded.",
       "snapshot": {
@@ -304,11 +304,11 @@
       "snapshotStartupDataBytes": 44954964,
       "snapshotPlusTemplateSummariesBytes": 46293920
     },
-    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paint-vault-startup-stress-zMhGsP"
+    "dataDir": "/var/folders/5w/x9120lx13_z2r1s8jlnmm60h0000gn/T/paintwarden-startup-stress-zMhGsP"
   },
   "source": {
     "head": "421c564bfd20f4f3215a6d9653b110167f1c7ede",
-    "changes": " M apps/paint-vault/graphql/miniature-schemes.test.ts\n M apps/paint-vault/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
+    "changes": " M apps/paintwarden/graphql/miniature-schemes.test.ts\n M apps/paintwarden/graphql/miniature-schemes.ts\n M packages/vault-ui/src/dom/Modals/ApolloSchemeDialogs.stories.tsx\n M packages/vault-ui/src/dom/Modals/ApolloSchemePickerDialog.tsx\n?? docs/benchmarks/graphql-miniatures-browser.json\n?? docs/benchmarks/graphql-miniatures-bundle.json\n?? docs/benchmarks/graphql-miniatures-large.json\n?? docs/benchmarks/graphql-miniatures-stress.json\n?? docs/benchmarks/graphql-miniatures.md\n?? docs/graphql-phase3-smoke.md\n?? scripts/benchmark-miniatures-bundle.mts\n?? scripts/benchmark-miniatures.mts\n?? scripts/home-miniatures-fixture.mjs\n?? scripts/home-miniatures-fixture.test.mjs\n?? scripts/home-miniatures-process-client.mjs\n?? scripts/home-miniatures-process-client.test.mjs\n?? scripts/home-miniatures-smoke-support.mjs\n?? scripts/smoke-home-miniatures-browser.mjs\n?? scripts/smoke-home-miniatures-docker.mjs\n?? scripts/smoke-home-miniatures-native.mjs\n"
   },
   "method": "Actual production documents with Apollo addTypenameToDocument, GraphQL execute and JSON serialization. 11 independent fresh-process first operations per scenario; cold DERIVED caches, NOT cold disk or import/startup time. Warm uses one warmup plus 11 samples. launch is navigation then Home in one process (sum operation ms/SQL/bytes, maximum per-operation setImmediate block). SQL counts actual all/get/run/iterate statement calls, excluding transaction helper BEGIN/COMMIT and trigger internals. setImmediate probe measures synchronous operation blocking, NOT a production event-loop-delay histogram. Excludes HTTP/auth/TCP/browser/React/Electron and non-projection startup traffic. Gzip bytes are size only, not timed. Eleven-sample p95 is the largest observation. Stock rebuilds are separate from writes, 11 repeated revisions in the final home worker.",
   "snapshotComparison": {

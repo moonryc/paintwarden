@@ -1,4 +1,4 @@
-import { fuzzyFilter } from "@paint-vault/core/fuzzy-search";
+import { fuzzyFilter } from "@paintwarden/core/fuzzy-search";
 
 import type { Miniature, Paint, PaintingStatus, State } from "../types";
 import {

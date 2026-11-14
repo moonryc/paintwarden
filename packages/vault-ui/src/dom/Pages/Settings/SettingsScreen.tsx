@@ -7,7 +7,7 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import SystemUpdateAltOutlinedIcon from "@mui/icons-material/SystemUpdateAltOutlined";
 import { Alert, Button, Chip, Switch } from "@mui/material";
 import Box from "@mui/material/Box";
-import { translateServerError } from "@paint-vault/i18n/runtime";
+import { translateServerError } from "@paintwarden/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -56,8 +56,8 @@ export function SettingsScreen({
   const [serverAddress, setServerAddress] = useState<string>(window.location.origin);
   const [localServer, setLocalServer] = useState(false);
   useEffect(() => {
-    if (!window.paintVaultDesktop) return;
-    void window.paintVaultDesktop
+    if (!window.paintwardenDesktop) return;
+    void window.paintwardenDesktop
       .getConnection()
       .then((choice) => {
         setLocalServer(choice.mode !== "remote");
@@ -137,8 +137,8 @@ export function SettingsScreen({
     const mode = pendingBackup.summary.legacy ? "merge" : restoreMode;
     setBusy(true);
     try {
-      if (window.paintVaultDesktop) {
-        const result = await window.paintVaultDesktop.restoreBackup(pendingBackup.file, {
+      if (window.paintwardenDesktop) {
+        const result = await window.paintwardenDesktop.restoreBackup(pendingBackup.file, {
           mode,
           authorization: authHeaders().authorization,
         });
@@ -159,7 +159,7 @@ export function SettingsScreen({
     } catch (cause) {
       // Browser restores are reported by the shared API helper. Desktop failures
       // can instead reject at the bridge, before any HTTP response is available.
-      if (window.paintVaultDesktop) notify(publicErrorMessage(cause, translateServerError({})), "error");
+      if (window.paintwardenDesktop) notify(publicErrorMessage(cause, translateServerError({})), "error");
     } finally {
       setBusy(false);
     }

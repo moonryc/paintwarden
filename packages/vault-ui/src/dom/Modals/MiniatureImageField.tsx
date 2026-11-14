@@ -1,6 +1,6 @@
 import { Alert, Button } from "@mui/material";
 import Box from "@mui/material/Box";
-import { translateServerError } from "@paint-vault/i18n/runtime";
+import { translateServerError } from "@paintwarden/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 

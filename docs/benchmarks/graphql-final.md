@@ -154,12 +154,12 @@ node scripts/benchmark-graphql-final.mjs stress /absolute/evidence/stress
 # Historical build is an explicit separately prepared private archive, not main:
 node scripts/benchmark-graphql-before.mjs large /private/archive/ea86dd1 /absolute/evidence/before-large
 node scripts/benchmark-graphql-before.mjs stress /private/archive/ea86dd1 /absolute/evidence/before-stress
-node scripts/benchmark-miniatures-bundle.mts compare /private/archive/ea86dd1/apps/paint-vault-web/dist apps/paint-vault-web/dist /absolute/evidence/bundle.json
+node scripts/benchmark-miniatures-bundle.mts compare /private/archive/ea86dd1/apps/paintwarden-web/dist apps/paintwarden-web/dist /absolute/evidence/bundle.json
 ```
 
 The historical archive uses `git archive ea86dd1 | tar -x -C PRIVATE_DIR`, its own
-`npm ci`, `npm run build --workspace paint-vault-web`, then
-`npm run build --workspace paint-vault`. No old endpoint implementation is kept in
+`npm ci`, `npm run build --workspace paintwarden-web`, then
+`npm run build --workspace paintwarden`. No old endpoint implementation is kept in
 current production source. See `scripts/graphql-phase5-README.md` for production
 browser/Docker and same-profile native switching QA; broad screen runners remain
 in `scripts/graphql-phase4-README.md`. Runners do not build/pull/mutate a live vault.

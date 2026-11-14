@@ -1,6 +1,6 @@
 import type { ApolloClient } from "@apollo/client";
-import type { RecipeStep } from "@paint-vault/core/recipe-steps";
-import { i18n } from "@paint-vault/i18n/runtime";
+import type { RecipeStep } from "@paintwarden/core/recipe-steps";
+import { i18n } from "@paintwarden/i18n/runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { getFragmentData } from "../graphql/generated/fragment-masking";

@@ -9,7 +9,7 @@ import path from "node:path";
 export async function createLibraryFixture(root, profile = "large") {
   assert.equal(process.version, "v22.22.2", "Use pinned Node 22.22.2");
   assert.ok(["large", "stress"].includes(profile));
-  const evidence = await mkdtemp(path.join(tmpdir(), `paint-vault-library-${profile}-`));
+  const evidence = await mkdtemp(path.join(tmpdir(), `paintwarden-library-${profile}-`));
   const baselinePath = path.join(evidence, "fixture.json");
   const env = { ...process.env, BENCH_REPORT: baselinePath };
   delete env.DATABASE_PATH;
@@ -18,7 +18,7 @@ export async function createLibraryFixture(root, profile = "large") {
     process.execPath,
     ["--import", "tsx", "../../scripts/seed-benchmark-vault.mts", profile],
     {
-      cwd: path.join(root, "apps/paint-vault"),
+      cwd: path.join(root, "apps/paintwarden"),
       env,
       encoding: "utf8",
       timeout: 300000,
@@ -27,6 +27,6 @@ export async function createLibraryFixture(root, profile = "large") {
   await writeFile(path.join(evidence, "seed.log"), seeded.stdout + seeded.stderr);
   assert.equal(seeded.status, 0, `Phase 0 fixture failed: ${seeded.stderr}`);
   const baseline = JSON.parse(await readFile(baselinePath, "utf8"));
-  assert.ok(baseline.dataDir.startsWith(path.join(tmpdir(), "paint-vault-startup-")));
+  assert.ok(baseline.dataDir.startsWith(path.join(tmpdir(), "paintwarden-startup-")));
   return { evidence, baselinePath, baseline, dataDir: baseline.dataDir };
 }

@@ -30,16 +30,16 @@
     "zoom": "拡大／縮小",
     "front": "すべてを手前に移動",
     "help": "ヘルプ",
-    "website": "GitHubでPaint Vaultを見る"
+    "website": "GitHubでPaintwardenを見る"
   },
   "errors": {
     "enterUrl": "サーバーURLを入力してください",
     "serverOrigin": "https://vault.example.comのようなサーバーのオリジンを入力してください",
     "portUsed": "ポート{{port}}は別のサーバーで使用中です。",
-    "missingServer": "同梱のPaint Vaultサーバーがありません。デスクトップアプリをビルドし直してください。",
-    "startServer": "同梱のPaint Vaultサーバーを起動できませんでした。",
+    "missingServer": "同梱のPaintwardenサーバーがありません。デスクトップアプリをビルドし直してください。",
+    "startServer": "同梱のPaintwardenサーバーを起動できませんでした。",
     "connectionMode": "接続方法を選んでください",
-    "notServer": "このアドレスはPaint Vaultサーバーではありません",
+    "notServer": "このアドレスはPaintwardenサーバーではありません",
     "serverVersion": "サーバーのバージョンを確認できませんでした",
     "chooseServer": "保管庫を使う前にサーバーを選んでください",
     "connectionChanged": "接続が変更されました",
@@ -48,19 +48,19 @@
     "unavailable": "サーバーを利用できません",
     "forbidden": "アクセスが拒否されました",
     "notFound": "見つかりません",
-    "outsideApp": "Paint Vault以外では利用できません",
+    "outsideApp": "Paintwarden以外では利用できません",
     "invalidExport": "書き出し内容が無効です",
     "exportFailed": "書き出しに失敗しました",
     "invalidRestore": "復元内容が無効です",
     "restoreFailed": "復元に失敗しました",
     "invalidLanguage": "対応している言語を選んでください",
-    "olderServer": "このサーバーは古いバージョンのPaint Vaultで動作しています。接続するには、サーバーを{{appVersion}}に更新してください。",
-    "updateServer": "サーバーはPaint Vault {{serverVersion}}、このアプリは{{appVersion}}です。接続するには、サーバーを{{appVersion}}に更新してください。",
-    "updateApp": "サーバーはPaint Vault {{serverVersion}}、このアプリは{{appVersion}}です。接続するには、このアプリを{{serverVersion}}に更新してください。"
+    "olderServer": "このサーバーは古いバージョンのPaintwardenで動作しています。接続するには、サーバーを{{appVersion}}に更新してください。",
+    "updateServer": "サーバーはPaintwarden {{serverVersion}}、このアプリは{{appVersion}}です。接続するには、サーバーを{{appVersion}}に更新してください。",
+    "updateApp": "サーバーはPaintwarden {{serverVersion}}、このアプリは{{appVersion}}です。接続するには、このアプリを{{serverVersion}}に更新してください。"
   },
   "dialogs": {
-    "exportFile": "Paint Vaultファイルを書き出す",
-    "exportBackup": "Paint Vaultバックアップを書き出す",
+    "exportFile": "Paintwardenファイルを書き出す",
+    "exportBackup": "Paintwardenバックアップを書き出す",
     "zip": "ZIPアーカイブ",
     "save": "保存"
   },

@@ -12,8 +12,8 @@ import {
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Alert, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import type { ColorCategory } from "@paint-vault/core/color-categories";
-import { COLOR_CATEGORIES } from "@paint-vault/core/color-categories";
+import type { ColorCategory } from "@paintwarden/core/color-categories";
+import { COLOR_CATEGORIES } from "@paintwarden/core/color-categories";
 import { useState } from "react";
 
 import { Modal } from "../Components/Modal";

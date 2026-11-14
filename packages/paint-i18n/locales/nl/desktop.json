@@ -30,16 +30,16 @@
     "zoom": "Zoom",
     "front": "Alles naar voren",
     "help": "Help",
-    "website": "Paint Vault op GitHub"
+    "website": "Paintwarden op GitHub"
   },
   "errors": {
     "enterUrl": "Voer een server-URL in",
     "serverOrigin": "Voer een serveradres in, zoals https://vault.example.com",
     "portUsed": "Poort {{port}} wordt al door een andere server gebruikt.",
-    "missingServer": "De meegeleverde Paint Vault-server ontbreekt. Bouw de desktop-app opnieuw.",
-    "startServer": "De meegeleverde Paint Vault-server kon niet worden gestart.",
+    "missingServer": "De meegeleverde Paintwarden-server ontbreekt. Bouw de desktop-app opnieuw.",
+    "startServer": "De meegeleverde Paintwarden-server kon niet worden gestart.",
     "connectionMode": "Kies een verbindingsmodus",
-    "notServer": "Dit adres is geen Paint Vault-server",
+    "notServer": "Dit adres is geen Paintwarden-server",
     "serverVersion": "De versie van de server kon niet worden gecontroleerd",
     "chooseServer": "Kies een server voordat je de kluis gebruikt",
     "connectionChanged": "Verbinding gewijzigd",
@@ -48,19 +48,19 @@
     "unavailable": "Server niet beschikbaar",
     "forbidden": "Geen toegang",
     "notFound": "Niet gevonden",
-    "outsideApp": "Niet beschikbaar buiten Paint Vault",
+    "outsideApp": "Niet beschikbaar buiten Paintwarden",
     "invalidExport": "Ongeldige export",
     "exportFailed": "Exporteren mislukt",
     "invalidRestore": "Ongeldig herstel",
     "restoreFailed": "Herstellen mislukt",
     "invalidLanguage": "Kies een ondersteunde taal",
-    "olderServer": "Deze server gebruikt een oudere versie van Paint Vault. Werk de server bij naar {{appVersion}} om verbinding te maken.",
-    "updateServer": "Deze server gebruikt Paint Vault {{serverVersion}} en deze app gebruikt {{appVersion}}. Werk de server bij naar {{appVersion}} om verbinding te maken.",
-    "updateApp": "Deze server gebruikt Paint Vault {{serverVersion}} en deze app gebruikt {{appVersion}}. Werk deze app bij naar {{serverVersion}} om verbinding te maken."
+    "olderServer": "Deze server gebruikt een oudere versie van Paintwarden. Werk de server bij naar {{appVersion}} om verbinding te maken.",
+    "updateServer": "Deze server gebruikt Paintwarden {{serverVersion}} en deze app gebruikt {{appVersion}}. Werk de server bij naar {{appVersion}} om verbinding te maken.",
+    "updateApp": "Deze server gebruikt Paintwarden {{serverVersion}} en deze app gebruikt {{appVersion}}. Werk deze app bij naar {{serverVersion}} om verbinding te maken."
   },
   "dialogs": {
-    "exportFile": "Paint Vault-bestand exporteren",
-    "exportBackup": "Paint Vault-back-up exporteren",
+    "exportFile": "Paintwarden-bestand exporteren",
+    "exportBackup": "Paintwarden-back-up exporteren",
     "zip": "ZIP-archief",
     "save": "Opslaan"
   },

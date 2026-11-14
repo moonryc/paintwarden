@@ -11,11 +11,11 @@ assert.equal(process.version, "v22.22.2");
 assert.equal(process.platform, "darwin");
 const [
   evidence,
-  executable = path.join(root, "dist/electron/mac-arm64/Paint Vault.app/Contents/MacOS/Paint Vault"),
+  executable = path.join(root, "dist/electron/mac-arm64/Paintwarden.app/Contents/MacOS/Paintwarden"),
 ] = process.argv.slice(2);
 assert.ok(evidence);
 await mkdir(evidence, { recursive: true });
-const data = await mkdtemp(path.join(os.tmpdir(), "paint-vault-i18n-native-"));
+const data = await mkdtemp(path.join(os.tmpdir(), "paintwarden-i18n-native-"));
 await writeFile(path.join(data, "client-connection.json"), JSON.stringify({ mode: "local", language: "de" }));
 const report = {
   executable,
@@ -28,8 +28,8 @@ const env = {
   ...process.env,
   DATA_DIR: "",
   DATABASE_PATH: "",
-  PAINT_VAULT_DESKTOP_DATA_DIR: data,
-  PAINT_VAULT_DISABLE_UPDATES: "1",
+  PAINTWARDEN_DESKTOP_DATA_DIR: data,
+  PAINTWARDEN_DISABLE_UPDATES: "1",
   NODE_ENV: "production",
 };
 let app;
@@ -70,7 +70,7 @@ try {
   const page = await snapshot("de");
   // The same secured IPC used by the settings selector must immediately rebuild
   // native menus and persist without overwriting the local connection.
-  assert.equal(await page.evaluate(() => window.paintVaultDesktop.setLanguage("ja")), "ja");
+  assert.equal(await page.evaluate(() => window.paintwardenDesktop.setLanguage("ja")), "ja");
   const changed = await app.evaluate(({ Menu }) => Menu.getApplicationMenu().items.map(({ label }) => label));
   assert.ok(changed.includes("ファイル"));
   report.checks.push({ language: "ja", liveMenuChange: changed });

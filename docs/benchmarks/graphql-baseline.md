@@ -16,7 +16,7 @@ measurements, archive commit `1dd8ebe` to a private temporary tree (never switch
 the running main checkout), install its locked dependencies with pinned Node, then:
 
 ```sh
-cd apps/paint-vault
+cd apps/paintwarden
 BENCH_REPORT=../../docs/benchmarks/graphql-baseline-large.json node --import tsx ../../scripts/benchmark-startup.mts large
 BENCH_REPORT=../../docs/benchmarks/graphql-baseline-stress.json node --import tsx ../../scripts/benchmark-startup.mts stress
 ```
@@ -35,7 +35,7 @@ The harness **always overrides `DATA_DIR` with a fresh retained temp directory a
 ## Current fixture generator
 
 `node --import tsx ../../scripts/seed-benchmark-vault.mts large` (or `stress`),
-run from `apps/paint-vault`, seeds the **identical rows** in a fresh temp directory
+run from `apps/paintwarden`, seeds the **identical rows** in a fresh temp directory
 without importing deleted snapshot code. It reports fixture identity, not a new
 snapshot timing. Raw baseline JSON above remains historical evidence.
 See [final measurements](graphql-final.md).

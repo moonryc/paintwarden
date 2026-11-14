@@ -30,16 +30,16 @@
     "zoom": "Zoomen",
     "front": "Alle nach vorne bringen",
     "help": "Hilfe",
-    "website": "Paint Vault auf GitHub"
+    "website": "Paintwarden auf GitHub"
   },
   "errors": {
     "enterUrl": "Gib eine Server-URL ein",
     "serverOrigin": "Gib eine Serveradresse wie https://vault.example.com ein",
     "portUsed": "Port {{port}} wird bereits von einem anderen Server verwendet.",
-    "missingServer": "Der mitgelieferte Paint Vault-Server fehlt. Erstelle die Desktop-App neu.",
-    "startServer": "Der mitgelieferte Paint Vault-Server konnte nicht gestartet werden.",
+    "missingServer": "Der mitgelieferte Paintwarden-Server fehlt. Erstelle die Desktop-App neu.",
+    "startServer": "Der mitgelieferte Paintwarden-Server konnte nicht gestartet werden.",
     "connectionMode": "Wähle einen Verbindungsmodus",
-    "notServer": "Diese Adresse gehört nicht zu einem Paint Vault-Server",
+    "notServer": "Diese Adresse gehört nicht zu einem Paintwarden-Server",
     "serverVersion": "Die Serverversion konnte nicht geprüft werden",
     "chooseServer": "Wähle einen Server, bevor du deinen Tresor verwendest",
     "connectionChanged": "Verbindung geändert",
@@ -48,19 +48,19 @@
     "unavailable": "Server nicht erreichbar",
     "forbidden": "Zugriff verweigert",
     "notFound": "Nicht gefunden",
-    "outsideApp": "Außerhalb von Paint Vault nicht verfügbar",
+    "outsideApp": "Außerhalb von Paintwarden nicht verfügbar",
     "invalidExport": "Ungültiger Export",
     "exportFailed": "Export fehlgeschlagen",
     "invalidRestore": "Ungültige Wiederherstellung",
     "restoreFailed": "Wiederherstellung fehlgeschlagen",
     "invalidLanguage": "Wähle eine unterstützte Sprache",
-    "olderServer": "Auf diesem Server läuft eine ältere Version von Paint Vault. Aktualisiere den Server auf {{appVersion}}, um eine Verbindung herzustellen.",
-    "updateServer": "Auf diesem Server läuft Paint Vault {{serverVersion}}, diese App hat Version {{appVersion}}. Aktualisiere den Server auf {{appVersion}}, um eine Verbindung herzustellen.",
-    "updateApp": "Auf diesem Server läuft Paint Vault {{serverVersion}}, diese App hat Version {{appVersion}}. Aktualisiere diese App auf {{serverVersion}}, um eine Verbindung herzustellen."
+    "olderServer": "Auf diesem Server läuft eine ältere Version von Paintwarden. Aktualisiere den Server auf {{appVersion}}, um eine Verbindung herzustellen.",
+    "updateServer": "Auf diesem Server läuft Paintwarden {{serverVersion}}, diese App hat Version {{appVersion}}. Aktualisiere den Server auf {{appVersion}}, um eine Verbindung herzustellen.",
+    "updateApp": "Auf diesem Server läuft Paintwarden {{serverVersion}}, diese App hat Version {{appVersion}}. Aktualisiere diese App auf {{serverVersion}}, um eine Verbindung herzustellen."
   },
   "dialogs": {
-    "exportFile": "Paint Vault-Datei exportieren",
-    "exportBackup": "Paint Vault-Sicherung exportieren",
+    "exportFile": "Paintwarden-Datei exportieren",
+    "exportBackup": "Paintwarden-Sicherung exportieren",
     "zip": "ZIP-Archiv",
     "save": "Speichern"
   },

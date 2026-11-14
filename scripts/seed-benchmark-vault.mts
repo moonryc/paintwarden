@@ -1,4 +1,4 @@
-// Run from apps/paint-vault: node --import tsx ../../scripts/seed-benchmark-vault.mts
+// Run from apps/paintwarden: node --import tsx ../../scripts/seed-benchmark-vault.mts
 // Exact Phase 0 fixture rows; no legacy endpoint or snapshot implementation needed.
 // Always creates its own synthetic vault. Never opens DATA_DIR/DATABASE_PATH supplied by the caller.
 import assert from "node:assert/strict";
@@ -14,11 +14,11 @@ const spec =
   profile === "large"
     ? { paints: 4500, miniatures: 1500, schemes: 300, templates: 500 }
     : { paints: 30000, miniatures: 10000, schemes: 3000, templates: 5000 };
-const dataDir = mkdtempSync(path.join(tmpdir(), `paint-vault-startup-${profile}-`));
+const dataDir = mkdtempSync(path.join(tmpdir(), `paintwarden-startup-${profile}-`));
 process.env.DATA_DIR = dataDir;
 delete process.env.DATABASE_PATH;
 process.env.NODE_ENV = "test";
-const { getSqlite } = await import("../apps/paint-vault/db/index.ts");
+const { getSqlite } = await import("../apps/paintwarden/db/index.ts");
 const db = getSqlite();
 const id = (n: number) => `${n.toString(16).padStart(8, "0")}-0000-4000-8000-000000000000`;
 const paintId = (n: number) => (n % 25 === 0 ? `user:${id(n)}` : id(n));

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#406ac2" />
+    <title>Paintwarden — Offline</title>
+    <style>
+      :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      body { min-height: 100vh; margin: 0; display: grid; place-items: center; background: #202020; color: #d0d0d0; }
+      main { width: min(32rem, calc(100% - 3rem)); text-align: center; }
+      img { width: 5rem; height: 5rem; }
+      h1 { margin: 1.25rem 0 .5rem; font: 700 2rem/1.1 Georgia, serif; }
+      p { margin: 0 auto 1.5rem; color: #aab5ad; line-height: 1.6; }
+      button { border: 1px solid #4d6d5b; border-radius: .8rem; padding: .75rem 1.1rem; background: #2f8b60; color: white; font: inherit; font-weight: 700; cursor: pointer; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/favicon.svg" alt="" />
+      <h1>Your paintwarden is offline</h1>
+      <p>Reconnect to load your private collection and sync changes.</p>
+      <button onclick="location.reload()">Try again</button>
+    </main>
+  </body>
+</html>

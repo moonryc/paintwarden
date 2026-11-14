@@ -126,7 +126,7 @@ function files(directory) {
   });
 }
 const allowedText = new Map([
-  ["Paint Vault", "Product name"],
+  ["Paintwarden", "Product name"],
   ["GitHub", "Brand"],
   ["Docker", "Product name"],
   ["［Pseudo］", "Development-only language autonym"],
@@ -235,8 +235,8 @@ export function main() {
   }
   const production = [
     "packages/vault-ui/src/dom",
-    "apps/paint-vault-web/src",
-    "apps/paint-vault-site/src/site",
+    "apps/paintwarden-web/src",
+    "apps/paintwarden-site/src/site",
   ]
     .flatMap((directory) => files(path.join(root, directory)))
     .filter(
@@ -251,8 +251,8 @@ export function main() {
     ...files(path.join(root, "packages/vault-ui/src/dom")).filter(
       (file) => file.endsWith(".ts") && !file.includes("/generated/"),
     ),
-    ...files(path.join(root, "apps/paint-vault-site/src")).filter((file) => file.endsWith(".astro")),
-    ...files(path.join(root, "apps/paint-vault-electron")).filter(
+    ...files(path.join(root, "apps/paintwarden-site/src")).filter((file) => file.endsWith(".astro")),
+    ...files(path.join(root, "apps/paintwarden-electron")).filter(
       (file) => file.endsWith(".cjs") && !file.includes("/desktop-server/"),
     ),
   ]

@@ -4,26 +4,26 @@ module.exports = {
     "**/node_modules/**",
     "**/dist/**",
     "**/build/**",
-    "apps/paint-vault/drizzle/**",
-    "apps/paint-vault-electron/desktop-server/**",
+    "apps/paintwarden/drizzle/**",
+    "apps/paintwarden-electron/desktop-server/**",
   ],
   overrides: [
     {
       files: [
-        "apps/paint-vault/**/*.ts",
-        "apps/paint-vault-web/**/*.ts",
-        "apps/paint-vault-web/**/*.tsx",
-        "apps/paint-vault-site/**/*.ts",
-        "apps/paint-vault-site/**/*.tsx",
+        "apps/paintwarden/**/*.ts",
+        "apps/paintwarden-web/**/*.ts",
+        "apps/paintwarden-web/**/*.tsx",
+        "apps/paintwarden-site/**/*.ts",
+        "apps/paintwarden-site/**/*.tsx",
         "packages/**/*.ts",
         "packages/**/*.tsx",
       ],
       parser: "@typescript-eslint/parser",
       parserOptions: {
         project: [
-          "./apps/paint-vault/tsconfig.json",
-          "./apps/paint-vault-web/tsconfig.json",
-          "./apps/paint-vault-site/tsconfig.json",
+          "./apps/paintwarden/tsconfig.json",
+          "./apps/paintwarden-web/tsconfig.json",
+          "./apps/paintwarden-site/tsconfig.json",
           "./packages/paint-core/tsconfig.json",
           "./packages/vault-ui/tsconfig.json",
         ],
@@ -43,9 +43,9 @@ module.exports = {
         "import/resolver": {
           typescript: {
             project: [
-              "./apps/paint-vault/tsconfig.json",
-              "./apps/paint-vault-web/tsconfig.json",
-              "./apps/paint-vault-site/tsconfig.json",
+              "./apps/paintwarden/tsconfig.json",
+              "./apps/paintwarden-web/tsconfig.json",
+              "./apps/paintwarden-site/tsconfig.json",
               "./packages/paint-core/tsconfig.json",
               "./packages/vault-ui/tsconfig.json",
             ],
@@ -92,8 +92,8 @@ module.exports = {
     },
     {
       files: [
-        "apps/paint-vault-web/**/*.tsx",
-        "apps/paint-vault-site/**/*.tsx",
+        "apps/paintwarden-web/**/*.tsx",
+        "apps/paintwarden-site/**/*.tsx",
         "packages/vault-ui/**/*.tsx",
       ],
       plugins: ["react", "react-hooks", "jsx-a11y"],
@@ -132,11 +132,11 @@ module.exports = {
     },
     {
       files: [
-        "apps/paint-vault/**/*.ts",
-        "apps/paint-vault-web/**/*.ts",
-        "apps/paint-vault-web/**/*.tsx",
-        "apps/paint-vault-site/**/*.ts",
-        "apps/paint-vault-site/**/*.tsx",
+        "apps/paintwarden/**/*.ts",
+        "apps/paintwarden-web/**/*.ts",
+        "apps/paintwarden-web/**/*.tsx",
+        "apps/paintwarden-site/**/*.ts",
+        "apps/paintwarden-site/**/*.tsx",
         "packages/paint-core/**/*.ts",
       ],
       rules: {
@@ -152,7 +152,7 @@ module.exports = {
       rules: { "max-lines": ["warn", 500] },
     },
     {
-      files: ["apps/paint-vault/**/*.test.ts", "packages/**/*.test.ts"],
+      files: ["apps/paintwarden/**/*.test.ts", "packages/**/*.test.ts"],
       rules: {
         "sonarjs/no-duplicate-string": "off",
         "max-lines": ["error", 1000],

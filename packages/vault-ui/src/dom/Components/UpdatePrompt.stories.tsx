@@ -33,9 +33,9 @@ export const ReadyToInstall: Story = {
   ],
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
-    await body.findByText("Paint Vault 1.1.0 is ready to install.");
-    const install = fn(window.paintVaultDesktop!.installUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.installUpdate = install;
+    await body.findByText("Paintwarden 1.1.0 is ready to install.");
+    const install = fn(window.paintwardenDesktop!.installUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.installUpdate = install;
     await userEvent.click(body.getByRole("button", { name: "Later" }));
     await expect(install).not.toHaveBeenCalled();
     await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
@@ -74,8 +74,8 @@ export const UpdateAnyway: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const dialog = await body.findByRole("dialog", { name: title });
-    const respond = fn(window.paintVaultDesktop!.respondToUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.respondToUpdate = respond;
+    const respond = fn(window.paintwardenDesktop!.respondToUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.respondToUpdate = respond;
     await userEvent.click(within(dialog).getByRole("button", { name: "Update anyway" }));
     await expect(respond).toHaveBeenCalledTimes(1);
     await expect(respond).toHaveBeenCalledWith({
@@ -84,7 +84,7 @@ export const UpdateAnyway: Story = {
       action: "download",
     });
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
-    await expect((await window.paintVaultDesktop!.getUpdateState()).status).toBe("downloading");
+    await expect((await window.paintwardenDesktop!.getUpdateState()).status).toBe("downloading");
   },
 };
 
@@ -93,8 +93,8 @@ export const NotNowAndRemindAgain: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const dialog = await body.findByRole("dialog", { name: title });
-    const respond = fn(window.paintVaultDesktop!.respondToUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.respondToUpdate = respond;
+    const respond = fn(window.paintwardenDesktop!.respondToUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.respondToUpdate = respond;
     await userEvent.click(within(dialog).getByRole("button", { name: "Not now" }));
     await expect(respond).toHaveBeenCalledTimes(1);
     await expect(respond).toHaveBeenCalledWith({
@@ -103,8 +103,8 @@ export const NotNowAndRemindAgain: Story = {
       action: "defer",
     });
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
-    await expect((await window.paintVaultDesktop!.getUpdateState()).status).toBe("deferred");
-    await window.paintVaultDesktop!.checkForUpdates();
+    await expect((await window.paintwardenDesktop!.getUpdateState()).status).toBe("deferred");
+    await window.paintwardenDesktop!.checkForUpdates();
     await body.findByRole("dialog", { name: title });
   },
 };
@@ -114,8 +114,8 @@ export const EscapeDefers: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     await body.findByRole("dialog", { name: title });
-    const respond = fn(window.paintVaultDesktop!.respondToUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.respondToUpdate = respond;
+    const respond = fn(window.paintwardenDesktop!.respondToUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.respondToUpdate = respond;
     await userEvent.keyboard("{Escape}");
     await expect(respond).toHaveBeenCalledTimes(1);
     await expect(respond).toHaveBeenCalledWith({
@@ -134,7 +134,7 @@ export const CloseDefers: Story = {
     const dialog = await body.findByRole("dialog", { name: title });
     await userEvent.click(within(dialog).getByRole("button", { name: "Close" }));
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
-    await expect((await window.paintVaultDesktop!.getUpdateState()).status).toBe("deferred");
+    await expect((await window.paintwardenDesktop!.getUpdateState()).status).toBe("deferred");
   },
 };
 
@@ -173,8 +173,8 @@ export const NewerStateWins: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await within(canvasElement.ownerDocument.body).findByRole("dialog", { name: title });
     await expect(dialog).toHaveTextContent("Server 1.2.0 · App update 2.0.0");
-    const respond = fn(window.paintVaultDesktop!.respondToUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.respondToUpdate = respond;
+    const respond = fn(window.paintwardenDesktop!.respondToUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.respondToUpdate = respond;
     await userEvent.click(within(dialog).getByRole("button", { name: "Update anyway" }));
     await expect(respond).toHaveBeenCalledTimes(1);
     await expect(respond).toHaveBeenCalledWith({
@@ -200,8 +200,8 @@ export const PendingResponseAndServerSwitch: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     const dialog = await body.findByRole("dialog", { name: title });
-    const respond = fn(window.paintVaultDesktop!.respondToUpdate.bind(window.paintVaultDesktop));
-    window.paintVaultDesktop!.respondToUpdate = respond;
+    const respond = fn(window.paintwardenDesktop!.respondToUpdate.bind(window.paintwardenDesktop));
+    window.paintwardenDesktop!.respondToUpdate = respond;
     await userEvent.click(within(dialog).getByRole("button", { name: "Update anyway" }));
     await expect(within(dialog).getByRole("button", { name: "Update anyway" })).toBeDisabled();
     await expect(within(dialog).getByRole("button", { name: "Not now" })).toBeDisabled();

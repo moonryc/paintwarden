@@ -1,6 +1,6 @@
 # Library server contract (Phase 2)
 
-Schema: `apps/paint-vault/graphql/schema.graphql`. Generated typed documents live in
+Schema: `apps/paintwarden/graphql/schema.graphql`. Generated typed documents live in
 `packages/vault-ui/src/dom/graphql/generated`; `npm run codegen` owns both client
 and resolver output. The ordinary protected JSON POST endpoint now accepts queries
 **and mutations**; subscriptions still require the dedicated POST SSE endpoint.
@@ -115,7 +115,7 @@ immutable projection before commit. Nested resolver pages use that captured
 projection instead of making later inconsistent reads. Paint detail alone reads
 direct usage associations in its root transaction; there is no per-row N+1.
 
-Focused checks: `npm run test:graphql --workspace paint-vault`, shared stock route
+Focused checks: `npm run test:graphql --workspace paintwarden`, shared stock route
 tests, `npm run codegen:check`, and app typecheck. The Library domain suite covers
 counts/filter/search/source parity, substitutions including empty/cycle/direct-self,
 ID paging and cursor invalidation; HTTP tests verify stock writes, decimal-string
@@ -126,7 +126,7 @@ budget. Large/stress cold/warm measurements are separate from semantic correctne
 ## Client integration (Phase 2)
 
 Apollo is the default Library path; there is no debug flag or debug panel. `#paints`
-opens Library directly in both HTTP and `paintvault://app`, without `/api/state`.
+opens Library directly in both HTTP and `paintwarden://app`, without `/api/state`.
 The default entry remains Home; navigation is unchanged. All screens and overlays
 now use bounded Apollo projections. The snapshot endpoint/cache/row merges and
 TanStack dependency are removed. See `data-loading.md` and `graphql-miniatures.md`.

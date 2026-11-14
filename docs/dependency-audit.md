@@ -38,7 +38,7 @@ moderate affected package:
 | Advisory | Severity | Applicability / decision |
 | --- | --- | --- |
 | [GHSA-mh32-jxcr-mh9f](https://github.com/advisories/GHSA-mh32-jxcr-mh9f) | Low | Dynamic-tag attribute injection. The `.astro` templates use fixed tags and fixed component imports, not untrusted dynamic tag names. User/plugin vault content is not an input to this build. Accept for this static site. |
-| [GHSA-r3h5-4585-7x3w](https://github.com/advisories/GHSA-r3h5-4585-7x3w) | Moderate | Case-variant sibling read via the `@astrojs/node` image endpoint. `apps/paint-vault-site/astro.config.mjs` has `output: "static"`, no server adapter and no `@astrojs/node` dependency. Deployed output is static files; no such endpoint exists. Accept as not reachable. |
+| [GHSA-r3h5-4585-7x3w](https://github.com/advisories/GHSA-r3h5-4585-7x3w) | Moderate | Case-variant sibling read via the `@astrojs/node` image endpoint. `apps/paintwarden-site/astro.config.mjs` has `output: "static"`, no server adapter and no `@astrojs/node` dependency. Deployed output is static files; no such endpoint exists. Accept as not reachable. |
 
 An Astro **7.4.12** patch upgrade was resolved and tested for dependency
 compatibility, but rejected: it and the earliest release beyond both affected

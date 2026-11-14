@@ -2,7 +2,7 @@ import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
-import { isPaintOwned } from "@paint-vault/core/paint-state";
+import { isPaintOwned } from "@paintwarden/core/paint-state";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

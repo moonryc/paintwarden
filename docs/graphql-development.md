@@ -23,7 +23,7 @@ npm run storybook:test
 ## Add a query or fragment
 
 1. Define the smallest summary/detail contract in
-   `apps/paint-vault/graphql/schema.graphql`. Return revision envelopes and bounded
+   `apps/paintwarden/graphql/schema.graphql`. Return revision envelopes and bounded
    connections; separate global aggregates from loaded nodes. Do not add a field
    that silently loads an entire catalog/recipe. Use `Sequence` decimal strings
    on the wire, not GraphQL Int, for revisions.
@@ -37,7 +37,7 @@ npm run storybook:test
    fields the screen uses. Preserve ID tie-break order and bound nested pages.
 4. Run `npm run codegen`. The client preset generates typed documents, result/input
    types and fragment masking under `graphql/generated/`; server resolver types
-   are generated under `apps/paint-vault/graphql/generated/`. Import individual
+   are generated under `apps/paintwarden/graphql/generated/`. Import individual
    `*Document` constants from `generated/graphql`, not the all-operations lookup
    map. Read a masked fragment with `getFragmentData(FragmentDocument, value)`.
    Do not hand-edit generated files or replace typed documents with string casts.

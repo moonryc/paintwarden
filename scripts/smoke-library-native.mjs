@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /** Packaged macOS Phase 2 only. Never builds; fixtures and evidence are retained.
- * node scripts/smoke-library-native.mjs EVIDENCE_DIR --app '/path/Paint Vault.app' [--run]
+ * node scripts/smoke-library-native.mjs EVIDENCE_DIR --app '/path/Paintwarden.app' [--run]
  * Without --run, writes an honest NOT RUN plan (does not launch anything).
  */
 import assert from "node:assert/strict";
@@ -238,7 +238,7 @@ async function main() {
     const app = path.resolve(options.app);
     assert.ok(app.endsWith(".app"), "Use a packaged .app, not development Electron");
     const resources = path.join(app, "Contents/Resources");
-    const executable = path.join(app, "Contents/MacOS/Paint Vault");
+    const executable = path.join(app, "Contents/MacOS/Paintwarden");
     for (const file of [
       executable,
       path.join(resources, "app.asar"),
@@ -268,7 +268,7 @@ async function main() {
           HOST: "127.0.0.1",
           PORT: String(remotePort),
           DATA_DIR: remoteData,
-          PAINT_VAULT_DISABLE_UPDATES: "1",
+          PAINTWARDEN_DISABLE_UPDATES: "1",
         },
       },
       path.join(evidence, "remote-server.log"),
@@ -287,8 +287,8 @@ async function main() {
           env: {
             ...process.env,
             DATABASE_PATH: "",
-            PAINT_VAULT_DESKTOP_DATA_DIR: dataDir,
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_DESKTOP_DATA_DIR: dataDir,
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(evidence, `${mode}-electron.log`),
@@ -300,7 +300,7 @@ async function main() {
       const page = context.pages()[0] || (await context.waitForEvent("page"));
       currentPage = page;
       const recorder = attachLibraryRecorder(page);
-      await page.waitForURL("paintvault://app/**");
+      await page.waitForURL("paintwarden://app/**");
       if (mode === "local")
         await page.getByRole("button", { name: "Use this computer", exact: true }).click();
       else {
@@ -339,7 +339,7 @@ async function main() {
         evidenceDir: evidence,
         label: `native-${mode}`,
         initialNavigate: async () => {
-          await page.goto("paintvault://app/#paints");
+          await page.goto("paintwarden://app/#paints");
           await page.reload(); // Hash-only navigation does not remount the initial-tab store.
         },
         secondClientWrite,
@@ -359,7 +359,7 @@ async function main() {
       const require = createRequire(import.meta.url);
       const Database = require("better-sqlite3");
       const fixtureDb = new Database(
-        path.join(mode === "local" ? dataDir : remoteData, "paint-vault.sqlite"),
+        path.join(mode === "local" ? dataDir : remoteData, "paintwarden.sqlite"),
       );
       try {
         fixtureDb.pragma("busy_timeout = 5000");
@@ -414,8 +414,8 @@ async function main() {
           env: {
             ...process.env,
             DATABASE_PATH: "",
-            PAINT_VAULT_DESKTOP_DATA_DIR: dataDir,
-            PAINT_VAULT_DISABLE_UPDATES: "1",
+            PAINTWARDEN_DESKTOP_DATA_DIR: dataDir,
+            PAINTWARDEN_DISABLE_UPDATES: "1",
           },
         },
         path.join(evidence, `${mode}-relaunch.log`),
@@ -426,9 +426,9 @@ async function main() {
       const relaunchedContext = browser.contexts()[0];
       const relaunchedPage = relaunchedContext.pages()[0] || (await relaunchedContext.waitForEvent("page"));
       currentPage = relaunchedPage;
-      await relaunchedPage.waitForFunction(() => Boolean(window.paintVaultDesktop));
+      await relaunchedPage.waitForFunction(() => Boolean(window.paintwardenDesktop));
       const retained = await relaunchedPage.evaluate(async () => ({
-        connection: await window.paintVaultDesktop.getConnection(),
+        connection: await window.paintwardenDesktop.getConnection(),
         auth: await (await fetch("/api/auth/status")).json(),
       }));
       assert.equal(retained.connection.mode, mode);

@@ -51,7 +51,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: node scripts/package-desktop-server.mjs electron
-      - run: npm run dist --workspace paint-vault-electron -- --publish always
+      - run: npm run dist --workspace paintwarden-electron -- --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CERTIFICATE_P12_BASE64 || '' }}

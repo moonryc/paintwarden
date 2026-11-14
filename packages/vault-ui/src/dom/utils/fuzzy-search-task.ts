@@ -1,4 +1,4 @@
-import { createFuzzyIndex, searchFuzzyIndex, FUZZY_LIMITS } from "@paint-vault/core/fuzzy-search";
+import { createFuzzyIndex, searchFuzzyIndex, FUZZY_LIMITS } from "@paintwarden/core/fuzzy-search";
 
 type SearchReply = { request: number; indices: number[] };
 type SearchWorker = {

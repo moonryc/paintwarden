@@ -1,6 +1,6 @@
 # Application architecture
 
-Paint Vault is one single-owner SQLite vault with three hosts: browser, Docker/Nest,
+Paintwarden is one single-owner SQLite vault with three hosts: browser, Docker/Nest,
 and Electron. Web and desktop render the same React/MUI UI. Electron's local mode
 starts its packaged loopback server; remote mode uses an existing server and does
 not start a second vault. Local mode works without internet. Remote offline writes
@@ -12,7 +12,7 @@ and a durable client replica are not supported.
   Origin, setup, session, request limits and security headers remain common.
 - Yoga serves `POST /api/graphql` queries/mutations and the exact
   `POST /api/graphql/stream` subscription. SDL lives in
-  `apps/paint-vault/graphql/schema.graphql`. No production GraphiQL/introspection.
+  `apps/paintwarden/graphql/schema.graphql`. No production GraphiQL/introspection.
 - Server `graphql/` read services return bounded summary/detail models with a captured durable
   revision. It uses SQL aggregates and generation-cached shared paint/readiness
   projections, not an application-wide snapshot. Global counts are not calculated
@@ -51,7 +51,7 @@ ordinary REST/GraphQL responses retain their buffering/deadline behavior.
 ## Deployment
 
 The production build bundles server code and copies `schema.graphql`, Drizzle
-migrations and the Vite web output into `apps/paint-vault/dist`. Docker copies that
+migrations and the Vite web output into `apps/paintwarden/dist`. Docker copies that
 whole artifact. Desktop packaging copies the same server/schema/web artifact,
 production lockfile dependencies and pinned Node binary. Generated client documents
 are compiled into Vite output; generated resolver types are compile-time only.

@@ -1,7 +1,7 @@
 # Screen-level data loading
 
 All production screens use typed Apollo projections. Home remains the default;
-`#paints` is a supported direct Library entry in HTTP and `paintvault://app`.
+`#paints` is a supported direct Library entry in HTTP and `paintwarden://app`.
 No screen downloads a whole-vault snapshot or reconstructs `State` from pages.
 
 | Screen            | Initial data                                                             | Deferred data                                                   |
@@ -35,7 +35,7 @@ Bounded response size does not imply constant server CPU. Global fuzzy membershi
 and readiness can scan the compact paint/relationship graph on a new durable
 generation; subsequent requests reuse it. Invalidation is conservative, and the
 30k stress fixture can still block during an aggregate rebuild. Official scale is
-a realistic few-thousand-paint vault (including plugins), roughly 1–2k miniatures;
+a realistic few-thousand-paintwarden (including plugins), roughly 1–2k miniatures;
 30k is a stress test, not a new support promise.
 
 Queries are constrained before data SQL: body/text/parser/depth/field/root/cost,

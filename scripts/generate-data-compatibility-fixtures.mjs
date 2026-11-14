@@ -21,11 +21,11 @@ import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const app = path.join(root, "apps/paint-vault");
+const app = path.join(root, "apps/paintwarden");
 const output = path.join(app, "test-fixtures/data-compatibility");
 const archive = process.argv[2];
 assert.ok(archive, "Pass the historical archive repository path");
-const temporary = mkdtempSync(path.join(tmpdir(), "paint-vault-golden-generate-"));
+const temporary = mkdtempSync(path.join(tmpdir(), "paintwarden-golden-generate-"));
 process.env.DATA_DIR = path.join(temporary, "vault");
 delete process.env.DATABASE_PATH;
 mkdirSync(process.env.DATA_DIR);
@@ -44,8 +44,8 @@ globalThis.Date = class extends NativeDate {
     return stamp;
   }
 };
-const { testId: id, testUserId: user } = await import("../apps/paint-vault/lib/test-ids.ts");
-const { BACKUP_SECTIONS, SECTION_KEYS } = await import("../apps/paint-vault/lib/backup-format.ts");
+const { testId: id, testUserId: user } = await import("../apps/paintwarden/lib/test-ids.ts");
+const { BACKUP_SECTIONS, SECTION_KEYS } = await import("../apps/paintwarden/lib/backup-format.ts");
 const plugin = id("golden-plugin"),
   paint = user("golden-paint"),
   scheme = user("golden-scheme");
@@ -263,11 +263,11 @@ try {
       `Regenerate baseline fixtures only with the ${baseline} backup implementation`,
     );
   }
-  const { APP_VERSION } = await import("../apps/paint-vault/lib/app-version.ts");
+  const { APP_VERSION } = await import("../apps/paintwarden/lib/app-version.ts");
   assert.equal(APP_VERSION, "1.0.0", "Regenerate with the baseline app version");
-  const { createBackup } = await import("../apps/paint-vault/lib/backup.ts");
+  const { createBackup } = await import("../apps/paintwarden/lib/backup.ts");
   write("zip-v1.zip", Buffer.from(await new Response(createBackup()).arrayBuffer()));
-  const { getSqlite } = await import("../apps/paint-vault/db/index.ts");
+  const { getSqlite } = await import("../apps/paintwarden/db/index.ts");
   getSqlite().close();
 
   // Execute the exact historical GET body against its real historical application schema.

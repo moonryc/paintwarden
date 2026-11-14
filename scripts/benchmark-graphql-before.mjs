@@ -52,7 +52,7 @@ let browser;
 try {
   report.source = await sourceManifest();
   report.fixture = await createLibraryFixture(root, profile);
-  const dist = path.join(baseline, "apps/paint-vault/dist");
+  const dist = path.join(baseline, "apps/paintwarden/dist");
   report.artifacts.push(await identity(path.join(dist, "server.mjs")));
   for (const entry of await readdir(path.join(dist, "web-dist"), { recursive: true, withFileTypes: true }))
     if (entry.isFile()) report.artifacts.push(await identity(path.join(entry.parentPath, entry.name)));
@@ -78,7 +78,7 @@ try {
           DATABASE_PATH: "",
           HOST: "127.0.0.1",
           PORT: String(port),
-          PAINT_VAULT_ALLOWED_HOSTS: host,
+          PAINTWARDEN_ALLOWED_HOSTS: host,
         },
       },
       path.join(dir, `server-${sample}.log`),

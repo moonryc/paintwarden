@@ -8,10 +8,10 @@ test("desktop image namespaces change without mutating persisted URLs and web UR
   try {
     Object.defineProperty(globalThis, "location", {
       configurable: true,
-      value: new URL("paintvault://app/"),
+      value: new URL("paintwarden://app/"),
     });
     const source = "/api/miniatures/same-id/image?v=photo-key";
-    rememberImageScope(new Response("", { headers: { "x-paint-vault-image-scope": "server-a-account-a" } }));
+    rememberImageScope(new Response("", { headers: { "x-paintwarden-image-scope": "server-a-account-a" } }));
     assert.equal(imageUrl(source), `${source}&_pv_scope=server-a-account-a`);
     for (const url of [
       "https://example.com/a.webp",
@@ -23,7 +23,7 @@ test("desktop image namespaces change without mutating persisted URLs and web UR
     ]) {
       assert.equal(imageUrl(url), url);
     }
-    rememberImageScope(new Response("", { headers: { "x-paint-vault-image-scope": "server-b-account-b" } }));
+    rememberImageScope(new Response("", { headers: { "x-paintwarden-image-scope": "server-b-account-b" } }));
     assert.equal(imageUrl(source), `${source}&_pv_scope=server-b-account-b`);
     assert.equal(imageUrl(`${source}&_pv_scope=old`), `${source}&_pv_scope=server-b-account-b`);
     assert.equal(
@@ -46,7 +46,7 @@ test("desktop image namespaces change without mutating persisted URLs and web UR
     rememberImageScope(new Response(""));
     Object.defineProperty(globalThis, "location", {
       configurable: true,
-      value: new URL("paintvault://app/"),
+      value: new URL("paintwarden://app/"),
     });
     assert.equal(imageUrl(source), source);
   } finally {

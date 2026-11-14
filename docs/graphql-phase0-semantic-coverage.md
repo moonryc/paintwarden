@@ -80,9 +80,9 @@ cursor ordering, canonical collation or pagination behavior.
 Use the repository's Node version (`.nvmrc`, 22.22.2):
 
 ```sh
-npm run test --workspace @paint-vault/ui
-npm run test --workspace @paint-vault/core
-npm run typecheck --workspace @paint-vault/ui
+npm run test --workspace @paintwarden/ui
+npm run test --workspace @paintwarden/core
+npm run typecheck --workspace @paintwarden/ui
 ```
 
 These are semantic unit tests, not visual/native UI acceptance. Placeholder

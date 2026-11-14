@@ -1,4 +1,4 @@
-import { i18n } from "@paint-vault/i18n/runtime";
+import { i18n } from "@paintwarden/i18n/runtime";
 
 import type { AuthHeaders } from "../types";
 
@@ -8,10 +8,10 @@ import { PublicError } from "./public-error";
 // or as a browser download. Returns false when the user cancels the desktop save dialog.
 export async function exportBackupFile(authHeaders: AuthHeaders) {
   try {
-    const filename = `paint-vault-${new Date().toISOString().slice(0, 10)}.zip`;
+    const filename = `paintwarden-${new Date().toISOString().slice(0, 10)}.zip`;
     const headers = authHeaders();
-    if (window.paintVaultDesktop)
-      return await window.paintVaultDesktop.saveBackup({ filename, authorization: headers.authorization });
+    if (window.paintwardenDesktop)
+      return await window.paintwardenDesktop.saveBackup({ filename, authorization: headers.authorization });
     const response = await fetch("/api/backup", { headers });
     if (!response.ok) throw new Error(i18n.t("shell:exportFailed"));
     const blob = await response.blob();

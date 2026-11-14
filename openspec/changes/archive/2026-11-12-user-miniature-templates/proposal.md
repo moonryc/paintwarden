@@ -1,6 +1,6 @@
 ## Why
 
-Installed plugins provide miniature templates for starting projects, but painters also need to save a reusable model of their own. A dedicated template library makes installed templates discoverable and lets people reuse their own miniature setup. Paint Vault bundles no catalog; plugin installation is optional.
+Installed plugins provide miniature templates for starting projects, but painters also need to save a reusable model of their own. A dedicated template library makes installed templates discoverable and lets people reuse their own miniature setup. Paintwarden bundles no catalog; plugin installation is optional.
 
 ## What Changes
 

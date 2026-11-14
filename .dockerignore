@@ -2,10 +2,10 @@
 dist
 .nx
 data
-apps/paint-vault/dist
+apps/paintwarden/dist
 node_modules
 **/node_modules
-apps/paint-vault-electron/desktop-server
+apps/paintwarden-electron/desktop-server
 npm-debug.log*
 .env*
 .agents

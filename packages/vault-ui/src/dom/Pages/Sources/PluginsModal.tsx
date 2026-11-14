@@ -9,7 +9,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import { translateServerError } from "@paint-vault/i18n/runtime";
+import { translateServerError } from "@paintwarden/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 

@@ -64,7 +64,7 @@ export function inspectBackup(bytes) {
   const files = unzipSync(new Uint8Array(bytes));
   assert.ok(files["backup.json"], "Production export must be a real backup ZIP");
   const manifest = JSON.parse(strFromU8(files["backup.json"]));
-  assert.equal(manifest.format, "paint-vault-backup");
+  assert.equal(manifest.format, "paintwarden-backup");
   assert.ok(manifest.tables.paints.length);
   assert.ok(!Object.keys(manifest.tables).some((key) => /account|session|password/i.test(key)));
   const images = Object.fromEntries(
@@ -327,9 +327,9 @@ export async function runPhase5Scenario({ page, recorder, evidenceDir, label, ba
       await dialog.locator('input[type="file"]').setInputFiles(pluginFile);
       const installed = await response;
       await assertResponseStatus(installed, 200);
-      await dialog.getByText("Paint Vault demo plugin", { exact: true }).waitFor();
+      await dialog.getByText("Paintwarden demo plugin", { exact: true }).waitFor();
       const { sources } = await request(page, "/api/catalog-sources");
-      const source = sources.find((s) => s.name === "Paint Vault demo plugin");
+      const source = sources.find((s) => s.name === "Paintwarden demo plugin");
       assert.deepEqual(source.counts, { paints: 8, schemes: 2, templates: 1 });
       sourceId = source.id;
       await dialog.getByRole("button", { name: "Close", exact: true }).first().click();
@@ -423,8 +423,8 @@ export async function runPhase5Scenario({ page, recorder, evidenceDir, label, ba
       await nav(page, "Data & settings");
       await page.getByRole("button", { name: "Manage plugins", exact: true }).click();
       const plugins = page.getByRole("dialog", { name: "Plugins", exact: true });
-      await plugins.getByRole("button", { name: "Remove Paint Vault demo plugin", exact: true }).click();
-      const removal = page.getByRole("dialog", { name: "Remove Paint Vault demo plugin?", exact: true });
+      await plugins.getByRole("button", { name: "Remove Paintwarden demo plugin", exact: true }).click();
+      const removal = page.getByRole("dialog", { name: "Remove Paintwarden demo plugin?", exact: true });
       const response = page.waitForResponse(
         (r) => new URL(r.url()).pathname === "/api/catalog-sources" && r.request().method() === "DELETE",
       );
@@ -432,7 +432,7 @@ export async function runPhase5Scenario({ page, recorder, evidenceDir, label, ba
       const removed = await response;
       await assertResponseStatus(removed, 200);
       await removal.waitFor({ state: "hidden" });
-      await plugins.getByText("Paint Vault demo plugin", { exact: true }).waitFor({ state: "hidden" });
+      await plugins.getByText("Paintwarden demo plugin", { exact: true }).waitFor({ state: "hidden" });
       await plugins.getByRole("button", { name: "Close", exact: true }).first().click();
       await librarySearch(page, "Harbor Blue", false, recorder);
       return { uiRemoved: true, cachedLibraryUpdated: true };
@@ -468,7 +468,7 @@ export async function runPhase5Scenario({ page, recorder, evidenceDir, label, ba
         mark,
       );
       const { sources } = await request(page, "/api/catalog-sources");
-      const id = sources.find((s) => s.name === "Paint Vault demo plugin").id;
+      const id = sources.find((s) => s.name === "Paintwarden demo plugin").id;
       const removalMark = recorder.mark();
       await external(`/api/catalog-sources?id=${encodeURIComponent(id)}`, "DELETE");
       await recorder.waitFor(

@@ -15,31 +15,31 @@ const mode = process.argv[2];
 const baselineRef = "e1f345a";
 if (mode === "baseline") {
   const evidence = path.resolve(
-    process.argv[3] ?? mkdtempSync(path.join(tmpdir(), "paint-vault-phase3-bundle-")),
+    process.argv[3] ?? mkdtempSync(path.join(tmpdir(), "paintwarden-phase3-bundle-")),
   );
   mkdirSync(evidence, { recursive: true });
-  const tree = mkdtempSync(path.join(tmpdir(), "paint-vault-phase2-bundle-"));
+  const tree = mkdtempSync(path.join(tmpdir(), "paintwarden-phase2-bundle-"));
   const archive = spawnSync("git", ["archive", baselineRef], { cwd: root, maxBuffer: 64 * 1024 * 1024 });
   assert.equal(archive.status, 0, archive.stderr.toString());
   const unpack = spawnSync("tar", ["-xf", "-", "-C", tree], { input: archive.stdout });
   assert.equal(unpack.status, 0, unpack.stderr.toString());
   // Dependency packages are read-only inputs. Local workspace imports must resolve
-  // to archived sources, never the evolving shared workspace's @paint-vault links.
+  // to archived sources, never the evolving shared workspace's @paintwarden links.
   const dependencies = path.join(tree, "node_modules");
   mkdirSync(dependencies);
   for (const name of readdirSync(path.join(root, "node_modules"))) {
     // Never link Vite/cache output directories: this build owns its scratch files.
-    if (name === "@paint-vault" || name.startsWith(".")) continue;
+    if (name === "@paintwarden" || name.startsWith(".")) continue;
     symlinkSync(path.join(root, "node_modules", name), path.join(dependencies, name));
   }
-  mkdirSync(path.join(dependencies, "@paint-vault"));
-  for (const name of readdirSync(path.join(root, "node_modules/@paint-vault"))) {
+  mkdirSync(path.join(dependencies, "@paintwarden"));
+  for (const name of readdirSync(path.join(root, "node_modules/@paintwarden"))) {
     const pkg = name === "core" ? "paint-core" : name === "ui" ? "vault-ui" : null;
     assert.ok(pkg, `Unexpected workspace dependency ${name}; explicitly map its archived source`);
-    symlinkSync(path.join(tree, "packages", pkg), path.join(dependencies, "@paint-vault", name));
+    symlinkSync(path.join(tree, "packages", pkg), path.join(dependencies, "@paintwarden", name));
   }
   // npm can retain workspace-specific dependency versions below a package.
-  for (const workspace of ["apps/paint-vault-web", "packages/vault-ui", "packages/paint-core"]) {
+  for (const workspace of ["apps/paintwarden-web", "packages/vault-ui", "packages/paint-core"]) {
     const source = path.join(root, workspace, "node_modules");
     try {
       symlinkSync(source, path.join(tree, workspace, "node_modules"));
@@ -50,10 +50,10 @@ if (mode === "baseline") {
   // Vite bundles config into root node_modules/.vite-temp; its app-local plugin
   // must therefore also be visible at the isolated dependency root.
   symlinkSync(
-    path.join(root, "apps/paint-vault-web/node_modules/vite-plugin-react-click-to-component"),
+    path.join(root, "apps/paintwarden-web/node_modules/vite-plugin-react-click-to-component"),
     path.join(dependencies, "vite-plugin-react-click-to-component"),
   );
-  const dist = path.join(tree, "apps/paint-vault-web/dist");
+  const dist = path.join(tree, "apps/paintwarden-web/dist");
   const env = { ...process.env, NODE_ENV: "production" };
   delete env.VITE_GRAPHQL_LIBRARY_DEBUG;
   delete env.DATA_DIR;
@@ -62,7 +62,7 @@ if (mode === "baseline") {
     process.execPath,
     [path.join(root, "node_modules/vite/bin/vite.js"), "build", "--emptyOutDir"],
     {
-      cwd: path.join(tree, "apps/paint-vault-web"),
+      cwd: path.join(tree, "apps/paintwarden-web"),
       env,
       encoding: "utf8",
       timeout: 240000,

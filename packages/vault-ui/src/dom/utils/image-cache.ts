@@ -4,11 +4,11 @@
 let scope = "";
 
 export function rememberImageScope(response: Response) {
-  scope = response.headers.get("x-paint-vault-image-scope") ?? "";
+  scope = response.headers.get("x-paintwarden-image-scope") ?? "";
 }
 
 export function imageUrl(source: string): string {
-  if (typeof location === "undefined" || location.protocol !== "paintvault:" || !scope) return source;
+  if (typeof location === "undefined" || location.protocol !== "paintwarden:" || !scope) return source;
   if (
     !/^\/api\/(?:miniatures\/[^/]+\/image|miniature-templates\/[^/]+\/image|catalog-source-(?:images|logos)\/[^/?]+)(?:\?|$)/.test(
       source,

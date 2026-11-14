@@ -1,4 +1,4 @@
-// Run from apps/paint-vault using Node 22.22.2 --import tsx.
+// Run from apps/paintwarden using Node 22.22.2 --import tsx.
 import assert from "node:assert/strict";
 import { cp, mkdir, mkdtemp, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
@@ -12,7 +12,7 @@ const fixture = JSON.parse(await readFile(path.join(evidence, "photo-fixture.jso
 const directory = await mkdtemp(path.join(os.tmpdir(), "paint-thumbnails-cpu-"));
 process.env.DATA_DIR = directory;
 delete process.env.DATABASE_PATH;
-const { imageResponse } = await import("../apps/paint-vault/lib/image-store.ts");
+const { imageResponse } = await import("../apps/paintwarden/lib/image-store.ts");
 await mkdir(path.join(directory, "images"));
 const cases = [];
 let originalBytes = 0;
@@ -60,7 +60,7 @@ assert.equal(
   measuredBytes.reduce((a, b) => a + b, 0),
   originalBytes + derivedBytes,
 );
-const sharp = createRequire(new URL("../apps/paint-vault/lib/image-store.ts", import.meta.url))("sharp");
+const sharp = createRequire(new URL("../apps/paintwarden/lib/image-store.ts", import.meta.url))("sharp");
 const result = {
   codec: { sharp: sharp.versions.sharp, vips: sharp.versions.vips, webp: sharp.versions.webp },
   measuredAt: new Date().toISOString(),

@@ -83,7 +83,7 @@ Focused commands (Node 22.22.2):
 ```sh
 node --import tsx --test packages/vault-ui/src/dom/graphql/miniature-list-loader.test.ts
 npm run codegen
-node scripts/nx.mjs typecheck @paint-vault/ui
+node scripts/nx.mjs typecheck @paintwarden/ui
 npm run storybook:test
 ```
 

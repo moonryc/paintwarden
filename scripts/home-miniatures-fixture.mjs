@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 
 // The host MUST create the isolated vault and owner before calling this helper.
 // Uses production commands (including an ordinary FK cascade to make an empty
-// substitution), so this works through HTTP, paintvault:// proxy, and Docker.
+// substitution), so this works through HTTP, paintwarden:// proxy, and Docker.
 // No caller-supplied filesystem paths or direct SQLite mutations are accepted.
 export async function seedHomeMiniaturesFixture(page, { miniatures = 360 } = {}) {
   assert.ok(Number.isInteger(miniatures) && miniatures >= 360 && miniatures <= 2000);

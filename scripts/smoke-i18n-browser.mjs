@@ -31,7 +31,7 @@ const server = launchOwned(
     'process.env.NODE_ENV="test";const {startServer}=await import("./server.mjs");process.env.NODE_ENV="production";await startServer();console.log("I18N_SMOKE_READY");',
   ],
   {
-    cwd: path.join(root, "apps/paint-vault/dist"),
+    cwd: path.join(root, "apps/paintwarden/dist"),
     env: {
       ...process.env,
       NODE_ENV: "production",
@@ -39,9 +39,9 @@ const server = launchOwned(
       DATABASE_PATH: "",
       HOST: "127.0.0.1",
       PORT: String(port),
-      WEB_DIST: path.join(root, "apps/paint-vault-web/dist"),
-      PAINT_VAULT_ALLOWED_HOSTS: "",
-      PAINT_VAULT_DISABLE_UPDATES: "1",
+      WEB_DIST: path.join(root, "apps/paintwarden-web/dist"),
+      PAINTWARDEN_ALLOWED_HOSTS: "",
+      PAINTWARDEN_DISABLE_UPDATES: "1",
     },
   },
   path.join(evidence, "browser-server.log"),
@@ -146,7 +146,7 @@ try {
     await page.getByRole("option", { name, exact: true }).waitFor({ state: "hidden" });
     current = code;
     await page.waitForFunction((language) => document.documentElement.lang === language, code);
-    assert.equal(await page.evaluate(() => localStorage.getItem("paint-vault-language")), code);
+    assert.equal(await page.evaluate(() => localStorage.getItem("paintwarden-language")), code);
     const dictionary = await translationDictionary(code);
     await record(code, "settings", dictionary);
     await page.getByRole("button", { name: catalogs[code].pages.settingsManagePlugins, exact: true }).click();

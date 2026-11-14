@@ -1,4 +1,4 @@
-import { translateServerError } from "@paint-vault/i18n/runtime";
+import { translateServerError } from "@paintwarden/i18n/runtime";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 

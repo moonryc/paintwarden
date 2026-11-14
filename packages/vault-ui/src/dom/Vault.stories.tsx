@@ -225,7 +225,7 @@ export const OwnerSetupLandmark: Story = {
   play: async ({ canvasElement }) => {
     const main = await within(canvasElement).findByRole("main");
     await expect(
-      await within(main).findByRole("heading", { level: 1, name: "Set up Paint Vault" }),
+      await within(main).findByRole("heading", { level: 1, name: "Set up Paintwarden" }),
     ).toBeInTheDocument();
     await expect(within(main).getByRole("button", { name: "Create account" })).toBeInTheDocument();
   },
@@ -247,7 +247,7 @@ export const LoginLandmark: Story = {
   play: async ({ canvasElement }) => {
     const main = await within(canvasElement).findByRole("main");
     await expect(
-      await within(main).findByRole("heading", { level: 1, name: "Sign in to Paint Vault" }),
+      await within(main).findByRole("heading", { level: 1, name: "Sign in to Paintwarden" }),
     ).toBeInTheDocument();
     await expect(within(main).getByRole("button", { name: "Sign in" })).toBeInTheDocument();
   },

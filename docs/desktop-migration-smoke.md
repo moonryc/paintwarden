@@ -1,11 +1,11 @@
 # Electron migration smoke check
 
 Tested October 30, 2026, about 16:35 CDT on macOS arm64. The tested bundle was
-`dist/electron/mac-arm64/Paint Vault.app`; its `Contents/Resources/app.asar` SHA-256 is
+`dist/electron/mac-arm64/Paintwarden.app`; its `Contents/Resources/app.asar` SHA-256 is
 `d22a066763252664e5e7944720ef07ad92836c923cb77b737582c790a9829759`.
 The packaged DMG and ZIP were produced unsigned. The desktop app used
-`PAINT_VAULT_DESKTOP_DATA_DIR` under `/private/tmp`, and the separate web/server fixture used
-`/private/tmp/paint-vault-migration-check` on `127.0.0.1:3387`. No original vault data was used.
+`PAINTWARDEN_DESKTOP_DATA_DIR` under `/private/tmp`, and the separate web/server fixture used
+`/private/tmp/paintwarden-migration-check` on `127.0.0.1:3387`. No original vault data was used.
 
 | Native check | Status | Evidence or remaining work |
 | --- | --- | --- |
@@ -45,14 +45,14 @@ This creates isolated desktop data directories and runs an actual backup and sch
 with a synchronous 45-second test delay **each**, verifies the localized updating screen,
 checks the untouched recovery database, quits and relaunches, deliberately fails a backup,
 exercises Retry and the logs-folder IPC, and verifies that Quit waits for protected work.
-The fault-injection hook requires both `PAINT_VAULT_TEST_STARTUP=1` and
-`PAINT_VAULT_TEST_STARTUP_DELAY_MS`; it is bounded at two minutes per operation and is ignored
+The fault-injection hook requires both `PAINTWARDEN_TEST_STARTUP=1` and
+`PAINTWARDEN_TEST_STARTUP_DELAY_MS`; it is bounded at two minutes per operation and is ignored
 without explicit opt-in. Never set these variables for a personal vault.
 
 Electron now retains child stdout/stderr in its application logs directory as
 `vault-server.log`, rotating at 2 MiB with three older files (8 MiB total). Files are private
 on Unix; logs can include the first-run owner setup code, recovery paths and server diagnostics,
-so review/redact before sharing. Isolated `PAINT_VAULT_DESKTOP_DATA_DIR` profiles keep logs at
+so review/redact before sharing. Isolated `PAINTWARDEN_DESKTOP_DATA_DIR` profiles keep logs at
 `electron/logs` within that directory. The startup error screen offers **Open logs folder**
 and **Retry** without exposing raw paths/errors in the renderer.
 
