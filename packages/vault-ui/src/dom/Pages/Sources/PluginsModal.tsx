@@ -476,7 +476,13 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         aria-busy={sourceRead.loading || sourceRead.refreshing}
         data-loading-section="installed-plugins"
         data-skeleton={initialLoading ? "installed-plugins" : undefined}
-        sx={{ minWidth: 0, minHeight: "24rem", overflowWrap: "anywhere" }}
+        sx={{
+          minWidth: 0,
+          height: "24rem",
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          overflowWrap: "anywhere",
+        }}
       >
         {initialLoading ? (
           <Box aria-hidden sx={{ display: "grid", gap: 1.5 }}>
