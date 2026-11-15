@@ -13,6 +13,8 @@ export function observePluginInstall(
   onDisconnected: () => void,
 ) {
   let disposed = false;
+  let initialSnapshot = true;
+  let acceptedId: string | null = null;
   // The server immediately replays its latest snapshot, including null and terminal
   // jobs, on every connection. A duplicate latest-job HTTP query adds no recovery
   // guarantee and would consume ordinary operation slots/rate budgets during edits.
@@ -21,7 +23,14 @@ export function observePluginInstall(
     .subscribe({
       next(result) {
         if (disposed || !result.data || !("pluginInstallProgress" in result.data)) return;
-        onJob(result.data.pluginInstallProgress ?? null);
+        const next = result.data.pluginInstallProgress ?? null;
+        if (initialSnapshot) {
+          initialSnapshot = false;
+          // Initial replay can already be in transit when REST accepts a new job.
+          // Ignore that one older snapshot, not later authoritative server replay.
+          if (acceptedId && next?.id !== acceptedId) return;
+        }
+        onJob(next);
       },
       error() {
         if (!disposed) onDisconnected();
@@ -32,7 +41,10 @@ export function observePluginInstall(
     });
   return {
     accept(job: PluginInstallJob) {
-      if (!disposed) onJob(job);
+      if (!disposed) {
+        acceptedId = job.id;
+        onJob(job);
+      }
     },
     dispose() {
       disposed = true;

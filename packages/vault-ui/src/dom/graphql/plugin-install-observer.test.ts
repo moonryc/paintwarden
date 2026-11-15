@@ -295,3 +295,21 @@ void test(
     assert.deepEqual(scope.client.cache.extract(), {});
   },
 );
+
+for (const stale of [null, job("SUCCEEDED", "previous-job"), job("READING", "previous-job")]) {
+  void test(`REST acceptance supersedes an in-flight initial ${stale?.stage ?? "null"} snapshot`, (t) => {
+    const source = harness();
+    const seen: (PluginInstallJob | null)[] = [];
+    const observation = observePluginInstall(source.client, (value) => seen.push(value), assert.fail);
+    t.after(() => {
+      observation.dispose();
+      source.client.stop();
+    });
+    observation.accept(job("READING", "new-job"));
+    source.stream(stale);
+    assert.deepEqual(seen, [job("READING", "new-job")]);
+    source.stream(job("IMAGES", "new-job"));
+    source.stream(null); // A later authoritative null (e.g. server restart) still clears state.
+    assert.deepEqual(seen, [job("READING", "new-job"), job("IMAGES", "new-job"), null]);
+  });
+}

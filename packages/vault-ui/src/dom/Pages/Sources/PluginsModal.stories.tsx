@@ -16,16 +16,33 @@ function PluginsStory({
   onClose,
   onOperation,
   job,
+  deferBackgroundResult,
 }: {
   mode: SourcesFixtureMode;
   delay?: number;
   onClose(): void;
   onOperation(name: string): void;
   job?: PluginInstallJob;
+  deferBackgroundResult?: boolean;
 }) {
   const [open, setOpen] = useState(true);
+  const [background] = useState(() => {
+    if (!deferBackgroundResult) return null;
+    let release!: () => void;
+    const promise = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    return { promise, release };
+  });
   return (
-    <SourcesApolloFixture mode={mode} delay={delay} onOperation={onOperation} job={job}>
+    <SourcesApolloFixture
+      mode={mode}
+      delay={delay}
+      onOperation={onOperation}
+      job={job}
+      beforeBackgroundResult={background ? () => background.promise : undefined}
+    >
+      {background ? <Button onClick={background.release}>Release automatic update response</Button> : null}
       {open ? (
         <PluginsModal
           onClose={() => {
@@ -217,5 +234,25 @@ export const ReloadedRunningJob: Story = {
     await userEvent.keyboard("{Escape}");
     await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
     await expect(body.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+  },
+};
+
+export const LateAutomaticUpdateResult: Story = {
+  args: { deferBackgroundResult: true },
+  play: async ({ args, canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(args.onOperation).toHaveBeenCalledWith("BackgroundInstallDecodeStarted"));
+    const fileInput = canvasElement.ownerDocument.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!fileInput) throw new Error("Missing plugin ZIP input");
+    await userEvent.upload(fileInput, new File(["fixture"], "plugin.zip", { type: "application/zip" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
+    await expect(await body.findByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+    await userEvent.click(body.getByRole("button", { name: "Release automatic update response" }));
+    await waitFor(() => expect(args.onOperation).toHaveBeenCalledWith("BackgroundInstallResult"));
+    await userEvent.click(body.getByRole("button", { name: "Open Plugins" }));
+    await waitForDialogEntered(await body.findByRole("dialog", { name: "Plugins" }));
+    await expect(body.getByText("An installation is already running.")).toBeVisible();
+    await expect(body.getByRole("button", { name: "Cancel installation" })).toBeEnabled();
+    await expect(body.getByRole("button", { name: "Add plugin" })).toBeDisabled();
   },
 };

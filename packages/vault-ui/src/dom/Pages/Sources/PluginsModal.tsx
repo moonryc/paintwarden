@@ -125,7 +125,10 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
       if (!response.ok || !mounted.current) return;
       const result = (await response.json()) as { job?: PluginInstallJob };
-      if (result.job) installation.acceptJob(result.job);
+      // Decoding may finish after a ZIP/URL submission closed this dialog or
+      // a newer job arrived. An old automatic refresh ack must not replace it.
+      if (result.job && mounted.current && !isPluginInstallActive(latestJob.current))
+        installation.acceptJob(result.job);
     })().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceRead.loading, sourceRead.error]);

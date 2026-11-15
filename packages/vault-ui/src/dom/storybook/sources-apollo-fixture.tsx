@@ -31,6 +31,7 @@ export function SourcesApolloFixture({
   onOperation = () => {},
   job = null,
   startedJob,
+  beforeBackgroundResult,
 }: {
   children: ReactNode;
   mode?: SourcesFixtureMode;
@@ -38,6 +39,7 @@ export function SourcesApolloFixture({
   onOperation?: (name: string) => void;
   job?: PluginInstallJob | null;
   startedJob?: PluginInstallJob;
+  beforeBackgroundResult?: () => Promise<void>;
 }) {
   const [scope] = useState(() => {
     const controller = new VaultInvalidationController();
@@ -103,8 +105,8 @@ export function SourcesApolloFixture({
     const original = window.fetch;
     window.fetch = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input), location.origin);
-      if (url.pathname === "/api/catalog-sources")
-        return Response.json({
+      if (url.pathname === "/api/catalog-sources") {
+        const response = Response.json({
           job:
             init?.method === "POST"
               ? (startedJob ?? {
@@ -130,6 +132,17 @@ export function SourcesApolloFixture({
                   errorParameters: [],
                 },
         });
+        if (init?.method === "PUT" && beforeBackgroundResult) {
+          const decode = response.json.bind(response);
+          response.json = async () => {
+            onOperation("BackgroundInstallDecodeStarted");
+            await beforeBackgroundResult();
+            onOperation("BackgroundInstallResult");
+            return decode();
+          };
+        }
+        return response;
+      }
       if (url.pathname === "/api/version") return Response.json({ version: "story-fixture" });
       throw new Error(`Unexpected source story request: ${url.pathname} (${init?.method ?? "GET"})`);
     };
