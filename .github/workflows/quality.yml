@@ -42,12 +42,18 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        with:
+          xcode-version: latest-stable
+      - run: xcrun actool --version
       - run: npm ci
       - run: npm run notices:check
       - run: npm run typecheck
       - run: npm run build
       - run: node scripts/package-desktop-server.mjs electron
       - run: npm run dist --workspace paintwarden-electron -- --dir --publish never
+      - name: Verify ad-hoc macOS signature and Gatekeeper rejection (not damage)
+        run: node scripts/check-mac-signature.mjs "$(find dist/electron -type d -name '*.app' -maxdepth 3 -print -quit)" --adhoc
       - name: Verify packaged macOS notices and dynamic libvips
         run: node scripts/check-notice-artifact.mjs --resources "$(find dist/electron -type d -path '*.app/Contents/Resources' -print -quit)"
       - run: npm run e2e:native

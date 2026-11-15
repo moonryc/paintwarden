@@ -176,7 +176,7 @@ for (const releaseVersion of ["1.0.0-beta.1", "1.0.0"]) {
         require(${JSON.stringify(require.resolve("./package.json"))}).version = ${JSON.stringify(releaseVersion)};
         const config = require(${JSON.stringify(require.resolve("./electron-builder.cjs"))});
         console.log(JSON.stringify({ force: config.forceCodeSigning, mac: config.mac,
-          discovery: process.env.CSC_IDENTITY_AUTO_DISCOVERY, name: process.env.CSC_NAME,
+          link: process.env.CSC_LINK, discovery: process.env.CSC_IDENTITY_AUTO_DISCOVERY, name: process.env.CSC_NAME,
           winLink: process.env.WIN_CSC_LINK, winPassword: process.env.WIN_CSC_KEY_PASSWORD,
           channel: config.publish[0].channel, fanout: config.generateUpdatesFilesForAllChannels }));
       `,
@@ -186,6 +186,8 @@ for (const releaseVersion of ["1.0.0-beta.1", "1.0.0"]) {
         assert.equal(child.status, 0, child.stderr);
         const config = JSON.parse(child.stdout.trim().split("\n").at(-1));
         assert.equal(config.force, signed);
+        if (platform === "darwin")
+          assert.equal(config.link, signed ? "synthetic-MAC_CERTIFICATE_P12_BASE64" : undefined);
         assert.equal(config.discovery, signed && platform === "darwin" ? "true" : "false");
         assert.equal(config.name, "");
         assert.equal(
@@ -200,7 +202,7 @@ for (const releaseVersion of ["1.0.0-beta.1", "1.0.0"]) {
         assert.equal(config.fanout, false);
         if (platform === "darwin") {
           assert.equal(config.mac.notarize, signed);
-          assert.equal(config.mac.identity, signed ? undefined : null);
+          assert.equal(config.mac.identity, signed ? undefined : "-");
         }
       });
     }
@@ -274,5 +276,23 @@ test("locked Windows builder receives the selected certificate and password, nev
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
     }
+  }
+});
+
+test("locked Mac builder resolves explicit ad-hoc identity with discovery disabled", async () => {
+  require("app-builder-lib");
+  const { MacTargetHelper } = require("app-builder-lib/out/mac/MacTargetHelper");
+  const previous = process.env.CSC_IDENTITY_AUTO_DISCOVERY;
+  try {
+    process.env.CSC_IDENTITY_AUTO_DISCOVERY = "false";
+    const helper = new MacTargetHelper({ forceCodeSigning: false });
+    const identity = await helper.findSigningIdentity(false, false, "-", undefined, {
+      hardenedRuntime: true,
+    });
+    assert.equal(identity.name, "-");
+    assert.equal(identity.hash, undefined);
+  } finally {
+    if (previous === undefined) delete process.env.CSC_IDENTITY_AUTO_DISCOVERY;
+    else process.env.CSC_IDENTITY_AUTO_DISCOVERY = previous;
   }
 });

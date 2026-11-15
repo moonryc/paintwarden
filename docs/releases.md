@@ -64,7 +64,7 @@ may not support a newer vault's schema. See [data compatibility](data-compatibil
 
 ## Signing (optional, complete sets only)
 
-The default is **unsigned**, with no signing-secret failure. Partial credential
+The default is **unsigned** (properly ad-hoc-signed on macOS), with no signing-secret failure. Partial credential
 sets also deliberately produce unsigned builds. Check the packaging log before
 sharing a build as signed. Invalid complete credentials fail signing rather than
 silently downgrading security. Signed paths require a real release acceptance test;
@@ -90,6 +90,36 @@ signing is required. Ambient identity names/Windows certificate aliases are clea
 or replaced with the selected credentials, so unrelated local credentials cannot
 silently change the chosen policy.
 The current Mac artifact targets Apple silicon; Windows targets x64.
+
+Unsigned Mac builds explicitly use builder's `mac.identity: "-"`, rather than leaving
+Electron's stale linker signature after modifying the bundle. Builder signs native
+server binaries, addons, dylibs, frameworks and helpers inside-out with the existing
+hardened-runtime entitlements, then seals the app. Ad-hoc signing proves bundle
+integrity, **not** developer identity or notarization. The signed credential path
+still requires Developer ID signing and notarization; no failure falls back to ad-hoc.
+The after-sign hook and Quality CI require `codesign --verify --deep --strict`,
+non-linker signatures/hardened runtime on every Mach-O, V8/native-loading entitlements,
+and an explicit Gatekeeper `rejected` assessment for ad-hoc apps (never damaged).
+Notices and the separate dynamically loaded libvips are checked again after signing.
+Release CI additionally copies the app from a quarantined DMG to a temporary folder,
+quarantines that copy, repeats signature/notices checks, launches it with an isolated
+profile, and checks the ZIP copy too. Because an ad-hoc app is intentionally
+rejected until a user grants Open Anyway consent, automation removes quarantine
+**only from its already-verified disposable copy** before the runtime smoke. This
+is not evidence of user consent or notarization; no system-wide policy is changed. Reproduce with:
+
+```sh
+node scripts/check-mac-signature.mjs dist/electron/mac-arm64/Paintwarden.app --adhoc
+node scripts/check-mac-installers.mjs dist/electron
+```
+
+Mac packaging requires Xcode 26+ (`xcrun actool --version`) for the modern Icon Composer
+`build/icon.icon`. It compiles to Assets.car, preventing macOS 26/27 from placing the
+legacy artwork in an unwanted light container. A complete legacy `.icns` is installed
+before signing for older macOS, Finder and the DMG. CI selects current stable Xcode;
+missing/old tooling fails packaging rather than silently shipping the wrong icon.
+See [desktop icons](icons.md) for regeneration and pixel checks.
+
 
 Unsigned friends-and-family builds may require macOS **Privacy & Security → Open
 Anyway**, or Windows SmartScreen **More info → Run anyway**. Do not tell testers to

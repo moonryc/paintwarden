@@ -50,6 +50,12 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: npm
+      - uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1.7.0
+        if: runner.os == 'macOS'
+        with:
+          xcode-version: latest-stable
+      - if: runner.os == 'macOS'
+        run: xcrun actool --version
       - run: npm ci
       - run: npm run notices:check
       - run: npm run build
@@ -70,6 +76,11 @@ jobs:
           WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
       - name: Verify exact beta metadata, release notes and installer checksums
         run: node scripts/check-release-artifacts.mjs dist/electron
+      - name: Verify quarantined macOS DMG and ZIP and launch isolated DMG copy
+        if: runner.os == 'macOS'
+        run: node scripts/check-mac-installers.mjs dist/electron
+        env:
+          E2E_ARTIFACTS_DIR: outputs/native-release/installers
       # afterPack checks physical notices and native libraries before installers are built.
       - run: npm run e2e:native
         env:

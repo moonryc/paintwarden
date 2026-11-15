@@ -1,0 +1,21 @@
+{
+  "fill": {
+    "solid": "srgb:0.17255,0.17255,0.17255,1.00000"
+  },
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "PaintPot.svg",
+          "name": "Paint pot"
+        }
+      ],
+      "name": "Paint pot"
+    }
+  ],
+  "supported-platforms": {
+    "squares": [
+      "macOS"
+    ]
+  }
+}
