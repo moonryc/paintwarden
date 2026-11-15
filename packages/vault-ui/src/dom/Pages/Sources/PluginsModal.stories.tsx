@@ -1,10 +1,12 @@
+import { ApolloLink, Observable } from "@apollo/client";
 import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
+import { useLayoutEffect, useState, type ReactNode } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { PluginInstallStatus } from "../../graphql/plugin-install-hooks";
 import type { PluginInstallJob } from "../../graphql/plugin-install-observer";
+import { useVaultGraphQL } from "../../graphql/provider";
 import { waitForDialogEntered } from "../../storybook/dialog";
 import { SourcesApolloFixture, type SourcesFixtureMode } from "../../storybook/sources-apollo-fixture";
 
@@ -17,6 +19,7 @@ function PluginsStory({
   onOperation,
   job,
   deferBackgroundResult,
+  installedGate,
 }: {
   mode: SourcesFixtureMode;
   delay?: number;
@@ -24,6 +27,7 @@ function PluginsStory({
   onOperation(name: string): void;
   job?: PluginInstallJob;
   deferBackgroundResult?: boolean;
+  installedGate?: Promise<void>;
 }) {
   const [open, setOpen] = useState(true);
   const [background] = useState(() => {
@@ -42,23 +46,53 @@ function PluginsStory({
       job={job}
       beforeBackgroundResult={background ? () => background.promise : undefined}
     >
-      {background ? <Button onClick={background.release}>Release automatic update response</Button> : null}
-      {open ? (
-        <PluginsModal
-          onClose={() => {
-            onClose();
-            setOpen(false);
-          }}
-        />
-      ) : (
-        <>
-          <PluginInstallStatus compact />
-          <Button onClick={() => setOpen(true)}>Open Plugins</Button>
-        </>
-      )}
+      <HoldInstalledSources until={installedGate}>
+        {background ? <Button onClick={background.release}>Release automatic update response</Button> : null}
+        {open ? (
+          <PluginsModal
+            onClose={() => {
+              onClose();
+              setOpen(false);
+            }}
+          />
+        ) : (
+          <>
+            <PluginInstallStatus compact />
+            <Button onClick={() => setOpen(true)}>Open Plugins</Button>
+          </>
+        )}
+      </HoldInstalledSources>
     </SourcesApolloFixture>
   );
 }
+// A deterministic list gate keeps form controls testable before the first accepted read.
+function HoldInstalledSources({ until, children }: { until?: Promise<void>; children: ReactNode }) {
+  const scope = useVaultGraphQL();
+  useLayoutEffect(() => {
+    if (!scope || !until) return;
+    const original = scope.client.link;
+    const gate = new ApolloLink((operation, forward) => {
+      if (operation.operationName !== "InstalledSources") return forward(operation);
+      return new Observable((observer) => {
+        let active = true;
+        let cancel = () => {};
+        void until.then(() => {
+          if (!active) return;
+          const subscription = forward(operation).subscribe(observer);
+          cancel = () => subscription.unsubscribe();
+        });
+        return () => {
+          active = false;
+          cancel();
+        };
+      });
+    });
+    scope.client.setLink(ApolloLink.from([gate, original]));
+    return () => scope.client.setLink(original);
+  }, [scope, until]);
+  return children;
+}
+
 const meta = {
   title: "Dialogs/Plugins",
   component: PluginsStory,
@@ -90,18 +124,48 @@ export const Empty: Story = {
 };
 export const Loading: Story = {
   args: { delay: 750 },
-  play: async ({ canvasElement }) => {
+  play: async ({ mount, args, canvasElement }) => {
+    const listRead = Promise.withResolvers<void>();
+    await mount(<PluginsStory {...args} delay={0} installedGate={listRead.promise} />);
     const body = within(canvasElement.ownerDocument.body);
-    const dialog = await body.findByRole("dialog", { name: "Plugins" });
-    await expect(await within(dialog).findByRole("status")).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.ownerDocument.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "plugins");
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(dialog).toContainElement(skeletons[0] as HTMLElement);
-    await expect(body.queryByRole("textbox", { name: "GitHub repository" })).not.toBeInTheDocument();
-    await expect(await body.findByText("Example paint source")).toBeVisible();
-    await expect(canvasElement.ownerDocument.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    try {
+      const dialog = await body.findByRole("dialog", { name: "Plugins" });
+      await waitForDialogEntered(dialog);
+      await expect(within(dialog).getAllByRole("status")).toHaveLength(1);
+      await expect(within(dialog).getByRole("status")).toHaveAttribute("aria-live", "polite");
+      await waitFor(() => expect(within(dialog).getByRole("status")).toHaveTextContent("Loading"));
+      const installed = within(dialog).getByRole("region", { name: "Installed" });
+      await expect(installed).toHaveAttribute("aria-busy", "true");
+      await expect(installed).toHaveAttribute("data-skeleton", "installed-plugins");
+      const shell = [
+        within(dialog).getByRole("heading", { name: "Plugins" }),
+        within(dialog).getByRole("textbox", { name: "GitHub repository" }),
+        within(dialog).getByRole("button", { name: "Add plugin" }),
+        within(dialog).getByRole("button", { name: "Upload .zip" }),
+        within(dialog).getByRole("heading", { name: "Installed" }),
+        within(dialog).getByRole("button", { name: "Create plugin" }),
+      ];
+      shell.forEach((node) => expect(node).toBeVisible());
+      const positions = shell.map((node) => node.getBoundingClientRect().toJSON());
+      const placeholder = installed.querySelector(".MuiCard-root")!.getBoundingClientRect().toJSON();
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+      listRead.resolve();
+      await expect(await body.findByText("Example paint source")).toBeVisible();
+      await waitFor(() => expect(installed).toHaveAttribute("aria-busy", "false"));
+      await expect(dialog.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+      shell.forEach((node, index) => {
+        expect(node.isConnected).toBe(true);
+        const next = node.getBoundingClientRect();
+        for (const key of ["x", "y", "width", "height"] as const)
+          expect(next[key]).toBeCloseTo(positions[index][key], 0);
+      });
+      const card = body.getByText("Example paint source").closest(".MuiCard-root")!.getBoundingClientRect();
+      for (const key of ["x", "y", "width", "height"] as const)
+        await expect(card[key]).toBeCloseTo(placeholder[key], 0);
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    } finally {
+      listRead.resolve();
+    }
   },
 };
 export const ErrorAndRetry: Story = {

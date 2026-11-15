@@ -1,15 +1,17 @@
+import { gql, type TypedDocumentNode } from "@apollo/client";
 import {
-  Alert,
   Button,
   ButtonBase,
   Card,
   Checkbox,
   CircularProgress,
   MenuItem,
+  Skeleton,
+  useMediaQuery,
   TextField,
 } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AddChoiceDialog } from "../Components/AddChoiceDialog";
@@ -22,16 +24,17 @@ import { FolderPicker } from "../Components/FolderPicker";
 import type { FolderView } from "../Components/FolderTile";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
-import { PageSkeleton } from "../Components/PageSkeletons";
 import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SectionHeader } from "../Components/SectionHeader";
 import { SelectionBar } from "../Components/SelectionBar";
 import { tileControlSx } from "../Components/tile-control";
 import { useFolderBrowser } from "../graphql/folder-hooks";
 import { useFolderSearch } from "../graphql/folder-search-hooks";
-import { useMiniatureList } from "../graphql/miniature-list-hooks";
+import type { MiniatureListQuery } from "../graphql/generated/graphql";
+import { MiniatureFixtureContext, useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
 import { useVaultGraphQL } from "../graphql/provider";
+import { useRetainedQuery } from "../graphql/use-retained-query";
 import { Archive, SearchX } from "../icons";
 import { CreateMiniatureDialog } from "../Modals/CreateMiniatureDialog";
 import { useVaultStore } from "../store/hooks";
@@ -45,6 +48,114 @@ import { visuallyHiddenSx } from "../utils/visually-hidden";
 import { useInitialPageLoading } from "./useInitialPageLoading";
 
 const shelfTileSx = { width: "100%", height: "100%" };
+
+// Counts have their own small read: a slow grid/search must not block the Workbench summary.
+// The server caches the aggregate; no miniature fields or preview images are requested here.
+const workbenchSummaryDocument: TypedDocumentNode<
+  { home?: Pick<NonNullable<MiniatureListQuery["home"]>, "counts" | "revision"> },
+  { workbench: boolean; first: number; folderId: string | null }
+> = gql`
+  query MiniatureList($workbench: Boolean!, $first: Int!, $folderId: ID) {
+    home(first: $first, folderId: $folderId) @include(if: $workbench) {
+      revision {
+        epoch
+        seq
+      }
+      counts {
+        catalogCount
+        owned
+        ready
+        distinctMissingPaints
+        wishlistedMissingPaints
+        stages {
+          key
+          label
+          count
+        }
+      }
+    }
+  }
+`;
+
+type SummaryCounts = NonNullable<MiniatureListQuery["home"]>["counts"];
+function useWorkbenchSummary(enabled: boolean, folderId: string | null) {
+  const scope = useVaultGraphQL();
+  const { t } = useTranslation("shell");
+  const fixture = useContext(MiniatureFixtureContext);
+  const [state, setState] = useState<{
+    scope?: typeof scope;
+    folderId?: string | null;
+    counts?: SummaryCounts;
+    loading: boolean;
+    error: string;
+  }>({ loading: true, error: "" });
+  const retryRef = useRef(() => {});
+  useEffect(() => {
+    if (!enabled || fixture || !scope) return;
+    const abort = new AbortController();
+    let active = true;
+    let running = false;
+    let pending = false;
+    const refresh = async () => {
+      pending = true;
+      if (running) return;
+      running = true;
+      setState((previous) => ({ ...previous, loading: true, error: "" }));
+      try {
+        while (active && pending) {
+          pending = false;
+          const ticket = scope.controller.capture();
+          const { data } = await scope.client.query({
+            query: workbenchSummaryDocument,
+            variables: { workbench: true, first: 1, folderId },
+            fetchPolicy: "no-cache",
+            context: { fetchOptions: { signal: abort.signal }, queryDeduplication: false },
+          });
+          if (!active) return;
+          if (!data?.home) throw new Error(t("miniatureListResponseWasEmpty"));
+          if (!scope.controller.accepts(ticket, data.home.revision, ["HOME"])) {
+            pending = true;
+            continue;
+          }
+          setState({ scope, folderId, counts: data.home.counts, loading: false, error: "" });
+        }
+      } catch (error) {
+        if (active)
+          setState((previous) => ({
+            scope,
+            folderId,
+            counts: previous.scope === scope && previous.folderId === folderId ? previous.counts : undefined,
+            loading: false,
+            error: error instanceof Error ? error.message : t("miniatureRefreshFailed"),
+          }));
+      } finally {
+        running = false;
+      }
+    };
+    retryRef.current = () => void refresh();
+    const unsubscribe = scope.controller.listen(["HOME"], () => void refresh());
+    void refresh();
+    return () => {
+      active = false;
+      abort.abort();
+      unsubscribe();
+    };
+  }, [enabled, scope, fixture, folderId, t]);
+  const matches = state.scope === scope && state.folderId === folderId;
+  const retained = useRetainedQuery(
+    matches ? state.counts : null,
+    enabled && Boolean(scope) && (!matches || (state.loading && !state.error)),
+    scope,
+    folderId,
+  );
+  return {
+    counts: retained.data,
+    loading: !fixture && retained.loading,
+    refreshing: !fixture && retained.refreshing,
+    error: matches ? state.error : "",
+    retry: () => retryRef.current(),
+  };
+}
 
 export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const { t, i18n } = useTranslation("pages");
@@ -67,6 +178,9 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
     stage: workbench && stageFilter !== "ALL" ? stageFilter : undefined,
   });
   const hasMixedSearch = Boolean(useVaultGraphQL()) && Boolean(q);
+  const summary = useWorkbenchSummary(workbench, folderState.flat ? null : folderState.folderId);
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
+  const skeletonAnimation = reducedMotion ? false : "pulse";
   const browser = {
     ...folderState,
     visibleFolders: hasMixedSearch ? mixedSearch.folders : folderState.visibleFolders,
@@ -98,9 +212,6 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
     rows: listedProjects,
     statusCounts,
     stageCounts,
-    ready,
-    missingProjectPaints,
-    wishlistedMissingPaints,
     loading: listLoading,
     refreshing: listRefreshing,
     hasNextPage: listHasNextPage,
@@ -113,17 +224,30 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const loadMore = hasMixedSearch ? mixedSearch.loadMore : listLoadMore;
   const listError = hasMixedSearch ? mixedSearch.error : list.error;
   const retry = hasMixedSearch ? mixedSearch.retry : list.retry;
-  const initialLoading = useInitialPageLoading(loading, Boolean(listError));
-  const pct = list.owned ? (ready / list.owned) * 100 : 0;
+  const gridLoading = loading || (!browser.flat && browser.loading);
+  const initialLoading = useInitialPageLoading(
+    gridLoading || (workbench && summary.loading),
+    Boolean(listError || summary.error),
+  );
+  const shelfLoading = initialLoading && gridLoading;
+  const summaryLoading = workbench && initialLoading && summary.loading;
+  const collectionCount = summary.counts?.owned ?? list.collectionCount;
+  const ready = summary.counts?.ready ?? list.ready;
+  const missingProjectPaints = summary.counts?.distinctMissingPaints ?? list.missingProjectPaints;
+  const wishlistedMissingPaints = summary.counts?.wishlistedMissingPaints ?? list.wishlistedMissingPaints;
+  const pct = collectionCount ? (ready / collectionCount) * 100 : 0;
+  const workbenchStageCount = (stage: keyof typeof stageCounts) =>
+    stage === "ALL"
+      ? collectionCount
+      : (summary.counts?.stages.find((facet) => facet.key === stage)?.count ?? stageCounts[stage]);
   // The add tile leads the grid (not while searching), then folders, then miniatures.
-  const shelfItems: (MiniatureTileProjection | FolderView | null)[] = [
+  const shelfItems: (MiniatureTileProjection | FolderView | "loading" | null)[] = [
     ...(q ? [] : [null]),
-    ...browser.visibleFolders,
-    ...visibleProjects,
+    ...(shelfLoading ? Array.from({ length: 9 }, () => "loading" as const) : browser.visibleFolders),
+    ...(shelfLoading ? [] : visibleProjects),
   ];
   const hasQuery = Boolean(q);
-  const hasShelf =
-    visibleProjects.length > 0 || browser.visibleFolders.length > 0 || (!q && !loading && !listError);
+  const hasShelf = shelfLoading || visibleProjects.length > 0 || browser.visibleFolders.length > 0 || !q;
   const [adding, setAdding] = useState(false);
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
@@ -241,11 +365,12 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
     setShelfViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
     setPendingShelfFocus({ index, origin });
   };
-  if (initialLoading) return <PageSkeleton page={workbench ? "home" : "miniatures"} />;
   return (
     <Box
       component="div"
       sx={{
+        minWidth: 0,
+        overflowWrap: "anywhere",
         "& > :where(:not(:last-child))": { mb: 4 },
         [up.lg]: {
           "& > :where(:not(:last-child))": { mb: 5 },
@@ -257,12 +382,13 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
         title={workbench ? t("homeWorkbenchTitle") : t("homeMiniaturesTitle")}
         body={workbench ? t("homeWorkbenchBody") : t("homeMiniaturesBody")}
       />
-      {workbench && !loading && !listError && list.catalogCount === 0 && (
-        // A new vault has no catalog until a plugin is installed, so point there first.
-        <Alert severity="info">{t("homeEmptyLibrary")}</Alert>
-      )}
       {workbench && (
         <Card
+          component="section"
+          aria-label={t("homeWorkbenchTitle")}
+          aria-busy={summary.loading || summary.refreshing}
+          data-loading-section="workbench-summary"
+          data-skeleton={summaryLoading ? "workbench-summary" : undefined}
           sx={{
             boxSizing: "border-box",
             overflow: "hidden",
@@ -323,8 +449,8 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                 value={pct}
                 size="100%"
                 thickness={4.5}
-                color={ready && ready === list.owned ? "success" : "secondary"}
-                aria-label={t("homeReadyProjectsAria", { ready, total: list.collectionCount })}
+                color={ready && ready === collectionCount ? "success" : "secondary"}
+                aria-label={t("homeReadyProjectsAria", { ready, total: collectionCount })}
                 sx={[
                   {
                     boxSizing: "border-box",
@@ -337,6 +463,12 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               <Box
                 component="span"
                 sx={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "center",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
                   fontFamily: "var(--font-serif)",
                   letterSpacing: "-0.02em",
                   fontOpticalSizing: "auto",
@@ -350,17 +482,30 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   },
                 }}
               >
-                {number(ready)}
-                <Box
-                  component="span"
-                  sx={{
-                    fontSize: "0.875rem",
-                    lineHeight: 10 / 7,
-                    color: "var(--ink-faint)",
-                  }}
-                >
-                  /{number(list.collectionCount)}
-                </Box>
+                {summaryLoading ? (
+                  <Skeleton
+                    aria-hidden
+                    animation={skeletonAnimation}
+                    variant="rounded"
+                    width="70%"
+                    height={20}
+                    sx={{ mx: "auto" }}
+                  />
+                ) : (
+                  <>
+                    {number(ready)}
+                    <Box
+                      component="span"
+                      sx={{
+                        fontSize: "0.875rem",
+                        lineHeight: 10 / 7,
+                        color: "var(--ink-faint)",
+                      }}
+                    >
+                      /{number(collectionCount)}
+                    </Box>
+                  </>
+                )}
               </Box>
             </Box>
             <Box
@@ -373,7 +518,11 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               <Box
                 component="b"
                 sx={{
-                  display: "block",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  overflow: "hidden",
+                  height: "2.5em",
                   fontFamily: "var(--font-serif)",
                   letterSpacing: "-0.02em",
                   fontOpticalSizing: "auto",
@@ -385,27 +534,45 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   },
                 }}
               >
-                {list.collectionCount
-                  ? ready === list.collectionCount
-                    ? t("homeAllReady")
-                    : t("homeReadyProjects", { ready, total: list.collectionCount })
-                  : t("homeStartFirstProject")}
+                {summaryLoading ? (
+                  <Skeleton aria-hidden animation={skeletonAnimation} variant="rounded" height="100%" />
+                ) : collectionCount ? (
+                  ready === collectionCount ? (
+                    t("homeAllReady")
+                  ) : (
+                    t("homeReadyProjects", { ready, total: collectionCount })
+                  )
+                ) : (
+                  t("homeStartFirstProject")
+                )}
               </Box>
               <Box
                 component="span"
                 sx={{
                   mt: 0.5,
-                  display: "block",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  overflow: "hidden",
+                  height: 40,
                   fontSize: "0.875rem",
                   lineHeight: 10 / 7,
                   color: "var(--ink-faint)",
                 }}
               >
-                {list.collectionCount
-                  ? missingProjectPaints
-                    ? t("homeMissingPaints", { count: missingProjectPaints })
-                    : t("homeEveryPaintReady")
-                  : t("homeAddMiniaturePlan")}
+                {summaryLoading ? (
+                  <Skeleton aria-hidden animation={skeletonAnimation} variant="rounded" height="100%" />
+                ) : !summary.error && summary.counts?.catalogCount === 0 ? (
+                  t("homeEmptyLibrary")
+                ) : collectionCount ? (
+                  missingProjectPaints ? (
+                    t("homeMissingPaints", { count: missingProjectPaints })
+                  ) : (
+                    t("homeEveryPaintReady")
+                  )
+                ) : (
+                  t("homeAddMiniaturePlan")
+                )}
               </Box>
             </Box>
           </Box>
@@ -435,6 +602,8 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                 height: "100%",
                 width: "100%",
                 flexDirection: "column",
+                minWidth: 0,
+                px: 1,
                 paddingBlock: "0.75rem",
                 "&:hover": {
                   "@media (hover: hover)": {
@@ -449,6 +618,12 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               <Box
                 component="b"
                 sx={{
+                  display: "block",
+                  width: "100%",
+                  height: "1em",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                   fontFamily: "var(--font-serif)",
                   letterSpacing: "-0.02em",
                   fontOpticalSizing: "auto",
@@ -462,16 +637,29 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   },
                 }}
               >
-                {number(wishlistedMissingPaints)}
-                <Box
-                  component="span"
-                  sx={{
-                    color: "var(--ink-faint)",
-                  }}
-                >
-                  {" "}
-                  / {number(missingProjectPaints)}
-                </Box>
+                {summaryLoading ? (
+                  <Skeleton
+                    aria-hidden
+                    animation={skeletonAnimation}
+                    variant="rounded"
+                    width={90}
+                    height="100%"
+                    sx={{ mx: "auto" }}
+                  />
+                ) : (
+                  <>
+                    {number(wishlistedMissingPaints)}
+                    <Box
+                      component="span"
+                      sx={{
+                        color: "var(--ink-faint)",
+                      }}
+                    >
+                      {" "}
+                      / {number(missingProjectPaints)}
+                    </Box>
+                  </>
+                )}
               </Box>
               <Box
                 component="span"
@@ -502,6 +690,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
           scrollMarginTop: "6rem",
         }}
       >
+        {workbench && <QueryErrorNotice error={summary.error} onRetry={summary.retry} />}
         {workbench && <SectionHeader title={t("homePaintQuestion")} />}
         <FilterToolbar
           search={search}
@@ -513,6 +702,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
             select
             fullWidth
             size="small"
+            sx={{ minWidth: 0 }}
             label={workbench ? t("homeStepLabel") : t("homeCollectionLabel")}
             value={workbench ? stageFilter : filter}
             onChange={(event) =>
@@ -524,11 +714,11 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
             {workbench
               ? [
                   <MenuItem key="ALL" value="ALL">
-                    {t("homeAllCount", { count: stageCounts.ALL })}
+                    {t("homeAllCount", { count: workbenchStageCount("ALL") })}
                   </MenuItem>,
                   ...getStages().map(([stage, label]) => (
                     <MenuItem key={stage} value={stage}>
-                      {label} ({number(stageCounts[stage])})
+                      {label} ({number(workbenchStageCount(stage))})
                     </MenuItem>
                   )),
                 ]
@@ -563,7 +753,9 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   ref={shelfRef}
                   role="list"
                   aria-label={t("homeMiniatureShelf")}
-                  aria-busy={loading || refreshing}
+                  aria-busy={gridLoading || refreshing || browser.refreshing}
+                  data-loading-section="miniature-grid"
+                  data-skeleton={shelfLoading ? "miniature-grid" : undefined}
                   data-loaded-count={visibleProjects.length}
                   data-total-count={hasMixedSearch ? mixedSearch.totalCount : list.totalCount}
                   sx={{
@@ -617,7 +809,13 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                           <Box
                             component="div"
                             key={
-                              project ? ("mini" in project ? project.mini.id : `folder:${project.id}`) : "add"
+                              project === "loading"
+                                ? `loading:${index}`
+                                : project
+                                  ? "mini" in project
+                                    ? project.mini.id
+                                    : `folder:${project.id}`
+                                  : "add"
                             }
                             role="listitem"
                             data-mini-index={index}
@@ -626,7 +824,39 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                               minWidth: 0,
                             }}
                           >
-                            {project && !("mini" in project) ? (
+                            {project === "loading" ? (
+                              <Card
+                                aria-hidden
+                                sx={{
+                                  ...shelfTileSx,
+                                  boxSizing: "border-box",
+                                  position: "relative",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <Skeleton
+                                  animation={skeletonAnimation}
+                                  variant="rectangular"
+                                  width="100%"
+                                  height="100%"
+                                />
+                                <Box sx={{ position: "absolute", insetInline: 12, bottom: 16 }}>
+                                  <Skeleton
+                                    animation={skeletonAnimation}
+                                    variant="rounded"
+                                    width="75%"
+                                    height={18}
+                                    sx={{ mb: 1 }}
+                                  />
+                                  <Skeleton
+                                    animation={skeletonAnimation}
+                                    variant="rounded"
+                                    width="45%"
+                                    height={12}
+                                  />
+                                </Box>
+                              </Card>
+                            ) : project && !("mini" in project) ? (
                               renderFolder(project, shelfTileSx)
                             ) : project ? (
                               <Box sx={{ position: "relative", height: "100%" }}>

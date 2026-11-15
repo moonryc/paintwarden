@@ -8,6 +8,9 @@ import {
   InputAdornment,
   TextField,
   Tooltip,
+  Card,
+  Skeleton,
+  useMediaQuery,
 } from "@mui/material";
 import { translateServerError } from "@paintwarden/i18n/runtime";
 import { useEffect, useRef, useState } from "react";
@@ -15,7 +18,6 @@ import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
-import { PageSkeleton } from "../../Components/PageSkeletons";
 import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { PluginInstallStatus, usePluginInstall } from "../../graphql/plugin-install-hooks";
 import { isPluginInstallActive, type PluginInstallJob } from "../../graphql/plugin-install-observer";
@@ -61,6 +63,8 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const latestJob = useRef(installation.job);
   latestJob.current = installation.job;
   const initialLoading = useInitialPageLoading(sourceRead.loading, Boolean(sourceRead.error), false);
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)", { noSsr: true });
+  const skeletonAnimation = reducedMotion ? false : "pulse";
   const { sources } = sourceRead;
   const checkedSources = useRef(false);
   const mounted = useRef(true);
@@ -282,27 +286,21 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         startIcon={<Extension size={18} />}
         onClick={() => void openCreate()}
         disabled={busy}
+        sx={{ minWidth: 0, maxWidth: "100%", whiteSpace: "normal", overflowWrap: "anywhere" }}
       >
         {t("sourcesCreatePlugin")}
       </Button>
     ),
   };
-  if (initialLoading)
-    return (
-      <Modal {...modalProps}>
-        <PluginInstallStatus />
-        <PageSkeleton page="plugins" />
-      </Modal>
-    );
   return (
-    <Modal {...modalProps}>
+    <Modal {...modalProps} loading={initialLoading}>
       <PluginInstallStatus />
       {isPluginInstallActive(installation.job) && (
         <Alert severity="info" sx={{ my: 2 }}>
           {t("sourcesJobRunning")}
         </Alert>
       )}
-      <Box component="section" sx={{ mb: 3 }}>
+      <Box component="section" sx={{ mb: 3, minWidth: 0, overflowWrap: "anywhere" }}>
         <Box component="h3" sx={sectionTitleSx}>
           {t("sourcesAddAPlugin")}
         </Box>
@@ -338,14 +336,20 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
                 ),
               },
             }}
-            sx={{ flex: "1 1 280px" }}
+            sx={{ flex: "1 1 240px", minWidth: 0 }}
           />
           <Button
             type="submit"
             variant="contained"
             loading={pending === "add"}
             disabled={!url.trim() || (busy && pending !== "add")}
-            sx={{ minWidth: 120, height: 40 }}
+            sx={{
+              minWidth: 0,
+              minHeight: 40,
+              maxWidth: "100%",
+              whiteSpace: "normal",
+              overflowWrap: "anywhere",
+            }}
           >
             {t("sourcesAddPlugin")}
           </Button>
@@ -355,7 +359,13 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
             loading={pending === "upload"}
             disabled={busy && pending !== "upload"}
             onClick={() => fileInputRef.current?.click()}
-            sx={{ height: 40 }}
+            sx={{
+              minWidth: 0,
+              minHeight: 40,
+              maxWidth: "100%",
+              whiteSpace: "normal",
+              overflowWrap: "anywhere",
+            }}
           >
             {t("sourcesUploadZip")}
           </Button>
@@ -375,6 +385,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
 
       <Box
         sx={{
+          minWidth: 0,
           display: "flex",
           flexWrap: "wrap",
           alignItems: "flex-end",
@@ -383,52 +394,73 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
           mb: 1.5,
         }}
       >
-        <Box sx={{ minWidth: 0 }}>
+        <Box sx={{ minWidth: 0, flex: "1 1 240px" }}>
           <Box component="h3" sx={sectionTitleSx}>
             {t("sourcesInstalled")}
           </Box>
-          {sources.length > 0 && (
-            <Box sx={{ color: "var(--ink-faint)", fontSize: 13, mt: 0.5 }}>
-              {[
+          <Box
+            sx={{
+              color: "var(--ink-faint)",
+              fontSize: 13,
+              mt: 0.5,
+              lineHeight: "20px",
+              height: 40,
+              overflow: "hidden",
+              overflowWrap: "anywhere",
+            }}
+          >
+            {initialLoading ? (
+              <Skeleton
+                aria-hidden
+                animation={skeletonAnimation}
+                variant="rounded"
+                width="100%"
+                height={20}
+              />
+            ) : sources.length ? (
+              [
                 plural(sources.length, "plugins"),
                 plural(totals.paints, "paints"),
                 plural(totals.schemes, "schemes"),
                 plural(totals.templates, "templates"),
-              ].join(" · ")}
-            </Box>
-          )}
-        </Box>
-        {sources.some((source) => !isUploadedSource(source)) && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Tooltip title={t("sourcesCheckForUpdates")}>
-              <span>
-                <IconButton
-                  size="small"
-                  aria-label={t("sourcesCheckForUpdates")}
-                  disabled={versionsChecking || busy}
-                  onClick={() => void loadVersions()}
-                >
-                  {versionsChecking ? (
-                    <CircularProgress size={16} aria-label={t("sourcesCheckingPluginUpdates")} />
-                  ) : (
-                    <RotateCw size={18} />
-                  )}
-                </IconButton>
-              </span>
-            </Tooltip>
-            <Button
-              size="small"
-              variant={updatesAvailable ? "contained" : "outlined"}
-              loading={pending === "update-all"}
-              disabled={busy && pending !== "update-all"}
-              onClick={() => void updateAllSources()}
-            >
-              {updatesAvailable
-                ? t("sourcesUpdateAllCount", { count: updatesAvailable })
-                : t("sourcesUpdateAll")}
-            </Button>
+              ].join(" · ")
+            ) : (
+              ""
+            )}
           </Box>
-        )}
+        </Box>
+        <Box sx={{ minWidth: 0, maxWidth: "100%", display: "flex", alignItems: "center", gap: 1 }}>
+          <Tooltip title={t("sourcesCheckForUpdates")}>
+            <span>
+              <IconButton
+                size="small"
+                aria-label={t("sourcesCheckForUpdates")}
+                disabled={versionsChecking || busy || !sources.some((source) => !isUploadedSource(source))}
+                onClick={() => void loadVersions()}
+              >
+                {versionsChecking ? (
+                  <CircularProgress size={16} aria-label={t("sourcesCheckingPluginUpdates")} />
+                ) : (
+                  <RotateCw size={18} />
+                )}
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Button
+            size="small"
+            variant={updatesAvailable ? "contained" : "outlined"}
+            loading={pending === "update-all"}
+            disabled={
+              (busy && pending !== "update-all") || !sources.some((source) => !isUploadedSource(source))
+            }
+            sx={{ minWidth: 0, whiteSpace: "normal", overflowWrap: "anywhere" }}
+            onClick={() => void updateAllSources()}
+          >
+            {updatesAvailable
+              ? t("sourcesUpdateAllCount", { count: updatesAvailable })
+              : t("sourcesUpdateAll")}
+          </Button>
+        </Box>
       </Box>
 
       <QueryErrorNotice error={sourceRead.error} onRetry={() => loadSources()} />
@@ -438,42 +470,103 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         </Box>
       )}
 
-      {!sources.length && !sourceRead.error ? (
-        <EmptyState
-          icon={<Extension size={26} />}
-          title={t("sourcesNoPluginsYet")}
-          body={t("sourcesAddAGitHubRepositoryAboveToBringItsPaints")}
-        />
-      ) : (
-        <Box sx={{ display: "grid", gap: 1.5 }}>
-          {sources.map((source) => (
-            <SourceCard
-              key={source.id}
-              source={source}
-              remote={sourceVersions[source.id]}
-              checking={versionsChecking}
-              requires={source.dependencies.map(
-                (dependency) =>
-                  nameByKey.get(sourceKey(dependency.repository)) ?? repositoryLabel(dependency.repository),
-              )}
-              requiredBy={sources
-                .filter(
-                  (other) =>
-                    other.id !== source.id &&
-                    other.dependencies.some(
-                      (dependency) => sourceKey(dependency.repository) === sourceKey(source.url),
-                    ),
-                )
-                .map((other) => other.name)}
-              updating={pending === `update:${source.id}`}
-              disabled={busy}
-              onUpdate={() => void updateSource(source.id)}
-              onRemove={() => void previewRemoval(source.id)}
-            />
-          ))}
-        </Box>
-      )}
-
+      <Box
+        component="section"
+        aria-label={t("sourcesInstalled")}
+        aria-busy={sourceRead.loading || sourceRead.refreshing}
+        data-loading-section="installed-plugins"
+        data-skeleton={initialLoading ? "installed-plugins" : undefined}
+        sx={{ minWidth: 0, minHeight: "24rem", overflowWrap: "anywhere" }}
+      >
+        {initialLoading ? (
+          <Box aria-hidden sx={{ display: "grid", gap: 1.5 }}>
+            {[0, 1].map((index) => (
+              <Card
+                key={index}
+                sx={{ boxSizing: "border-box", minWidth: 0, minHeight: 176, p: { xs: 2, sm: 2.5 } }}
+              >
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.75 }}>
+                  <Skeleton
+                    animation={skeletonAnimation}
+                    variant="rounded"
+                    width={44}
+                    height={44}
+                    sx={{ flexShrink: 0 }}
+                  />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Skeleton animation={skeletonAnimation} variant="rounded" width="75%" height={24} />
+                    <Skeleton
+                      animation={skeletonAnimation}
+                      variant="rounded"
+                      width="90%"
+                      height={20}
+                      sx={{ mt: 0.5 }}
+                    />
+                  </Box>
+                </Box>
+                <Skeleton
+                  animation={skeletonAnimation}
+                  variant="rounded"
+                  width="65%"
+                  height={24}
+                  sx={{ mt: 1.5, ml: { xs: 0, sm: "58px" }, maxWidth: "100%" }}
+                />
+                <Skeleton
+                  animation={skeletonAnimation}
+                  variant="rounded"
+                  width="50%"
+                  height={18}
+                  sx={{ mt: 1.25, ml: { xs: 0, sm: "58px" }, maxWidth: "100%" }}
+                />
+              </Card>
+            ))}
+          </Box>
+        ) : !sources.length && !sourceRead.error ? (
+          <EmptyState
+            icon={<Extension size={26} />}
+            title={t("sourcesNoPluginsYet")}
+            body={t("sourcesAddAGitHubRepositoryAboveToBringItsPaints")}
+          />
+        ) : (
+          <Box
+            sx={{
+              display: "grid",
+              gap: 1.5,
+              minWidth: 0,
+              "& > .MuiCard-root": { boxSizing: "border-box", minWidth: 0, minHeight: 176 },
+              "& .MuiButton-root": { minWidth: 0, whiteSpace: "normal", overflowWrap: "anywhere" },
+              "& .MuiCard-root > .MuiBox-root > .MuiBox-root": { minWidth: 0 },
+              "& a": { overflowWrap: "anywhere" },
+            }}
+          >
+            {sources.map((source) => (
+              <SourceCard
+                key={source.id}
+                source={source}
+                remote={sourceVersions[source.id]}
+                checking={versionsChecking}
+                requires={source.dependencies.map(
+                  (dependency) =>
+                    nameByKey.get(sourceKey(dependency.repository)) ?? repositoryLabel(dependency.repository),
+                )}
+                requiredBy={sources
+                  .filter(
+                    (other) =>
+                      other.id !== source.id &&
+                      other.dependencies.some(
+                        (dependency) => sourceKey(dependency.repository) === sourceKey(source.url),
+                      ),
+                  )
+                  .map((other) => other.name)}
+                updating={pending === `update:${source.id}`}
+                disabled={busy}
+                onUpdate={() => void updateSource(source.id)}
+                onRemove={() => void previewRemoval(source.id)}
+              />
+            ))}
+          </Box>
+        )}
+      </Box>
       {createOpen && <CreateSourceDialog shareable={shareable} onClose={() => setCreateOpen(false)} />}
       {removal && (
         <RemoveSourceDialog

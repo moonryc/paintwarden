@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useLayoutEffect, type ReactNode } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
+import { PageLoadingStatus } from "../Components/PageLoadingStatus";
 import { useVaultGraphQL } from "../graphql/provider";
 import { miniatures, paints, vault } from "../storybook/fixtures";
 import { MiniatureApolloFixture } from "../storybook/miniature-apollo-fixture";
@@ -19,7 +20,9 @@ const meta = {
   decorators: [
     (Story) => (
       <MiniatureFixtureProvider>
-        <Story />
+        <PageLoadingStatus>
+          <Story />
+        </PageLoadingStatus>
       </MiniatureFixtureProvider>
     ),
   ],
@@ -169,36 +172,115 @@ export const ApolloPagingReachesFinalMiniature: Story = {
   },
 };
 
-export const ApolloLoading: Story = {
+// Hold reads by event rather than timing; this tests the real shell while each data
+// section is independently pending, including the summary arriving before the grid.
+function HoldInitialMiniatures({ until, children }: { until: Promise<void>; children: ReactNode }) {
+  const scope = useVaultGraphQL();
+  useLayoutEffect(() => {
+    if (!scope) return;
+    const original = scope.client.link;
+    const gate = new ApolloLink((operation, forward) => {
+      if (operation.operationName !== "MiniatureList" || operation.variables.first === 1)
+        return forward(operation);
+      return new Observable((observer) => {
+        let active = true;
+        let cancel = () => {};
+        void until.then(() => {
+          if (!active) return;
+          const subscription = forward(operation).subscribe(observer);
+          cancel = () => subscription.unsubscribe();
+        });
+        return () => {
+          active = false;
+          cancel();
+        };
+      });
+    });
+    scope.client.setLink(ApolloLink.from([gate, original]));
+    return () => scope.client.setLink(original);
+  }, [scope, until]);
+  return children;
+}
+
+const loadingStory = (folders = false): Story => ({
   parameters: apolloParameters,
   render: (args) => (
     <MiniatureApolloFixture data={apolloVault} pageDelay={500}>
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    const status = await canvas.findByRole("status");
-    await expect(status).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute(
-      "data-skeleton",
-      args.view === "dashboard" ? "home" : "miniatures",
+  play: async ({ mount, args, canvasElement }) => {
+    const page = Promise.withResolvers<void>();
+    if (folders) localStorage.setItem(`paintwarden.folders.${args.view}.flat`, "false");
+    const canvas = await mount(
+      <MiniatureApolloFixture
+        data={apolloVault}
+        folders={
+          folders
+            ? [
+                {
+                  id: "army",
+                  name: "Long miniature folder name ".repeat(8),
+                  parentId: null,
+                  directCount: 120,
+                  recursiveCount: 120,
+                },
+              ]
+            : []
+        }
+      >
+        <HoldInitialMiniatures until={page.promise}>
+          <Home {...args} />
+        </HoldInitialMiniatures>
+      </MiniatureApolloFixture>,
     );
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(canvas.queryByRole("textbox", { name: /Search miniatures/ })).not.toBeInTheDocument();
-    await expect(
-      await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0119/ }),
-    ).toBeInTheDocument();
-    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    try {
+      const heading = canvas.getByRole("heading", {
+        name: args.view === "dashboard" ? "Workbench" : "Miniatures",
+      });
+      const search = canvas.getByRole("textbox", { name: /Search miniatures/ });
+      const filter = canvas.getByRole("combobox");
+      const add = canvas.getByRole("button", { name: /Add miniature/ });
+      const list = canvas.getByRole("list", { name: "Miniature shelf" });
+      await expect(canvas.getAllByRole("status")).toHaveLength(1);
+      await expect(canvas.getByRole("status")).toHaveAttribute("aria-live", "polite");
+      await expect(list).toHaveAttribute("aria-busy", "true");
+      await expect(list).toHaveAttribute("data-skeleton", "miniature-grid");
+      const shell = [heading, search, filter, add];
+      const positions = shell.map((node) => node.getBoundingClientRect().toJSON());
+      const firstPlaceholder = list.querySelector<HTMLElement>('[data-mini-index="1"]')!;
+      const tileGeometry = firstPlaceholder.getBoundingClientRect().toJSON();
+      if (args.view === "dashboard") {
+        const summary = canvas.getByRole("region", { name: "Workbench" });
+        await waitFor(() => expect(summary).toHaveAttribute("aria-busy", "false"));
+        // The summary is ready while the unrelated grid request is still held.
+        await expect(summary).toHaveTextContent("120");
+        await expect(list).toHaveAttribute("aria-busy", "true");
+      }
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+      page.resolve();
+      await waitFor(() => expect(list).toHaveAttribute("aria-busy", "false"));
+      await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+      shell.forEach((node, index) => {
+        expect(node.isConnected).toBe(true);
+        const next = node.getBoundingClientRect();
+        for (const key of ["x", "y", "width", "height"] as const)
+          expect(next[key]).toBeCloseTo(positions[index][key], 0);
+      });
+      const loadedTile = list.querySelector<HTMLElement>('[data-mini-index="1"]')!.getBoundingClientRect();
+      for (const key of ["x", "y", "width", "height"] as const)
+        await expect(loadedTile[key]).toBeCloseTo(tileGeometry[key], 0);
+      await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    } finally {
+      page.resolve();
+      if (folders) localStorage.removeItem(`paintwarden.folders.${args.view}.flat`);
+    }
   },
-};
+});
 
-export const ApolloMiniaturesLoading: Story = {
-  ...ApolloLoading,
-  args: { view: "miniatures" },
-};
+export const ApolloLoading: Story = loadingStory();
+export const ApolloMiniaturesLoading: Story = { ...loadingStory(), args: { view: "miniatures" } };
+export const ApolloFolderLoading: Story = { ...loadingStory(true), args: { view: "miniatures" } };
 
 export const ApolloErrorRetry: Story = {
   args: { view: "miniatures" },
@@ -363,8 +445,8 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
   },
 };
 
-// Deliberately use the asynchronous Apollo path: the shelf is absent during loading,
-// but its item count is one (the add tile) both before and after the empty response.
+// Deliberately use the asynchronous Apollo path: the add tile is present immediately,
+// and the grid sheds its placeholders after the accepted empty response.
 // The tile is the single Add entry point; its dialog switches between a miniature and a folder.
 const emptyShelf: Story = {
   parameters: { vault: emptyState },
