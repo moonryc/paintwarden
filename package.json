@@ -1,6 +1,6 @@
 {
   "name": "paintwarden-workspace",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "private": true,
   "type": "module",
   "engines": {
@@ -25,8 +25,8 @@
     "test": "npm run test:graphql && node --test scripts/*.test.mjs && node scripts/nx.mjs run-many -t test -p paintwarden @paintwarden/core @paintwarden/ui && npm run test --workspace paintwarden-electron",
     "lint": "npm run lint:eslint && npm run typecheck",
     "lint:eslint": "node scripts/nx.mjs run-many -t code-lint -p paintwarden paintwarden-web paintwarden-site @paintwarden/core @paintwarden/ui --parallel=2",
-    "format:check": "prettier --check .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
-    "format:write": "prettier --write .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json .github/workflows/quality.yml docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
+    "format:check": "prettier --check .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json \".github/workflows/*.yml\" \"e2e/**/*.mjs\" docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
+    "format:write": "prettier --write .eslintrc.cjs .prettierrc.json nx.json codegen.ts package.json \".github/workflows/*.yml\" \"e2e/**/*.mjs\" docs/code-quality.md \"apps/**/*.{ts,tsx,mjs,cjs}\" \"packages/**/*.{ts,tsx,mjs}\" \"scripts/**/*.{ts,tsx,mjs,cjs}\" \"apps/*/{package,project,tsconfig}.json\" \"packages/*/{package,tsconfig}.json\" \"packages/paint-i18n/locales/**/*.json\"",
     "typecheck": "npm run typecheck:shared && node --check apps/paintwarden-electron/main.cjs && node --check apps/paintwarden-electron/preload.cjs && node --check apps/paintwarden-electron/desktop-core.cjs",
     "typecheck:shared": "node scripts/nx.mjs run-many -t lint -p paintwarden paintwarden-web paintwarden-site && node scripts/nx.mjs run-many -t typecheck -p @paintwarden/core @paintwarden/ui",
     "db:generate": "node scripts/nx.mjs db:generate paintwarden",
@@ -41,7 +41,9 @@
     "audit:production": "node scripts/check-production-audit.mjs",
     "notices:generate": "node scripts/generate-notices.mjs",
     "notices:check": "node scripts/generate-notices.mjs --check",
-    "notices:artifact": "node scripts/check-notice-artifact.mjs"
+    "notices:artifact": "node scripts/check-notice-artifact.mjs",
+    "e2e:browser": "node e2e/browser-smoke.mjs",
+    "e2e:native": "node e2e/native-smoke.mjs"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^8.0.0",
@@ -61,6 +63,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-sonarjs": "^0.25.1",
     "nx": "23.3.0",
+    "playwright": "1.64.1",
     "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^7.3.7"

@@ -49,7 +49,7 @@ function check(files, tag = `v${version}`) {
   );
 }
 
-for (const tag of ["v1.2.3", "1.2.3", "v0.0.0", "v12.34.56"]) {
+for (const tag of ["v1.2.3", "1.2.3", "v0.0.0", "v12.34.56", "v1.2.3-beta.1", "v1.2.3-beta.10"]) {
   test(`accepts matching release tag ${tag}`, () => {
     const files = fixture();
     const expected = tag.replace(/^v/, "");
@@ -65,7 +65,10 @@ for (const tag of [
   "v1.2.3.4",
   "vv1.2.3",
   "V1.2.3",
-  "v1.2.3-beta.1",
+  "v1.2.3-beta",
+  "v1.2.3-beta.01",
+  "v1.2.3-rc.1",
+  "v01.2.3",
   "v1.2.3+build",
   " v1.2.3",
   "v1.2.3\n",

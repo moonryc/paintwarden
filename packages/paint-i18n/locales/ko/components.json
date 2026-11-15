@@ -479,5 +479,9 @@
   "noticesRead": "오픈 소스 라이선스 읽기",
   "noticesLoading": "고지 불러오는 중…",
   "noticesFailure": "고지를 불러오지 못했습니다.",
-  "noticesRetry": "다시 시도"
+  "noticesRetry": "다시 시도",
+  "supportChannel": "채널",
+  "supportChannelBeta": "베타",
+  "supportChannelStable": "안정",
+  "updateReleaseNotes": "릴리스 노트"
 }

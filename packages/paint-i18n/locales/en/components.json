@@ -500,5 +500,9 @@
   "noticesRead": "Read open-source licenses",
   "noticesLoading": "Loading notices…",
   "noticesFailure": "Could not load the notices.",
-  "noticesRetry": "Try again"
+  "noticesRetry": "Try again",
+  "supportChannel": "Channel",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stable",
+  "updateReleaseNotes": "Release notes"
 }

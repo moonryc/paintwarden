@@ -521,5 +521,9 @@
   "noticesRead": "Ler licenças de código aberto",
   "noticesLoading": "Carregando avisos…",
   "noticesFailure": "Não foi possível carregar os avisos.",
-  "noticesRetry": "Tentar novamente"
+  "noticesRetry": "Tentar novamente",
+  "supportChannel": "Canal",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Estável",
+  "updateReleaseNotes": "Notas da versão"
 }

@@ -1,6 +1,6 @@
 {
   "name": "paintwarden-web",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "private": true,
   "type": "module",
   "dependencies": {
@@ -8,7 +8,7 @@
     "@fontsource/inter": "^5.2.8",
     "@mui/icons-material": "^9.5.0",
     "@mui/material": "^9.4.0",
-    "@paintwarden/i18n": "^1.0.0",
+    "@paintwarden/i18n": "*",
     "@paintwarden/ui": "*",
     "react": "19.2.6",
     "react-dom": "19.2.6",

@@ -1,5 +1,6 @@
 // Own the download/install policy rather than allowing electron-updater to stage a native
 // install. In particular, Squirrel.Mac cannot revoke a staged update on a server switch.
+const { plainReleaseNotes } = require("./desktop-release-notes.cjs");
 const { t } = require("./desktop-i18n.cjs");
 const FIRST_CHECK_DELAY_MS = 10_000;
 const CHECK_INTERVAL_MS = 6 * 60 * 60_000;
@@ -80,6 +81,10 @@ function createUpdater({
 
   // Never let the library stage a native install: checking this flag only at quit is
   // too late on macOS. Local automatic-on-quit is implemented by installOnQuit below.
+  // channel assignment enables downgrades in electron-updater; reset it explicitly.
+  autoUpdater.channel = currentVersion.includes("-beta.") ? "beta" : "latest";
+  autoUpdater.allowPrerelease = currentVersion.includes("-beta.");
+  autoUpdater.allowDowngrade = false;
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
   if (enabled) {
@@ -89,7 +94,7 @@ function createUpdater({
     });
     autoUpdater.on("update-not-available", () => {
       if (!downloaded && !downloading && state.status !== "consent-required" && state.status !== "deferred")
-        set({ status: "up-to-date", version: null, progress: null });
+        set({ status: "up-to-date", version: null, progress: null, releaseNotes: "" });
     });
     autoUpdater.on("update-available", (info) => {
       if (typeof info?.version !== "string") return;
@@ -97,7 +102,7 @@ function createUpdater({
         consent = null;
         downloaded = false;
       }
-      set({ version: info.version, error: null });
+      set({ version: info.version, releaseNotes: plainReleaseNotes(info.releaseNotes), error: null });
       reconcile();
     });
     autoUpdater.on("download-progress", (progress) => {

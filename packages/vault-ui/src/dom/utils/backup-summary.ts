@@ -73,7 +73,8 @@ export async function summarizeBackup(file: Blob): Promise<BackupSummary> {
     return { ok: false, error: i18n.t("shell:backupInvalid") };
   const record = body as Record<string, unknown>;
   if (record.format !== "paintwarden-backup") return { ok: false, error: i18n.t("shell:backupInvalid") };
-  if (record.version !== 1) return { ok: false, error: i18n.t("shell:backupVersion") };
+  if (record.version !== 1 && record.version !== 2)
+    return { ok: false, error: i18n.t("shell:backupVersion") };
   const exported = typeof record.exportedAt === "string" ? new Date(record.exportedAt) : null;
   const tables = (record.tables ?? {}) as Record<string, unknown>;
   const counts = [

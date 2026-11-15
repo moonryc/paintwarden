@@ -6,16 +6,37 @@ import { useDesktopUpdate } from "../utils/desktop-update";
 
 import { Modal } from "./Modal";
 
+function ReleaseNotes({ notes }: { notes?: string }) {
+  const { t } = useTranslation("components");
+  if (!notes) return null;
+  return (
+    <Stack spacing={0.5} sx={{ mt: 1 }}>
+      <Typography component="p" variant="subtitle2">
+        {t("updateReleaseNotes")}
+      </Typography>
+      <Typography
+        component="div"
+        variant="body2"
+        sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", maxHeight: 200, overflowY: "auto" }}
+      >
+        {notes}
+      </Typography>
+    </Stack>
+  );
+}
+
 type ConsentInput = { version: string; consentId: string; action: "download" | "defer" };
 
 function RemoteUpdateConsent({
   version,
   serverVersion,
+  releaseNotes,
   consentId,
   respond,
 }: {
   version: string;
   serverVersion?: string | null;
+  releaseNotes?: string;
   consentId: string;
   respond: (input: ConsentInput) => Promise<void>;
 }) {
@@ -54,6 +75,7 @@ function RemoteUpdateConsent({
       <Stack spacing={2}>
         <Alert severity="warning">{t("updateRemoteWarning", versions)}</Alert>
         <Typography variant="body2">{t("updateRemindNextCheck")}</Typography>
+        <ReleaseNotes notes={releaseNotes} />
         {failed && <Alert severity="error">{t("updateConsentFailed")}</Alert>}
       </Stack>
     </Modal>
@@ -74,6 +96,7 @@ export function UpdatePrompt() {
         key={state.consentId}
         version={state.version}
         serverVersion={state.serverVersion}
+        releaseNotes={state.releaseNotes}
         consentId={state.consentId}
         respond={respond}
       />
@@ -122,6 +145,7 @@ export function UpdatePrompt() {
         }
       >
         {t("updateReady", { version: state?.version })}
+        <ReleaseNotes notes={state?.releaseNotes} />
       </Alert>
     </Snackbar>
   );

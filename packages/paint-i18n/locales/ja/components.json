@@ -479,5 +479,9 @@
   "noticesRead": "オープンソースライセンスを読む",
   "noticesLoading": "通知を読み込み中…",
   "noticesFailure": "通知を読み込めませんでした。",
-  "noticesRetry": "再試行"
+  "noticesRetry": "再試行",
+  "supportChannel": "チャンネル",
+  "supportChannelBeta": "ベータ",
+  "supportChannelStable": "安定版",
+  "updateReleaseNotes": "リリースノート"
 }

@@ -230,3 +230,34 @@ export const GermanRemoteConsent: Story = {
   decorators: [desktopBridge(consent)],
   parameters: { locale: "de" },
 };
+
+export const SafeReleaseNotes: Story = {
+  decorators: [
+    desktopBridge({
+      status: "ready",
+      currentVersion: "1.0.0-beta.1",
+      version: "1.0.0-beta.2",
+      progress: 100,
+      error: null,
+      releaseNotes: 'New miniature folders.\n<img src=x onerror="alert(1)"> is plain text, not HTML.',
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(body.getByText("Release notes")).toBeVisible());
+    await expect(body.getByText(/New miniature folders/)).toHaveTextContent('<img src=x onerror="alert(1)">');
+    await expect(body.queryByRole("img")).not.toBeInTheDocument();
+    await userEvent.click(body.getByRole("button", { name: "Later" }));
+    await waitFor(() => expect(body.queryByText("Release notes")).not.toBeInTheDocument());
+  },
+};
+export const RemoteReleaseNotes: Story = {
+  decorators: [desktopBridge({ ...consent, releaseNotes: "Preview: safer backups and folders." })],
+  play: async ({ canvasElement }) => {
+    const dialog = within(
+      await within(canvasElement.ownerDocument.body).findByRole("dialog", { name: title }),
+    );
+    await waitFor(() => expect(dialog.getByText("Release notes")).toBeVisible());
+    await expect(dialog.getByText("Preview: safer backups and folders.")).toBeVisible();
+  },
+};

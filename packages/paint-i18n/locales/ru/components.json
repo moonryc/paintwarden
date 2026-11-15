@@ -542,5 +542,9 @@
   "noticesRead": "Читать лицензии открытого ПО",
   "noticesLoading": "Загрузка уведомлений…",
   "noticesFailure": "Не удалось загрузить уведомления.",
-  "noticesRetry": "Повторить"
+  "noticesRetry": "Повторить",
+  "supportChannel": "Канал",
+  "supportChannelBeta": "Бета",
+  "supportChannelStable": "Стабильный",
+  "updateReleaseNotes": "Примечания к выпуску"
 }

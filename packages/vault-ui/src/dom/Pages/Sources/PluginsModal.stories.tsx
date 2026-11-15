@@ -80,6 +80,16 @@ export const DeferredCreateChoices: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(body.getByText("Example paint source")).toBeVisible());
     await expect(args.onOperation).not.toHaveBeenCalledWith("PluginShareable");
+    // The mount-time background update check refreshes the list once, temporarily
+    // disabling Create. Wait for its second versions read, not the brief enabled
+    // state before that refresh (a physical click there can be dropped).
+    await waitFor(
+      () =>
+        expect(
+          args.onOperation.mock.calls.filter(([name]) => name === "PluginVersions").length,
+        ).toBeGreaterThanOrEqual(2),
+      { timeout: 5000 },
+    );
     await waitFor(() => expect(body.getByRole("button", { name: "Create plugin" })).toBeEnabled());
     await userEvent.click(body.getByRole("button", { name: "Create plugin" }));
     await waitFor(() => expect(body.getByLabelText("Search items to include")).toBeVisible());

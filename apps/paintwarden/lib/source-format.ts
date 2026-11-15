@@ -138,9 +138,15 @@ const label = (kind: string, index: number, row: unknown) => {
 };
 
 export function versionAtLeast(actual: string, minimum: string) {
-  const a = actual.split(".").map(Number),
-    b = minimum.split(".").map(Number);
-  for (let i = 0; i < 3; i++) {
+  const appVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-beta\.(0|[1-9]\d*))?$/;
+  if (!appVersion.test(actual) || !appVersion.test(minimum)) return false;
+  const parts = (version: string) => {
+    const [core, beta] = version.split("-beta.");
+    return [...core.split(".").map(Number), beta === undefined ? Infinity : Number(beta)];
+  };
+  const a = parts(actual),
+    b = parts(minimum);
+  for (let i = 0; i < 4; i++) {
     if (a[i] > b[i]) return true;
     if (a[i] < b[i]) return false;
   }
@@ -166,7 +172,11 @@ export function parseManifest(value: unknown): Manifest {
       catalog: (file) => file === "catalog.json",
       assets: (file) => file === "assets.json",
     },
-    { license: text(100), attribution: text(1000), minimumAppVersion: isVersion },
+    {
+      license: text(100),
+      attribution: text(1000),
+      minimumAppVersion: matches(/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-beta\.(0|[1-9]\d*))?$/, 60),
+    },
   ) as Manifest;
   manifest.dependencies.forEach((dependency, index) =>
     checkObject(

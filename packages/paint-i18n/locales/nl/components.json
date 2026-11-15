@@ -500,5 +500,9 @@
   "noticesRead": "Opensourcelicenties lezen",
   "noticesLoading": "Vermeldingen laden…",
   "noticesFailure": "De vermeldingen konden niet worden geladen.",
-  "noticesRetry": "Opnieuw proberen"
+  "noticesRetry": "Opnieuw proberen",
+  "supportChannel": "Kanaal",
+  "supportChannelBeta": "Bèta",
+  "supportChannelStable": "Stabiel",
+  "updateReleaseNotes": "Versieopmerkingen"
 }

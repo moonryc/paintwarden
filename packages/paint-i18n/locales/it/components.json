@@ -521,5 +521,9 @@
   "noticesRead": "Leggi le licenze open source",
   "noticesLoading": "Caricamento degli avvisi…",
   "noticesFailure": "Impossibile caricare gli avvisi.",
-  "noticesRetry": "Riprova"
+  "noticesRetry": "Riprova",
+  "supportChannel": "Canale",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabile",
+  "updateReleaseNotes": "Note di rilascio"
 }

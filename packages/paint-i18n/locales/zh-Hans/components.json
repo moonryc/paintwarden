@@ -479,5 +479,9 @@
   "noticesRead": "阅读开源许可证",
   "noticesLoading": "正在加载声明…",
   "noticesFailure": "无法加载声明。",
-  "noticesRetry": "重试"
+  "noticesRetry": "重试",
+  "supportChannel": "更新通道",
+  "supportChannelBeta": "测试版",
+  "supportChannelStable": "稳定版",
+  "updateReleaseNotes": "版本说明"
 }

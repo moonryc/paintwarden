@@ -13,6 +13,9 @@ export default defineConfig({
   plugins: [storybookTest({ configDir: path.join(here, ".storybook") })],
   test: {
     name: "storybook",
+    // Browser stories exercise global focus, viewport scrolling and locale transitions.
+    // Serialize files rather than retrying races between interactive pages in CI.
+    fileParallelism: false,
     browser: {
       enabled: true,
       headless: true,

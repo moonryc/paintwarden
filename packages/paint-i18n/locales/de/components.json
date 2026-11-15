@@ -500,5 +500,9 @@
   "noticesRead": "Open-Source-Lizenzen lesen",
   "noticesLoading": "Hinweise werden geladen…",
   "noticesFailure": "Die Hinweise konnten nicht geladen werden.",
-  "noticesRetry": "Erneut versuchen"
+  "noticesRetry": "Erneut versuchen",
+  "supportChannel": "Kanal",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabil",
+  "updateReleaseNotes": "Versionshinweise"
 }

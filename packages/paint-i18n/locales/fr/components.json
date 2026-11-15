@@ -521,5 +521,9 @@
   "noticesRead": "Lire les licences open source",
   "noticesLoading": "Chargement des mentions…",
   "noticesFailure": "Impossible de charger les mentions.",
-  "noticesRetry": "Réessayer"
+  "noticesRetry": "Réessayer",
+  "supportChannel": "Canal",
+  "supportChannelBeta": "Bêta",
+  "supportChannelStable": "Stable",
+  "updateReleaseNotes": "Notes de version"
 }

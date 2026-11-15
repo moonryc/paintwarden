@@ -45,7 +45,7 @@ test("rejects other files and versions", async () => {
   assert.equal((await summarize(strToU8("not a backup"))).ok, false);
   assert.equal((await summarize(zipSync({ "other.txt": strToU8("x") }))).ok, false);
   assert.equal(
-    (await summarize(zipBackup({ format: "paintwarden-backup", version: 2, tables: {} }))).ok,
+    (await summarize(zipBackup({ format: "paintwarden-backup", version: 3, tables: {} }))).ok,
     false,
   );
   assert.equal(
@@ -61,4 +61,22 @@ test("rejects JSON backups even when they use the current brand", async () => {
       (await summarize(strToU8(JSON.stringify({ format: "paintwarden-backup", version })))).ok,
       false,
     );
+});
+
+test("previews current folders v2 exports as well as v1 before Replace restore", async () => {
+  for (const version of [1, 2]) {
+    const result = await summarize(
+      zipBackup({
+        format: "paintwarden-backup",
+        version,
+        tables: {
+          miniatures: [{ id: "user:mini" }],
+          folders: version === 2 ? [{ id: "user:folder", kind: "miniature" }] : [],
+        },
+        images: [],
+      }),
+    );
+    assert.equal(result.ok, true);
+    assert.ok(result.counts.some(({ key, count }) => key === "backupMiniature" && count === 1));
+  }
 });

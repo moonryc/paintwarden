@@ -17,8 +17,11 @@ export function checkReleaseVersion(
     }),
 ) {
   const expected = tag.replace(/^v/, "");
-  if (!/^\d+\.\d+\.\d+$/.test(expected) || expected.trim() !== expected) {
-    return { errors: [`Release tags look like v1.2.3, not "${tag}".`] };
+  if (
+    !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-beta\.(0|[1-9]\d*))?$/.test(expected) ||
+    expected.trim() !== expected
+  ) {
+    return { errors: [`Release tags look like v1.2.3 or v1.2.3-beta.1, not "${tag}".`] };
   }
 
   const errors = [];

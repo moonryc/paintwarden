@@ -542,5 +542,9 @@
   "noticesRead": "Przeczytaj licencje open source",
   "noticesLoading": "Wczytywanie informacji…",
   "noticesFailure": "Nie udało się wczytać informacji.",
-  "noticesRetry": "Spróbuj ponownie"
+  "noticesRetry": "Spróbuj ponownie",
+  "supportChannel": "Kanał",
+  "supportChannelBeta": "Beta",
+  "supportChannelStable": "Stabilny",
+  "updateReleaseNotes": "Informacje o wydaniu"
 }

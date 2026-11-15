@@ -8,6 +8,7 @@ on:
 
 jobs:
   shared:
+    timeout-minutes: 25
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,6 +34,7 @@ jobs:
       - run: docker build --tag paintwarden-notices-ci .
 
   macos:
+    timeout-minutes: 25
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,8 +50,18 @@ jobs:
       - run: npm run dist --workspace paintwarden-electron -- --dir --publish never
       - name: Verify packaged macOS notices and dynamic libvips
         run: node scripts/check-notice-artifact.mjs --resources "$(find dist/electron -type d -path '*.app/Contents/Resources' -print -quit)"
+      - run: npm run e2e:native
+        env:
+          E2E_ARTIFACTS_DIR: outputs/native-${{ runner.os }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-smoke-${{ runner.os }}
+          retention-days: 7
+          path: outputs/native-${{ runner.os }}
 
   windows:
+    timeout-minutes: 25
     # npm's bundled node-gyp supports VS 2022, not the VS 2026 image behind windows-latest.
     runs-on: windows-2022
     steps:
@@ -66,3 +78,34 @@ jobs:
       - run: npm run dist --workspace paintwarden-electron -- --dir --publish never
       - name: Verify packaged Windows notices and dynamic libvips
         run: node scripts/check-notice-artifact.mjs --resources dist/electron/win-unpacked/resources
+      - run: npm run e2e:native
+        env:
+          E2E_ARTIFACTS_DIR: outputs/native-${{ runner.os }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-smoke-${{ runner.os }}
+          retention-days: 7
+          path: outputs/native-${{ runner.os }}
+
+  production-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node scripts/nx.mjs build paintwarden
+      - run: npm run e2e:browser
+        env:
+          E2E_ARTIFACTS_DIR: outputs/browser-smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-browser-smoke
+          retention-days: 7
+          path: outputs/browser-smoke

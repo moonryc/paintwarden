@@ -70,6 +70,12 @@ export function HelpAbout({
   const details = summary
     ? [
         [t("supportVersion"), summary.version === "unknown" ? t("supportUnavailable") : summary.version],
+        [
+          t("supportChannel"),
+          summary.version === "unknown"
+            ? t("supportUnavailable")
+            : t(summary.version.includes("-beta.") ? "supportChannelBeta" : "supportChannelStable"),
+        ],
         [t("supportPlatform"), summary.os === "Other" ? t("supportUnavailable") : summary.os],
         [t("supportMode"), summary.mode === "local" ? t("supportLocal") : t("supportRemote")],
         [t("supportLanguage"), summary.language],

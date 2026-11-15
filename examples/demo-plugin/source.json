@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "license": "CC0-1.0",
   "attribution": "Made-up paints and recipes for trying out Paintwarden plugins",
-  "minimumAppVersion": "1.0.0",
+  "minimumAppVersion": "1.0.0-beta.1",
   "dependencies": [],
   "catalog": "catalog.json",
   "assets": "assets.json"
