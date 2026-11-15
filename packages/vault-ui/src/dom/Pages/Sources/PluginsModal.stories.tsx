@@ -78,14 +78,14 @@ export const Installed: Story = {
 };
 export const Empty: Story = {
   args: { mode: "empty" },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(body.getByText("No plugins yet")).toBeVisible());
-    await expect(body.getByRole("link", { name: "Download demo plugin ZIP" })).toHaveAttribute(
-      "href",
-      "https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip",
-    );
-    await expect(body.getByText(/Do not paste the download link into the repository field/)).toBeVisible();
+    await waitFor(() => expect(args.onOperation).toHaveBeenCalledWith("AutomaticUpdate"));
+    const emptyCard = body.getByText("No plugins yet").parentElement!;
+    await expect(within(emptyCard).getByTestId("ExtensionOutlinedIcon")).toBeInTheDocument();
+    await expect(body.queryByRole("progressbar")).not.toBeInTheDocument();
+    await expect(body.queryByRole("region", { name: "Plugin installation" })).not.toBeInTheDocument();
   },
 };
 export const Loading: Story = {
@@ -254,5 +254,35 @@ export const LateAutomaticUpdateResult: Story = {
     await expect(body.getByText("An installation is already running.")).toBeVisible();
     await expect(body.getByRole("button", { name: "Cancel installation" })).toBeEnabled();
     await expect(body.getByRole("button", { name: "Add plugin" })).toBeDisabled();
+  },
+};
+
+export const ReplayedFinishedJob: Story = {
+  args: {
+    mode: "empty",
+    job: {
+      id: "old-completed-job",
+      stage: "SUCCEEDED",
+      done: 1,
+      total: 1,
+      percent: 100,
+      cancellable: false,
+      error: null,
+      errorCode: null,
+      errorParameters: [],
+    },
+  },
+  play: async ({ args, canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(args.onOperation).toHaveBeenCalledWith("AutomaticUpdate"));
+    await waitForDialogEntered(await body.findByRole("dialog", { name: "Plugins" }));
+    await expect(body.getByText("No plugins yet")).toBeVisible();
+    await expect(body.queryByRole("progressbar")).not.toBeInTheDocument();
+    await expect(body.queryByText("Plugin installation finished")).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(body.getByRole("button", { name: "Open Plugins" }));
+    await waitForDialogEntered(await body.findByRole("dialog", { name: "Plugins" }));
+    await expect(body.queryByRole("progressbar")).not.toBeInTheDocument();
+    await expect(body.queryByText("Plugin installation finished")).not.toBeInTheDocument();
   },
 };

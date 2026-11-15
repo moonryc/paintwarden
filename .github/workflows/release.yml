@@ -93,28 +93,10 @@ jobs:
           retention-days: 7
           path: outputs/native-release
 
-  demo-plugin:
-    needs: [version, quality]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - run: node scripts/package-demo-plugin.mjs outputs/paintwarden-demo-plugin.zip
-      - uses: actions/upload-artifact@v4
-        with:
-          name: release-demo-plugin
-          retention-days: 14
-          if-no-files-found: error
-          path: outputs/paintwarden-demo-plugin.zip
-
   publish:
     # No workflow_dispatch (including on main) can publish or create a Release.
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: [version, quality, desktop, demo-plugin]
+    needs: [version, quality, desktop]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -137,6 +119,6 @@ jobs:
           flags=(--latest)
           if [[ "$TAG" == *-beta.* ]]; then flags=(--prerelease --latest=false); fi
           # Exclude diagnostic artifacts. A retry must not silently overwrite an existing release.
-          mapfile -t assets < <(find artifacts/release-macOS artifacts/release-Windows artifacts/release-demo-plugin -maxdepth 1 -type f | sort)
+          mapfile -t assets < <(find artifacts/release-macOS artifacts/release-Windows -maxdepth 1 -type f | sort)
           test "${#assets[@]}" -gt 0
           gh release create "$TAG" --verify-tag --title "Paintwarden ${TAG#v}" --notes-file release-notes.md "${flags[@]}" "${assets[@]}"

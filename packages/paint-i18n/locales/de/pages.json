@@ -631,7 +631,5 @@
   },
   "complementaryPalette": "Deine Palette",
   "complementaryYourPaint": "Deine Farbe",
-  "complementaryNoPick": "Keine passende eigene Farbe",
-  "sourcesDemoDownload": "Demo-Plugin-ZIP herunterladen",
-  "sourcesDemoHelp": "Neu hier? Lade die kleine fiktive Demo herunter, wähle ZIP hochladen und dann die heruntergeladene Datei. Füge den Download-Link nicht in das Repository-Feld ein."
+  "complementaryNoPick": "Keine passende eigene Farbe"
 }

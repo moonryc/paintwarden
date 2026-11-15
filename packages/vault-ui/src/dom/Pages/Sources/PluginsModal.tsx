@@ -19,9 +19,8 @@ import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PluginInstallStatus, usePluginInstall } from "../../graphql/plugin-install-hooks";
 import { isPluginInstallActive, type PluginInstallJob } from "../../graphql/plugin-install-observer";
 import { usePluginSources } from "../../graphql/sources-hooks";
-import { Extension, FileUp, Layers, RotateCw } from "../../icons";
+import { Extension, FileUp, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
-import { demoPluginZipUrl } from "../../utils/project-links";
 import { PublicError } from "../../utils/public-error";
 import { useInitialPageLoading } from "../useInitialPageLoading";
 
@@ -120,11 +119,15 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     if (sourceRead.loading || sourceRead.error || checkedSources.current) return;
     checkedSources.current = true;
     void (async () => {
-      await loadVersions();
       if (!mounted.current || isPluginInstallActive(latestJob.current)) return;
-      const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
+      const response = await fetch("/api/catalog-sources?automatic=1", {
+        method: "PUT",
+        headers: authHeaders(),
+      });
       if (!response.ok || !mounted.current) return;
-      const result = (await response.json()) as { job?: PluginInstallJob };
+      const result = (await response.json()) as { job?: PluginInstallJob; versions?: SourceVersion[] };
+      if (mounted.current && result.versions)
+        setSourceVersions(Object.fromEntries(result.versions.map((item) => [item.id, item])));
       // Decoding may finish after a ZIP/URL submission closed this dialog or
       // a newer job arrived. An old automatic refresh ack must not replace it.
       if (result.job && mounted.current && !isPluginInstallActive(latestJob.current))
@@ -305,14 +308,6 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         <Box component="p" sx={{ color: "var(--ink-faint)", fontSize: 13, mt: 0.5, mb: 2 }}>
           {t("sourcesPasteAGitHubRepositoryOrUploadAPluginZip")}
         </Box>
-        <Alert severity="info" sx={{ mb: 2 }}>
-          {t("sourcesDemoHelp")}
-          <Box sx={{ mt: 1 }}>
-            <Button href={demoPluginZipUrl} target="_blank" rel="noopener noreferrer" size="small">
-              {t("sourcesDemoDownload")}
-            </Button>
-          </Box>
-        </Alert>
         <Box
           component="form"
           onSubmit={(event) => {
@@ -454,7 +449,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
 
       {!sources.length && !sourceRead.error ? (
         <EmptyState
-          icon={<Layers size={26} />}
+          icon={<Extension size={26} />}
           title={t("sourcesNoPluginsYet")}
           body={t("sourcesAddAGitHubRepositoryAboveToBringItsPaints")}
         />

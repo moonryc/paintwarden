@@ -120,18 +120,24 @@ export function SourcesApolloFixture({
                   errorCode: null,
                   errorParameters: [],
                 })
-              : {
-                  id: "background-job",
-                  stage: "SUCCEEDED",
-                  done: 1,
-                  total: 1,
-                  percent: 100,
-                  cancellable: false,
-                  error: null,
-                  errorCode: null,
-                  errorParameters: [],
-                },
+              : !beforeBackgroundResult
+                ? null
+                : {
+                    id: "background-job",
+                    stage: "SUCCEEDED",
+                    done: 1,
+                    total: 1,
+                    percent: 100,
+                    cancellable: false,
+                    error: null,
+                    errorCode: null,
+                    errorParameters: [],
+                  },
         });
+        if (init?.method === "PUT" && url.searchParams.has("automatic")) {
+          onOperation("AutomaticUpdate");
+          if (mode === "empty" && !beforeBackgroundResult) return Response.json({ job: null, versions: [] });
+        }
         if (init?.method === "PUT" && beforeBackgroundResult) {
           const decode = response.json.bind(response);
           response.json = async () => {

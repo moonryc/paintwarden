@@ -81,22 +81,17 @@ A new network server also needs the one-time setup code from its server log
 not need a code. Keep sign-in required on a shared or reachable server. Turning
 it off lets anyone who can reach that server read the vault.
 
-## 4. Install the small starter plugin
+## 4. Add your catalog
 
 An empty catalog on first launch is expected: no manufacturer catalog is bundled.
+In **Settings → Plugins**, add a compatible public GitHub plugin repository or
+choose **Upload ZIP** for a plugin file you trust. **Create plugin** can package
+your own paints, schemes and templates for sharing.
 
-1. Download [paintwarden-demo-plugin.zip](https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip)
-   from the beta.1 release. Leave it zipped (if your browser expands downloads,
-   keep or download the original ZIP).
-2. Open **Settings → Plugins → Upload ZIP** and select that file.
-3. Try the eight fictitious paints, two schemes and one miniature template.
-   Mark a paint owned, set its quantity, and add a miniature/project to try a recipe.
-
-This tiny CC0 demo is not a real manufacturer's range. **Do not paste the download
-URL or the Paintwarden application repository into the GitHub repository field.**
-That field accepts compatible plugin repositories whose root contains `source.json`,
-not arbitrary ZIP links or subfolders. Installing other plugins is optional;
-check their source, content permissions and [plugin behavior](plugins.md) first.
+The repository field accepts compatible plugin repositories whose root contains
+`source.json`, not arbitrary ZIP links, subfolders or the Paintwarden application
+repository. Check the source, content permissions and [plugin behavior](plugins.md)
+before installing a plugin.
 
 ## 5. Back up before upgrading or restoring
 

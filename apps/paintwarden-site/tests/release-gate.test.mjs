@@ -59,6 +59,7 @@ test("built default site hides private links and setup; opt-in restores them", {
   try {
     const hidden = build(join(temporary, "private"));
     for (const page of ["", "download", "docs", "faq", "licenses"]) {
+      assert.ok(!/demo[- ]plugin|demo ZIP|starter plugin/i.test(hidden(page)), `${page}: demo promotion`);
       const links = hrefs(hidden(page));
       assert.ok(!links.some((href) => href.startsWith(repository)), `${page}: private link`);
       assert.ok(links.includes("/licenses/"), `${page}: local notices`);
@@ -78,6 +79,9 @@ test("built default site hides private links and setup; opt-in restores them", {
     assert.ok(hrefs(download).includes("/docs/"));
 
     const publicSite = build(join(temporary, "public"), "true");
+    for (const page of ["", "download", "docs", "faq", "licenses"]) {
+      assert.ok(!/demo[- ]plugin|demo ZIP|starter plugin/i.test(publicSite(page)), `${page}: demo promotion`);
+    }
     const publicDownload = publicSite("download");
     assert.ok(!publicDownload.includes(notice));
     assert.ok(publicDownload.includes("git clone"));

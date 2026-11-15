@@ -94,6 +94,7 @@ function Workspace() {
     <>
       <Tabs
         textColor="inherit"
+        sx={{ color: "var(--ink)", "& .MuiTab-root": { opacity: 1 } }}
         value={tab}
         onChange={(_event, value: unknown) => {
           if (value === "dashboard" || value === "paints") store.getState().go(value);
@@ -251,7 +252,7 @@ export const RestoredJobDoesNotBlockEditing: Story = {
 
 function completionStory(stage: "SUCCEEDED" | "FAILED" | "CANCELLED"): Story {
   return {
-    args: { details: stage === "FAILED" },
+    args: { details: true },
     play: async ({ args, canvasElement }) => {
       const canvas = within(canvasElement);
       const fixture = await ready(args);
@@ -275,14 +276,21 @@ function completionStory(stage: "SUCCEEDED" | "FAILED" | "CANCELLED"): Story {
         ).not.toBeInTheDocument(),
       );
       await expect(fixture.notify).toHaveBeenCalledTimes(1);
+      await expect(canvas.getByTestId("plugin-details")).toBeEmptyDOMElement();
+      // A reload must not restore the panel or repeat even a failed result.
+      await userEvent.click(canvas.getByRole("button", { name: "Unmount provider" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Reload provider" }));
+      await waitFor(() => expect(fixture.operation).toHaveBeenCalledTimes(2));
+      await expect(canvas.getByTestId("global-progress")).toHaveAttribute("data-stage", stage);
+      await expect(canvas.queryByRole("progressbar")).not.toBeInTheDocument();
+      await expect(canvas.getByTestId("plugin-details")).toBeEmptyDOMElement();
+      await expect(fixture.notify).toHaveBeenCalledTimes(1);
       // The existing live invalidation subscription owns catalog publication;
       // progress notifications must not restart it via a global refresh.
       await expect(fixture.refresh).not.toHaveBeenCalled();
       await expect(canvasElement).not.toHaveTextContent("PRIVATE diagnostic");
       if (stage === "FAILED") {
-        await expect(
-          within(canvas.getByTestId("plugin-details")).getByText("Invalid paint selection"),
-        ).toBeVisible();
+        await expect(canvas.getByTestId("plugin-details")).toBeEmptyDOMElement();
         await expect(fixture.notify).not.toHaveBeenCalledWith(
           expect.stringContaining("PRIVATE diagnostic"),
           "error",
@@ -360,11 +368,7 @@ export const LateRestAcceptanceCannotResurrectTerminalJob: Story = {
     // assertions below must observe its processed result, not the pre-response UI.
     await userEvent.type(canvas.getByRole("textbox", { name: "Arbitrary note" }), "Still cancelled");
     await expect(canvas.getByTestId("global-progress")).toHaveAttribute("data-stage", "CANCELLED");
-    await waitFor(() =>
-      expect(within(canvas.getByTestId("plugin-details")).getByRole("status")).toHaveTextContent(
-        "Plugin installation cancelled",
-      ),
-    );
+    await expect(canvas.getByTestId("plugin-details")).toBeEmptyDOMElement();
     await expect(compact.queryByRole("progressbar")).not.toBeInTheDocument();
     await expect(canvas.queryByRole("button", { name: "Cancel installation" })).not.toBeInTheDocument();
     await expect(fixture.notify).toHaveBeenCalledTimes(1);

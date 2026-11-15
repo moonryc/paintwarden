@@ -37,9 +37,8 @@ credentials, sessions and private photos: treat it as sensitive.
   its manifest, catalog, logo/images and declared dependencies as needed.
   Opening **Plugins** also checks versions and can automatically download and
   apply newer versions of installed repository plugins in the background. Uploading a ZIP sends it to your vault
-  server; declared repository dependencies can still require GitHub. The small
-  fictitious demo ZIP has no repository dependencies. Downloading that ZIP in
-  your browser contacts GitHub separately.
+  server; declared repository dependencies can still require GitHub. Downloading
+  a plugin in your browser contacts its download host separately.
 - **External images:** importing an image by URL asks the vault server to fetch
   that public URL and permitted redirects. Scheme image/thumbnail URLs can also
   be displayed directly by the interface, contacting their host from your
@@ -83,7 +82,7 @@ by any paint or miniature manufacturer. Brand and paint names in plugins belong
 to their respective owners.** This notice does not grant permission to copy,
 redistribute or use anyone's catalogs, logos or photographs. Choose plugins and
 share content only where you have the necessary rights. The app bundles no
-manufacturer catalog; its optional CC0 demo uses fictitious paints.
+manufacturer catalog.
 
 ## Code references for this disclosure
 

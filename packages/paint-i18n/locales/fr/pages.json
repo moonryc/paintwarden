@@ -659,7 +659,5 @@
   },
   "complementaryPalette": "Ta palette",
   "complementaryYourPaint": "Ta peinture",
-  "complementaryNoPick": "Aucune peinture possédée ne correspond",
-  "sourcesDemoDownload": "Télécharger le ZIP du plugin de démonstration",
-  "sourcesDemoHelp": "Vous débutez ? Téléchargez la petite démonstration fictive, puis choisissez Importer un ZIP et sélectionnez le fichier téléchargé. Ne collez pas le lien de téléchargement dans le champ du dépôt."
+  "complementaryNoPick": "Aucune peinture possédée ne correspond"
 }

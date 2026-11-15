@@ -659,7 +659,5 @@
   },
   "complementaryPalette": "Sua paleta",
   "complementaryYourPaint": "Sua tinta",
-  "complementaryNoPick": "Nenhuma tinta sua corresponde",
-  "sourcesDemoDownload": "Baixar ZIP do plugin de demonstração",
-  "sourcesDemoHelp": "Primeira vez? Baixe a pequena demonstração fictícia, escolha Enviar ZIP e selecione o arquivo baixado. Não cole o link de download no campo do repositório."
+  "complementaryNoPick": "Nenhuma tinta sua corresponde"
 }

@@ -114,7 +114,11 @@ type SourceVersionResult = {
   updateAvailable?: boolean;
   error?: string;
 };
-const sourceVersionChecks = new Map<string, Promise<SourceVersionResult>>();
+type CheckedSourceVersion = {
+  result: SourceVersionResult;
+  pinned?: Awaited<ReturnType<typeof sourceManifest>>;
+};
+const sourceVersionChecks = new Map<string, { identity: string; promise: Promise<CheckedSourceVersion> }>();
 const sourceVersionResults = new Map<string, { identity: string; result: SourceVersionResult }>();
 const versionIdentity = (source: { repository: string; branch: string; version: string }) =>
   JSON.stringify([source.repository, source.branch, source.version]);
@@ -142,41 +146,80 @@ export function cachedCatalogSourceVersions() {
   });
 }
 
-export async function checkCatalogSourceVersions() {
+async function checkSourceVersions() {
   // Drop removed or changed identities before accepting another set of checks.
   cachedCatalogSourceVersions();
   return Promise.all(
     listCatalogSources().map((source) => {
-      const pending = sourceVersionChecks.get(source.id);
-      if (pending) return pending;
       const identity = versionIdentity(source);
+      const pending = sourceVersionChecks.get(source.id);
+      if (pending?.identity === identity) return pending.promise.then((checked) => ({ source, ...checked }));
       const check = checkSourceVersion(source)
-        .then((result) => {
+        .then((checked) => {
           const current = installedSource(source.repository);
           if (current?.id === source.id && versionIdentity(current) === identity)
-            sourceVersionResults.set(source.id, { identity, result });
-          return result;
+            sourceVersionResults.set(source.id, { identity, result: checked.result });
+          return checked;
         })
-        .finally(() => sourceVersionChecks.delete(source.id));
-      sourceVersionChecks.set(source.id, check);
-      return check;
+        .finally(() => {
+          if (sourceVersionChecks.get(source.id)?.promise === check) sourceVersionChecks.delete(source.id);
+        });
+      sourceVersionChecks.set(source.id, { identity, promise: check });
+      return check.then((checked) => ({ source, ...checked }));
     }),
   );
 }
 
-async function checkSourceVersion(source: ReturnType<typeof listCatalogSources>[number]) {
-  if (isUploadedSource(source.repository)) return { id: source.id };
+export async function checkCatalogSourceVersions() {
+  return (await checkSourceVersions()).map(({ result }) => result);
+}
+
+// Probing versions is read-only: an automatic no-op never creates an install job or
+// staging directory. Reuse these exact revisions when an update really is needed.
+export async function prepareCatalogSourceUpdates(id?: string) {
+  const checked = await checkSourceVersions();
+  const updates = checked.filter(({ source, result }) => (!id || source.id === id) && result.updateAvailable);
+  return {
+    versions: checked.map(({ result }) => result),
+    install: updates.length
+      ? (context: InstallContext) => {
+          for (const { source } of checked) {
+            const current = installedSource(source.repository);
+            if (!current || current.id !== source.id || versionIdentity(current) !== versionIdentity(source))
+              throw new Error("The vault changed during plugin installation. Please try again.");
+          }
+          return installRepositories(
+            updates.map(({ source }) => source.url),
+            context,
+            new Map(
+              checked.flatMap(({ source, pinned }) => (pinned ? [[source.repository, pinned] as const] : [])),
+            ),
+          );
+        }
+      : null,
+  };
+}
+
+async function checkSourceVersion(
+  source: ReturnType<typeof listCatalogSources>[number],
+): Promise<CheckedSourceVersion> {
+  if (isUploadedSource(source.repository)) return { result: { id: source.id } };
   try {
-    const { manifest } = await sourceManifest(source.repository, source.branch);
+    const pinned = await sourceManifest(source.repository, source.branch);
     return {
-      id: source.id,
-      availableVersion: manifest.version,
-      updateAvailable: !versionAtLeast(source.version, manifest.version),
+      pinned,
+      result: {
+        id: source.id,
+        availableVersion: pinned.manifest.version,
+        updateAvailable: !versionAtLeast(source.version, pinned.manifest.version),
+      },
     };
   } catch (error) {
     return {
-      id: source.id,
-      error: error instanceof Error ? error.message : "Could not check for updates",
+      result: {
+        id: source.id,
+        error: error instanceof Error ? error.message : "Could not check for updates",
+      },
     };
   }
 }

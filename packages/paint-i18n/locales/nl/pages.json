@@ -631,7 +631,5 @@
   },
   "complementaryPalette": "Jouw palet",
   "complementaryYourPaint": "Jouw verf",
-  "complementaryNoPick": "Geen eigen verf komt overeen",
-  "sourcesDemoDownload": "Demo-plug-in als ZIP downloaden",
-  "sourcesDemoHelp": "Nieuw hier? Download de kleine fictieve demo, kies ZIP uploaden en selecteer het gedownloade bestand. Plak de downloadlink niet in het repositoryveld."
+  "complementaryNoPick": "Geen eigen verf komt overeen"
 }

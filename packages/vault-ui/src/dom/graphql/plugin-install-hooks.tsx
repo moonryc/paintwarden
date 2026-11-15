@@ -83,7 +83,7 @@ export function PluginInstallProvider({
       setJob(next);
       if (!next || isPluginInstallActive(next)) return;
       setCancelling(false);
-      // Reload recovers terminal status without replaying yesterday's toast.
+      // Remember terminal state for stale-ack protection, without replaying old toasts.
       if (!watched.current.has(next.id) || announced.current.has(next.id)) return;
       announced.current.add(next.id);
       if (next.stage === "SUCCEEDED") {
@@ -175,9 +175,9 @@ export function PluginInstallProvider({
 export function PluginInstallStatus({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("pages");
   const { job, cancelling, disconnected, cancel } = usePluginInstall();
-  // Completed jobs stay visible in Plugins; the global indicator only occupies
-  // space while work is running, with terminal results delivered as app toasts.
-  if (!job || (compact && !isPluginInstallActive(job))) return null;
+  // Both surfaces represent live work only. Terminal snapshots are retained by
+  // the provider solely for deduplication; results belong in transient toasts.
+  if (!job || !isPluginInstallActive(job)) return null;
   return (
     <Box sx={{ minWidth: 0 }}>
       <PluginInstallProgress

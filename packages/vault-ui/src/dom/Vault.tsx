@@ -574,6 +574,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
               <Alert
                 severity={toast.tone === "error" ? "error" : "success"}
                 variant="filled"
+                onClose={() => dismissToast(toast.id)}
                 sx={{
                   boxSizing: "border-box",
                   width: "100%",

@@ -64,6 +64,17 @@ test.after(() => {
   rmSync(`${directory}.plugin-staging`, { recursive: true, force: true });
 });
 
+void test("automatic refresh with no sources never creates the first install job", async () => {
+  assert.equal(currentPluginInstallJob(), null);
+  const response = await routeApi(
+    new Request(base + "/api/catalog-sources?automatic=1", { method: "PUT", headers }),
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { job: null, versions: [] });
+  assert.equal(currentPluginInstallJob(), null);
+  assert.equal(pluginInstallRunning(), false);
+});
+
 test("job reservation, bounded progress, reload snapshots, abort cleanup, and commit cancellation boundary", async () => {
   assert.equal(currentPluginInstallJob(), null);
   const gate = deferred();
@@ -162,6 +173,178 @@ test("REST streams ZIP to a job, refuses overlap, and preserves the original del
   );
   assert.equal(removed.status, 200);
   assert.equal((database.prepare("SELECT count(*) AS n FROM paint_catalog").get() as { n: number }).n, 0);
+});
+
+void test("automatic refresh skips no-ops, reuses manifest probes, and cannot replace racing jobs", async (t) => {
+  const {
+    addCatalogSource,
+    addUploadedCatalogSource,
+    cachedCatalogSourceVersions,
+    listCatalogSources,
+    removeCatalogSource,
+  } = await import("./catalog-sources.ts");
+  const originalFetch = globalThis.fetch;
+  let version = "1.0.0";
+  let offline = false;
+  let probeGate: ReturnType<typeof deferred> | undefined;
+  let probeStarted: ReturnType<typeof deferred> | undefined;
+  let catalogGate: ReturnType<typeof deferred> | undefined;
+  const requests: string[] = [];
+  const refresh = () =>
+    routeApi(new Request(base + "/api/catalog-sources?automatic=1", { method: "PUT", headers }));
+  const rows = () => database.prepare("SELECT * FROM catalog_sources ORDER BY id").all();
+  globalThis.fetch = async (input) => {
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    requests.push(url.href);
+    if (offline) throw new Error("Offline test");
+    const repo = url.hostname === "api.github.com" ? url.pathname.split("/")[3] : url.pathname.split("/")[2];
+    if (url.pathname.endsWith(`/repos/automatic/${repo}`)) return Response.json({ default_branch: "main" });
+    if (url.pathname.endsWith("/commits/main")) {
+      probeStarted?.release();
+      await probeGate?.promise;
+      return Response.json({ sha: "a".repeat(40) });
+    }
+    if (url.pathname.endsWith("/contents/source.json"))
+      return Response.json({
+        encoding: "base64",
+        content: Buffer.from(
+          JSON.stringify({
+            formatVersion: 1,
+            name: repo,
+            version: repo === "root" ? version : "1.0.0",
+            dependencies: repo === "root" ? [{ repository: "automatic/dependency" }] : [],
+            catalog: "catalog.json",
+            assets: "assets.json",
+          }),
+        ).toString("base64"),
+      });
+    if (url.pathname.endsWith("/catalog.json")) {
+      await catalogGate?.promise;
+      return Response.json({ paints: [], schemes: [], templates: [] });
+    }
+    if (url.pathname.endsWith("/assets.json")) return Response.json({});
+    return new Response(null, { status: 404 });
+  };
+  try {
+    await t.test("uploaded-only sources have no automatic work", async () => {
+      await addUploadedCatalogSource(buildDemoPlugin());
+      const before = rows();
+      const latest = currentPluginInstallJob();
+      const response = await refresh();
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.equal(result.job, null);
+      assert.deepEqual(result.versions, cachedCatalogSourceVersions());
+      assert.deepEqual(rows(), before);
+      assert.deepEqual(currentPluginInstallJob(), latest);
+      assert.equal(requests.length, 0);
+      await removeCatalogSource(listCatalogSources()[0].id);
+    });
+    await addCatalogSource("automatic/root");
+    await t.test("current, older, and unreachable sources create no job and do not write", async () => {
+      for (const state of ["current", "older", "offline"]) {
+        version = state === "older" ? "0.9.0" : "1.0.0";
+        offline = state === "offline";
+        requests.length = 0;
+        const before = rows();
+        const latest = currentPluginInstallJob();
+        const response = await refresh();
+        assert.equal(response.status, 200, state);
+        const result = await response.json();
+        assert.equal(result.job, null, state);
+        assert.deepEqual(result.versions, cachedCatalogSourceVersions());
+        assert.deepEqual(rows(), before);
+        assert.deepEqual(currentPluginInstallJob(), latest);
+        assert.equal(pluginInstallRunning(), false);
+        assert.ok(requests.every((url) => url.startsWith("https://api.github.com/")));
+        if (offline) assert.ok(result.versions.every((row: { error?: string }) => row.error));
+        else
+          assert.ok(
+            result.versions.every((row: { updateAvailable?: boolean }) => row.updateAvailable === false),
+          );
+      }
+      offline = false;
+    });
+    await t.test("concurrent automatic updates share one observable job and pinned manifests", async () => {
+      version = "1.1.0";
+      requests.length = 0;
+      probeGate = deferred();
+      probeStarted = deferred();
+      catalogGate = deferred();
+      const first = refresh();
+      await probeStarted.promise;
+      const second = refresh();
+      await setImmediate();
+      probeGate.release();
+      const [response, overlap] = await Promise.all([first, second]);
+      assert.equal(response.status, 202);
+      assert.equal(overlap.status, 202);
+      const accepted = await response.json();
+      assert.equal((await overlap.json()).job.id, accepted.job.id);
+      assert.equal(currentPluginInstallJob()?.id, accepted.job.id);
+      assert.equal(pluginInstallRunning(), true);
+      const snapshot = await api({ query });
+      assert.equal((await snapshot.json()).data.pluginInstallJob.id, accepted.job.id);
+      const before = requests.length;
+      assert.equal((await refresh()).status, 409);
+      assert.equal(requests.length, before, "running install skips automatic network probes");
+      catalogGate.release();
+      assert.equal((await settled()).stage, "SUCCEEDED");
+      assert.equal(currentPluginInstallJob()?.id, accepted.job.id);
+      assert.equal(
+        listCatalogSources().find((source) => source.repository === "automatic/root")?.version,
+        "1.1.0",
+      );
+      assert.equal(requests.filter((url) => url.includes("/contents/source.json")).length, 2);
+      assert.equal(requests.filter((url) => url.includes("/commits/")).length, 2);
+      assert.equal(requests.filter((url) => url.endsWith("/catalog.json")).length, 1);
+      probeGate = probeStarted = catalogGate = undefined;
+    });
+    for (const finishBeforeProbe of [false, true]) {
+      await t.test(
+        `manual job ${finishBeforeProbe ? "completed" : "running"} during preflight is never replaced`,
+        async () => {
+          version = "1.2.0";
+          probeGate = deferred();
+          probeStarted = deferred();
+          const response = refresh();
+          await probeStarted.promise;
+          const manualGate = deferred();
+          const manual = startPluginInstall(() => manualGate.promise);
+          if (finishBeforeProbe) {
+            manualGate.release();
+            await settled();
+          }
+          probeGate.release();
+          assert.equal((await response).status, 409);
+          assert.equal(currentPluginInstallJob()?.id, manual.id);
+          if (!finishBeforeProbe) {
+            manualGate.release();
+            await settled();
+          }
+          probeGate = probeStarted = undefined;
+        },
+      );
+    }
+    await t.test("manual update-all and single-source requests remain supported", async () => {
+      for (const suffix of [
+        "",
+        `?id=${listCatalogSources().find((source) => source.repository === "automatic/root")!.id}`,
+      ]) {
+        const response = await routeApi(
+          new Request(base + "/api/catalog-sources" + suffix, { method: "PUT", headers }),
+        );
+        assert.equal(response.status, 202);
+        const accepted = await response.json();
+        assert.equal((await settled()).stage, "SUCCEEDED");
+        assert.equal(currentPluginInstallJob()?.id, accepted.job.id);
+      }
+    });
+  } finally {
+    probeGate?.release();
+    catalogGate?.release();
+    globalThis.fetch = originalFetch;
+  }
 });
 
 test(

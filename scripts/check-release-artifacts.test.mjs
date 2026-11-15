@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -52,3 +52,31 @@ for (const version of ["1.0.0-beta.1", "1.0.0"]) {
     });
   }
 }
+
+test("release workflow publishes desktop assets only and keeps dispatch non-publishing", () => {
+  const source = readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8");
+  const workflow = yaml.load(source);
+  assert.deepEqual(Object.keys(workflow.jobs).sort(), ["desktop", "publish", "quality", "version"]);
+  assert.deepEqual(workflow.jobs.publish.needs, ["version", "quality", "desktop"]);
+  assert.equal(
+    workflow.jobs.publish.if,
+    "github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')",
+  );
+  assert.ok(Object.hasOwn(workflow.on, "workflow_dispatch"));
+  const publish = workflow.jobs.publish.steps.find((step) => step.run?.includes("gh release create"));
+  const roots = /find ([^\n]+?) -maxdepth/.exec(publish.run)?.[1].split(" ");
+  assert.deepEqual(roots, ["artifacts/release-macOS", "artifacts/release-Windows"]);
+  assert.ok(!/demo|package-demo-plugin/.test(source), "developer fixture must not become a release asset");
+});
+
+test("tester onboarding never promotes the developer fixture as a released starter catalog", () => {
+  for (const filename of ["README.md", "docs/beta-testers.md", "docs/privacy.md", "CHANGELOG.md"]) {
+    const text = readFileSync(new URL(`../${filename}`, import.meta.url), "utf8");
+    assert.ok(!/paintwarden-demo-plugin|fictitious demo|starter plugin/i.test(text), filename);
+  }
+  for (const filename of ["docs/plugins.md", "examples/demo-plugin/README.md"]) {
+    const text = readFileSync(new URL(`../${filename}`, import.meta.url), "utf8");
+    assert.ok(text.includes("examples/demo-plugin") || text.includes("developer authoring example"));
+    assert.ok(!/releases\/download\/[^\s)]+\/paintwarden-demo-plugin\.zip/.test(text), filename);
+  }
+});

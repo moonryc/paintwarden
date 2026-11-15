@@ -13,7 +13,7 @@ contact third parties; see [privacy and network activity](docs/privacy.md).
 
 Start with the [beta tester guide](docs/beta-testers.md) for **1.0.0-beta.1**:
 choosing local or server mode, safe Mac/optional Windows installation, owner setup,
-the downloadable fictitious starter plugin, backups, manual unsigned Mac upgrades
+adding your own catalogs, backups, manual unsigned Mac upgrades
 and reporting. Use only platforms offered and accepted on the
 [beta release page](https://github.com/moonryc/paintwarden/releases/tag/v1.0.0-beta.1).
 App and server versions must match exactly, including `beta.1`.
@@ -314,10 +314,6 @@ bundles no catalog of its own.
 - [docs/plugins.md](docs/plugins.md) explains how plugins are installed, updated, removed,
   backed up, and made.
 - [docs/source-format.md](docs/source-format.md) is the formal specification of the plugin files.
-- [Download the fictitious demo ZIP](https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip),
-  then use **Settings → Plugins → Upload ZIP**. Do not paste its URL or this app's
-  repository into the repository field. [Source](examples/demo-plugin/) is CC0;
-  the release asset becomes available when beta.1 is published.
 
 ## Architecture
 

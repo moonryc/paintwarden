@@ -603,7 +603,5 @@
   },
   "complementaryPalette": "你的調色盤",
   "complementaryYourPaint": "你的顏料",
-  "complementaryNoPick": "沒有符合的已擁有顏料",
-  "sourcesDemoDownload": "下載示範外掛 ZIP",
-  "sourcesDemoHelp": "第一次使用？下載這個小型虛構示範，然後選擇「上傳 ZIP」並選取下載的檔案。請勿將下載連結貼到儲存庫欄位中。"
+  "complementaryNoPick": "沒有符合的已擁有顏料"
 }

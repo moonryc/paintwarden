@@ -6,7 +6,7 @@ import { unzipSync } from "fflate";
 
 import { buildDemoPlugin } from "./package-demo-plugin.mjs";
 
-test("release demo ZIP is reproducible across time zones and has no developer files", () => {
+test("developer fixture ZIP is reproducible across time zones and has no developer files", () => {
   const outputs = ["UTC", "America/Chicago", "Asia/Tokyo"].map((TZ) => {
     const child = spawnSync(
       process.execPath,

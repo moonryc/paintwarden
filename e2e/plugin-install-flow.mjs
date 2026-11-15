@@ -165,6 +165,25 @@ export async function runPluginInstallFlow({
   }
   const inspectPage = observerPage ?? page;
   assert.equal((await sources(inspectPage)).length, 0, "Fresh fixture must have no plugins");
+  await navigate(page, "Data & settings");
+  const automatic = page.waitForResponse(
+    (r) => new URL(r.url()).searchParams.has("automatic") && r.request().method() === "PUT",
+  );
+  await page.getByRole("button", { name: "Manage plugins", exact: true }).click();
+  let plugins = page.getByRole("dialog", { name: "Plugins", exact: true });
+  await expect(plugins.getByText("No plugins yet", { exact: true })).toBeVisible();
+  assert.deepEqual(await (await automatic).json(), { job: null, versions: [] });
+  await expect(plugins.getByRole("progressbar")).toHaveCount(0);
+  await expect(page.getByText("Plugin installation finished", { exact: true })).toHaveCount(0);
+  await expect(plugins.locator("xpath=..")).toHaveCSS("opacity", "1");
+  await page.screenshot({
+    path: path.join(artifacts, `${width}-fresh-plugins.png`),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await navigate(page, "Workbench");
+  check("fresh vault automatic refresh creates no job, toast or progress panel");
   const title = `Synthetic install companion ${width}`;
   await page.getByRole("button", { name: "Add miniature", exact: true }).click();
   await page
@@ -219,16 +238,32 @@ export async function runPluginInstallFlow({
   await waitJob(page, cancelledId, "IMAGES", 300);
   await page.screenshot({ path: path.join(artifacts, `${width}-reloaded-progress.png`), fullPage: false });
   assert.equal((await sources(inspectPage)).length, 0, "Reload did not expose partial rows");
+  await navigate(page, "Data & settings");
+  await page.getByRole("button", { name: "Manage plugins", exact: true }).click();
+  plugins = page.getByRole("dialog", { name: "Plugins", exact: true });
+  await expect(plugins.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+  await expect(plugins.locator("xpath=..")).toHaveCSS("opacity", "1");
+  await page.screenshot({
+    path: path.join(artifacts, `${width}-running-plugins.png`),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
   const cancelResponse = page.waitForResponse(
     (r) => new URL(r.url()).searchParams.get("job") === cancelledId && r.request().method() === "DELETE",
   );
   await page.getByRole("button", { name: "Cancel installation", exact: true }).click();
   assert.equal((await cancelResponse).status(), 200);
   await waitJob(page, cancelledId, "CANCELLED");
+  await expect(page.getByText("Plugin installation cancelled", { exact: true })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Plugin installation", exact: true })).toHaveCount(0);
   assert.equal((await sources(inspectPage)).length, 0, "Cancelled plugin must leave no source/catalog rows");
   if (verifyCancelled) await verifyCancelled();
   check("reload reattaches; cancellation cleans staged images and leaves no catalog changes");
+  await page.reload();
+  await expect(page.getByRole("progressbar", { name: "Plugin installation" })).toHaveCount(0);
+  await expect(page.getByText("Plugin installation cancelled", { exact: true })).toHaveCount(0);
+  await navigate(page, "Workbench");
   await page.getByText(title, { exact: true }).click();
   await expect(page.getByText(notes, { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Close project", exact: true }).click();
@@ -238,6 +273,7 @@ export async function runPluginInstallFlow({
   assert.equal((await sources(inspectPage)).length, 0, "Retry still hidden halfway through real processing");
   await page.screenshot({ path: path.join(artifacts, `${width}-retry-images.png`), fullPage: false });
   await waitJob(page, successId, "SUCCEEDED");
+  await expect(page.getByText("Plugin installation finished", { exact: true })).toBeVisible();
   await expect(page.getByRole("progressbar", { name: "Plugin installation", exact: true })).toHaveCount(0);
   const committed = await sources(inspectPage);
   assert.equal(committed.length, 1);
@@ -258,6 +294,31 @@ export async function runPluginInstallFlow({
   );
   if (verifyComplete) await verifyComplete(committed[0]);
   await page.screenshot({ path: path.join(artifacts, `${width}-installed.png`), fullPage: false });
+  await navigate(page, "Data & settings");
+  await page.getByRole("button", { name: "Manage plugins", exact: true }).click();
+  plugins = page.getByRole("dialog", { name: "Plugins", exact: true });
+  await expect(plugins.getByRole("progressbar")).toHaveCount(0);
+  await expect(plugins.getByText("Plugin installation finished", { exact: true })).toHaveCount(0);
+  await expect(plugins.locator("xpath=..")).toHaveCSS("opacity", "1");
+  await expect(plugins.getByText("No plugins yet", { exact: true })).toHaveCount(0);
+  await page.screenshot({
+    path: path.join(artifacts, `${width}-completed-plugins.png`),
+    fullPage: false,
+    animations: "disabled",
+  });
+  await page.keyboard.press("Escape");
+  await page.reload();
+  await navigate(page, "Data & settings");
+  await page.getByRole("button", { name: "Manage plugins", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Plugins", exact: true })).toBeVisible();
+  await expect(page.getByRole("progressbar", { name: "Plugin installation" })).toHaveCount(0);
+  await expect(page.getByText("Plugin installation finished", { exact: true })).toHaveCount(0);
+  await page.screenshot({
+    path: path.join(artifacts, `${width}-reloaded-completed-plugins.png`),
+    fullPage: false,
+    animations: "disabled",
+  });
+  check("completion removes both panels; reopening and reloading do not replay terminal progress or toast");
   const evidence = await page.evaluate(() => window.__pluginFlow);
   assert.deepEqual(evidence.errors, []);
   results[`width${width}`] = { cancelledId, successId, committed, jobs: evidence.jobs, pluginChanges };

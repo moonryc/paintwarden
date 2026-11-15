@@ -57,7 +57,14 @@ function installedSource(repository: string) {
   return getDb().select().from(catalogSources).where(eq(catalogSources.repository, repository)).get();
 }
 
-type Preparation = { sources: Map<string, PreparedSource>; context: InstallContext; readingDone: number };
+// Automatic refresh can hand its pinned manifest probes to the install without fetching twice.
+export type RepositoryManifests = ReadonlyMap<string, Awaited<ReturnType<typeof sourceManifest>>>;
+type Preparation = {
+  sources: Map<string, PreparedSource>;
+  context: InstallContext;
+  readingDone: number;
+  manifests?: RepositoryManifests;
+};
 
 async function readCatalog(source: PreparedSource) {
   [source.catalogData, source.assetData] = await Promise.all([
@@ -86,7 +93,8 @@ async function prepareRepository(input: string, state: Preparation, stack: Set<s
   try {
     const expected = installedSource(id);
     const branch = expected?.branch ?? (await defaultBranch(id, state.context.signal));
-    const { manifest, revision } = await sourceManifest(id, branch, state.context.signal);
+    const { manifest, revision } =
+      state.manifests?.get(id) ?? (await sourceManifest(id, branch, state.context.signal));
     await dependencies(manifest, state, stack);
     if (expected && !versionAtLeast(manifest.version, expected.version))
       throw new Error(
@@ -117,7 +125,11 @@ async function prepareRepository(input: string, state: Preparation, stack: Set<s
 // ZIP directory/manifest reading too, not merely the eventual transaction.
 let installing = false;
 
-async function installPrepared(prepare: (state: Preparation) => Promise<string[]>, context: InstallContext) {
+async function installPrepared(
+  prepare: (state: Preparation) => Promise<string[]>,
+  context: InstallContext,
+  manifests?: RepositoryManifests,
+) {
   if (installing) throw new Error("A plugin install is already running");
   installing = true;
   let stage: Awaited<ReturnType<typeof createCatalogImageStage>> | undefined;
@@ -125,7 +137,7 @@ async function installPrepared(prepare: (state: Preparation) => Promise<string[]
   try {
     installProgress(context, "reading", 0, 0);
     await sweepCatalogImageStages();
-    const state: Preparation = { sources: new Map(), context, readingDone: 0 };
+    const state: Preparation = { sources: new Map(), context, readingDone: 0, manifests };
     const rootIds = await prepare(state);
     const sources = [...state.sources.values()];
     installProgress(context, "checking", 0, sources.length);
@@ -246,16 +258,24 @@ async function installPrepared(prepare: (state: Preparation) => Promise<string[]
   }
 }
 
-export function installRepositories(inputs: string[], context: InstallContext = {}) {
-  return installPrepared(async (state) => {
-    const ids: string[] = [];
-    for (const input of inputs) {
-      const { id } = normalizeRepository(input);
-      await prepareRepository(input, state, new Set());
-      ids.push(id);
-    }
-    return ids;
-  }, context);
+export function installRepositories(
+  inputs: string[],
+  context: InstallContext = {},
+  manifests?: RepositoryManifests,
+) {
+  return installPrepared(
+    async (state) => {
+      const ids: string[] = [];
+      for (const input of inputs) {
+        const { id } = normalizeRepository(input);
+        await prepareRepository(input, state, new Set());
+        ids.push(id);
+      }
+      return ids;
+    },
+    context,
+    manifests,
+  );
 }
 
 export function installRepository(input: string, context: InstallContext = {}) {

@@ -4,8 +4,6 @@ A plugin adds paints, color schemes and miniature templates to a Paintwarden. Pa
 
 This guide explains how plugins behave: how they are installed, updated, removed and backed up, and how to make one. [The catalog source format](source-format.md) is the formal specification of the files and the rules each field must follow. In the code and that specification, a plugin is called a _catalog source_.
 
-A working example is in [`examples/demo-plugin/`](../examples/demo-plugin/). Its test, `apps/paintwarden/lib/demo-plugin.test.ts`, installs it on every test run, so it always matches the current format.
-
 ## What a plugin contains
 
 A plugin is a folder, published as a public GitHub repository or packed in a `.zip`:
@@ -21,30 +19,6 @@ logo.svg        optional logo shown in Settings → Plugins
 Other files, such as a README, are allowed and ignored.
 
 Every paint, scheme, template and scheme entry has a fixed UUID. Miniatures, recipes, substitutions, backups and other plugins refer to items by these IDs. The ID is what makes an update change an existing paint rather than add a second copy.
-
-## Trying the demo plugin
-
-For beta.1, download [paintwarden-demo-plugin.zip](https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip)
-from the release, leave it zipped, then open **Settings → Plugins → Upload ZIP**
-and select the downloaded file. This asset is available once beta.1 is published.
-Do not paste the download link or the Paintwarden application repository into
-the GitHub repository field: that field needs a compatible plugin at its root.
-
-Developers can instead build the same demo from the repository root:
-
-```sh
-node scripts/package-demo-plugin.mjs outputs/paintwarden-demo-plugin.zip
-```
-
-The vault gains:
-
-- 8 paints from a made-up brand, _Paintwarden Demo_. One is a varnish with no color, and _Old Bone_ is marked discontinued.
-- 2 schemes. _Harbor Blue Armor_ has step headings, milestones, and an image with a thumbnail. _Brass and Bone_ lists two paints under one step.
-- 1 template, _Demo Sentinel_. Its recipe links _Harbor Blue Armor_ and uses _Gull Grey_ in two steps.
-
-To install it from GitHub, copy the folder's contents to the root of a new public repository and add the repository in **Settings → Plugins**.
-
-To remove it, use the plugin's remove action in **Settings → Plugins**.
 
 ## Installing
 
@@ -175,3 +149,18 @@ To release a change:
 | Files in an uploaded `.zip`             | 50,000 |
 
 Text lengths, allowed values and ID rules are in [the source format](source-format.md).
+
+### Developer example
+
+[`examples/demo-plugin/`](../examples/demo-plugin/) is a CC0 authoring example and
+automated test fixture, not a published starter catalog. It contains eight
+fictitious paints, two schemes and one template. Its backend test installs it on
+every test run to keep the example aligned with the current format.
+
+To build a ZIP for development in a test vault, run from the repository root:
+
+```sh
+node scripts/package-demo-plugin.mjs outputs/paintwarden-demo-plugin.zip
+```
+
+Replace every item ID with a new UUID before using the example as your own plugin.

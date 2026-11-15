@@ -3,10 +3,10 @@ import {
   currentPluginInstallJob,
   PluginInstallBusyError,
   pluginInstallFailure,
+  pluginInstallRunning,
   startPluginInstall,
 } from "../../../lib/catalog-install-jobs";
 import { spoolPluginUpload } from "../../../lib/catalog-install-upload";
-
 import {
   addCatalogSource,
   addUploadedCatalogSource,
@@ -15,6 +15,7 @@ import {
   checkCatalogSources,
   listCatalogSources,
   previewSourceRemoval,
+  prepareCatalogSourceUpdates,
   removeCatalogSource,
 } from "../../../lib/catalog-sources";
 
@@ -55,9 +56,36 @@ export async function POST(request: Request) {
   }
 }
 
-export function PUT(request: Request) {
-  const id = new URL(request.url).searchParams.get("id");
+// Coalesce overlapping automatic probes, without reserving/publishing an install job.
+const automaticRefreshes = new Map<string, ReturnType<typeof automaticRefresh>>();
+async function automaticRefresh(id?: string) {
+  if (pluginInstallRunning()) throw new PluginInstallBusyError();
+  const previousJobId = currentPluginInstallJob()?.id;
+  const prepared = await prepareCatalogSourceUpdates(id);
+  // A manual install may have started (and even finished) during the network probe.
+  // Never replace that job with the delayed automatic refresh.
+  if (pluginInstallRunning() || currentPluginInstallJob()?.id !== previousJobId)
+    throw new PluginInstallBusyError();
+  return {
+    job: prepared.install ? startPluginInstall(prepared.install) : null,
+    versions: prepared.versions,
+  };
+}
+
+export async function PUT(request: Request) {
+  const params = new URL(request.url).searchParams;
+  const id = params.get("id");
   try {
+    if (params.get("automatic") === "1") {
+      const key = id ?? "";
+      let pending = automaticRefreshes.get(key);
+      if (!pending) {
+        pending = automaticRefresh(id ?? undefined).finally(() => automaticRefreshes.delete(key));
+        automaticRefreshes.set(key, pending);
+      }
+      const result = await pending;
+      return Response.json(result, { status: result.job ? 202 : 200 });
+    }
     const job = startPluginInstall((context) =>
       id ? checkCatalogSource(id, context) : checkCatalogSources(context),
     );

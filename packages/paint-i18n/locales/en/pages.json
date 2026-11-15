@@ -631,7 +631,5 @@
   },
   "complementaryPalette": "Your palette",
   "complementaryYourPaint": "Your paint",
-  "complementaryNoPick": "No owned match",
-  "sourcesDemoDownload": "Download demo plugin ZIP",
-  "sourcesDemoHelp": "New here? Download the small fictitious demo, then choose Upload ZIP and select the downloaded file. Do not paste the download link into the repository field."
+  "complementaryNoPick": "No owned match"
 }

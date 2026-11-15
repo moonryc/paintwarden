@@ -603,7 +603,5 @@
   },
   "complementaryPalette": "你的调色板",
   "complementaryYourPaint": "你的颜料",
-  "complementaryNoPick": "没有匹配的已拥有颜料",
-  "sourcesDemoDownload": "下载演示插件 ZIP",
-  "sourcesDemoHelp": "初次使用？下载这个小型虚构演示，然后选择“上传 ZIP”并选中下载的文件。请勿将下载链接粘贴到仓库输入框中。"
+  "complementaryNoPick": "没有匹配的已拥有颜料"
 }

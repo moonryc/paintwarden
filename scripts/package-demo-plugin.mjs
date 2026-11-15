@@ -7,7 +7,7 @@ import { zipSync } from "fflate";
 const root = fileURLToPath(new URL("../examples/demo-plugin/", import.meta.url));
 export const demoPluginAsset = "paintwarden-demo-plugin.zip";
 
-// Fixed timestamps and sorted entries make the reviewed release asset reproducible.
+// Fixed timestamps and sorted entries make the developer fixture ZIP reproducible.
 export function buildDemoPlugin() {
   const entries = {};
   for (const filename of ["source.json", "catalog.json", "assets.json", "logo.svg", "LICENSE", "README.md"]) {
