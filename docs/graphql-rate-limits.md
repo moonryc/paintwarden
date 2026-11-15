@@ -25,13 +25,16 @@ terms, 160 characters total), 40 rapid Workbench/Miniatures switches and 20 focu
 events. It measured **55 GraphQL operations in 20.144 seconds** (about **164/minute**
 if sustained): 14 template searches, 40 miniature windows and **one** folder tree.
 The focus burst issued **zero** catch-up reads. No HTTP failure or renderer error
-occurred. These numbers are evidence, not timing-sensitive test assertions.
+occurred. A second final packaged run measured **50 operations in 11.863 seconds**
+(about **253/minute**): nine template searches, the same 40 miniature reads and
+one folder read, again zero catch-up reads/errors. These numbers are evidence,
+not timing-sensitive test assertions.
 
 ## Policy
 
 - **800 ordinary starts/minute per client AND session** only for a session verified
-  by the server's session table/expiry check. This is approximately **4.9×** the
-  sustained heavy interactive regression. A bearer-shaped string, expired token,
+  by the server's session table/expiry check. This is approximately **3.2–4.9×**
+  the sustained heavy interactive measurements. A bearer-shaped string, expired token,
   or anonymous access to a sign-in-disabled vault cannot select this allowance.
 - Anonymous/unverified ordinary traffic remains **120 starts/minute**.
 - Ordinary concurrency remains **four** operations per client AND session.

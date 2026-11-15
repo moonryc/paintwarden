@@ -23,6 +23,6 @@ node scripts/smoke-banner-layout.mjs EVIDENCE
 node scripts/smoke-banner-layout.mjs EVIDENCE --baseline-dir BASELINES
 ```
 
-The default pixel replay checks reviewed PNGs in `EVIDENCE/baselines`. Any pixel changing more than 8/255 in a channel fails (small rasterizer rounding is ignored). The initial macOS audit lives outside the repository in `paint-tracker-audit/banner-fix`; these macOS screenshots must not be treated as portable Linux pixel baselines. A future pixel CI gate should use reviewed Linux baselines from a pinned browser/OS image. The durable cross-platform CI gate is the geometry mode above; it must not silently create/accept pixel baselines on each run.
+The browser clock/timezone are fixed so the Home greeting does not change at noon. Real timers continue running. The default pixel replay checks reviewed PNGs in `EVIDENCE/baselines`. Any pixel changing more than 8/255 in a channel fails (small rasterizer rounding is ignored). The initial macOS audit lives outside the repository in `paint-tracker-audit/banner-fix`; these macOS screenshots must not be treated as portable Linux pixel baselines. A future pixel CI gate should use reviewed Linux baselines from a pinned browser/OS image. The durable cross-platform CI gate is the geometry mode above; it must not silently create/accept pixel baselines on each run.
 
 The usual `storybook:test` gate separately runs story interactions and accessibility checks, including dismiss/Retry and the quiet updater-metadata-404 state.

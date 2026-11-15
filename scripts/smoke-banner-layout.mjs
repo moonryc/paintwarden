@@ -62,7 +62,14 @@ try {
       "layout-vaultlayout--update",
       "app-vault--live-updates-disconnected",
     ]) {
-      const page = await browser.newPage({ viewport: { width, height: 1000 }, reducedMotion: "reduce" });
+      const page = await browser.newPage({
+        viewport: { width, height: 1000 },
+        reducedMotion: "reduce",
+        timezoneId: "America/Chicago",
+      });
+      // Home's time-of-day greeting is not a layout regression. Fix Date only;
+      // real timers must keep running for stream recovery and story interactions.
+      await page.clock.setFixedTime(new Date("2026-11-15T17:00:00Z"));
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
       // No external images/services are needed for the sample-vault stories.

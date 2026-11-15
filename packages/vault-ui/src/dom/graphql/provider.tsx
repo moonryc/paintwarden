@@ -1,6 +1,7 @@
 import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
+import Box from "@mui/material/Box";
 import {
   createContext,
   useCallback,
@@ -13,6 +14,7 @@ import {
 } from "react";
 
 import { AppBanner } from "../Components/AppBanner";
+import { AppContent } from "../Layout/AppContent";
 import { useVaultStore } from "../store/hooks";
 
 import { createVaultGraphQLClient, isVaultRateLimited, type VaultGraphQLError } from "./client";
@@ -61,6 +63,8 @@ const fields: Record<VaultFamily, readonly string[]> = {
 
 function Scope({ children }: { children: ReactNode }) {
   const auth = useVaultStore((store) => store.auth);
+  const token = useVaultStore((store) => store.token);
+  const setToken = useVaultStore((store) => store.setToken);
   const authHeaders = useVaultStore((store) => store.authHeaders);
   const checkServer = useVaultStore((store) => store.checkServer);
   const refreshGeneration = useVaultStore((store) => store.refreshGeneration);
@@ -223,6 +227,22 @@ function Scope({ children }: { children: ReactNode }) {
     },
     [scope],
   );
+  // Authorization denial must unmount every projection/dialog, not merely clear
+  // Apollo's cache: atomic windows also retain previously accepted local data.
+  // There is no navigation in this state, so use the shared full-width content
+  // container with titlebar clearance rather than leaving private rows behind.
+  // Retry advances the auth generation, recreating the disposed transport and
+  // rechecking access rather than querying a permanently stopped client.
+  if (failure?.accessDenied)
+    return (
+      <Box component="main" sx={{ minHeight: "100vh", pt: 8, bgcolor: "var(--canvas)" }}>
+        <AppContent>
+          <AppBanner severity="error" onRetry={() => setToken(token)}>
+            {i18n.t("shell:vaultAccessExpiredSignInAgain")}
+          </AppBanner>
+        </AppContent>
+      </Box>
+    );
   return (
     <ApolloProvider client={scope.client}>
       <VaultGraphQLContext.Provider value={scope}>

@@ -282,3 +282,30 @@ export const LiveUpdatesDisconnected: Story = {
     await waitFor(() => expect(canvas.getByRole("heading", { level: 2, name: /Workbench/ })).toBeVisible());
   },
 };
+
+let denyReconciliation = true;
+const deniedReconciliation = fn((name: string) =>
+  name === "VaultInvalidation" && denyReconciliation
+    ? Response.json(
+        { errors: [{ message: "Private auth diagnostic", extensions: { code: "UNAUTHENTICATED" } }] },
+        { status: 401 },
+      )
+    : undefined,
+);
+export const AccessDenialUnmountsPrivateWindows: Story = {
+  decorators: [mockApi({}, { query: deniedReconciliation })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    denyReconciliation = true;
+    await canvas.findByRole("heading", { level: 2, name: /Workbench/ });
+    window.dispatchEvent(new Event("focus"));
+    const warning = await canvas.findByRole("alert");
+    await expect(warning).toHaveTextContent("Vault access expired. Sign in again.");
+    await expect(canvas.queryByRole("navigation", { name: "Primary" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("heading", { name: /Workbench/ })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("list", { name: "Miniature shelf" })).not.toBeInTheDocument();
+    denyReconciliation = false;
+    await userEvent.click(within(warning).getByRole("button", { name: "Retry" }));
+    await expect(await canvas.findByRole("heading", { level: 2, name: /Workbench/ })).toBeInTheDocument();
+  },
+};
