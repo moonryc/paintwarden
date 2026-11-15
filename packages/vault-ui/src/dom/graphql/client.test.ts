@@ -521,3 +521,32 @@ void test("errored Apollo observables refetch after the server recovers without 
     scope.dispose();
   }
 });
+
+void test("SSE genuine HTTP 500 stays an operation error, not an endlessly reconnecting gateway outage", async () => {
+  let requests = 0;
+  let disconnected = false;
+  const delivered = deferred<unknown>();
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onDisconnect: () => {
+      disconnected = true;
+    },
+    fetch: async () => {
+      requests++;
+      return new Response("private diagnostic", { status: 500 });
+    },
+  });
+  const subscription = scope.client
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: "0" } })
+    .subscribe({ next: (result) => delivered.resolve(result.error), error: delivered.resolve });
+  try {
+    const error = await delivered.promise;
+    assert.ok(CombinedGraphQLErrors.is(error));
+    assert.equal(isVaultConnectionLost(error), false);
+    assert.equal(disconnected, false);
+    assert.equal(requests, 1);
+  } finally {
+    subscription.unsubscribe();
+    scope.dispose();
+  }
+});

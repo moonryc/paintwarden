@@ -90,9 +90,9 @@ export function createVaultSSELink(options: Options) {
                 variables: { ...request.variables, epoch: cursor.epoch, since: cursor.seq },
               }),
             });
-            // Permanent access/validation failures must not enter the network retry loop.
+            // Permanent access/validation/server bugs must not enter the network retry loop.
             // Surface them as GraphQL errors so the shared error link handles both transports.
-            if (response.status >= 400 && response.status < 500) {
+            if (response.status >= 400 && ![502, 503, 504].includes(response.status)) {
               const code =
                 response.status === 429
                   ? "RATE_LIMITED"
@@ -100,7 +100,9 @@ export function createVaultSSELink(options: Options) {
                     ? "UNAUTHENTICATED"
                     : response.status === 403 || response.status === 428
                       ? "FORBIDDEN"
-                      : "BAD_REQUEST";
+                      : response.status >= 500
+                        ? "INTERNAL_SERVER_ERROR"
+                        : "BAD_REQUEST";
               return new Response(
                 `event: next\ndata: ${JSON.stringify({ errors: [{ message: i18n.t("shell:graphqlStreamFailed", { value1: response.status }), extensions: { code } }] })}\n\nevent: complete\ndata: {}\n\n`,
                 {
