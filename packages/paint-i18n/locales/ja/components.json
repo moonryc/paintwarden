@@ -89,7 +89,6 @@
   "resetImageView": "画像表示をリセット",
   "miniTemplate": "ミニチュアテンプレート",
   "chooseASourceOrPersonalTemplateToAddIts": "カタログまたは自作のテンプレートを選ぶと、名前・画像・カラースキーム・塗料を追加できます。",
-  "loadingTemplates": "テンプレートを読み込み中",
   "category": "カテゴリー",
   "allCategories": "すべてのカテゴリー",
   "model": "モデル",
@@ -291,7 +290,6 @@
   "removeEmptyStep": "空の{{label}}工程を削除",
   "addFirstPaintToStep": "{{label}}に最初の塗料を追加",
   "wishlistBrandPaints_other": "{{brand}}：{{count, number}}色",
-  "viewPaintProjects_other": "{{name}}を使う全{{count, number}}件のプロジェクトを表示",
   "projectCount_other": "{{count, number}}件のプロジェクト",
   "projectPaintsNeedAttention_other": "プロジェクトの塗料{{count, number}}色に確認が必要",
   "missingPaintsNotListed_other": "プロジェクトに必要な塗料{{count, number}}色がこのリストにありません",
@@ -501,5 +499,6 @@
   "scanWorstPin": "最も遠いピン · ΔE {{value}}",
   "scanPinNumber": "ピン {{number}} → 塗料",
   "searchResultCount": "検索結果：{{count}}件。",
-  "searchResults": "検索結果"
+  "searchResults": "検索結果",
+  "usedInProjects_other": "{{count, number}}件のプロジェクトで使用"
 }

@@ -89,7 +89,6 @@
   "resetImageView": "Bildansicht zurücksetzen",
   "miniTemplate": "Miniaturenvorlage",
   "chooseASourceOrPersonalTemplateToAddIts": "Wähle eine Vorlage aus einer Quelle oder eine eigene Vorlage, um ihren Namen, ihr Bild, ihre Farbschemata und Farben zu übernehmen.",
-  "loadingTemplates": "Vorlagen werden geladen",
   "category": "Kategorie",
   "allCategories": "Alle Kategorien",
   "model": "Modell",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Erste Farbe zu {{label}} hinzufügen",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} Farbe",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} Farben",
-  "viewPaintProjects_one": "{{count, number}} Projekt für {{name}} anzeigen",
-  "viewPaintProjects_other": "Alle {{count, number}} Projekte für {{name}} anzeigen",
   "projectCount_one": "{{count, number}} Projekt",
   "projectCount_other": "{{count, number}} Projekte",
   "projectPaintsNeedAttention_one": "{{count, number}} Projektfarbe braucht Aufmerksamkeit",
@@ -522,5 +519,7 @@
   "scanWorstPin": "Schlechtester Punkt · ΔE {{value}}",
   "scanPinNumber": "Punkt {{number}} → Farbe",
   "searchResultCount": "{{count}} Ergebnisse verfügbar.",
-  "searchResults": "Suchergebnisse"
+  "searchResults": "Suchergebnisse",
+  "usedInProjects_one": "In {{count, number}} Projekt verwendet",
+  "usedInProjects_other": "In {{count, number}} Projekten verwendet"
 }

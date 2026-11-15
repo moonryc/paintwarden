@@ -56,3 +56,19 @@ export const BoughtWithBrokenSubstitution: Story = {
     await expect(canvas.queryByRole("button", { name: `Mark ${args.paint.name} as bought` })).toBeNull();
   },
 };
+
+export const CircularProjectCount: Story = {
+  args: { projectCount: 1234, onProjects: fn() },
+  play: async ({ canvasElement, args }) => {
+    const button = within(canvasElement).getByRole("button", { name: "99+ · Used in 1,234 projects" });
+    await expect(button).toHaveTextContent("99+");
+    const bought = within(canvasElement).getByRole("button", { name: `Mark ${args.paint.name} as bought` });
+    const b = button.getBoundingClientRect();
+    const a = bought.getBoundingClientRect();
+    await expect(b.width).toBe(a.width);
+    await expect(b.height).toBe(a.height);
+    await expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth);
+    await userEvent.click(button);
+    await expect(args.onProjects).toHaveBeenCalledOnce();
+  },
+};

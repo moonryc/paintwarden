@@ -32,9 +32,9 @@ export function PaintToolsPage() {
             // Keep each whole word readable, giving the longer tab its intrinsic width.
             width: "auto",
             flex: "1 1 0",
-            minWidth: "min-content",
+            minWidth: 0,
             px: { xs: 0.5, sm: 1.5 },
-            overflowWrap: "normal",
+            overflowWrap: "anywhere",
           },
         }}
       >

@@ -139,8 +139,11 @@ export const Loading: Story = {
   play: async ({ canvasElement }) => {
     const body = canvasElement.ownerDocument.body;
     const dialog = await within(body).findByRole("dialog");
-    await expect(within(dialog).getByRole("status")).toHaveTextContent("Loading Paint details");
-    await expect(dialog.querySelectorAll("[data-skeleton]")).toHaveLength(1);
-    await expect(dialog.querySelector('[data-skeleton="paint-detail"]')).toHaveAttribute("aria-busy", "true");
+    await waitForDialogEntered(dialog);
+    await expect(within(dialog).getByRole("status")).toHaveTextContent("Loading…");
+    await expect(within(dialog).getByRole("heading", { name: paints.royalBlue.name })).toBeVisible();
+    await expect(within(dialog).getByRole("button", { name: "Owned" })).toBeDisabled();
+    await expect(dialog.querySelectorAll('[aria-busy="true"]')).toHaveLength(2);
+    await expect(dialog.querySelector('[data-skeleton="paint-detail"]')).toBeNull();
   },
 };

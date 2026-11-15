@@ -117,6 +117,16 @@ jobs:
       - run: npm run e2e:browser
         env:
           E2E_ARTIFACTS_DIR: outputs/browser-smoke
+      - name: Granular shell, content, CLS and width regression
+        run: |
+          node scripts/audit-granular-loading.mjs outputs/granular-loading --assert
+          node scripts/audit-granular-loading.mjs outputs/granular-loading/matrix --matrix --assert
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: granular-loading
+          retention-days: 7
+          path: outputs/granular-loading
       - uses: actions/upload-artifact@v4
         if: always()
         with:

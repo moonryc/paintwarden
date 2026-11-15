@@ -89,7 +89,6 @@
   "resetImageView": "Restablecer vista de la imagen",
   "miniTemplate": "Plantilla de miniatura",
   "chooseASourceOrPersonalTemplateToAddIts": "Elige una plantilla de una fuente o una personal para añadir su nombre, imagen, esquemas y pinturas.",
-  "loadingTemplates": "Cargando plantillas",
   "category": "Categoría",
   "allCategories": "Todas las categorías",
   "model": "Modelo",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Añadir la primera pintura a {{label}}",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} pintura",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} pinturas",
-  "viewPaintProjects_one": "Ver {{count, number}} proyecto de {{name}}",
-  "viewPaintProjects_other": "Ver los {{count, number}} proyectos de {{name}}",
   "projectCount_one": "{{count, number}} proyecto",
   "projectCount_other": "{{count, number}} proyectos",
   "projectPaintsNeedAttention_one": "{{count, number}} pintura de los proyectos necesita atención",
@@ -413,7 +410,6 @@
   "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
   "paintCount_many": "{{count, number}} pinturas",
   "wishlistBrandPaints_many": "{{brand}}: {{count, number}} pinturas",
-  "viewPaintProjects_many": "Ver los {{count, number}} proyectos de {{name}}",
   "projectCount_many": "{{count, number}} proyectos",
   "projectPaintsNeedAttention_many": "{{count, number}} pinturas de los proyectos necesitan atención",
   "missingPaintsNotListed_many": "{{count, number}} pinturas que necesitan tus proyectos no están en esta lista",
@@ -543,5 +539,8 @@
   "scanWorstPin": "Peor punto · ΔE {{value}}",
   "scanPinNumber": "Punto {{number}} → pintura",
   "searchResultCount": "{{count}} resultados disponibles.",
-  "searchResults": "Resultados de búsqueda"
+  "searchResults": "Resultados de búsqueda",
+  "usedInProjects_one": "Se usa en {{count, number}} proyecto",
+  "usedInProjects_other": "Se usa en {{count, number}} proyectos",
+  "usedInProjects_many": "Se usa en {{count, number}} proyectos"
 }

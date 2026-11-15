@@ -1,18 +1,13 @@
-import { Autocomplete, Box, CircularProgress, Skeleton, type AutocompleteProps } from "@mui/material";
+import { Autocomplete, Box, Skeleton, type AutocompleteProps } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+
+import { usePageLoading } from "./PageLoadingStatus";
 
 import { useVaultGraphQL } from "../graphql/provider";
 import { nearSearchBottom, useSearchResults } from "../utils/use-search-results";
 
 const popupHeight = "min(240px, 40dvh)";
-const statusSx = {
-  position: "absolute",
-  width: 1,
-  height: 1,
-  overflow: "hidden",
-  clipPath: "inset(50%)",
-} as const;
 
 type Props<
   T,
@@ -59,19 +54,13 @@ export function StableAutocomplete<
     else if (current.started || options.length > current.count) paging.current = null;
   }, [options, loading]);
   const [placement, setPlacement] = useState<"bottom-start" | "top-start">("bottom-start");
-  const [slow, setSlow] = useState(false);
-  useEffect(() => {
-    if (!loading) {
-      setSlow(false);
-      return;
-    }
-    const timer = setTimeout(() => setSlow(true), 300);
-    return () => clearTimeout(timer);
-  }, [loading]);
+  const initialLoading = loading && previous === null;
+  usePageLoading(initialLoading);
   return (
     <>
       <Autocomplete<T, Multiple, DisableClearable, FreeSolo>
         {...props}
+        disabled={props.disabled || initialLoading}
         onInputChange={(event, value, reason) => {
           if (reason === "input" || reason === "clear") paging.current = null;
           props.onInputChange?.(event, value, reason);
@@ -109,29 +98,9 @@ export function StableAutocomplete<
             ...params,
             slotProps: {
               ...params.slotProps,
-              input: {
-                ...params.slotProps.input,
-                endAdornment: (
-                  <>
-                    {params.slotProps.input.endAdornment}
-                    <Box
-                      component="span"
-                      aria-hidden="true"
-                      sx={{
-                        position: "absolute",
-                        right: 60,
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        width: 20,
-                        height: 20,
-                        display: "grid",
-                        placeItems: "center",
-                      }}
-                    >
-                      {loading && slow ? <CircularProgress size={16} /> : null}
-                    </Box>
-                  </>
-                ),
+              htmlInput: {
+                ...params.slotProps.htmlInput,
+                ...(initialLoading ? { placeholder: t("loading"), "aria-busy": true } : {}),
               },
             },
           })
@@ -181,9 +150,6 @@ export function StableAutocomplete<
           },
         }}
       />
-      <Box component="span" role="status" aria-live="polite" aria-atomic="true" sx={statusSx}>
-        {!loading ? t("searchResultCount", { count: retained.length }) : ""}
-      </Box>
     </>
   );
 }

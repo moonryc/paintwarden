@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import { i18n } from "@paintwarden/i18n/runtime";
 import { useState, type ReactNode } from "react";
 
+import { PageLoadingStatus } from "../Components/PageLoadingStatus";
 import { ErrorSurface } from "../Components/QueryErrorNotice";
 import { MenuIcon } from "../icons";
 import { up } from "../theme-tokens";
@@ -196,7 +197,9 @@ export function VaultLayout({
           {status}
         </Box>
         <AppContent>
-          <ErrorSurface>{children}</ErrorSurface>
+          <ErrorSurface>
+            <PageLoadingStatus>{children}</PageLoadingStatus>
+          </ErrorSurface>
         </AppContent>
       </Box>
     </Box>

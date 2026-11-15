@@ -89,7 +89,6 @@
   "resetImageView": "Réinitialiser la vue de l’image",
   "miniTemplate": "Modèle de figurine",
   "chooseASourceOrPersonalTemplateToAddIts": "Choisissez un modèle provenant d’une source ou un modèle personnel pour ajouter son nom, son image, ses schémas de couleurs et ses peintures.",
-  "loadingTemplates": "Chargement des modèles",
   "category": "Catégorie",
   "allCategories": "Toutes les catégories",
   "model": "Maquette",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Ajouter la première peinture à {{label}}",
   "wishlistBrandPaints_one": "{{brand}} : {{count, number}} peinture",
   "wishlistBrandPaints_other": "{{brand}} : {{count, number}} peintures",
-  "viewPaintProjects_one": "Voir {{count, number}} projet utilisant {{name}}",
-  "viewPaintProjects_other": "Voir les {{count, number}} projets utilisant {{name}}",
   "projectCount_one": "{{count, number}} projet",
   "projectCount_other": "{{count, number}} projets",
   "projectPaintsNeedAttention_one": "{{count, number}} peinture de projet à vérifier",
@@ -413,7 +410,6 @@
   "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
   "paintCount_many": "{{count, number}} peintures",
   "wishlistBrandPaints_many": "{{brand}} : {{count, number}} peintures",
-  "viewPaintProjects_many": "Voir les {{count, number}} projets utilisant {{name}}",
   "projectCount_many": "{{count, number}} projets",
   "projectPaintsNeedAttention_many": "{{count, number}} peintures de projet à vérifier",
   "missingPaintsNotListed_many": "{{count, number}} peintures nécessaires à vos projets ne figurent pas dans cette liste",
@@ -543,5 +539,8 @@
   "scanWorstPin": "Point le moins proche · ΔE {{value}}",
   "scanPinNumber": "Point {{number}} → peinture",
   "searchResultCount": "{{count}} résultats disponibles.",
-  "searchResults": "Résultats de recherche"
+  "searchResults": "Résultats de recherche",
+  "usedInProjects_one": "Utilisée dans {{count, number}} projet",
+  "usedInProjects_many": "Utilisée dans {{count, number}} projets",
+  "usedInProjects_other": "Utilisée dans {{count, number}} projets"
 }

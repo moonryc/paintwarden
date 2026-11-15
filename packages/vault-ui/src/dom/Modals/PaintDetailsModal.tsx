@@ -1,6 +1,6 @@
 import { useFragment } from "@apollo/client/react";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Alert, Button, Chip, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Alert, Button, Chip, Skeleton, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isPaintOwned } from "@paintwarden/core/paint-state";
 import type { ReactNode } from "react";
@@ -8,11 +8,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
-import { PageSkeleton } from "../Components/PageSkeletons";
 import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
 import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { dialogPreloadHandlers } from "../dialog-preload";
+import { LibraryPaintFragmentDoc, type LibraryPaintFragment } from "../graphql/generated/graphql";
+import { useVaultGraphQL } from "../graphql/provider";
 import { usePaintDetail } from "../graphql/detail-hooks";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
 import { usePaintStock } from "../graphql/stock-actions";
@@ -29,7 +30,6 @@ type DetailProps = {
 };
 
 export function PaintDetailsModal(props: DetailProps) {
-  const { t } = useTranslation("components");
   const detail = usePaintDetail(props.paint.id);
   const { setPaintState } = usePaintStock();
   const stock = useFragment({
@@ -37,28 +37,20 @@ export function PaintDetailsModal(props: DetailProps) {
     from: { __typename: "Paint", id: props.paint.id },
     optimistic: true,
   });
+  const scope = useVaultGraphQL();
+  const cached = scope?.client.readFragment<LibraryPaintFragment>({
+    id: `Paint:${props.paint.id}`,
+    fragment: LibraryPaintFragmentDoc,
+    fragmentName: "LibraryPaint",
+    returnPartialData: true,
+  });
   const projected = detail.data?.paint;
+  const known = projected ?? cached;
   const inventory = stock.complete ? stock.data.inventory : projected?.inventory;
-  if (!projected)
-    return (
-      <Modal
-        title={props.paint.name}
-        subtitle={`${props.paint.brand} · ${props.paint.range}`}
-        onClose={props.onClose}
-      >
-        {detail.error ? (
-          <QueryErrorNotice error={detail.error.message} onRetry={detail.refresh} />
-        ) : detail.data ? (
-          <Alert severity="info">{t("thisPaintIsNoLongerAvailable")}</Alert>
-        ) : (
-          <PageSkeleton page="paint-detail" />
-        )}
-      </Modal>
-    );
   return (
     <PaintDetailsView
       {...props}
-      paint={{ ...projected, sourceName: projected.sourceName ?? undefined }}
+      paint={known ? { ...props.paint, ...known, sourceName: known.sourceName ?? undefined } : props.paint}
       rec={
         inventory
           ? {
@@ -69,12 +61,14 @@ export function PaintDetailsModal(props: DetailProps) {
           : undefined
       }
       setPaintState={setPaintState}
-      activeSubstitution={projected.activeSubstitution}
+      initialLoading={!detail.data && !detail.error}
+      unavailable={Boolean(detail.data && !projected)}
+      activeSubstitution={projected?.activeSubstitution}
       brokenReason={
-        projected.brokenReason === "EMPTY" ? "empty" : projected.brokenReason === "CYCLE" ? "cycle" : null
+        projected?.brokenReason === "EMPTY" ? "empty" : projected?.brokenReason === "CYCLE" ? "cycle" : null
       }
-      blocked={projected.brokenSubstitution}
-      available={projected.available}
+      blocked={projected?.brokenSubstitution ?? false}
+      available={projected?.available ?? false}
       substitutionCount={detail.data?.substitutions.totalCount ?? 0}
       usedBy={detail.data?.usedBy.nodes ?? []}
       loading={detail.loading}
@@ -99,11 +93,12 @@ function PaintDetailsView({
   available,
   usedBy,
   substitutionCount,
-  loading,
   error,
   refresh,
   hasMoreUsedBy,
   loadMoreUsedBy,
+  initialLoading = false,
+  unavailable = false,
 }: DetailProps & {
   rec?: { state: PaintStatus; stockLevel: StockLevel; quantity: number };
   setPaintState: PaintStateSetter;
@@ -114,6 +109,8 @@ function PaintDetailsView({
   usedBy: { id: string; title: string }[];
   substitutionCount: number;
   loading?: boolean;
+  initialLoading?: boolean;
+  unavailable?: boolean;
   error?: Error | null;
   refresh?(): void;
   hasMoreUsedBy?: boolean;
@@ -154,6 +151,8 @@ function PaintDetailsView({
         paint.sourceName ? <PluginChip name={paint.sourceName} logoUrl={paint.sourceLogoUrl} /> : undefined
       }
       onClose={onClose}
+      loading={initialLoading}
+      bodyHeight="min(38rem, 65dvh)"
     >
       <Box
         component="div"
@@ -161,6 +160,7 @@ function PaintDetailsView({
           display: "flex",
           flexDirection: "column",
           gap: 2.5,
+          minWidth: 0,
         }}
       >
         <Box
@@ -181,7 +181,8 @@ function PaintDetailsView({
               : "var(--sunken)",
           }}
         >
-          {paint.colorHex && (
+          {initialLoading && <Skeleton variant="rectangular" animation={false} height="100%" />}
+          {!initialLoading && paint.colorHex && (
             <Box
               component="span"
               sx={{
@@ -206,9 +207,10 @@ function PaintDetailsView({
           )}
         </Box>
         {error && <QueryErrorNotice error={error.message} onRetry={refresh} />}
+        {unavailable && <Alert severity="info">{t("thisPaintIsNoLongerAvailable")}</Alert>}
         <ToggleButtonGroup
           exclusive
-          disabled={loading}
+          disabled={initialLoading || unavailable}
           fullWidth
           value={state ?? "UNTRACKED"}
           onChange={(_, v: PaintStatus | "UNTRACKED" | null) => {
@@ -243,52 +245,59 @@ function PaintDetailsView({
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        {state === "OWNED" && rec && (
-          <Box
-            component="div"
-            sx={{
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              borderRadius: "1rem",
-              borderStyle: "solid",
-              borderWidth: "1px",
-              borderColor: "var(--line)",
-              bgcolor: "var(--surface-raised)",
-              p: 1.5,
-              pl: 2,
-            }}
-          >
-            <span>
+        <Box aria-busy={initialLoading} sx={{ minHeight: 82 }}>
+          {initialLoading ? (
+            <Skeleton variant="rounded" animation={false} height={82} />
+          ) : (
+            state === "OWNED" &&
+            rec && (
               <Box
-                component="b"
+                component="div"
                 sx={{
-                  display: "block",
-                  fontSize: "0.875rem",
-                  lineHeight: 10 / 7,
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderRadius: "1rem",
+                  borderStyle: "solid",
+                  borderWidth: "1px",
+                  borderColor: "var(--line)",
+                  bgcolor: "var(--surface-raised)",
+                  p: 1.5,
+                  pl: 2,
                 }}
               >
-                {t("bottlesOnHand")}
+                <span>
+                  <Box
+                    component="b"
+                    sx={{
+                      display: "block",
+                      fontSize: "0.875rem",
+                      lineHeight: 10 / 7,
+                    }}
+                  >
+                    {t("bottlesOnHand")}
+                  </Box>
+                  <Box
+                    component="small"
+                    sx={{
+                      color: "var(--ink-faint)",
+                    }}
+                  >
+                    {rec.stockLevel === "LOW" ? t("runningLow") : t("inStock")}
+                  </Box>
+                </span>
+                <QuantityCounter
+                  name={paint.name}
+                  value={rec.quantity}
+                  onChange={(quantity) =>
+                    setPaintState(paint.id, quantity === 0 ? null : "OWNED", "FULL", quantity)
+                  }
+                />
               </Box>
-              <Box
-                component="small"
-                sx={{
-                  color: "var(--ink-faint)",
-                }}
-              >
-                {rec.stockLevel === "LOW" ? t("runningLow") : t("inStock")}
-              </Box>
-            </span>
-            <QuantityCounter
-              name={paint.name}
-              value={rec.quantity}
-              onChange={(quantity) =>
-                setPaintState(paint.id, quantity === 0 ? null : "OWNED", "FULL", quantity)
-              }
-            />
-          </Box>
-        )}
+            )
+          )}
+        </Box>
         {activeSubstitution && (
           <Alert severity={brokenReason ? "error" : available ? "success" : "warning"} variant="outlined">
             {brokenReason
@@ -309,6 +318,7 @@ function PaintDetailsView({
         >
           <Button
             variant="outlined"
+            disabled={initialLoading || unavailable}
             startIcon={<ScienceOutlinedIcon fontSize="small" />}
             onClick={() => setShowSubstitutions(true)}
             sx={{
@@ -371,45 +381,49 @@ function PaintDetailsView({
           >
             {t("usedIn")}
           </Box>
-          {usedBy.length ? (
-            <Box
-              component="div"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-              }}
-            >
-              {usedBy.map((m) => (
-                <Chip
-                  key={m.id}
-                  clickable
-                  label={m.title}
-                  {...dialogPreloadHandlers("project")}
-                  onClick={() => openMini(m.id)}
-                  sx={{
-                    boxSizing: "border-box",
-                    height: "2.25rem",
-                    bgcolor: "var(--sunken) !important",
-                  }}
-                />
-              ))}
-            </Box>
-          ) : (
-            <Box
-              component="p"
-              sx={{
-                m: 0,
-                fontSize: "0.875rem",
-                lineHeight: 10 / 7,
-                color: "var(--ink-faint)",
-              }}
-            >
-              {t("notPartOfAnyProjectRecipeYet")}
-            </Box>
-          )}
+          <Box aria-busy={initialLoading} sx={{ minHeight: 72 }}>
+            {initialLoading ? (
+              <Skeleton variant="rounded" animation={false} height={72} />
+            ) : usedBy.length ? (
+              <Box
+                component="div"
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
+                {usedBy.map((m) => (
+                  <Chip
+                    key={m.id}
+                    clickable
+                    label={m.title}
+                    {...dialogPreloadHandlers("project")}
+                    onClick={() => openMini(m.id)}
+                    sx={{
+                      boxSizing: "border-box",
+                      height: "2.25rem",
+                      bgcolor: "var(--sunken) !important",
+                    }}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <Box
+                component="p"
+                sx={{
+                  m: 0,
+                  fontSize: "0.875rem",
+                  lineHeight: 10 / 7,
+                  color: "var(--ink-faint)",
+                }}
+              >
+                {t("notPartOfAnyProjectRecipeYet")}
+              </Box>
+            )}
+          </Box>
           {hasMoreUsedBy && (
-            <Button onClick={loadMoreUsedBy} disabled={loading}>
+            <Button onClick={loadMoreUsedBy} disabled={initialLoading || unavailable}>
               {t("loadMoreProjects")}
             </Button>
           )}

@@ -17,7 +17,10 @@ export function PageHeader({
   return (
     <Box
       component="div"
+      data-page-header
       sx={{
+        minWidth: 0,
+        overflowWrap: "anywhere",
         mb: 2.5,
         display: "flex",
         flexWrap: "wrap",
@@ -88,7 +91,9 @@ export function PageHeader({
           component="div"
           sx={{
             display: "flex",
-            flexShrink: 0,
+            minWidth: 0,
+            maxWidth: "100%",
+            flexWrap: "wrap",
             alignItems: "center",
             gap: 1,
           }}

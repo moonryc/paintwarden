@@ -89,7 +89,6 @@
   "resetImageView": "Afbeeldingsweergave herstellen",
   "miniTemplate": "Miniatuursjabloon",
   "chooseASourceOrPersonalTemplateToAddIts": "Kies een bron- of eigen sjabloon om de naam, afbeelding, kleurenschema's en verven ervan toe te voegen.",
-  "loadingTemplates": "Sjablonen laden",
   "category": "Categorie",
   "allCategories": "Alle categorieën",
   "model": "Model",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "De eerste verf aan {{label}} toevoegen",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} verf",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} verven",
-  "viewPaintProjects_one": "{{count, number}} project voor {{name}} bekijken",
-  "viewPaintProjects_other": "Alle {{count, number}} projecten voor {{name}} bekijken",
   "projectCount_one": "{{count, number}} project",
   "projectCount_other": "{{count, number}} projecten",
   "projectPaintsNeedAttention_one": "{{count, number}} projectverf vereist aandacht",
@@ -522,5 +519,7 @@
   "scanWorstPin": "Slechtste pin · ΔE {{value}}",
   "scanPinNumber": "Pin {{number}} → verf",
   "searchResultCount": "{{count}} resultaten beschikbaar.",
-  "searchResults": "Zoekresultaten"
+  "searchResults": "Zoekresultaten",
+  "usedInProjects_one": "Gebruikt in {{count, number}} project",
+  "usedInProjects_other": "Gebruikt in {{count, number}} projecten"
 }

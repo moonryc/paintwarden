@@ -159,6 +159,7 @@ function useWorkbenchSummary(enabled: boolean, folderId: string | null) {
 
 export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const { t, i18n } = useTranslation("pages");
+  const { t: tc } = useTranslation("components");
   const number = (value: number) =>
     new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language).format(value);
   const filter = useVaultStore((s) => s.miniatureFilter);
@@ -704,6 +705,12 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
             size="small"
             sx={{ minWidth: 0 }}
             label={workbench ? t("homeStepLabel") : t("homeCollectionLabel")}
+            disabled={workbench ? summaryLoading : shelfLoading}
+            slotProps={{
+              select: {
+                renderValue: (workbench ? summaryLoading : shelfLoading) ? () => tc("loading") : undefined,
+              },
+            }}
             value={workbench ? stageFilter : filter}
             onChange={(event) =>
               workbench

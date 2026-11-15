@@ -26,6 +26,8 @@ for (const [family, source, weight] of [
     .catch(() => undefined);
 }
 
+import { expectNoPageOverflow } from "../src/dom/storybook/layout";
+
 const preview: Preview = {
   initialGlobals: { locale: "en" },
   globalTypes: {
@@ -66,6 +68,10 @@ const preview: Preview = {
       </LanguageProvider>
     ),
   ],
+  afterEach: async ({ title, canvasElement }) => {
+    if (title.startsWith("Pages/") || title.startsWith("Dialogs/") || title === "Paint tools/Layout")
+      await expectNoPageOverflow(canvasElement.ownerDocument);
+  },
   tags: ["autodocs"],
 };
 

@@ -89,7 +89,6 @@
   "resetImageView": "Resetuj widok obrazu",
   "miniTemplate": "Szablon figurki",
   "chooseASourceOrPersonalTemplateToAddIts": "Wybierz szablon ze źródła lub własny, aby dodać jego nazwę, obraz, schematy i farby.",
-  "loadingTemplates": "Wczytywanie szablonów",
   "category": "Kategoria",
   "allCategories": "Wszystkie kategorie",
   "model": "Model",
@@ -297,10 +296,6 @@
   "wishlistBrandPaints_few": "{{brand}}: {{count, number}} farby",
   "wishlistBrandPaints_many": "{{brand}}: {{count, number}} farb",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} farby",
-  "viewPaintProjects_one": "Zobacz {{count, number}} projekt z {{name}}",
-  "viewPaintProjects_few": "Zobacz wszystkie projekty z {{name}} ({{count, number}})",
-  "viewPaintProjects_many": "Zobacz wszystkie projekty z {{name}} ({{count, number}})",
-  "viewPaintProjects_other": "Zobacz projekty z {{name}} ({{count, number}})",
   "projectCount_one": "{{count, number}} projekt",
   "projectCount_few": "{{count, number}} projekty",
   "projectCount_many": "{{count, number}} projektów",
@@ -564,5 +559,9 @@
   "scanWorstPin": "Najgorszy punkt · ΔE {{value}}",
   "scanPinNumber": "Punkt {{number}} → farba",
   "searchResultCount": "Liczba dostępnych wyników: {{count}}.",
-  "searchResults": "Wyniki wyszukiwania"
+  "searchResults": "Wyniki wyszukiwania",
+  "usedInProjects_one": "Używana w {{count, number}} projekcie",
+  "usedInProjects_few": "Używana w {{count, number}} projektach",
+  "usedInProjects_many": "Używana w {{count, number}} projektach",
+  "usedInProjects_other": "Używana w {{count, number}} projektu"
 }

@@ -89,7 +89,6 @@
   "resetImageView": "Reimposta vista immagine",
   "miniTemplate": "Modello predefinito per miniatura",
   "chooseASourceOrPersonalTemplateToAddIts": "Scegli un modello predefinito da una fonte o uno personale per aggiungerne nome, immagine, schemi di colore e colori.",
-  "loadingTemplates": "Caricamento dei modelli predefiniti",
   "category": "Categoria",
   "allCategories": "Tutte le categorie",
   "model": "Modello",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Aggiungi il primo colore a {{label}}",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} colore",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} colori",
-  "viewPaintProjects_one": "Mostra il progetto di {{name}} ({{count, number}})",
-  "viewPaintProjects_other": "Mostra tutti i {{count, number}} progetti di {{name}}",
   "projectCount_one": "{{count, number}} progetto",
   "projectCount_other": "{{count, number}} progetti",
   "projectPaintsNeedAttention_one": "{{count, number}} colore del progetto richiede attenzione",
@@ -413,7 +410,6 @@
   "schemesChanged": "{{addedSummary}}, {{removedSummary}}",
   "paintCount_many": "{{count, number}} colori",
   "wishlistBrandPaints_many": "{{brand}}: {{count, number}} colori",
-  "viewPaintProjects_many": "Mostra tutti i {{count, number}} progetti di {{name}}",
   "projectCount_many": "{{count, number}} progetti",
   "projectPaintsNeedAttention_many": "{{count, number}} colori del progetto richiedono attenzione",
   "missingPaintsNotListed_many": "{{count, number}} colori necessari ai tuoi progetti non sono in questa lista",
@@ -543,5 +539,8 @@
   "scanWorstPin": "Punto peggiore · ΔE {{value}}",
   "scanPinNumber": "Punto {{number}} → colore",
   "searchResultCount": "{{count}} risultati disponibili.",
-  "searchResults": "Risultati di ricerca"
+  "searchResults": "Risultati di ricerca",
+  "usedInProjects_one": "Usato in {{count, number}} progetto",
+  "usedInProjects_many": "Usato in {{count, number}} progetti",
+  "usedInProjects_other": "Usato in {{count, number}} progetti"
 }

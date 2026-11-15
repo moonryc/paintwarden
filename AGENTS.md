@@ -18,6 +18,10 @@ For the product website, keep Astro route files thin and implement interactive c
 
 ## UI Parity & Desktop Compatibility
 
+**Hard UI rules: no page-level horizontal scrolling and no loading-induced layout shift.** Render static page/drawer/modal shells immediately at their final positions; reserve each independent query-backed section’s final geometry and use skeletons only on first load, never on refetch. Query-backed fields stay disabled with localized “Loading…” until their initial options are ready. Do not add page-level Suspense that replaces the shell. Keep one polite loading status per page/modal and aria-busy on each pending section.
+
+At widths 320, 360, 390, 768, 1024, 1280 and 1440, every page, drawer and modal must fit the viewport, including all locales, pseudo-localized text and long user names/URLs/chips. Fix flex/grid min-width, wrapping, truncation and image/canvas sizing at the cause. Never hide horizontal overflow on html/body to conceal a bug. Only inherently wide data tables may use an explicit, contained internal scroller. Add overflow and stable-shell geometry assertions to page stories and production browser tests.
+
 Preserve the MUI appearance and interactions in the shared React UI. Compare reference and current screens at matching viewport sizes and equivalent data states. Match typography, spacing, labels, placeholders, field states, autocomplete behavior, keyboard handling, and responsive grid breakpoints. Keep the current Settings design. Implement missing behavior in shared components instead of duplicating it between web and Electron.
 
 Use the shared `packages/vault-ui/src/dom/Components/Modal.tsx` component for new app forms and confirmation overlays. It provides the app's dialog on desktop and its responsive presentation on phones. Reuse `Modal` and its `ModalHeader` rather than creating a second modal or dialog wrapper or using a bare MUI `Dialog` for these flows.

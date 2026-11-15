@@ -2,12 +2,15 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@mui/material";
 import Box from "@mui/material/Box";
 
+import { formatNumber } from "../i18n";
+
 import { up } from "../theme-tokens";
 import type { Paint } from "../types";
 import type { PaintRequirementReason } from "../utils/vault-data";
 
 import { PaintRowActions } from "./PaintRowActions";
 import { PaintRowLabel, paintRowHoverSx } from "./PaintRowLabel";
+import { RoundActionButton } from "./RoundActionButton";
 import { StatusChip } from "./StatusChip";
 
 // A paint on the wishlist. Until it's bought it offers Bought and Remove; once bought it
@@ -70,17 +73,32 @@ export function WishlistPaintRow({
         accessory={restock && <StatusChip tone="gold">{t("restock")}</StatusChip>}
       />
       {Boolean(projectCount) && onProjects && (
-        <Button
-          size="small"
-          aria-label={t("viewPaintProjects", { count: projectCount, name: paint.name })}
-          onClick={onProjects}
-          sx={{ flexShrink: 0 }}
-        >
-          {t("projectCount", { count: projectCount })}
-        </Button>
+        <Box sx={{ flexShrink: 0, mr: 0.75 }}>
+          <RoundActionButton
+            size="md"
+            tone="wishlist"
+            label={`${projectCount! > 99 ? "99+ · " : ""}${t("usedInProjects", { count: projectCount })}`}
+            title={t("usedInProjects", { count: projectCount })}
+            onClick={onProjects}
+          >
+            <Box component="span" sx={{ fontSize: "0.7rem", fontWeight: 700, lineHeight: 1 }}>
+              {projectCount! > 99 ? "99+" : formatNumber(projectCount!)}
+            </Box>
+          </RoundActionButton>
+        </Box>
       )}
       {reasons?.includes("brokenSubstitution") && (
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: 0,
+            maxWidth: "25%",
+            "& .MuiChip-root": { maxWidth: "100%" },
+            "& button": { minWidth: 0, overflowWrap: "anywhere", fontSize: "0.65rem", lineHeight: 1.2 },
+          }}
+        >
           <StatusChip tone="rust">{t("brokenSubstitution")}</StatusChip>
           <Button size="small" aria-label={t("fixPaintSubstitution", { name: paint.name })} onClick={onFix}>
             {t("fixSubstitution")}

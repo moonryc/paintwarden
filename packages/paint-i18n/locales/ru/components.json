@@ -89,7 +89,6 @@
   "resetImageView": "Сбросить вид изображения",
   "miniTemplate": "Шаблон миниатюры",
   "chooseASourceOrPersonalTemplateToAddIts": "Выберите шаблон из источника или свой шаблон, чтобы добавить его название, изображение, схемы и краски.",
-  "loadingTemplates": "Загрузка шаблонов",
   "category": "Категория",
   "allCategories": "Все категории",
   "model": "Модель",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Добавить первую краску на этап «{{label}}»",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} краска",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} краски",
-  "viewPaintProjects_one": "Открыть все проекты для {{name}} ({{count, number}})",
-  "viewPaintProjects_other": "Открыть все проекты для {{name}} ({{count, number}})",
   "projectCount_one": "{{count, number}} проект",
   "projectCount_other": "{{count, number}} проекта",
   "projectPaintsNeedAttention_one": "Внимания требует {{count, number}} краска проекта",
@@ -415,8 +412,6 @@
   "paintCount_many": "{{count, number}} красок",
   "wishlistBrandPaints_few": "{{brand}}: {{count, number}} краски",
   "wishlistBrandPaints_many": "{{brand}}: {{count, number}} красок",
-  "viewPaintProjects_few": "Открыть все проекты для {{name}} ({{count, number}})",
-  "viewPaintProjects_many": "Открыть все проекты для {{name}} ({{count, number}})",
   "projectCount_few": "{{count, number}} проекта",
   "projectCount_many": "{{count, number}} проектов",
   "projectPaintsNeedAttention_few": "Внимания требуют {{count, number}} краски проекта",
@@ -564,5 +559,9 @@
   "scanWorstPin": "Худшая точка · ΔE {{value}}",
   "scanPinNumber": "Точка {{number}} → краска",
   "searchResultCount": "Доступно результатов: {{count}}.",
-  "searchResults": "Результаты поиска"
+  "searchResults": "Результаты поиска",
+  "usedInProjects_one": "Используется в {{count, number}} проекте",
+  "usedInProjects_few": "Используется в {{count, number}} проектах",
+  "usedInProjects_many": "Используется в {{count, number}} проектах",
+  "usedInProjects_other": "Используется в {{count, number}} проекта"
 }

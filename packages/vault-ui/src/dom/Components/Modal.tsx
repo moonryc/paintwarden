@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
 import { createContext, useContext, useId, type ReactNode } from "react";
 
+import { PageLoadingStatus } from "./PageLoadingStatus";
 import { ModalHeader } from "./ModalHeader";
 import { ErrorSurface } from "./QueryErrorNotice";
 
@@ -46,6 +47,8 @@ export function Modal({
   children,
   footer,
   fillBody = false,
+  loading = false,
+  bodyHeight,
 }: {
   title: string;
   subtitle: string;
@@ -56,6 +59,9 @@ export function Modal({
   // Lays the body out as a flex column so one child (such as a long list) can fill the
   // remaining height and scroll by itself.
   fillBody?: boolean;
+  loading?: boolean;
+  /** Stable data-drawer viewport: changes scroll inside it, never recenter the shell. */
+  bodyHeight?: string;
 }) {
   const bodyLayout = fillBody ? ({ display: "flex", flexDirection: "column" } as const) : {};
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"), { noSsr: true });
@@ -67,7 +73,7 @@ export function Modal({
     <ModalLeadContext.Provider value={null}>
       <ErrorSurface showConnection>
         {slot && <Box sx={{ mb: 2.5 }}>{slot.lead}</Box>}
-        {children}
+        <PageLoadingStatus loading={loading}>{children}</PageLoadingStatus>
       </ErrorSurface>
     </ModalLeadContext.Provider>
   );
@@ -147,6 +153,7 @@ export function Modal({
         sx={{
           ...scrollingBody,
           ...bodyLayout,
+          ...(bodyHeight ? { height: bodyHeight, flex: "1 1 auto" } : {}),
           px: { xs: 3, md: 3.5 },
           pt: LABEL_ROOM,
           pb: footer ? 2.5 : { xs: 3, md: 3.5 },

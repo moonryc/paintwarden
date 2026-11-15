@@ -1,14 +1,5 @@
 import { StableAutocomplete } from "../Components/StableAutocomplete";
-import {
-  Alert,
-  Button,
-  Chip,
-  CircularProgress,
-  MenuItem,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-} from "@mui/material";
+import { Alert, Button, Chip, MenuItem, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -46,7 +37,7 @@ export function MiniatureForm({
 }) {
   const { t } = useTranslation("components");
   const { t: tPages } = useTranslation("pages");
-  const { folders } = useFolderBrowser("miniature-form", "MINIATURE", "");
+  const { folders, loading: foldersLoading } = useFolderBrowser("miniature-form", "MINIATURE", "");
   const startFolderId = initial ? (initial.folderId ?? null) : initialFolderId;
   const [folderId, setFolderId] = useState<string | null>(startFolderId);
   // Each folder by its full path, so nested folders with the same name stay distinct.
@@ -81,6 +72,7 @@ export function MiniatureForm({
   // Opening Add from a distant card must not depend on the first summary page.
   const selectedQuery = useTemplateCatalog(!initial && !!initialTemplateId, { id: initialTemplateId });
   const templateCatalog = catalogQuery.data;
+  const initialCatalogLoading = catalogQuery.loading && !templateCatalog;
   const templateError = catalogQuery.error?.message ?? selectedQuery.error?.message ?? "";
   useEffect(() => {
     if (!confirmDelete) return;
@@ -196,9 +188,6 @@ export function MiniatureForm({
                   {t("chooseASourceOrPersonalTemplateToAddIts")}
                 </Box>
               </div>
-              {!templateCatalog && !templateError && (
-                <CircularProgress size={18} aria-label={t("loadingTemplates")} />
-              )}
             </Box>
             <Box
               component="div"
@@ -213,8 +202,11 @@ export function MiniatureForm({
                 fullWidth
                 size="small"
                 label={t("category")}
+                disabled={initialCatalogLoading}
+                slotProps={{
+                  select: { renderValue: initialCatalogLoading ? () => t("loading") : undefined },
+                }}
                 value={templateCategory}
-                disabled={!templateCatalog}
                 onChange={(e) => {
                   if (selectedTemplate && title === selectedTemplate.name) setTitle("");
                   setTemplateCategory(e.target.value);
@@ -408,23 +400,25 @@ export function MiniatureForm({
             </MenuItem>
           ))}
         </TextField>
-        {(folderOptions.length > 0 || folderId) && (
-          <TextField
-            fullWidth
-            select
-            label={tPages("folders.folder")}
-            value={folderId ?? ""}
-            onChange={(e) => setFolderId(e.target.value || null)}
-            slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
-          >
-            <MenuItem value="">{tPages("folders.noFolder")}</MenuItem>
-            {folderOptions.map((option) => (
-              <MenuItem key={option.id} value={option.id}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
+        <TextField
+          fullWidth
+          select
+          label={tPages("folders.folder")}
+          disabled={foldersLoading}
+          value={foldersLoading ? "" : (folderId ?? "")}
+          onChange={(e) => setFolderId(e.target.value || null)}
+          slotProps={{
+            select: { displayEmpty: true, renderValue: foldersLoading ? () => t("loading") : undefined },
+            inputLabel: { shrink: true },
+          }}
+        >
+          <MenuItem value="">{tPages("folders.noFolder")}</MenuItem>
+          {folderOptions.map((option) => (
+            <MenuItem key={option.id} value={option.id}>
+              {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
         <TextField
           fullWidth
           multiline

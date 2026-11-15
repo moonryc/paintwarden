@@ -30,6 +30,8 @@ export function ModalHeader({
       sx={[
         {
           boxSizing: "border-box",
+          minWidth: 0,
+          overflowWrap: "anywhere",
           position: "sticky",
           top: 0,
           zIndex: 10,

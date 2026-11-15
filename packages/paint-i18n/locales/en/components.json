@@ -89,7 +89,6 @@
   "resetImageView": "Reset image view",
   "miniTemplate": "Mini-template",
   "chooseASourceOrPersonalTemplateToAddIts": "Choose a source or personal template to add its name, image, schemes, and paints.",
-  "loadingTemplates": "Loading templates",
   "category": "Category",
   "allCategories": "All categories",
   "model": "Model",
@@ -293,8 +292,6 @@
   "addFirstPaintToStep": "Add the first paint to {{label}}",
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} paint",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} paints",
-  "viewPaintProjects_one": "View all {{count, number}} project for {{name}}",
-  "viewPaintProjects_other": "View all {{count, number}} projects for {{name}}",
   "projectCount_one": "{{count, number}} project",
   "projectCount_other": "{{count, number}} projects",
   "projectPaintsNeedAttention_one": "{{count, number}} project paint needs attention",
@@ -522,5 +519,7 @@
   "scanWorstPin": "Worst pin · ΔE {{value}}",
   "scanPinNumber": "Pin {{number}} → paint",
   "searchResultCount": "{{count}} results available.",
-  "searchResults": "Search results"
+  "searchResults": "Search results",
+  "usedInProjects_one": "Used in {{count, number}} project",
+  "usedInProjects_other": "Used in {{count, number}} projects"
 }

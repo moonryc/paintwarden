@@ -112,7 +112,10 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          whiteSpace: "nowrap",
+          whiteSpace: "normal",
+          overflowWrap: "anywhere",
+          maxWidth: "100%",
+          minWidth: 0,
           minHeight: 40,
           [down.md]: { minHeight: 44 },
         },

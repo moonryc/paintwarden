@@ -25,6 +25,7 @@ export function FilterToolbar({
   children,
   wideSearch = false,
   singleLineFilters = false,
+  disabled = false,
 }: {
   search: string;
   setSearch(v: string): void;
@@ -32,10 +33,12 @@ export function FilterToolbar({
   children: ReactNode;
   wideSearch?: boolean;
   singleLineFilters?: boolean;
+  disabled?: boolean;
 }) {
   const { t } = useTranslation(["components", "common"]);
   return (
     <Card
+      data-filter-toolbar
       sx={[
         {
           boxSizing: "border-box",
@@ -63,6 +66,7 @@ export function FilterToolbar({
     >
       <TextField
         fullWidth
+        disabled={disabled}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={(event) => {
@@ -72,7 +76,7 @@ export function FilterToolbar({
           event.stopPropagation();
           setSearch("");
         }}
-        placeholder={t("common:search")}
+        placeholder={disabled ? t("loading") : t("common:search")}
         size="small"
         sx={
           singleLineFilters
@@ -96,6 +100,7 @@ export function FilterToolbar({
             endAdornment: (
               <InputAdornment position="end" sx={{ width: 28, visibility: search ? "visible" : "hidden" }}>
                 <IconButton
+                  disabled={disabled}
                   size="small"
                   edge="end"
                   onClick={() => setSearch("")}

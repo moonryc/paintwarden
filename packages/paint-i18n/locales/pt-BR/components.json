@@ -89,7 +89,6 @@
   "resetImageView": "Redefinir visualização da imagem",
   "miniTemplate": "Predefinição de miniatura",
   "chooseASourceOrPersonalTemplateToAddIts": "Escolha uma predefinição de uma fonte ou pessoal para adicionar seu nome, imagem, esquemas de cores e tintas.",
-  "loadingTemplates": "Carregando predefinições",
   "category": "Categoria",
   "allCategories": "Todas as categorias",
   "model": "Modelo",
@@ -295,9 +294,6 @@
   "wishlistBrandPaints_one": "{{brand}}: {{count, number}} tinta",
   "wishlistBrandPaints_many": "{{brand}}: {{count, number}} tintas",
   "wishlistBrandPaints_other": "{{brand}}: {{count, number}} tintas",
-  "viewPaintProjects_one": "Ver {{count, number}} projeto de {{name}}",
-  "viewPaintProjects_many": "Ver todos os {{count, number}} projetos de {{name}}",
-  "viewPaintProjects_other": "Ver todos os {{count, number}} projetos de {{name}}",
   "projectCount_one": "{{count, number}} projeto",
   "projectCount_many": "{{count, number}} projetos",
   "projectCount_other": "{{count, number}} projetos",
@@ -543,5 +539,8 @@
   "scanWorstPin": "Pior ponto · ΔE {{value}}",
   "scanPinNumber": "Ponto {{number}} → tinta",
   "searchResultCount": "{{count}} resultados disponíveis.",
-  "searchResults": "Resultados da busca"
+  "searchResults": "Resultados da busca",
+  "usedInProjects_one": "Usada em {{count, number}} projeto",
+  "usedInProjects_many": "Usada em {{count, number}} projetos",
+  "usedInProjects_other": "Usada em {{count, number}} projetos"
 }

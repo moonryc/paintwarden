@@ -139,3 +139,14 @@ export const DesktopRemoteHasNoPhoneAccess: Story = {
     ).not.toBeInTheDocument();
   },
 };
+
+// Settings has no query barrier: even an offline/pending connection leaves its shell usable.
+export const Loading: Story = {
+  args: { connected: false },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { name: "Data & settings" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Manage plugins" })).toBeEnabled();
+    await expect(canvas.queryByRole("progressbar")).toBeNull();
+  },
+};

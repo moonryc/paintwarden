@@ -89,7 +89,6 @@
   "resetImageView": "重設圖片檢視",
   "miniTemplate": "微縮模型範本",
   "chooseASourceOrPersonalTemplateToAddIts": "選擇來源或個人範本，加入其名稱、圖片、配色方案與塗料。",
-  "loadingTemplates": "正在載入範本",
   "category": "分類",
   "allCategories": "所有分類",
   "model": "模型",
@@ -291,7 +290,6 @@
   "removeEmptyStep": "移除空白的「{{label}}」步驟",
   "addFirstPaintToStep": "在「{{label}}」新增第一項塗料",
   "wishlistBrandPaints_other": "{{brand}}：{{count, number}} 項塗料",
-  "viewPaintProjects_other": "查看使用 {{name}} 的全部 {{count, number}} 個專案",
   "projectCount_other": "{{count, number}} 個專案",
   "projectPaintsNeedAttention_other": "{{count, number}} 項專案塗料需要處理",
   "missingPaintsNotListed_other": "專案需要的 {{count, number}} 項塗料不在此清單中",
@@ -501,5 +499,6 @@
   "scanWorstPin": "最差取樣點 · ΔE {{value}}",
   "scanPinNumber": "取樣點 {{number}} → 顏料",
   "searchResultCount": "找到 {{count}} 個結果。",
-  "searchResults": "搜尋結果"
+  "searchResults": "搜尋結果",
+  "usedInProjects_other": "用於 {{count, number}} 個專案"
 }

@@ -87,3 +87,15 @@ export const DesktopPalette: Story = {
   ...Palette,
   globals: { viewport: { value: "desktop1440", isRotated: false } },
 };
+
+export const Loading: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("heading", { name: "Paint Tools" })).toBeVisible();
+    await expect(canvas.getByRole("button", { name: /^Complementary$/ })).toBeEnabled();
+    const field = canvas.getByRole("combobox");
+    await expect(field).toBeDisabled();
+    await expect(field).toHaveAttribute("placeholder", "Loading…");
+    await expect(canvas.queryByRole("progressbar")).toBeNull();
+  },
+};

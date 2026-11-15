@@ -8,6 +8,8 @@ export function installBaseStyles() {
   }
   Object.assign(document.documentElement.style, {
     colorScheme: "dark",
+    scrollbarGutter: "stable",
+    overflowWrap: "anywhere",
     lineHeight: "1.5",
     minHeight: "100%",
     width: "100%",

@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { usePageLoading } from "../Components/PageLoadingStatus";
+
 import { useFirstScreenReady } from "../utils/FirstScreenPreload";
 
 // Only replace a page before its first successful read. Later query/filter loads
@@ -10,5 +12,7 @@ export function useInitialPageLoading(loading: boolean, hasError: boolean, scree
   useEffect(() => {
     if (!loading && !hasError) loaded.current = true;
   }, [loading, hasError]);
-  return loading && !loaded.current;
+  const initialLoading = loading && !loaded.current;
+  usePageLoading(screen && initialLoading);
+  return initialLoading;
 }

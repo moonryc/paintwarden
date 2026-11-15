@@ -89,7 +89,6 @@
   "resetImageView": "重置图片视图",
   "miniTemplate": "微缩模型模板",
   "chooseASourceOrPersonalTemplateToAddIts": "选择数据源或个人模板，添加其名称、图片、配色方案和涂料。",
-  "loadingTemplates": "正在加载模板",
   "category": "分类",
   "allCategories": "所有分类",
   "model": "模型",
@@ -291,7 +290,6 @@
   "removeEmptyStep": "移除空的{{label}}步骤",
   "addFirstPaintToStep": "向{{label}}添加第一款涂料",
   "wishlistBrandPaints_other": "{{brand}}：{{count, number}} 款涂料",
-  "viewPaintProjects_other": "查看使用 {{name}} 的全部 {{count, number}} 个项目",
   "projectCount_other": "{{count, number}} 个项目",
   "projectPaintsNeedAttention_other": "{{count, number}} 款项目涂料需要处理",
   "missingPaintsNotListed_other": "项目需要的 {{count, number}} 款涂料尚未加入此清单",
@@ -501,5 +499,6 @@
   "scanWorstPin": "最差取样点 · ΔE {{value}}",
   "scanPinNumber": "取样点 {{number}} → 颜料",
   "searchResultCount": "找到 {{count}} 个结果。",
-  "searchResults": "搜索结果"
+  "searchResults": "搜索结果",
+  "usedInProjects_other": "用于 {{count, number}} 个项目"
 }

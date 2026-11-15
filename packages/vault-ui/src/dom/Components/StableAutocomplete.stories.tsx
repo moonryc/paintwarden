@@ -64,6 +64,7 @@ async function stableSearch(canvasElement: HTMLElement, label: string) {
   const canvas = within(canvasElement);
   const body = within(document.body);
   const input = canvas.getByRole("combobox", { name: label });
+  await waitFor(() => expect(input).toBeEnabled());
   await userEvent.click(input);
   await waitFor(() => expect(body.getAllByRole("option")).toHaveLength(10));
   const initial = boxes(input);
@@ -108,9 +109,16 @@ export const FolderLocal: Story = {
 export const FirstLoadAndInfiniteScroll: Story = {
   play: async ({ canvasElement }) => {
     const body = within(document.body);
-    await userEvent.click(within(canvasElement).getByRole("combobox", { name: "Model" }));
-    await expect(body.getByRole("listbox")).toHaveAttribute("aria-busy", "true");
-    await expect(body.queryByText(/Loading…/)).not.toBeInTheDocument();
+    const input = within(canvasElement).getByRole("combobox", { name: "Model" });
+    const before = input.getBoundingClientRect();
+    await expect(input).toBeDisabled();
+    await expect(input).toHaveAttribute("placeholder", "Loading…");
+    await expect(body.queryByRole("progressbar")).not.toBeInTheDocument();
+    await waitFor(() => expect(input).toBeEnabled());
+    const after = input.getBoundingClientRect();
+    for (const axis of ["x", "y", "width", "height"] as const)
+      await expect(Math.abs(after[axis] - before[axis])).toBeLessThanOrEqual(0.5);
+    await userEvent.click(input);
     await waitFor(() => expect(body.getAllByRole("option")).toHaveLength(10));
     const list = body.getByRole("listbox");
     list.scrollTop = list.scrollHeight;

@@ -1,7 +1,7 @@
 import { Alert, Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
-import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
+import { useState, type ComponentProps, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
@@ -26,6 +26,12 @@ import { FALLBACK_OWNER_NAME } from "./Layout/UserAvatar";
 import { VaultLayout } from "./Layout/VaultLayout";
 import { CreateMiniatureDialog } from "./Modals/CreateMiniatureDialog";
 import { Home } from "./Pages/Home";
+import { PaintLibrary } from "./Pages/PaintLibrary";
+import { PaintToolsPage } from "./Pages/PaintTools/PaintToolsPage";
+import { ColorSchemesPage } from "./Pages/Schemes/ColorSchemesPage";
+import { SettingsScreen } from "./Pages/Settings/SettingsScreen";
+import { MiniatureTemplatesPage } from "./Pages/Templates/MiniatureTemplatesPage";
+import { WishlistPage } from "./Pages/WishlistPage";
 import { useVaultStore } from "./store/hooks";
 import { createVaultStore } from "./store/vault-store";
 import { VaultStoreProvider } from "./store/VaultStoreProvider";
@@ -34,30 +40,11 @@ import { installBaseStyles } from "./utils/base-styles";
 import { FirstScreenPreload, FirstScreenReady } from "./utils/FirstScreenPreload";
 import { PublicError, publicErrorMessage } from "./utils/public-error";
 
-// Keep the workbench eager; screens stay lazy and dialogs share idle/intent preloads.
+// Page shells are eager: navigation never swaps a different skeleton shell.
+// Heavy overlays remain lazy and share idle/intent preloads.
 const PaintForm = dialogs.paint.Component;
 const ProjectDrawer = dialogs.project.Component;
-const PaintLibrary = lazy(() =>
-  import("./Pages/PaintLibrary").then((module) => ({ default: module.PaintLibrary })),
-);
-const PaintToolsPage = lazy(() =>
-  import("./Pages/PaintTools/PaintToolsPage").then((module) => ({ default: module.PaintToolsPage })),
-);
-const ColorSchemesPage = lazy(() =>
-  import("./Pages/Schemes/ColorSchemesPage").then((module) => ({ default: module.ColorSchemesPage })),
-);
-const SettingsScreen = lazy(() =>
-  import("./Pages/Settings/SettingsScreen").then((module) => ({ default: module.SettingsScreen })),
-);
 const PluginsModal = dialogs.plugins.Component;
-const MiniatureTemplatesPage = lazy(() =>
-  import("./Pages/Templates/MiniatureTemplatesPage").then((module) => ({
-    default: module.MiniatureTemplatesPage,
-  })),
-);
-const WishlistPage = lazy(() =>
-  import("./Pages/WishlistPage").then((module) => ({ default: module.WishlistPage })),
-);
 
 if (typeof document !== "undefined") installBaseStyles();
 
@@ -270,58 +257,38 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
             {loading ? (
               <PageSkeleton page={tab === "dashboard" ? "home" : tab} />
             ) : (
-              <Box
-                component="div"
-                sx={{
-                  animation: "rise 0.25s ease",
-                  "@keyframes rise": {
-                    from: {
-                      opacity: 0,
-                      transform: "translateY(6px)",
-                    },
-                    to: {
-                      opacity: 1,
-                      transform: "none",
-                    },
-                  },
-                  "@media (prefers-reduced-motion: reduce)": {
-                    animation: "none",
-                  },
-                }}
-              >
-                <Suspense fallback={<PageSkeleton page={tab === "dashboard" ? "home" : tab} />}>
-                  {tab === "dashboard" || tab === "miniatures" ? (
-                    <Home view={tab} />
-                  ) : tab === "templates" ? (
-                    <MiniatureTemplatesPage
-                      onUse={(id) => {
-                        setInitialTemplateId(id);
-                        setShowMiniForm(true);
-                      }}
-                    />
-                  ) : tab === "paint-tools" ? (
-                    <>
-                      <PaintToolsPage />
-                      <FirstScreenReady />
-                    </>
-                  ) : tab === "schemes" ? (
-                    <ColorSchemesPage />
-                  ) : tab === "wishlist" ? (
-                    <WishlistPage
-                      onBrowsePaints={() => {
-                        setPaintFilter("ALL");
-                        go("paints");
-                      }}
-                    />
-                  ) : tab === "settings" ? (
-                    <>
-                      <SettingsScreen auth={auth} connected={!loadError} onChangeServer={onChangeServer} />
-                      <FirstScreenReady />
-                    </>
-                  ) : (
-                    <PaintLibrary onAddPaint={() => setShowPaintForm(true)} />
-                  )}
-                </Suspense>
+              <Box component="div" sx={{ minWidth: 0 }}>
+                {tab === "dashboard" || tab === "miniatures" ? (
+                  <Home key={tab} view={tab} />
+                ) : tab === "templates" ? (
+                  <MiniatureTemplatesPage
+                    onUse={(id) => {
+                      setInitialTemplateId(id);
+                      setShowMiniForm(true);
+                    }}
+                  />
+                ) : tab === "paint-tools" ? (
+                  <>
+                    <PaintToolsPage />
+                    <FirstScreenReady />
+                  </>
+                ) : tab === "schemes" ? (
+                  <ColorSchemesPage />
+                ) : tab === "wishlist" ? (
+                  <WishlistPage
+                    onBrowsePaints={() => {
+                      setPaintFilter("ALL");
+                      go("paints");
+                    }}
+                  />
+                ) : tab === "settings" ? (
+                  <>
+                    <SettingsScreen auth={auth} connected={!loadError} onChangeServer={onChangeServer} />
+                    <FirstScreenReady />
+                  </>
+                ) : (
+                  <PaintLibrary onAddPaint={() => setShowPaintForm(true)} />
+                )}
               </Box>
             )}
           </VaultLayout>
