@@ -18,6 +18,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import { CtaBand, IconTile, Screenshot, SectionTitle, Surface, serif } from "../components/primitives";
 import { siteT as t } from "../i18n";
+import { HomePhonePrivacy } from "./PhonePage";
 
 // The app's navigation, in the order its sidebar lists it.
 const screens = (): [ComponentType<SvgIconProps>, string, string][] => [
@@ -128,7 +129,11 @@ function Hero() {
     <Box component="section" sx={{ position: "relative", overflow: "hidden" }}>
       <Box
         component="img"
-        src="/images/paint-desk-hero.png"
+        src="/images/paint-desk-hero.webp"
+        srcSet="/images/paint-desk-hero-720.webp 720w, /images/paint-desk-hero-1200.webp 1200w, /images/paint-desk-hero.webp 1672w"
+        sizes="100vw"
+        width={1672}
+        height={941}
         alt=""
         fetchPriority="high"
         sx={{
@@ -274,8 +279,8 @@ function Hero() {
           <Screenshot
             priority
             src="/images/app/workbench.webp"
-            width={2400}
-            height={1500}
+            width={1440}
+            height={1000}
             alt={t("home.thePaintwardenWorkbench2Of5MiniaturesReadyTo")}
             caption={t("home.theWorkbenchInThePaintwardenApp")}
             sx={{ display: { xs: "none", sm: "block" }, position: "relative", mr: { md: "12%" } }}
@@ -465,10 +470,70 @@ function Hosting() {
   );
 }
 
+function AppGallery() {
+  const items = [
+    ["workbench", t("home.screenWorkbench")],
+    ["miniature", t("home.screenMiniature")],
+    ["recipe", t("home.screenRecipe")],
+    ["scan", t("home.screenScan")],
+    ["complement", t("home.screenComplement")],
+    ["paints", t("home.screenPaints")],
+    ["wishlist", t("home.screenWishlist")],
+    ["plugins", t("home.screenPlugins")],
+    ["settings", t("home.screenSettings")],
+  ];
+  return (
+    <Container component="section" id="screenshots" maxWidth="lg" sx={{ mt: { xs: 10, md: 14 } }}>
+      <SectionTitle
+        eyebrow={t("home.realScreensTitle")}
+        title={t("home.realScreensTitle")}
+        body={t("home.realScreensBody")}
+      />
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+        {items.map(([name, title]) => (
+          <Surface key={name} component="article" sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
+            <Typography component="h3" sx={{ fontWeight: 600, mb: 2 }}>
+              {title}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 2, alignItems: "center", justifyContent: "center" }}>
+              <Box sx={{ width: "76%", display: { xs: "none", sm: "block" } }}>
+                <a href={`/images/app/${name}.webp`}>
+                  <Screenshot
+                    src={`/images/app/${name}.webp`}
+                    width={1440}
+                    height={1000}
+                    alt={`${title} — ${t("home.desktop")}`}
+                    caption={t("home.desktop")}
+                  />
+                </a>
+              </Box>
+              <Box sx={{ width: { xs: "78%", sm: "22%" }, maxWidth: { xs: 290, sm: 120 } }}>
+                <a href={`/images/app/phone-${name}.webp`}>
+                  <Screenshot
+                    src={`/images/app/phone-${name}.webp`}
+                    width={780}
+                    height={1688}
+                    alt={`${title} — ${t("home.phone")}`}
+                    caption={t("home.phone")}
+                  />
+                </a>
+              </Box>
+            </Box>
+            <Box sx={{ display: { xs: "block", sm: "none" }, textAlign: "center", mt: 2 }}>
+              <a href={`/images/app/${name}.webp`}>{t("home.desktop")}</a>
+            </Box>
+          </Surface>
+        ))}
+      </Box>
+    </Container>
+  );
+}
+
 export function HomePage() {
   return (
     <>
       <Hero />
+      <HomePhonePrivacy />
       <Stats />
       <Screens />
       <Container maxWidth="lg" sx={{ mt: { xs: 12, md: 16 }, display: "grid", gap: { xs: 12, md: 16 } }}>
@@ -485,8 +550,8 @@ export function HomePage() {
           preview={
             <Screenshot
               src="/images/app/paints.webp"
-              width={1600}
-              height={1216}
+              width={1440}
+              height={1000}
               alt={t("home.thePaintsLibraryFilteredToOwnedPaintsEachRowWith")}
               caption={t("home.thePaintLibrary")}
             />
@@ -505,10 +570,10 @@ export function HomePage() {
           link={{ label: t("home.planAMiniature"), href: "/docs/#miniatures" }}
           preview={
             <Screenshot
-              src="/images/app/miniature.webp"
-              width={960}
-              height={1350}
-              alt={t("home.aKnightCaptainMiniatureInProgressPaintingStage2Paints")}
+              src="/images/app/phone-recipe.webp"
+              width={780}
+              height={1688}
+              alt={t("home.screenRecipe")}
               caption={t("home.aMiniatureSRecipeAndPaintingStage")}
               sx={{ maxWidth: 440, mx: "auto" }}
             />
@@ -516,25 +581,22 @@ export function HomePage() {
         />
         <Showcase
           eyebrow={t("home.paintTools")}
-          title={t("home.findAStandInFromPaintsYouOwn")}
-          body={t("home.paintCompareRanksCatalogColorsByHowCloseTheyLook")}
-          points={[
-            t("home.lightnessHueAndVividnessDifferencesExplained"),
-            t("home.reviewEverySwapBeforeYouSave"),
-            t("home.yourOriginalSchemeStaysUnchanged"),
-          ]}
+          title={t("home.complementTitle")}
+          body={t("home.complementBody")}
+          points={[t("home.complementStrength"), t("home.complementTargets"), t("home.complementSave")]}
           link={{ label: t("home.learnAboutPaintTools"), href: "/docs/#paint-tools" }}
           preview={
             <Screenshot
-              src="/images/app/compare.webp"
-              width={1600}
-              height={1189}
-              alt={t("home.paintCompareRankingTheClosestPaintsToCrimsonBaseBy")}
-              caption={t("home.paintCompare")}
+              src="/images/app/complement.webp"
+              width={1440}
+              height={1000}
+              alt={t("home.screenComplement")}
+              caption={t("home.screenComplement")}
             />
           }
         />
       </Container>
+      <AppGallery />
       <Hosting />
       <Container maxWidth="lg" sx={{ mt: { xs: 8, md: 10 } }}>
         <CtaBand

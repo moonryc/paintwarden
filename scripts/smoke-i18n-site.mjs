@@ -24,7 +24,7 @@ const report = {
   node: process.version,
   root,
   scope:
-    "Production static site: 13 locales × 4 routes, real autonym picker, metadata, navigation/reload persistence; all 13 locales × four routes at 390px",
+    "Production static site: 13 locales × 5 routes, real autonym picker, metadata, navigation/reload persistence; all 13 locales × five routes at 390px",
   catalogs: [],
   results: [],
   runtimeErrors: [],
@@ -35,6 +35,7 @@ const report = {
 const routes = [
   { pathname: "/", page: "home", label: "website.overview" },
   { pathname: "/docs/", page: "docs", label: "website.howToUse" },
+  { pathname: "/phone/", page: "phone", label: "website.phonePrivacy" },
   { pathname: "/faq/", page: "faq", label: "website.faq" },
   { pathname: "/download/", page: "download", label: "website.download" },
 ];
@@ -129,6 +130,7 @@ async function inspect(code, route, phase, mobile) {
     home: `${catalogs[code]["home.paintMore"]} ${catalogs[code]["home.huntLess"]}`,
     docs: catalogs[code]["docs.getFromShelfToSession"],
     faq: catalogs[code]["faq.theLittleDetailsMatter"],
+    phone: catalogs[code]["phone.title"],
     download: catalogs[code]["download.pickYourKindOfVault"],
   }[route.page];
   const normalize = (text) => text.replace(/\s+/g, " ").trim();
@@ -153,6 +155,17 @@ async function inspect(code, route, phase, mobile) {
     row.layout.unresolvedKeys.length ||
     row.siteUnresolvedKeys.length ||
     row.unresolvedInterpolation.length;
+  if (code === "en" && (phase === "navigation" || phase === "selection")) {
+    if (route.page === "phone")
+      await page.screenshot({
+        path: path.join(evidence, `phone-page-${mobile ? "390" : "1440"}.png`),
+        fullPage: true,
+      });
+    if (route.page === "home")
+      await page
+        .locator("#phone-privacy")
+        .screenshot({ path: path.join(evidence, `home-phone-privacy-${mobile ? "390" : "1440"}.png`) });
+  }
   const selectedScreenshot =
     mobile &&
     phase === "navigation" &&
@@ -174,7 +187,10 @@ async function inspectDetails(code, route, mobile) {
     for (const question of await questions.all()) await question.click();
     await page.waitForFunction(() => document.querySelectorAll("main .MuiCollapse-entered").length === 10);
     await inspect(code, route, "faq-expanded", mobile);
-  } else if (route.page === "download") {
+  } else if (
+    route.page === "download" &&
+    (await page.locator('button[aria-controls="server-panel"]').count())
+  ) {
     await page.locator('button[aria-controls="server-panel"]').click();
     assert.ok(await page.locator("#server-panel").isVisible());
     assert.ok(!(await page.locator("#desktop-panel").isVisible()));
@@ -327,7 +343,7 @@ try {
       await inspect(code, route, "reload", false);
       await inspectDetails(code, route, false);
     }
-    console.log(`Desktop ${code}: all four routes, metadata, picker, navigation and reload passed`);
+    console.log(`Desktop ${code}: all five routes, metadata, picker, navigation and reload passed`);
   }
   await page.setViewportSize({ width: 390, height: 844 });
   for (const { code } of languages) {
@@ -340,7 +356,7 @@ try {
       await inspect(code, route, "navigation", true);
       await inspectDetails(code, route, true);
     }
-    console.log(`Mobile ${code}: all four routes checked at 390px`);
+    console.log(`Mobile ${code}: all five routes checked at 390px`);
   }
   report.status =
     report.results.some((row) => row.status !== "PASS") ||

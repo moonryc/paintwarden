@@ -21,6 +21,10 @@ locations. Owner passwords are stored as hashes; sessions and the owner account
 are not in an exported vault ZIP. A full directory/volume backup can include
 credentials, sessions and private photos: treat it as sensitive.
 
+The owner account belongs to your vault; it is not registration with Paintwarden
+or an account hosted by us. For browser and private remote access, see
+[the phone access guide](phone-access.md).
+
 ## When requests leave your computer or server
 
 - **Desktop updates:** packaged apps check this project's GitHub Releases about
@@ -74,6 +78,13 @@ saved archive before sharing; redaction is not a reason to upload raw logs,
 a database or a backup. Only share what is necessary and remove private details
 from screenshots. See [the tester guide](beta-testers.md#6-tell-us-what-happened-safely)
 and [private security reporting](../SECURITY.md).
+
+## Product website
+
+The product website is separate from your vault. We keep aggregate visit counts
+for the website and delete raw access logs within 7 days. The website stores your
+chosen language in browser local storage. This website policy does not set the
+retention of your own server logs, app/OS logs or third-party service logs.
 
 ## Independent project; plugin content
 

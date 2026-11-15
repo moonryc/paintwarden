@@ -353,6 +353,14 @@ export function Screenshot({
       <Box
         component="img"
         src={src}
+        srcSet={
+          src.startsWith("/images/app/")
+            ? src.includes("/phone-")
+              ? `${src.replace(".webp", "-390.webp")} 390w, ${src} 780w`
+              : `${src.replace(".webp", "-720.webp")} 720w, ${src.replace(".webp", "-1080.webp")} 1080w, ${src} 1440w`
+            : undefined
+        }
+        sizes={src.includes("/phone-") ? "(max-width: 600px) 78vw, 320px" : "(max-width: 900px) 100vw, 720px"}
         alt={alt}
         width={width}
         height={height}

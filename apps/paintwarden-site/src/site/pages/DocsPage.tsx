@@ -53,8 +53,8 @@ const sections = (): Section[] => [
     icon: ExtensionOutlined,
     image: {
       src: "/images/app/plugins.webp",
-      width: 1000,
-      height: 1048,
+      width: 1440,
+      height: 1000,
       alt: t("docs.thePluginsDialogWithAGitHubRepositoryFieldAnUpload"),
       caption: t("docs.dataSettingsPlugins"),
       maxWidth: 460,
@@ -104,8 +104,8 @@ const sections = (): Section[] => [
     icon: DashboardOutlined,
     image: {
       src: "/images/app/miniature.webp",
-      width: 960,
-      height: 1350,
+      width: 1440,
+      height: 1000,
       alt: t("docs.aMiniatureSDetailViewWithItsPaintingStageThe"),
       caption: t("docs.aMiniatureSDetailView"),
       maxWidth: 420,
@@ -129,8 +129,8 @@ const sections = (): Section[] => [
     icon: LayersOutlined,
     image: {
       src: "/images/app/schemes.webp",
-      width: 2400,
-      height: 1500,
+      width: 1440,
+      height: 1000,
       alt: t("docs.theSchemesScreenWithColorRecipeCardsEachShowingWhether"),
       caption: t("docs.schemesFilteredByPluginColorAndAvailability"),
     },
@@ -161,8 +161,8 @@ const sections = (): Section[] => [
     icon: SwapHoriz,
     image: {
       src: "/images/app/converter.webp",
-      width: 1600,
-      height: 1189,
+      width: 1440,
+      height: 1000,
       alt: t("docs.theRecipeConverterKeepingThreeOwnedPaintsFromAScheme"),
       caption: t("docs.recipeConverter"),
     },
@@ -320,8 +320,8 @@ export function DocsPage() {
 
       <Screenshot
         src="/images/app/workbench.webp"
-        width={2400}
-        height={1500}
+        width={1440}
+        height={1000}
         alt={t("docs.thePaintwardenWorkbench2Of5MiniaturesReadyTo")}
         caption={t("docs.theWorkbenchTheFirstScreenAfterSetup")}
         sx={{ mt: { xs: 8, md: 10 } }}

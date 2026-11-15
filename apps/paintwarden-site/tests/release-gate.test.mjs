@@ -58,13 +58,33 @@ test("built default site hides private links and setup; opt-in restores them", {
   const temporary = mkdtempSync(join(tmpdir(), "paintwarden-release-gate-"));
   try {
     const hidden = build(join(temporary, "private"));
-    for (const page of ["", "download", "docs", "faq", "licenses"]) {
+    for (const page of ["", "download", "docs", "faq", "licenses", "phone"]) {
       assert.ok(!/demo[- ]plugin|demo ZIP|starter plugin/i.test(hidden(page)), `${page}: demo promotion`);
       const links = hrefs(hidden(page));
       assert.ok(!links.some((href) => href.startsWith(repository)), `${page}: private link`);
       assert.ok(links.includes("/licenses/"), `${page}: local notices`);
       assert.ok(links.includes("/LICENSE"), `${page}: local license`);
     }
+    const homepage = hidden("");
+    assert.ok(homepage.includes("Use Paintwarden on your phone"));
+    assert.ok(homepage.includes("The Paintwarden app doesn’t collect your data."));
+    assert.ok(homepage.includes("/phone/"));
+    const phone = hidden("phone");
+    for (const text of ["3000", "127.0.0.1", "Tailscale", "same network", "Home Screen", "within 7 days"]) {
+      assert.ok(phone.includes(text), `phone guide missing ${text}`);
+    }
+    for (const href of ["/privacy.md", "/phone-access.md"]) assert.ok(hrefs(phone).includes(href));
+    for (const [file, source] of [
+      ["privacy.md", "privacy.md"],
+      ["phone-access.md", "phone-access.md"],
+    ]) {
+      assert.equal(
+        readFileSync(join(temporary, "private", file), "utf8"),
+        readFileSync(join(root, "docs", source), "utf8"),
+      );
+    }
+    assert.ok(homepage.includes('srcSet="/images/app/workbench-720.webp 720w'));
+    assert.ok(!/illustrative|mock-up/i.test(homepage));
     const download = hidden("download");
     assert.ok(download.includes(notice));
     for (const forbidden of [
@@ -93,7 +113,7 @@ test("built default site hides private links and setup; opt-in restores them", {
       repository,
       `${repository}/blob/main/LICENSE`,
       `${repository}/blob/main/docs/beta-testers.md`,
-      `${repository}/blob/main/docs/privacy.md`,
+      "/privacy.md",
       `${repository}/security/policy`,
     ]) {
       assert.ok(hrefs(publicSite("")).includes(href), `public footer missing ${href}`);

@@ -19,27 +19,21 @@ import { useEffect, useState } from "react";
 
 import { Wordmark } from "./components/primitives";
 import { siteT as t, useSiteLanguage, languages } from "./i18n";
-import {
-  betaTesterGuide,
-  koFi,
-  privacyNetwork,
-  releases,
-  releasesAvailable,
-  repository,
-  securityReport,
-} from "./links";
+import { betaTesterGuide, koFi, releases, releasesAvailable, repository, securityReport } from "./links";
 import { DocsPage } from "./pages/DocsPage";
 import { DownloadPage } from "./pages/DownloadPage";
 import { FaqPage } from "./pages/FaqPage";
 import { HomePage } from "./pages/HomePage";
 import { LicensesPage } from "./pages/LicensesPage";
+import { PhonePage } from "./pages/PhonePage";
 import { theme } from "./theme";
 
-export type Page = "home" | "docs" | "faq" | "download" | "licenses";
+export type Page = "home" | "docs" | "faq" | "download" | "licenses" | "phone";
 
 const nav = (): { label: string; href: string; page: Page }[] => [
   { label: t("website.overview"), href: "/", page: "home" },
   { label: t("website.howToUse"), href: "/docs/", page: "docs" },
+  { label: t("website.phonePrivacy"), href: "/phone/", page: "phone" },
   { label: t("website.faq"), href: "/faq/", page: "faq" },
   { label: t("website.download"), href: "/download/", page: "download" },
 ];
@@ -82,7 +76,7 @@ function Header({
         <Box
           component="nav"
           aria-label={t("website.mainNavigation")}
-          sx={{ display: { xs: "none", md: "flex" }, alignItems: "center", gap: 0.5 }}
+          sx={{ display: { xs: "none", lg: "flex" }, alignItems: "center", gap: 0.5 }}
         >
           {nav().map((item) => {
             const current = page === item.page;
@@ -118,7 +112,7 @@ function Header({
           href="/download/"
           variant="contained"
           startIcon={<DownloadIcon />}
-          sx={{ display: { xs: "none", md: "inline-flex" }, ml: 1.5 }}
+          sx={{ display: { xs: "none", lg: "inline-flex" }, ml: 1.5 }}
         >
           {t("website.getTheApp")}
         </Button>
@@ -148,7 +142,7 @@ function Header({
           aria-controls="mobile-navigation"
           onClick={() => setMenuOpen(!menuOpen)}
           sx={{
-            display: { xs: "inline-flex", md: "none" },
+            display: { xs: "inline-flex", lg: "none" },
             border: "1px solid var(--line)",
             bgcolor: "var(--surface-raised)",
             borderRadius: 999,
@@ -163,7 +157,7 @@ function Header({
           component="nav"
           id="mobile-navigation"
           aria-label={t("website.mobileNavigation")}
-          sx={{ display: { md: "none" }, px: 2, pb: 2, pt: 1, borderTop: "1px solid var(--line)" }}
+          sx={{ display: { lg: "none" }, px: 2, pb: 2, pt: 1, borderTop: "1px solid var(--line)" }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
             {nav().map((item) => {
@@ -293,10 +287,14 @@ function Footer() {
                 {t("website.openSourceLicenses")}
               </Box>
             </li>
+            <li>
+              <Box component="a" href="/privacy.md" sx={footerLink}>
+                {t("website.privacyNetworkLink")}
+              </Box>
+            </li>
             {releasesAvailable &&
               [
                 [betaTesterGuide, t("website.betaTesterGuide")],
-                [privacyNetwork, t("website.privacyNetworkLink")],
                 [securityReport, t("website.securityReportLink")],
               ].map(([href, label]) => (
                 <li key={href}>
@@ -329,6 +327,13 @@ function Footer() {
       </Container>
       <Box sx={{ borderTop: "1px solid var(--line)" }}>
         <Container maxWidth="lg" sx={{ py: 2.5, color: "var(--ink-faint)", fontSize: 12 }}>
+          <Box
+            component="a"
+            href="/phone/#website-privacy"
+            sx={{ color: "var(--ink-soft)", display: "block", mb: 1.5, ...focusRing }}
+          >
+            {t("website.sitePrivacy")}
+          </Box>
           {t("website.paintwardenIsAnIndependentProjectAndIsNotAffiliated")}
         </Container>
       </Box>
@@ -373,6 +378,7 @@ export default function WebsitePage({ page, notices = "" }: { page: Page; notice
         <Box component="main" id="main">
           {page === "home" && <HomePage />}
           {page === "docs" && <DocsPage />}
+          {page === "phone" && <PhonePage />}
           {page === "faq" && <FaqPage />}
           {page === "download" && <DownloadPage />}
           {page === "licenses" && <LicensesPage notices={notices} />}
