@@ -73,3 +73,64 @@ export const InitialLoadOnly: Story = {
     await expect(content).not.toBeInTheDocument();
   },
 };
+
+function IdentityProbe() {
+  const [id, setId] = useState("A");
+  const [accepted, setAccepted] = useState<{ id: string } | null>({ id: "A" });
+  const [pending, setPending] = useState(false);
+  const result = useRetainedQuery(accepted?.id === id ? accepted : null, pending, "vault", id);
+  return (
+    <>
+      <p role="status">{result.data?.id ?? "No detail"}</p>
+      <p>Pending: {String(result.pending)}</p>
+      <Button
+        onClick={() => {
+          setPending(true);
+          setAccepted(null);
+        }}
+      >
+        Refresh same ID
+      </Button>
+      <Button
+        onClick={() => {
+          setPending(true);
+          setId(id === "A" ? "B" : "A");
+        }}
+      >
+        Switch ID
+      </Button>
+      <Button onClick={() => setPending(false)}>Fail read</Button>
+      <Button
+        onClick={() => {
+          setAccepted({ id });
+          setPending(false);
+        }}
+      >
+        Accept ID
+      </Button>
+    </>
+  );
+}
+
+export const IdentityBoundRetention: Story = {
+  render: () => <IdentityProbe />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = canvas.getByRole("status");
+    await expect(status).toHaveTextContent("A");
+    await userEvent.click(canvas.getByRole("button", { name: "Refresh same ID" }));
+    await expect(status).toHaveTextContent("A");
+    await userEvent.click(canvas.getByRole("button", { name: "Fail read" }));
+    await expect(status).toHaveTextContent("A");
+    await userEvent.click(canvas.getByRole("button", { name: "Switch ID" }));
+    await expect(status).toHaveTextContent("No detail");
+    await userEvent.click(canvas.getByRole("button", { name: "Fail read" }));
+    await expect(status).toHaveTextContent("No detail");
+    await userEvent.click(canvas.getByRole("button", { name: "Accept ID" }));
+    await expect(status).toHaveTextContent("B");
+    await userEvent.click(canvas.getByRole("button", { name: "Switch ID" }));
+    await expect(status).toHaveTextContent("No detail");
+    await userEvent.click(canvas.getByRole("button", { name: "Accept ID" }));
+    await expect(status).toHaveTextContent("A");
+  },
+};

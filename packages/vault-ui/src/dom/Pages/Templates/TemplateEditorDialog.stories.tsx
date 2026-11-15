@@ -34,6 +34,7 @@ type FixtureOptions = {
   failRefreshOnce?: boolean;
   failSaveOnce?: boolean;
   failSourceOnce?: boolean;
+  failSourceIdOnce?: string;
   paginatedMiniatures?: boolean;
   mutation?: ReturnType<typeof fn>;
   request?: ReturnType<typeof fn>;
@@ -103,7 +104,7 @@ function editorResponse(options: FixtureOptions = {}) {
       };
     }
     if (operation.operationName === "TemplateSourceMiniature") {
-      if (options.failSourceOnce && !sourceFailed) {
+      if ((options.failSourceOnce || options.failSourceIdOnce === operation.variables.id) && !sourceFailed) {
         sourceFailed = true;
         throw new Error("Source recipe temporarily unavailable");
       }
@@ -403,5 +404,54 @@ export const StaleCardMetadataNeverInitializesFields: Story = {
     const body = within(document.body);
     await waitFor(() => expect(body.getByDisplayValue("Latest committed manufacturer")).toBeVisible());
     await expect(body.queryByDisplayValue("Stale card manufacturer")).not.toBeInTheDocument();
+  },
+};
+
+// A and B are selected in the same mounted editor. A failed B read must not
+// relabel A's retained projection as B or consume B's population guard.
+export const SourceIdentitySwitchFailureRetry: Story = {
+  args: { template: null },
+  parameters: { editorFixture: { failSourceIdOnce: miniatures.scout.id, mutation: fn(), request: fn() } },
+  play: async ({ args, parameters }) => {
+    const body = within(document.body);
+    await waitForDialogEntered(await body.findByRole("dialog"));
+    const picker = body.getByRole("combobox", { name: "Start from miniature" });
+    await userEvent.type(picker, "knight");
+    await userEvent.click(await body.findByRole("option", { name: miniatures.knight.title }));
+    const name = body.getByRole("textbox", { name: "Name" });
+    await waitFor(() => expect(name).toHaveValue(miniatures.knight.title));
+    await userEvent.clear(name);
+    await userEvent.type(name, "Keep my draft during B failure");
+    // Replacing a nonempty search keeps A selected until B is chosen. Clearing
+    // the input would trigger MUI onChange(null), disable the source hook and
+    // erase its retention history, accidentally testing A -> disabled -> B.
+    await userEvent.click(picker);
+    (picker as HTMLInputElement).setSelectionRange(0, (picker as HTMLInputElement).value.length);
+    await userEvent.type(picker, "scout", { skipClick: true });
+    await userEvent.click(await body.findByRole("option", { name: miniatures.scout.title }));
+    await expect(await body.findByText("Source recipe temporarily unavailable")).toBeVisible();
+    await expect(name).toHaveValue("Keep my draft during B failure");
+    await expect(body.getByRole("button", { name: "Save template" })).toBeDisabled();
+    await userEvent.click(body.getByRole("button", { name: "Retry" }));
+    await waitFor(() => expect(name).toHaveValue(miniatures.scout.title));
+    await expect(body.getByRole("textbox", { name: "Faction" })).toHaveValue(miniatures.scout.faction);
+    await userEvent.click(body.getByRole("button", { name: "Save template" }));
+    await waitFor(() => expect(args.onSaved).toHaveBeenCalled());
+    const fixture = parameters.editorFixture as FixtureOptions;
+    await expect(fixture.request).toHaveBeenCalledWith(
+      "TemplateSourceMiniature",
+      expect.objectContaining({ id: miniatures.scout.id }),
+    );
+    await expect(fixture.mutation).toHaveBeenCalledWith(
+      "CreateReusableTemplate",
+      expect.objectContaining({
+        input: expect.objectContaining({
+          name: miniatures.scout.title,
+          manufacturer: miniatures.scout.manufacturer,
+          faction: miniatures.scout.faction,
+          sourceMiniatureId: miniatures.scout.id,
+        }),
+      }),
+    );
   },
 };

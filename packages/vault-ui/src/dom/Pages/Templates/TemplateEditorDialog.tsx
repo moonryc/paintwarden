@@ -122,7 +122,13 @@ function TemplateEditorFields({
   const source = useTemplateSourceMiniature(sourceMiniatureId || null);
   const populatedSource = useRef("");
   useEffect(() => {
-    if (!sourceMiniatureId || !source.data || source.isStale || source.error || populatedSource.current === sourceMiniatureId)
+    if (
+      !sourceMiniatureId ||
+      !source.data ||
+      source.isStale ||
+      source.error ||
+      populatedSource.current === sourceMiniatureId
+    )
       return;
     const miniature = source.data.miniature;
     if (!miniature || miniature.id !== sourceMiniatureId) return;
