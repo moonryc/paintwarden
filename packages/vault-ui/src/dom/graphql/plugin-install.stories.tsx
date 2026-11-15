@@ -393,7 +393,7 @@ export const HealthyFocusKeepsOneStream: Story = {
     await waitFor(() => expect(fixture.operation).toHaveBeenCalledTimes(2));
     for (let i = 0; i < 12; i++) window.dispatchEvent(new Event("focus"));
     window.dispatchEvent(new Event("online"));
-    await userEvent.type(canvas.getByRole("textbox", { name: "Project notes" }), "Still editing");
+    await userEvent.type(canvas.getByRole("textbox", { name: "Arbitrary note" }), "Still editing");
     await expect(fixture.operation).toHaveBeenCalledTimes(2);
     await expect(fixture.detached).not.toHaveBeenCalled();
   },
@@ -405,7 +405,7 @@ export const UnavailableVaultDoesNotRequestProgress: Story = {
     const canvas = within(canvasElement);
     const fixture = await ready(args);
     await userEvent.type(
-      canvas.getByRole("textbox", { name: "Project notes" }),
+      canvas.getByRole("textbox", { name: "Arbitrary note" }),
       "No authorized session yet",
     );
     await expect(fixture.operation).not.toHaveBeenCalled();
