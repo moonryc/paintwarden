@@ -39,6 +39,25 @@ export function StableAutocomplete<
 }: Props<T, Multiple, DisableClearable, FreeSolo>) {
   const { t } = useTranslation("components");
   const scope = useVaultGraphQL();
+  const previousValue = useRef({ scope, value: props.value });
+  const typing = useRef(false);
+  const sameOption = (a: unknown, b: unknown) =>
+    a === b ||
+    (a != null &&
+      b != null &&
+      typeof a !== "string" &&
+      typeof b !== "string" &&
+      Boolean(props.isOptionEqualToValue?.(a as T, b as T)));
+  const oldValue = previousValue.current.value;
+  const sameValue =
+    previousValue.current.scope === scope &&
+    (Array.isArray(oldValue) && Array.isArray(props.value)
+      ? oldValue.length === props.value.length &&
+        oldValue.every((value, index) => sameOption(value, (props.value as T[])[index]))
+      : !Array.isArray(oldValue) && !Array.isArray(props.value) && sameOption(oldValue, props.value));
+  useEffect(() => {
+    previousValue.current = { scope, value: props.value };
+  }, [scope, props.value]);
   const previous = useSearchResults(options.length || !loading ? options : null, loading, scope);
   // Search hooks own retention so they can remove newly excluded/selected rows
   // immediately rather than reintroducing an excluded previous option here.
@@ -62,8 +81,22 @@ export function StableAutocomplete<
         {...props}
         disabled={props.disabled || initialLoading}
         onInputChange={(event, value, reason) => {
-          if (reason === "input" || reason === "clear") paging.current = null;
+          if (reason === "input" || reason === "clear") {
+            paging.current = null;
+            typing.current = true;
+          }
+          // Independent accepted reads can recreate an equivalent selected model.
+          // MUI's reference-identity reset must not erase a controlled typing search.
+          if (reason === "reset" && props.inputValue !== undefined && typing.current && sameValue) return;
           props.onInputChange?.(event, value, reason);
+        }}
+        onBlur={(event) => {
+          typing.current = false;
+          props.onBlur?.(event);
+        }}
+        onChange={(event, value, reason, details) => {
+          typing.current = false;
+          props.onChange?.(event, value, reason, details);
         }}
         onOpen={(event) => {
           // Pick the fitting side once on open, not again as options change.

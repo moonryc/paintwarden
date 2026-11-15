@@ -1,4 +1,4 @@
-import { TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useState } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
@@ -128,5 +128,51 @@ export const FirstLoadAndInfiniteScroll: Story = {
     await expect(body.getByRole("listbox")).toBe(list);
     await expect(list.scrollTop).toBe(top);
     await userEvent.keyboard("{Escape}");
+  },
+};
+
+function FreshValueFixture({ multiple = false }) {
+  const [query, setQuery] = useState(multiple ? "" : items[0].name);
+  const [id, setId] = useState(0);
+  const selected = { ...items[id] };
+  return (
+    <>
+      <StableAutocomplete
+        multiple={multiple}
+        options={items}
+        value={multiple ? [selected] : selected}
+        inputValue={query}
+        onInputChange={(_, value) => setQuery(value)}
+        getOptionLabel={(option) => option.name}
+        isOptionEqualToValue={(a, b) => a.id === b.id}
+        renderInput={(params) => <TextField {...params} label="Equivalent selection" />}
+      />
+      <Button onMouseDown={(event) => event.preventDefault()} onClick={() => setId(1)}>
+        Change selection
+      </Button>
+    </>
+  );
+}
+
+export const EquivalentValuePreservesTyping: Story = {
+  render: () => <FreshValueFixture />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole("combobox", { name: "Equivalent selection" });
+    await userEvent.clear(input);
+    await userEvent.type(input, "rapid search");
+    await expect(input).toHaveValue("rapid search");
+    await userEvent.click(canvas.getByRole("button", { name: "Change selection" }));
+    await expect(input).toHaveValue("Model 2");
+    await userEvent.tab();
+  },
+};
+export const EquivalentMultipleValuePreservesTyping: Story = {
+  render: () => <FreshValueFixture multiple />,
+  play: async ({ canvasElement }) => {
+    const input = within(canvasElement).getByRole("combobox", { name: "Equivalent selection" });
+    await userEvent.type(input, "rapid search");
+    await expect(input).toHaveValue("rapid search");
+    await userEvent.tab();
   },
 };
