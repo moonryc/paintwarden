@@ -108,6 +108,7 @@ export const CompactPhone: Story = {
   play: async ({ canvasElement }) => {
     const panel = within(canvasElement).getByRole("region");
     await expect(panel.scrollWidth).toBeLessThanOrEqual(panel.clientWidth);
+    await expect(within(panel).getAllByText(/20%/)).toHaveLength(1);
   },
 };
 

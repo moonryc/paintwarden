@@ -86,7 +86,7 @@ export function PluginInstallProgress({
         {t(stageKeys[job.stage])}
         {" · "}
         {counts}
-        {compact && ` · ${percentText}`}
+        {compact && !indeterminate && ` · ${percentText}`}
       </Typography>
       <LinearProgress
         variant={indeterminate ? "indeterminate" : "determinate"}
@@ -97,7 +97,7 @@ export function PluginInstallProgress({
         }
         sx={{ my: compact ? 0.75 : 1, height: compact ? 4 : 6, borderRadius: 1 }}
       />
-      {!indeterminate && <Typography variant="body2">{percentText}</Typography>}
+      {!compact && !indeterminate && <Typography variant="body2">{percentText}</Typography>}
       {job.stage === "FAILED" && job.error && (
         <Typography
           variant="body2"
