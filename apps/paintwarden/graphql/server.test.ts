@@ -463,7 +463,11 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
         const query = await post({ query: "{pluginInstallJob{id}}" });
         assert.equal(query.status, 200, "Eight live SSE streams must not starve normal operations");
       } finally {
-        await Promise.all(responses.map((response) => response.body?.cancel()));
+        await Promise.all(
+          responses.map(async (response) => {
+            if (response.body) await response.body.cancel();
+          }),
+        );
       }
       const again = await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream");
       assert.equal(again.status, 200);
