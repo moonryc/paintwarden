@@ -65,7 +65,7 @@ The timing hook measures component render-start → layout commit, **not inclusi
 React CPU time**; nested shell/content measurements overlap. Warm boundary
 render→commit measurements after the change were 1.3–2.2 ms (one shell and one
 content measurement in the same commit). Cold content measurements were
-21.2–26.3 ms. Raw JSON includes every boundary measurement, request waterfall,
+22.3–25.8 ms. Raw JSON includes every boundary measurement, request waterfall,
 long task, CDP renderer CPU counter delta and Electron process CPU snapshot.
 Network resource timing for the custom native protocol is incomplete; Playwright
 request/finished events provide the GraphQL waterfall instead. No drawer JS

@@ -158,7 +158,9 @@ function ProjectContent({
         {error ? (
           <QueryErrorNotice error={error.message} onRetry={refresh} />
         ) : loading ? (
-          <PageSkeleton page="miniature-detail" miniatureImage={previewImage} />
+          <Box role="status" aria-label={t("loadingProject")}>
+            <PageSkeleton page="miniature-detail" miniatureImage={previewImage} />
+          </Box>
         ) : (
           <Box role="status">{t("thisMiniatureIsNoLongerAvailable")}</Box>
         )}
