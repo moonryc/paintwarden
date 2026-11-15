@@ -156,3 +156,7 @@ production ports or catalog downloads. `E2E_ARTIFACTS_DIR` changes the evidence
 output directory (native default under ignored `outputs/`; browser default in the OS temp directory). Profiles, backups, traces,
 logs and screenshots contain only fixture data and are retained for diagnosis.
 The launch smoke is intentionally not an exhaustive native interaction/signing test.
+
+### Hidden packaged UI tests
+
+Native automation sets `PAINTWARDEN_E2E=1` and launches with `--hidden` alongside an isolated `PAINTWARDEN_DESKTOP_DATA_DIR` and `PAINTWARDEN_DISABLE_UPDATES=1`. Windows are created with `show:false` and background throttling disabled, so tests never flash a visible window and animation-frame timings stay meaningful. The hidden setting is ignored without the E2E flag. The packaged native CI smoke asserts that windows remain hidden and unthrottled. Never use a personal desktop profile for automation.
