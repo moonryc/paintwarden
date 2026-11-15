@@ -47,7 +47,11 @@ export function SourcesApolloFixture({
         (operation) =>
           new Observable((observer) => {
             onOperation(operation.operationName ?? "");
-            if (mode === "loading" || operation.operationName === "PluginInstallProgress") return undefined;
+            if (operation.operationName === "PluginInstallProgress") {
+              observer.next({ data: { pluginInstallProgress: job } });
+              return undefined;
+            }
+            if (mode === "loading") return undefined;
             const timer = setTimeout(() => {
               if (mode === "error") {
                 observer.error(new Error("Could not load fixture plugins"));

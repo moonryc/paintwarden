@@ -1,10 +1,6 @@
 import type { ApolloClient } from "@apollo/client";
 
-import {
-  LatestPluginInstallJobDocument,
-  PluginInstallProgressDocument,
-  type LatestPluginInstallJobQuery,
-} from "./generated/graphql";
+import { PluginInstallProgressDocument, type LatestPluginInstallJobQuery } from "./generated/graphql";
 
 export type PluginInstallJob = NonNullable<LatestPluginInstallJobQuery["pluginInstallJob"]>;
 export const isPluginInstallActive = (job: PluginInstallJob | null) =>
@@ -17,13 +13,14 @@ export function observePluginInstall(
   onDisconnected: () => void,
 ) {
   let disposed = false;
-  let delivered = false;
+  // The server immediately replays its latest snapshot, including null and terminal
+  // jobs, on every connection. A duplicate latest-job HTTP query adds no recovery
+  // guarantee and would consume ordinary operation slots/rate budgets during edits.
   const subscription = client
     .subscribe({ query: PluginInstallProgressDocument, fetchPolicy: "no-cache" })
     .subscribe({
       next(result) {
         if (disposed || !result.data || !("pluginInstallProgress" in result.data)) return;
-        delivered = true;
         onJob(result.data.pluginInstallProgress ?? null);
       },
       error() {
@@ -33,22 +30,9 @@ export function observePluginInstall(
         if (!disposed) onDisconnected();
       },
     });
-  // The stream immediately replays the current job; the query also recovers the
-  // latest terminal result if there is no active stream yet. Never let a slower
-  // query overwrite a newer subscription event or REST acceptance.
-  void client
-    .query({ query: LatestPluginInstallJobDocument, fetchPolicy: "no-cache" })
-    .then(({ data }) => {
-      if (!disposed && !delivered && data) onJob(data.pluginInstallJob ?? null);
-    })
-    .catch(() => {
-      if (!disposed && !delivered) onDisconnected();
-    });
   return {
     accept(job: PluginInstallJob) {
-      if (disposed) return;
-      delivered = true;
-      onJob(job);
+      if (!disposed) onJob(job);
     },
     dispose() {
       disposed = true;

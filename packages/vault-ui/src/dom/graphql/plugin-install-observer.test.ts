@@ -38,7 +38,6 @@ async function settled() {
 }
 
 function harness() {
-  let query!: Subscriber<ApolloLink.Result>;
   let stream!: Subscriber<ApolloLink.Result>;
   let unsubscribed = 0;
   const operations: string[] = [];
@@ -49,25 +48,17 @@ function harness() {
         new Observable((observer) => {
           operations.push(operation.operationName ?? "");
           assert.deepEqual(operation.variables, {});
-          if (operation.operationName === "PluginInstallProgress") {
-            stream = observer;
-            return () => {
-              unsubscribed += 1;
-            };
-          }
-          assert.equal(operation.operationName, "LatestPluginInstallJob");
-          query = observer;
-          return undefined;
+          assert.equal(operation.operationName, "PluginInstallProgress", "No duplicate recovery HTTP query");
+          stream = observer;
+          return () => {
+            unsubscribed += 1;
+          };
         }),
     ),
   });
   return {
     client,
     operations,
-    query(value: PluginInstallJob | null) {
-      query.next({ data: { pluginInstallJob: value } });
-      query.complete();
-    },
     stream(value: PluginInstallJob | null) {
       stream.next({ data: { pluginInstallProgress: value } });
     },
@@ -81,7 +72,7 @@ function harness() {
 }
 
 for (const stage of ["READING", "SUCCEEDED", "FAILED", "CANCELLED"] satisfies PluginInstallStage[]) {
-  void test(`latest query restores ${stage} without an open dialog or stream event`, async (t) => {
+  void test(`initial stream replay restores ${stage} without an open dialog`, async (t) => {
     const source = harness();
     const seen: (PluginInstallJob | null)[] = [];
     let disconnects = 0;
@@ -94,16 +85,16 @@ for (const stage of ["READING", "SUCCEEDED", "FAILED", "CANCELLED"] satisfies Pl
       observation.dispose();
       source.client.stop();
     });
-    source.query(job(stage));
+    source.stream(job(stage));
     await settled();
     assert.deepEqual(seen, [job(stage)]);
-    assert.deepEqual(source.operations, ["PluginInstallProgress", "LatestPluginInstallJob"]);
+    assert.deepEqual(source.operations, ["PluginInstallProgress"]);
     assert.equal(disconnects, 0);
     assert.deepEqual(source.client.cache.extract(), {}, "progress is never retained in the vault cache");
   });
 }
 
-void test("nullable query and subscription before the first job do not disconnect or block later progress", async (t) => {
+void test("nullable initial subscription before the first job do not disconnect or block later progress", async (t) => {
   const source = harness();
   const seen: (PluginInstallJob | null)[] = [];
   let disconnects = 0;
@@ -116,7 +107,7 @@ void test("nullable query and subscription before the first job do not disconnec
     observation.dispose();
     source.client.stop();
   });
-  source.query(null);
+  source.stream(null);
   await settled();
   assert.deepEqual(seen, [null]);
   source.stream(null);
@@ -127,7 +118,7 @@ void test("nullable query and subscription before the first job do not disconnec
   assert.equal(disconnects, 0);
 });
 
-void test("an initial null stream snapshot also wins over a delayed previous-job query", async (t) => {
+void test("an initial null replay does not block a new job", async (t) => {
   const source = harness();
   const seen: (PluginInstallJob | null)[] = [];
   const observation = observePluginInstall(source.client, (value) => seen.push(value), assert.fail);
@@ -137,14 +128,13 @@ void test("an initial null stream snapshot also wins over a delayed previous-job
   });
   source.stream(null);
   assert.deepEqual(seen, [null]);
-  source.query(job("SUCCEEDED", "previous-job"));
   await settled();
   assert.deepEqual(seen, [null]);
   source.stream(job("PREPARING", "new-job"));
   assert.deepEqual(seen, [null, job("PREPARING", "new-job")]);
 });
 
-void test("immediate subscription progress wins over a delayed older query", async (t) => {
+void test("subscription stages arrive without awaiting a separate query", async (t) => {
   const source = harness();
   const seen: (PluginInstallJob | null)[] = [];
   const observation = observePluginInstall(source.client, (value) => seen.push(value), assert.fail);
@@ -154,13 +144,12 @@ void test("immediate subscription progress wins over a delayed older query", asy
   });
   source.stream(job("IMAGES"));
   assert.deepEqual(seen, [job("IMAGES")], "stream updates must not await latest-query completion");
-  source.query(job("PREPARING"));
   await settled();
   source.stream(job("SUCCEEDED"));
   assert.deepEqual(seen, [job("IMAGES"), job("SUCCEEDED")]);
 });
 
-void test("REST acceptance wins over the old query while subsequent stream stages still arrive", async (t) => {
+void test("REST acceptance delivers immediately while subsequent stream stages still arrive", async (t) => {
   const source = harness();
   const seen: (PluginInstallJob | null)[] = [];
   const observation = observePluginInstall(source.client, (value) => seen.push(value), assert.fail);
@@ -170,13 +159,12 @@ void test("REST acceptance wins over the old query while subsequent stream stage
   });
   observation.accept(job("PREPARING", "new-job"));
   assert.deepEqual(seen, [job("PREPARING", "new-job")]);
-  source.query(job("SUCCEEDED", "previous-job"));
   await settled();
   source.stream(job("COMMITTING", "new-job"));
   assert.deepEqual(seen, [job("PREPARING", "new-job"), job("COMMITTING", "new-job")]);
 });
 
-void test("dispose unsubscribes once and ignores late query, stream, REST acceptance, and disconnect", async () => {
+void test("dispose unsubscribes once and ignores late stream, REST acceptance, and disconnect", async () => {
   const source = harness();
   const seen: (PluginInstallJob | null)[] = [];
   let disconnects = 0;
@@ -188,7 +176,6 @@ void test("dispose unsubscribes once and ignores late query, stream, REST accept
   observation.dispose();
   observation.dispose();
   assert.equal(source.unsubscribed, 1);
-  source.query(job());
   source.stream(job("SUCCEEDED"));
   source.disconnect();
   observation.accept(job("PREPARING"));
@@ -198,7 +185,7 @@ void test("dispose unsubscribes once and ignores late query, stream, REST accept
   source.client.stop();
 });
 
-void test("distinct Apollo scopes cannot deliver an old account's late query or stream into a new observer", async () => {
+void test("distinct Apollo scopes cannot deliver an old account's late stream into a new observer", async () => {
   const old = harness();
   const current = harness();
   const oldSeen: (PluginInstallJob | null)[] = [];
@@ -208,9 +195,8 @@ void test("distinct Apollo scopes cannot deliver an old account's late query or 
   previous.dispose();
   const active = observePluginInstall(current.client, (value) => currentSeen.push(value), assert.fail);
   try {
-    old.query(job("FAILED", "old-account"));
     old.stream(job("SUCCEEDED", "old-account"));
-    current.query(null);
+    current.stream(null);
     await settled();
     current.stream(job("PREPARING", "new-account"));
     assert.deepEqual(oldSeen, [job("READING", "old-account")]);
@@ -227,7 +213,6 @@ void test(
   "real HTTP and generic SSE carry job stages across retry without vault revision variables",
   { timeout: 5000 },
   async (t) => {
-    const latest = deferred<Response>();
     const first = deferred<void>();
     const last = deferred<void>();
     const aborted = deferred<void>();
@@ -249,10 +234,6 @@ void test(
         assert.equal(init?.method, "POST");
         assert.equal(init?.credentials, "same-origin");
         assert.deepEqual(request.variables, {}, "job streams must not acquire epoch/since on reconnect");
-        if (url === "/api/graphql") {
-          assert.equal(request.operationName, "LatestPluginInstallJob");
-          return latest.promise;
-        }
         assert.equal(url, "/api/graphql/stream");
         assert.equal(request.operationName, "PluginInstallProgress");
         connections += 1;
@@ -299,7 +280,6 @@ void test(
     token = "refreshed-account-token";
     controller.error(new Error("temporary network loss"));
     await last.promise;
-    latest.resolve(Response.json({ data: { pluginInstallJob: job("PREPARING") } }));
     await settled();
     assert.deepEqual(seen, [job("READING"), job("SUCCEEDED")]);
     assert.equal(connections, 2);

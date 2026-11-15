@@ -40,8 +40,8 @@ const terminal = (stage: "SUCCEEDED" | "FAILED" | "CANCELLED") =>
       : {}),
   });
 
-// A real Apollo transport: query recovery and subsequent stream snapshots are
-// independently controlled. No production provider/hook/status is mocked.
+// A real Apollo transport replays the latest snapshot, just like the server.
+// No production provider/hook/status is mocked.
 function createTransport() {
   let latest = running;
   const listeners = new Set<(job: PluginInstallJob) => void>();
@@ -57,6 +57,7 @@ function createTransport() {
             const publish = (job: PluginInstallJob) =>
               observer.next({ data: { pluginInstallProgress: job } });
             listeners.add(publish);
+            publish(latest);
             return () => {
               listeners.delete(publish);
               detached();
@@ -227,7 +228,7 @@ export const RestoredJobDoesNotBlockEditing: Story = {
       "10",
     );
     await expect(within(canvasElement.ownerDocument.body).queryByRole("dialog")).not.toBeInTheDocument();
-    await expect(fixture.operation).toHaveBeenCalledWith("LatestPluginInstallJob");
+    await expect(fixture.operation).not.toHaveBeenCalledWith("LatestPluginInstallJob");
     await userEvent.type(
       canvas.getByRole("textbox", { name: "Arbitrary note" }),
       "Keep painting while the plugin installs",
@@ -332,7 +333,7 @@ export const ReloadReattachesLatestActiveJob: Story = {
     await waitFor(() => expect(canvas.getByRole("status")).toHaveTextContent("Preparing data · 8 / 10"));
     await expect(
       fixture.operation.mock.calls.filter(([name]) => name === "LatestPluginInstallJob"),
-    ).toHaveLength(2);
+    ).toHaveLength(0);
     await expect(
       fixture.operation.mock.calls.filter(([name]) => name === "PluginInstallProgress"),
     ).toHaveLength(2);
@@ -390,11 +391,11 @@ export const HealthyFocusKeepsOneStream: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     const fixture = await ready(args);
-    await waitFor(() => expect(fixture.operation).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(fixture.operation).toHaveBeenCalledTimes(1));
     for (let i = 0; i < 12; i++) window.dispatchEvent(new Event("focus"));
     window.dispatchEvent(new Event("online"));
     await userEvent.type(canvas.getByRole("textbox", { name: "Arbitrary note" }), "Still editing");
-    await expect(fixture.operation).toHaveBeenCalledTimes(2);
+    await expect(fixture.operation).toHaveBeenCalledTimes(1);
     await expect(fixture.detached).not.toHaveBeenCalled();
   },
 };

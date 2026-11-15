@@ -185,7 +185,7 @@ export const UploadStartsInBackground: Story = {
     await userEvent.upload(fileInput, new File(["fixture"], "plugin.zip", { type: "application/zip" }));
     await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
     await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
-    await expect(body.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+    await expect(await body.findByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
   },
 };
 
