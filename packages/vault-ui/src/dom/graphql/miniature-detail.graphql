@@ -12,6 +12,7 @@ query ProjectMiniatureDetails(
     }
     miniature {
       id
+      folderId
       title
       status
       paintingStatus

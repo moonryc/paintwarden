@@ -1,4 +1,3 @@
-import { useTranslation } from "react-i18next";
 import {
   Alert,
   Autocomplete,
@@ -12,8 +11,10 @@ import {
 } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
+import { folderAncestors, useFolderBrowser } from "../graphql/folder-hooks";
 import { Archive, Check, Heart, Save, Trash2 } from "../icons";
 import { useTemplateCatalog } from "../store/template-hooks";
 import type {
@@ -33,14 +34,30 @@ export function MiniatureForm({
   onDelete,
   initial,
   initialTemplateId,
+  initialFolderId = null,
 }: {
   onClose(): void;
   onSubmit(v: MiniatureFormValues): Promise<void>;
   onDelete?: () => Promise<void>;
   initial?: Miniature;
   initialTemplateId?: string | null;
+  /** Folder a new miniature starts in; editing starts from the miniature's own folder. */
+  initialFolderId?: string | null;
 }) {
   const { t } = useTranslation("components");
+  const { t: tPages } = useTranslation("pages");
+  const { folders } = useFolderBrowser("miniature-form", "MINIATURE", "");
+  const startFolderId = initial ? (initial.folderId ?? null) : initialFolderId;
+  const [folderId, setFolderId] = useState<string | null>(startFolderId);
+  // Each folder by its full path, so nested folders with the same name stay distinct.
+  const folderOptions = folders
+    .map((folder) => ({
+      id: folder.id,
+      label: folderAncestors(folders, folder.id)
+        .map((entry) => entry.name)
+        .join(" / "),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label));
   const [busy, setBusy] = useState(false),
     [deleting, setDeleting] = useState(false),
     [confirmDelete, setConfirmDelete] = useState(false),
@@ -114,6 +131,8 @@ export function MiniatureForm({
               image,
               removeImage,
               templateId: selectedTemplate?.id ?? null,
+              // An edit sends the folder only when it changed, so saving never moves it by accident.
+              ...(!initial || folderId !== startFolderId ? { folderId } : {}),
               includeTemplateImage: !!templateImageUrl && !removeImage,
             });
           } catch {
@@ -392,6 +411,23 @@ export function MiniatureForm({
             </MenuItem>
           ))}
         </TextField>
+        {(folderOptions.length > 0 || folderId) && (
+          <TextField
+            fullWidth
+            select
+            label={tPages("folders.folder")}
+            value={folderId ?? ""}
+            onChange={(e) => setFolderId(e.target.value || null)}
+            slotProps={{ select: { displayEmpty: true }, inputLabel: { shrink: true } }}
+          >
+            <MenuItem value="">{tPages("folders.noFolder")}</MenuItem>
+            {folderOptions.map((option) => (
+              <MenuItem key={option.id} value={option.id}>
+                {option.label}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
         <TextField
           fullWidth
           multiline

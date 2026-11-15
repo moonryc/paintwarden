@@ -613,7 +613,6 @@
     "deleteContents": "Delete folder and all contents",
     "moveContentsUp": "Move contents to the parent folder",
     "error": "The folder operation failed. Please try again.",
-    "loading": "Loading folders…",
     "selectItems": "Select items",
     "selected": "{{count}} selected",
     "clearSelection": "Clear selection",

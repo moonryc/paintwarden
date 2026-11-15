@@ -3,22 +3,6 @@ import DriveFileMove from "@mui/icons-material/DriveFileMove";
 import { Box, Button, IconButton, Paper, Tooltip } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
-/**
- * Hides a tile's select checkbox until the tile is hovered or focused, or while anything is
- * selected. Touch screens without hover always show it. Put `selectRevealParentSx` on the tile
- * wrapper and `selectRevealSx(selecting)` on the checkbox.
- */
-export const selectRevealParentSx = {
-  "&:hover .select-reveal, &:focus-within .select-reveal": { opacity: 1 },
-} as const;
-export const selectRevealSx = (selecting: boolean) =>
-  ({
-    opacity: selecting ? 1 : 0,
-    transition: "opacity 120ms",
-    "@media (hover: none)": { opacity: 1 },
-    "@media (prefers-reduced-motion: reduce)": { transition: "none" },
-  }) as const;
-
 /** Floating action bar for a multi-selection: it stays at the bottom while the grid scrolls. */
 export function SelectionBar({
   count,

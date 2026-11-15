@@ -585,7 +585,6 @@
     "deleteContents": "フォルダーとすべての内容を削除",
     "moveContentsUp": "内容を親フォルダーに移動",
     "error": "フォルダーの操作に失敗しました。もう一度お試しください。",
-    "loading": "フォルダーを読み込み中…",
     "selectItems": "項目を選択",
     "selected": "{{count}}件選択中",
     "clearSelection": "選択を解除",

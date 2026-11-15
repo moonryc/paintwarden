@@ -641,7 +641,6 @@
     "deleteContents": "Excluir pasta e todo o conteúdo",
     "moveContentsUp": "Mover conteúdo para a pasta superior",
     "error": "A operação na pasta falhou. Tente novamente.",
-    "loading": "Carregando pastas…",
     "selectItems": "Selecionar itens",
     "selected": "Seleção: {{count}}",
     "clearSelection": "Limpar seleção",

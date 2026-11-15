@@ -5,8 +5,6 @@ import {
   Card,
   Checkbox,
   CircularProgress,
-  IconButton,
-  Menu,
   MenuItem,
   TextField,
 } from "@mui/material";
@@ -21,17 +19,19 @@ import { FilterToolbar } from "../Components/FilterToolbar";
 import { FolderBrowser } from "../Components/FolderBrowser";
 import { FolderNameDialog } from "../Components/FolderNameDialog";
 import { FolderPicker } from "../Components/FolderPicker";
+import type { FolderView } from "../Components/FolderTile";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { SectionHeader } from "../Components/SectionHeader";
-import { SelectionBar, selectRevealParentSx, selectRevealSx } from "../Components/SelectionBar";
+import { SelectionBar } from "../Components/SelectionBar";
+import { tileControlSx } from "../Components/tile-control";
 import { useFolderBrowser } from "../graphql/folder-hooks";
 import { useFolderSearch } from "../graphql/folder-search-hooks";
 import { useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
 import { useVaultGraphQL } from "../graphql/provider";
-import { Archive, Ellipsis, SearchX } from "../icons";
+import { Archive, SearchX } from "../icons";
 import { CreateMiniatureDialog } from "../Modals/CreateMiniatureDialog";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
@@ -75,11 +75,15 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
     },
   };
   const [selection, setSelection] = useState<string[]>([]);
+  // Checkboxes, and tapping a tile to select it, only while edit mode is on.
+  const [editing, setEditing] = useState(false);
+  const toggleSelected = (id: string) =>
+    setSelection((previous) =>
+      previous.includes(id) ? previous.filter((entry) => entry !== id) : [...previous, id],
+    );
   const [movingItems, setMovingItems] = useState<string[] | null>(null);
-  const [itemMenu, setItemMenu] = useState<{ id: string; anchor: HTMLElement } | null>(null);
   useEffect(() => {
     setSelection([]);
-    setItemMenu(null);
   }, [browser.folderId, browser.flat, view, q]);
   const list = useMiniatureList({
     workbench,
@@ -110,9 +114,15 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const retry = hasMixedSearch ? mixedSearch.retry : list.retry;
   const initialLoading = useInitialPageLoading(loading, Boolean(listError));
   const pct = list.owned ? (ready / list.owned) * 100 : 0;
-  const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
+  // The add tile leads the grid (not while searching), then folders, then miniatures.
+  const shelfItems: (MiniatureTileProjection | FolderView | null)[] = [
+    ...(q ? [] : [null]),
+    ...browser.visibleFolders,
+    ...visibleProjects,
+  ];
   const hasQuery = Boolean(q);
-  const hasShelf = visibleProjects.length > 0 || (!q && !loading && !listError);
+  const hasShelf =
+    visibleProjects.length > 0 || browser.visibleFolders.length > 0 || (!q && !loading && !listError);
   const [adding, setAdding] = useState(false);
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
@@ -255,7 +265,8 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
           sx={{
             boxSizing: "border-box",
             overflow: "hidden",
-            [up.lg]: {
+            // Stacked only on phones; side by side from the small breakpoint up.
+            [up.sm]: {
               display: "flex",
             },
           }}
@@ -404,14 +415,15 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               borderTopStyle: "solid",
               borderTopWidth: "1px",
               borderColor: "var(--line)",
-              [up.lg]: {
-                width: "16rem",
+              [up.sm]: {
+                width: "13rem",
                 flexShrink: 0,
                 borderTopStyle: "solid",
                 borderTopWidth: "0px",
                 borderLeftStyle: "solid",
                 borderLeftWidth: "1px",
               },
+              [up.lg]: { width: "16rem" },
             }}
           >
             <ButtonBase
@@ -532,185 +544,187 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                 ]}
           </TextField>
         </FilterToolbar>
-        <FolderBrowser browser={browser} kind="project" />
-        {listError && (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={retry}>
-                {t("homeRetry")}
-              </Button>
-            }
-          >
-            {listError}
-          </Alert>
-        )}
-        {(loading || refreshing) && (
-          <Box role="status" sx={{ py: 1, color: "var(--ink-faint)" }}>
-            {loading ? t("homeLoadingMiniatures") : t("homeUpdatingMiniatures")}
-          </Box>
-        )}
-        {hasShelf ? (
-          <Box
-            component="div"
-            ref={shelfRef}
-            role="list"
-            aria-label={t("homeMiniatureShelf")}
-            aria-busy={loading || refreshing}
-            data-loaded-count={visibleProjects.length}
-            data-total-count={hasMixedSearch ? mixedSearch.totalCount : list.totalCount}
-            sx={{
-              position: "relative",
-              minWidth: 0,
-            }}
-            style={{ height: shelfWindow.totalHeight }}
-          >
-            <Box
-              component="div"
-              sx={{
-                position: "absolute",
-                insetInline: 0,
-                display: "grid",
-                minWidth: 0,
-              }}
-              style={{
-                top: shelfWindow.topOffset,
-                gridTemplateColumns: `repeat(${shelfColumns}, minmax(0, 1fr))`,
-                gap: shelfGap,
-                gridAutoRows: shelfRowHeight,
-              }}
-              onKeyDownCapture={(event) => {
-                if (event.key !== "Tab") return;
-                const current = (event.target as HTMLElement).closest<HTMLElement>("[data-mini-index]");
-                if (!current) return;
-                const controls = Array.from(
-                  current.querySelectorAll<HTMLElement>("button, input:not([disabled])"),
-                );
-                if (event.target !== (event.shiftKey ? controls[0] : controls.at(-1))) return;
-                const index = Number(current.dataset.miniIndex) + (event.shiftKey ? -1 : 1);
-                if (index < 0) return;
-                if (index >= shelfItems.length) {
-                  if (!event.shiftKey && hasNextPage) {
-                    event.preventDefault();
-                    setPendingShelfFocus({ index, origin: event.target as HTMLElement });
-                    loadMore();
-                  }
-                  return;
-                }
-                if (index >= shelfWindow.startIndex && index < shelfWindow.endIndex) return;
-                event.preventDefault();
-                focusShelfItem(index, event.target as HTMLElement);
-              }}
-            >
-              {shelfItems.slice(shelfWindow.startIndex, shelfWindow.endIndex).map((project, visibleIndex) => {
-                const index = shelfWindow.startIndex + visibleIndex;
-                return (
-                  <Box
-                    component="div"
-                    key={project?.mini.id ?? "add"}
-                    role="listitem"
-                    data-mini-index={index}
-                    data-miniature-index={index}
-                    sx={{
-                      minWidth: 0,
-                    }}
-                  >
-                    {project ? (
-                      <Box sx={{ position: "relative", height: "100%", ...selectRevealParentSx }}>
-                        <MiniatureTile
-                          mini={project.mini}
-                          swatches={project.swatches}
-                          total={project.total}
-                          missing={project.missing}
-                          onOpen={openMini}
-                          sx={shelfTileSx}
-                        />
-                        <Checkbox
-                          checked={selection.includes(project.mini.id)}
-                          slotProps={{
-                            input: { "aria-label": t("folders.selectItem", { name: project.mini.title }) },
-                          }}
-                          onChange={(_, checked) =>
-                            setSelection((previous) =>
-                              checked
-                                ? [...previous, project.mini.id]
-                                : previous.filter((id) => id !== project.mini.id),
-                            )
-                          }
-                          className="select-reveal"
-                          sx={{
-                            position: "absolute",
-                            top: 4,
-                            left: 4,
-                            bgcolor: "var(--surface)",
-                            borderRadius: 1,
-                            ...selectRevealSx(selection.length > 0),
-                          }}
-                        />
-                        <IconButton
-                          aria-label={t("folders.actions", { name: project.mini.title })}
-                          onClick={(event) =>
-                            setItemMenu({ id: project.mini.id, anchor: event.currentTarget })
-                          }
-                          sx={{ position: "absolute", top: 4, right: 4, bgcolor: "var(--surface)" }}
-                        >
-                          <Ellipsis size={18} />
-                        </IconButton>
-                      </Box>
-                    ) : (
-                      <AddMiniatureTile onClick={() => setAdding(true)} sx={shelfTileSx} />
-                    )}
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        ) : loading || listError || browser.visibleFolders.length > 0 ? null : list.collectionCount ? (
-          <EmptyState
-            icon={<SearchX size={26} />}
-            title={t("homeNoMatches")}
-            body={t("homeTryDifferentSearch")}
-            action={
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setSearch("");
-                  if (workbench) setStageFilter("ALL");
-                  else setFilter("ALL");
-                }}
-              >
-                {t("homeClearFilters")}
-              </Button>
-            }
-          />
-        ) : (
-          <EmptyState
-            icon={<Archive size={26} />}
-            title={workbench ? t("homeEmptyWorkbench") : t("homeEmptyShelf")}
-            body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
-          />
-        )}
-        <SelectionBar
-          count={selection.length}
-          onMove={() => setMovingItems(selection)}
-          onClear={() => setSelection([])}
-        />
-        {hasNextPage && (
-          <Button onClick={loadMore} disabled={loading || refreshing} sx={{ mt: 2 }}>
-            {t("homeLoadMoreMiniatures")}
-          </Button>
-        )}
-      </Box>
-      <Menu anchorEl={itemMenu?.anchor} open={Boolean(itemMenu)} onClose={() => setItemMenu(null)}>
-        <MenuItem
-          onClick={() => {
-            if (itemMenu) setMovingItems([itemMenu.id]);
-            setItemMenu(null);
+        <FolderBrowser
+          browser={browser}
+          kind="project"
+          editing={editing}
+          onEditingChange={(next) => {
+            setEditing(next);
+            if (!next) setSelection([]);
           }}
         >
-          {t("folders.moveToFolder")}
-        </MenuItem>
-      </Menu>
+          {(renderFolder) => (
+            <>
+              {listError && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button color="inherit" onClick={retry}>
+                      {t("homeRetry")}
+                    </Button>
+                  }
+                >
+                  {listError}
+                </Alert>
+              )}
+              {(loading || refreshing) && (
+                <Box role="status" sx={{ py: 1, color: "var(--ink-faint)" }}>
+                  {loading ? t("homeLoadingMiniatures") : t("homeUpdatingMiniatures")}
+                </Box>
+              )}
+              {hasShelf ? (
+                <Box
+                  component="div"
+                  ref={shelfRef}
+                  role="list"
+                  aria-label={t("homeMiniatureShelf")}
+                  aria-busy={loading || refreshing}
+                  data-loaded-count={visibleProjects.length}
+                  data-total-count={hasMixedSearch ? mixedSearch.totalCount : list.totalCount}
+                  sx={{
+                    position: "relative",
+                    minWidth: 0,
+                  }}
+                  style={{ height: shelfWindow.totalHeight }}
+                >
+                  <Box
+                    component="div"
+                    sx={{
+                      position: "absolute",
+                      insetInline: 0,
+                      display: "grid",
+                      minWidth: 0,
+                    }}
+                    style={{
+                      top: shelfWindow.topOffset,
+                      gridTemplateColumns: `repeat(${shelfColumns}, minmax(0, 1fr))`,
+                      gap: shelfGap,
+                      gridAutoRows: shelfRowHeight,
+                    }}
+                    onKeyDownCapture={(event) => {
+                      if (event.key !== "Tab") return;
+                      const current = (event.target as HTMLElement).closest<HTMLElement>("[data-mini-index]");
+                      if (!current) return;
+                      const controls = Array.from(
+                        current.querySelectorAll<HTMLElement>("button, input:not([disabled])"),
+                      );
+                      if (event.target !== (event.shiftKey ? controls[0] : controls.at(-1))) return;
+                      const index = Number(current.dataset.miniIndex) + (event.shiftKey ? -1 : 1);
+                      if (index < 0) return;
+                      if (index >= shelfItems.length) {
+                        if (!event.shiftKey && hasNextPage) {
+                          event.preventDefault();
+                          setPendingShelfFocus({ index, origin: event.target as HTMLElement });
+                          loadMore();
+                        }
+                        return;
+                      }
+                      if (index >= shelfWindow.startIndex && index < shelfWindow.endIndex) return;
+                      event.preventDefault();
+                      focusShelfItem(index, event.target as HTMLElement);
+                    }}
+                  >
+                    {shelfItems
+                      .slice(shelfWindow.startIndex, shelfWindow.endIndex)
+                      .map((project, visibleIndex) => {
+                        const index = shelfWindow.startIndex + visibleIndex;
+                        return (
+                          <Box
+                            component="div"
+                            key={
+                              project ? ("mini" in project ? project.mini.id : `folder:${project.id}`) : "add"
+                            }
+                            role="listitem"
+                            data-mini-index={index}
+                            data-miniature-index={index}
+                            sx={{
+                              minWidth: 0,
+                            }}
+                          >
+                            {project && !("mini" in project) ? (
+                              renderFolder(project, shelfTileSx)
+                            ) : project ? (
+                              <Box sx={{ position: "relative", height: "100%" }}>
+                                <MiniatureTile
+                                  mini={project.mini}
+                                  swatches={project.swatches}
+                                  total={project.total}
+                                  missing={project.missing}
+                                  onOpen={editing ? toggleSelected : openMini}
+                                  sx={shelfTileSx}
+                                />
+                                {editing && (
+                                  <Checkbox
+                                    checked={selection.includes(project.mini.id)}
+                                    slotProps={{
+                                      input: {
+                                        "aria-label": t("folders.selectItem", { name: project.mini.title }),
+                                      },
+                                    }}
+                                    onChange={(_, checked) =>
+                                      setSelection((previous) =>
+                                        checked
+                                          ? [...previous, project.mini.id]
+                                          : previous.filter((id) => id !== project.mini.id),
+                                      )
+                                    }
+                                    sx={{
+                                      position: "absolute",
+                                      top: 4,
+                                      left: 4,
+                                      ...tileControlSx,
+                                      borderRadius: 1,
+                                    }}
+                                  />
+                                )}
+                              </Box>
+                            ) : (
+                              <AddMiniatureTile onClick={() => setAdding(true)} sx={shelfTileSx} />
+                            )}
+                          </Box>
+                        );
+                      })}
+                  </Box>
+                </Box>
+              ) : loading || listError ? null : list.collectionCount ? (
+                <EmptyState
+                  icon={<SearchX size={26} />}
+                  title={t("homeNoMatches")}
+                  body={t("homeTryDifferentSearch")}
+                  action={
+                    <Button
+                      variant="outlined"
+                      onClick={() => {
+                        setSearch("");
+                        if (workbench) setStageFilter("ALL");
+                        else setFilter("ALL");
+                      }}
+                    >
+                      {t("homeClearFilters")}
+                    </Button>
+                  }
+                />
+              ) : (
+                <EmptyState
+                  icon={<Archive size={26} />}
+                  title={workbench ? t("homeEmptyWorkbench") : t("homeEmptyShelf")}
+                  body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
+                />
+              )}
+              <SelectionBar
+                count={selection.length}
+                onMove={() => setMovingItems(selection)}
+                onClear={() => setSelection([])}
+              />
+              {hasNextPage && (
+                <Button onClick={loadMore} disabled={loading || refreshing} sx={{ mt: 2 }}>
+                  {t("homeLoadMoreMiniatures")}
+                </Button>
+              )}
+            </>
+          )}
+        </FolderBrowser>
+      </Box>
       {movingItems && (
         <FolderPicker
           folders={browser.folders}

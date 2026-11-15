@@ -613,7 +613,6 @@
     "deleteContents": "Map en alle inhoud verwijderen",
     "moveContentsUp": "Inhoud naar de bovenliggende map verplaatsen",
     "error": "De mapbewerking is mislukt. Probeer het opnieuw.",
-    "loading": "Mappen laden…",
     "selectItems": "Items selecteren",
     "selected": "{{count}} geselecteerd",
     "clearSelection": "Selectie wissen",

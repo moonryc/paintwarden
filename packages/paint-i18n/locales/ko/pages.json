@@ -585,7 +585,6 @@
     "deleteContents": "폴더와 모든 내용 삭제",
     "moveContentsUp": "내용을 상위 폴더로 이동",
     "error": "폴더 작업에 실패했습니다. 다시 시도해 주세요.",
-    "loading": "폴더 불러오는 중…",
     "selectItems": "항목 선택",
     "selected": "{{count}}개 선택됨",
     "clearSelection": "선택 해제",

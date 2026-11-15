@@ -153,12 +153,9 @@ export const ApolloPagingReachesFinalMiniature: Story = {
       window.scrollTo(0, document.documentElement.scrollHeight);
       const final = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0000/ });
       final.focus();
-      await userEvent.tab({ shift: true });
-      await userEvent.tab({ shift: true });
+      // Each tile is one tab stop; select checkboxes appear only in edit mode.
       await userEvent.tab({ shift: true });
       await expect(document.activeElement).toHaveAccessibleName(/Synthetic Miniature 0001/);
-      await userEvent.tab();
-      await userEvent.tab();
       await userEvent.tab();
       await expect(final).toHaveFocus();
       await expect(list.querySelectorAll("[data-mini-index]").length).toBeLessThan(120);

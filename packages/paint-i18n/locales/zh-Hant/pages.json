@@ -585,7 +585,6 @@
     "deleteContents": "刪除資料夾及所有內容",
     "moveContentsUp": "將內容移至上層資料夾",
     "error": "資料夾操作失敗，請再試一次。",
-    "loading": "正在載入資料夾…",
     "selectItems": "選取項目",
     "selected": "已選取 {{count}} 項",
     "clearSelection": "清除選取",
