@@ -641,7 +641,6 @@
     "deleteContents": "Elimina la cartella e tutto il contenuto",
     "moveContentsUp": "Sposta il contenuto nella cartella superiore",
     "error": "L’operazione sulla cartella non è riuscita. Riprova.",
-    "loading": "Caricamento cartelle…",
     "selectItems": "Seleziona elementi",
     "selected": "Selezione: {{count}}",
     "clearSelection": "Cancella selezione",

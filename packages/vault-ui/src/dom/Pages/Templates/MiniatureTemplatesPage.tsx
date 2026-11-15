@@ -9,6 +9,7 @@ import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { FolderBrowser } from "../../Components/FolderBrowser";
 import { FolderNameDialog } from "../../Components/FolderNameDialog";
 import { FolderPicker } from "../../Components/FolderPicker";
+import type { FolderView } from "../../Components/FolderTile";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
 import { SelectionBar } from "../../Components/SelectionBar";
@@ -36,6 +37,8 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [plugin, setPlugin] = useState("ALL");
   const browser = useFolderBrowser("templates", "TEMPLATE", search);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  // Checkboxes, and tapping a card to select it, only while edit mode is on.
+  const [selectMode, setSelectMode] = useState(false);
   const [movingIds, setMovingIds] = useState<string[] | null>(null);
   useEffect(() => {
     setSelectedIds([]);
@@ -136,7 +139,13 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const columnWidth = Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
   const rowHeight = Math.max(1, ((columnWidth - 2 * CARD_BORDER) * 5) / 4 + 2 * CARD_BORDER);
   const matching = searching ? mixedSearch.templates : (catalog?.templates ?? []);
-  const gridItems: (MiniatureTemplate | null)[] = searching ? matching : [null, ...matching];
+  const folders = searching ? mixedSearch.folders : browser.visibleFolders;
+  // The add tile leads the grid (not while searching), then folders, then templates.
+  const gridItems: (MiniatureTemplate | FolderView | null)[] = [
+    ...(searching ? [] : [null]),
+    ...folders,
+    ...matching,
+  ];
   const gridWindow = schemeGridWindow({
     itemCount: gridItems.length,
     columns,
@@ -149,7 +158,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   });
   useLayoutEffect(() => {
     if (pendingFocus === null) return;
-    const target = gridRef.current?.querySelector<HTMLElement>(`[data-template-index="${pendingFocus}"]`);
+    const target = gridRef.current?.querySelector<HTMLElement>(
+      `[data-template-index="${pendingFocus}"], [data-folder-index="${pendingFocus}"] button`,
+    );
     if (target) {
       target.focus();
       setPendingFocus(null);
@@ -162,6 +173,8 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
     setViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
     setPendingFocus(index);
   };
+  const toggleSelected = (id: string) =>
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((entry) => entry !== id) : [...ids, id]));
   const remove = async (template: MiniatureTemplate) => {
     try {
       await actions.remove(template.id);
@@ -238,82 +251,91 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       <FolderBrowser
         browser={{
           ...browser,
-          visibleFolders: searching ? mixedSearch.folders : browser.visibleFolders,
+          visibleFolders: folders,
           navigate: (id) => {
             setSearch("");
             browser.navigate(id);
           },
         }}
         kind="template"
-      />
-      {hasGrid && (
-        <>
-          <Box
-            component="p"
-            sx={{
-              m: 0,
-              mb: 1.5,
-              fontSize: "0.875rem",
-              lineHeight: 10 / 7,
-              color: "var(--ink-faint)",
-            }}
-          >
-            {searching
-              ? t("folders.resultsCount", { count: totalCount })
-              : t("templatesTotalCount", {
-                  count: totalCount,
-                  formattedCount: new Intl.NumberFormat(i18n.language).format(totalCount),
-                })}
-          </Box>
-          <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
-            <Box
-              sx={{
-                position: "absolute",
-                insetInline: 0,
-                display: "grid",
-                gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-                gap: `${gap}px`,
-              }}
-              style={{ top: gridWindow.topOffset }}
-            >
-              {gridItems.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) =>
-                template ? (
-                  <TemplateCard
-                    key={template.id}
-                    template={template}
-                    index={gridWindow.startIndex + offset}
-                    checked={selectedIds.includes(template.id)}
-                    selecting={selectedIds.length > 0}
-                    onSelect={() =>
-                      setSelectedIds((ids) =>
-                        ids.includes(template.id)
-                          ? ids.filter((id) => id !== template.id)
-                          : [...ids, template.id],
-                      )
-                    }
-                    onOpen={() => setSelected(template)}
-                    onKeyDown={(event) => {
-                      if (event.key !== "Tab") return;
-                      const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
-                      if (next < 0 || next >= gridItems.length) return;
-                      if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
-                      event.preventDefault();
-                      focusTemplateAt(next);
-                    }}
-                  />
-                ) : (
-                  <AddMiniatureTile
-                    key="add"
-                    title={t("templatesNewTemplate")}
-                    onClick={() => setAdding(true)}
-                    sx={{ width: "100%", height: "100%" }}
-                  />
-                ),
-              )}
-            </Box>
-          </Box>
-        </>
-      )}
+        editing={selectMode}
+        onEditingChange={(next) => {
+          setSelectMode(next);
+          if (!next) setSelectedIds([]);
+        }}
+      >
+        {(renderFolder) =>
+          hasGrid && (
+            <>
+              <Box
+                component="p"
+                sx={{
+                  m: 0,
+                  mb: 1.5,
+                  fontSize: "0.875rem",
+                  lineHeight: 10 / 7,
+                  color: "var(--ink-faint)",
+                }}
+              >
+                {searching
+                  ? t("folders.resultsCount", { count: totalCount })
+                  : t("templatesTotalCount", {
+                      count: totalCount,
+                      formattedCount: new Intl.NumberFormat(i18n.language).format(totalCount),
+                    })}
+              </Box>
+              <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    insetInline: 0,
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                    gap: `${gap}px`,
+                  }}
+                  style={{ top: gridWindow.topOffset }}
+                >
+                  {gridItems.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) =>
+                    template && "recursiveCount" in template ? (
+                      <Box
+                        key={`folder:${template.id}`}
+                        data-folder-index={gridWindow.startIndex + offset}
+                        sx={{ minWidth: 0 }}
+                      >
+                        {renderFolder(template, { width: "100%", height: "100%" })}
+                      </Box>
+                    ) : template ? (
+                      <TemplateCard
+                        key={template.id}
+                        template={template}
+                        index={gridWindow.startIndex + offset}
+                        checked={selectedIds.includes(template.id)}
+                        onSelect={selectMode ? () => toggleSelected(template.id) : undefined}
+                        onOpen={() => (selectMode ? toggleSelected(template.id) : setSelected(template))}
+                        onKeyDown={(event) => {
+                          if (event.key !== "Tab") return;
+                          const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
+                          if (next < 0 || next >= gridItems.length) return;
+                          if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
+                          event.preventDefault();
+                          focusTemplateAt(next);
+                        }}
+                      />
+                    ) : (
+                      <AddMiniatureTile
+                        key="add"
+                        title={t("templatesNewTemplate")}
+                        onClick={() => setAdding(true)}
+                        sx={{ width: "100%", height: "100%" }}
+                      />
+                    ),
+                  )}
+                </Box>
+              </Box>
+            </>
+          )
+        }
+      </FolderBrowser>
       <SelectionBar
         count={selectedIds.length}
         onMove={() => setMovingIds(selectedIds)}

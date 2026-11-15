@@ -3,7 +3,7 @@ import Box from "@mui/material/Box";
 import type { KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 
-import { selectRevealParentSx, selectRevealSx } from "../../Components/SelectionBar";
+import { tileControlSx } from "../../Components/tile-control";
 import { thumbnailImageProps } from "../../image-thumbnails";
 import type { MiniatureTemplate } from "../../types";
 import { liftCardSx } from "../../utils/lift-card";
@@ -16,7 +16,6 @@ export function TemplateCard({
   onOpen,
   onKeyDown,
   checked,
-  selecting = false,
   onSelect,
 }: {
   template: MiniatureTemplate;
@@ -24,27 +23,24 @@ export function TemplateCard({
   index: number;
   onOpen: () => void;
   checked?: boolean;
-  selecting?: boolean;
   onSelect?: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void;
 }) {
   const { t, i18n } = useTranslation("pages");
   const previewUrl = template.thumbnailUrl ?? template.imageUrl;
   return (
-    <Card sx={{ ...liftCardSx, ...selectRevealParentSx, position: "relative" }}>
+    <Card sx={{ ...liftCardSx, position: "relative" }}>
       {onSelect && (
         <Checkbox
           checked={checked ?? false}
           onChange={onSelect}
           slotProps={{ input: { "aria-label": t("folders.selectItem", { name: template.name }) } }}
-          className="select-reveal"
           sx={{
-            ...selectRevealSx(selecting || Boolean(checked)),
             position: "absolute",
             top: 4,
             right: 4,
             zIndex: 1,
-            bgcolor: "var(--surface)",
+            ...tileControlSx,
             borderRadius: 1,
           }}
         />

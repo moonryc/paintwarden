@@ -459,6 +459,7 @@ export type ProjectMiniatureDetailsQuery = {
     revision: { epoch: string; seq: string };
     miniature: {
       id: string;
+      folderId: string | null;
       title: string;
       status: Ownership;
       paintingStatus: PaintingStatus;
@@ -3682,6 +3683,7 @@ export const ProjectMiniatureDetailsDocument = {
                     kind: "SelectionSet",
                     selections: [
                       { kind: "Field", name: { kind: "Name", value: "id" } },
+                      { kind: "Field", name: { kind: "Name", value: "folderId" } },
                       { kind: "Field", name: { kind: "Name", value: "title" } },
                       { kind: "Field", name: { kind: "Name", value: "status" } },
                       { kind: "Field", name: { kind: "Name", value: "paintingStatus" } },

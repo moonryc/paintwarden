@@ -1,3 +1,4 @@
+import Box from "@mui/material/Box";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 
@@ -28,7 +29,17 @@ const browser: FolderBrowserState = {
 const meta = {
   title: "Components/FolderBrowser",
   component: FolderBrowser,
-  args: { browser, kind: "project" },
+  args: { browser, kind: "project", children: () => null },
+  // Pages put the folder tiles at the front of their item grid; this stands in for that grid.
+  render: (args) => (
+    <FolderBrowser {...args}>
+      {(renderFolder) => (
+        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 2 }}>
+          {args.browser.visibleFolders.map((folder) => renderFolder(folder))}
+        </Box>
+      )}
+    </FolderBrowser>
+  ),
 } satisfies Meta<typeof FolderBrowser>;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -93,5 +104,15 @@ export const FlatSearchResults: Story = {
     const canvas = within(canvasElement);
     await expect(canvas.getByRole("button", { name: /^Scouts/ })).toBeVisible();
     await expect(canvas.queryByRole("navigation", { name: "Folder navigation" })).not.toBeInTheDocument();
+  },
+};
+
+export const EditToggle: Story = {
+  args: { editing: false, onEditingChange: fn() },
+  play: async ({ canvasElement, args }) => {
+    const edit = within(canvasElement).getByRole("button", { name: "Select items" });
+    await expect(edit).toHaveAttribute("aria-pressed", "false");
+    await userEvent.click(edit);
+    await expect(args.onEditingChange).toHaveBeenCalledWith(true);
   },
 };

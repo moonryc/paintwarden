@@ -149,6 +149,10 @@ export const Loading: Story = {
 export const BulkSelection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    await canvas.findByRole("button", { name: /Knight 000/ });
+    // Checkboxes only appear in edit mode.
+    await expect(canvas.queryByRole("checkbox", { name: "Select Knight 000" })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Select items" }));
     await userEvent.click(await canvas.findByRole("checkbox", { name: "Select Knight 000" }));
     await userEvent.click(canvas.getByRole("checkbox", { name: "Select Knight 001" }));
     await userEvent.click(canvas.getByRole("button", { name: "Move to folder" }));
@@ -157,6 +161,12 @@ export const BulkSelection: Story = {
     await userEvent.click(dialog.getByRole("button", { name: /Cancel/ }));
     await userEvent.click(canvas.getByRole("button", { name: "Clear selection" }));
     await expect(canvas.getByRole("checkbox", { name: "Select Knight 000" })).not.toBeChecked();
+    // Tapping a card selects it in edit mode; leaving edit mode clears and hides the checkboxes.
+    await userEvent.click(canvas.getByRole("button", { name: /Knight 001/ }));
+    await expect(canvas.getByRole("checkbox", { name: "Select Knight 001" })).toBeChecked();
+    await userEvent.click(canvas.getByRole("button", { name: "Select items" }));
+    await expect(canvas.queryByRole("checkbox", { name: "Select Knight 001" })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole("button", { name: "Move to folder" })).not.toBeInTheDocument();
   },
 };
 

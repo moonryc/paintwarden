@@ -641,7 +641,6 @@
     "deleteContents": "Eliminar la carpeta y todo su contenido",
     "moveContentsUp": "Mover el contenido a la carpeta superior",
     "error": "La operación de carpeta ha fallado. Vuelve a intentarlo.",
-    "loading": "Cargando carpetas…",
     "selectItems": "Seleccionar elementos",
     "selected": "Selección: {{count}}",
     "clearSelection": "Borrar selección",

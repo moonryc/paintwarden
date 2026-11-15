@@ -669,7 +669,6 @@
     "deleteContents": "Usuń folder i całą zawartość",
     "moveContentsUp": "Przenieś zawartość do folderu nadrzędnego",
     "error": "Operacja na folderze nie powiodła się. Spróbuj ponownie.",
-    "loading": "Wczytywanie folderów…",
     "selectItems": "Wybierz elementy",
     "selected": "Wybrano: {{count}}",
     "clearSelection": "Wyczyść zaznaczenie",

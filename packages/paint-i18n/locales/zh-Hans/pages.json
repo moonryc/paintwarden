@@ -585,7 +585,6 @@
     "deleteContents": "删除文件夹及其所有内容",
     "moveContentsUp": "将内容移至上级文件夹",
     "error": "文件夹操作失败，请重试。",
-    "loading": "正在加载文件夹…",
     "selectItems": "选择项目",
     "selected": "已选择 {{count}} 项",
     "clearSelection": "清除选择",

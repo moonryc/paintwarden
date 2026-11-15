@@ -641,7 +641,6 @@
     "deleteContents": "Supprimer le dossier et tout son contenu",
     "moveContentsUp": "Déplacer le contenu vers le dossier parent",
     "error": "L’opération sur le dossier a échoué. Veuillez réessayer.",
-    "loading": "Chargement des dossiers…",
     "selectItems": "Sélectionner des éléments",
     "selected": "Sélection : {{count}}",
     "clearSelection": "Effacer la sélection",

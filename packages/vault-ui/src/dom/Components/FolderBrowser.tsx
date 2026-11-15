@@ -1,3 +1,4 @@
+import EditOutlined from "@mui/icons-material/EditOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import ViewModule from "@mui/icons-material/ViewModuleOutlined";
 import {
@@ -7,13 +8,14 @@ import {
   FormControlLabel,
   Radio,
   RadioGroup,
-  Skeleton,
   Stack,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import type { SxProps, Theme } from "@mui/material/styles";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { FolderBrowserState } from "../graphql/folder-hooks";
@@ -24,14 +26,33 @@ import { FolderPicker } from "./FolderPicker";
 import { FolderTile, type FolderView } from "./FolderTile";
 import { Modal } from "./Modal";
 
+// Header toggles fill with the brand color when on, so the current mode is obvious.
+const selectedFillSx = {
+  "&.Mui-selected, &.Mui-selected:hover": { bgcolor: "var(--brand)", color: "var(--brand-fg)" },
+} as const;
+
 type Dialog = { type: "rename" | "delete" | "move"; folder: FolderView };
 
+/** Renders one folder as a grid tile; pages put these first in their item grid. */
+export type RenderFolder = (folder: FolderView, sx?: SxProps<Theme>) => ReactNode;
+
+/**
+ * Folder navigation header (breadcrumbs and view toggle) plus the folder dialogs. The page's
+ * item grid is `children`, which gets `renderFolder` so folders share that grid.
+ */
 export function FolderBrowser({
   browser,
   kind,
+  children,
+  editing = false,
+  onEditingChange,
 }: {
   browser: FolderBrowserState;
   kind: "project" | "template";
+  /** Edit mode: items show select checkboxes for moving several at once. */
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
+  children: (renderFolder: RenderFolder) => ReactNode;
 }) {
   const { t } = useTranslation("pages");
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -78,85 +99,92 @@ export function FolderBrowser({
     }
   }
   const error = <Alert severity="error">{t("folders.error")}</Alert>;
-  const initialLoading = browser.loading && browser.folders.length === 0;
+  const renderFolder: RenderFolder = (folder, sx) => (
+    <FolderTile
+      key={folder.id}
+      folder={folder}
+      sx={sx}
+      onOpen={browser.navigate}
+      onRename={(id) => folderAction("rename", id)}
+      onMove={(id) => folderAction("move", id)}
+      onDelete={(id) => folderAction("delete", id)}
+    />
+  );
   return (
-    <Stack spacing={2}>
-      <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
-        <ToggleButtonGroup
-          exclusive
-          size="small"
-          value={browser.flat ? "flat" : "folders"}
-          onChange={(_event, value: string | null) => {
-            if (value) browser.setFlat(value === "flat");
-          }}
-        >
-          <ToggleButton value="folders" sx={{ gap: 0.75 }}>
-            <FolderOutlined fontSize="small" aria-hidden />
-            {t("folders.showFolders")}
-          </ToggleButton>
-          <ToggleButton value="flat" sx={{ gap: 0.75 }}>
-            <ViewModule fontSize="small" aria-hidden />
-            {t("folders.showFlat")}
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Stack>
-      {!browser.flat && (
-        <FolderBreadcrumbs kind={kind} ancestors={browser.ancestors} onNavigate={browser.navigate} />
-      )}
-      {(browser.error || (operationError && !dialog)) && (
-        <Alert
-          severity="error"
-          action={
-            <Button
-              color="inherit"
-              disabled={pending}
-              onClick={() => void run(() => browser.refresh(), false)}
-            >
-              {t("folders.retry")}
-            </Button>
-          }
-        >
-          {t("folders.error")}
-        </Alert>
-      )}
-      {(!browser.flat || browser.visibleFolders.length > 0) && (
+    <>
+      <Stack spacing={2} sx={{ mb: 2 }}>
         <Box
-          role="region"
-          aria-busy={browser.loading}
-          aria-label={t(initialLoading ? "folders.loading" : "folders.showFolders")}
           sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 180px), 1fr))",
-            gap: 2,
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            columnGap: 2,
+            rowGap: 1,
+            minHeight: 40,
           }}
         >
-          {initialLoading
-            ? Array.from({ length: 3 }, (_, index) => (
-                <Skeleton
-                  key={index}
-                  variant="rounded"
-                  aria-hidden="true"
-                  sx={{
-                    height: 190,
-                    "@media (prefers-reduced-motion: reduce)": {
-                      animation: "none",
-                      "&::after": { animation: "none" },
-                    },
-                  }}
-                />
-              ))
-            : browser.visibleFolders.map((folder) => (
-                <FolderTile
-                  key={folder.id}
-                  folder={folder}
-                  onOpen={browser.navigate}
-                  onRename={(id) => folderAction("rename", id)}
-                  onMove={(id) => folderAction("move", id)}
-                  onDelete={(id) => folderAction("delete", id)}
-                />
-              ))}
+          <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>
+            {browser.flat ? (
+              <Typography sx={{ fontWeight: 700 }}>
+                {t(kind === "project" ? "folders.projects" : "folders.templateFolders")}
+              </Typography>
+            ) : (
+              <FolderBreadcrumbs kind={kind} ancestors={browser.ancestors} onNavigate={browser.navigate} />
+            )}
+          </Box>
+          <Box sx={{ display: "flex", gap: 1 }}>
+            {onEditingChange && (
+              <ToggleButtonGroup
+                size="small"
+                value={editing ? ["edit"] : []}
+                onChange={() => onEditingChange(!editing)}
+              >
+                <Tooltip title={t("folders.selectItems")}>
+                  <ToggleButton value="edit" aria-label={t("folders.selectItems")} sx={selectedFillSx}>
+                    <EditOutlined fontSize="small" aria-hidden />
+                  </ToggleButton>
+                </Tooltip>
+              </ToggleButtonGroup>
+            )}
+            <ToggleButtonGroup
+              exclusive
+              size="small"
+              value={browser.flat ? "flat" : "folders"}
+              onChange={(_event, value: string | null) => {
+                if (value) browser.setFlat(value === "flat");
+              }}
+            >
+              <Tooltip title={t("folders.showFolders")}>
+                <ToggleButton value="folders" sx={selectedFillSx} aria-label={t("folders.showFolders")}>
+                  <FolderOutlined fontSize="small" aria-hidden />
+                </ToggleButton>
+              </Tooltip>
+              <Tooltip title={t("folders.showFlat")}>
+                <ToggleButton value="flat" sx={selectedFillSx} aria-label={t("folders.showFlat")}>
+                  <ViewModule fontSize="small" aria-hidden />
+                </ToggleButton>
+              </Tooltip>
+            </ToggleButtonGroup>
+          </Box>
         </Box>
-      )}
+        {(browser.error || (operationError && !dialog)) && (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                disabled={pending}
+                onClick={() => void run(() => browser.refresh(), false)}
+              >
+                {t("folders.retry")}
+              </Button>
+            }
+          >
+            {t("folders.error")}
+          </Alert>
+        )}
+      </Stack>
+      {children(renderFolder)}
       {dialog?.type === "rename" && (
         <FolderNameDialog
           title={t("folders.rename")}
@@ -226,6 +254,6 @@ export function FolderBrowser({
           }}
         />
       )}
-    </Stack>
+    </>
   );
 }

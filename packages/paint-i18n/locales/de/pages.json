@@ -613,7 +613,6 @@
     "deleteContents": "Ordner und gesamten Inhalt löschen",
     "moveContentsUp": "Inhalt in den übergeordneten Ordner verschieben",
     "error": "Die Ordneraktion ist fehlgeschlagen. Bitte versuche es erneut.",
-    "loading": "Ordner werden geladen…",
     "selectItems": "Elemente auswählen",
     "selected": "{{count}} ausgewählt",
     "clearSelection": "Auswahl aufheben",

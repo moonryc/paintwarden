@@ -16,6 +16,8 @@ export type StockLevel = "FULL" | "LOW" | "EMPTY";
 
 export type Miniature = {
   id: string;
+  /** Null at the top level; absent where a projection does not load it. */
+  folderId?: string | null;
   title: string;
   status: "OWNED" | "WISHLIST";
   notes: string;
