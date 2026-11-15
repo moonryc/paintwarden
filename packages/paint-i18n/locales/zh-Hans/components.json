@@ -483,5 +483,10 @@
   "supportChannel": "更新通道",
   "supportChannelBeta": "测试版",
   "supportChannelStable": "稳定版",
-  "updateReleaseNotes": "版本说明"
+  "updateReleaseNotes": "版本说明",
+  "betaTesterGuide": "Beta 测试指南（英文）",
+  "privacyNetworkLink": "隐私与网络活动（英文）",
+  "securityReportLink": "报告安全漏洞（英文）",
+  "privacyNetworkSummary": "本地库使用此电脑，远程库使用你选择的服务器。更新、插件和外部图片可能连接第三方。支持包是可选的本地导出文件。",
+  "manufacturerNonAffiliation": "Paintwarden 是独立项目，与任何颜料或模型制造商均无关联，也未获其认可。插件中的品牌和颜料名称归各自所有者所有。"
 }

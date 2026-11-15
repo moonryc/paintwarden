@@ -163,3 +163,21 @@ export const BetaChannel: Story = {
     await expect(canvas.queryByText("Stable", { exact: true })).not.toBeInTheDocument();
   },
 };
+
+export const PolicyLinks: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Paintwarden is independent/)).toBeVisible();
+    await expect(canvas.getByText(/Support bundles are optional local exports/)).toBeVisible();
+    await expect(canvas.getByRole("link", { name: "Beta tester guide (English)" })).toHaveAttribute(
+      "href",
+      "https://github.com/moonryc/paintwarden/blob/main/docs/beta-testers.md",
+    );
+    await expect(
+      canvas.getByRole("link", { name: "Privacy and network activity (English)" }),
+    ).toHaveAttribute("href", "https://github.com/moonryc/paintwarden/blob/main/docs/privacy.md");
+    await expect(
+      canvas.getByRole("link", { name: "Report a security vulnerability (English)" }),
+    ).toHaveAttribute("href", "https://github.com/moonryc/paintwarden/security/policy");
+  },
+};

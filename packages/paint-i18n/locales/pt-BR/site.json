@@ -270,5 +270,9 @@
   "licenses.description": "Licenças e avisos de direitos autorais de terceiros. Os avisos originais estão em inglês e disponíveis offline.",
   "licenses.download": "Baixar avisos",
   "meta.licensesTitle": "Licenças de código aberto | Paintwarden",
-  "meta.licensesDescription": "Licenças e avisos de direitos autorais de terceiros. Os avisos originais estão em inglês e disponíveis offline."
+  "meta.licensesDescription": "Licenças e avisos de direitos autorais de terceiros. Os avisos originais estão em inglês e disponíveis offline.",
+  "website.betaTesterGuide": "Guia para testar a beta (inglês)",
+  "website.privacyNetworkLink": "Privacidade e atividade de rede (inglês)",
+  "website.securityReportLink": "Relatar uma vulnerabilidade (inglês)",
+  "download.betaScope": "Beta 1.0.0-beta.1 para amigos e familiares: leia o guia para avisos de instalação, backups e atualizações manuais no Mac. Use apenas os pacotes oferecidos e validados na página da versão. Windows é opcional."
 }

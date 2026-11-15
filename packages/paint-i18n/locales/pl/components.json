@@ -546,5 +546,10 @@
   "supportChannel": "Kanał",
   "supportChannelBeta": "Beta",
   "supportChannelStable": "Stabilny",
-  "updateReleaseNotes": "Informacje o wydaniu"
+  "updateReleaseNotes": "Informacje o wydaniu",
+  "betaTesterGuide": "Poradnik dla testerów bety (angielski)",
+  "privacyNetworkLink": "Prywatność i aktywność sieciowa (angielski)",
+  "securityReportLink": "Zgłoś lukę bezpieczeństwa (angielski)",
+  "privacyNetworkSummary": "Lokalne skarbce używają tego komputera, a zdalne — Twojego serwera. Aktualizacje, wtyczki i obrazy zewnętrzne mogą łączyć się z podmiotami trzecimi. Pakiety pomocy to opcjonalne eksporty lokalne.",
+  "manufacturerNonAffiliation": "Paintwarden jest niezależny i nie jest powiązany z żadnym producentem farb ani figurek ani przez niego polecany. Marki i nazwy farb we wtyczkach należą do ich właścicieli."
 }

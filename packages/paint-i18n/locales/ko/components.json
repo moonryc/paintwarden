@@ -483,5 +483,10 @@
   "supportChannel": "채널",
   "supportChannelBeta": "베타",
   "supportChannelStable": "안정",
-  "updateReleaseNotes": "릴리스 노트"
+  "updateReleaseNotes": "릴리스 노트",
+  "betaTesterGuide": "베타 테스터 가이드(영어)",
+  "privacyNetworkLink": "개인정보 및 네트워크 활동(영어)",
+  "securityReportLink": "보안 취약점 신고(영어)",
+  "privacyNetworkSummary": "로컬 보관함은 이 컴퓨터를, 원격 보관함은 선택한 서버를 사용합니다. 업데이트, 플러그인, 외부 이미지는 제3자에게 연결할 수 있습니다. 지원 번들은 선택적으로 로컬에 내보내는 파일입니다.",
+  "manufacturerNonAffiliation": "Paintwarden는 독립 프로젝트이며 어떤 페인트 또는 미니어처 제조사와도 제휴하거나 이들의 보증을 받지 않습니다. 플러그인의 브랜드와 페인트 이름은 각 소유자에게 속합니다."
 }

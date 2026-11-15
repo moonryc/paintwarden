@@ -270,5 +270,9 @@
   "licenses.description": "타사 라이선스 및 저작권 고지입니다. 원문은 영어로 제공되며 오프라인에서도 볼 수 있습니다.",
   "licenses.download": "고지 다운로드",
   "meta.licensesTitle": "오픈 소스 라이선스 | Paintwarden",
-  "meta.licensesDescription": "타사 라이선스 및 저작권 고지입니다. 원문은 영어로 제공되며 오프라인에서도 볼 수 있습니다."
+  "meta.licensesDescription": "타사 라이선스 및 저작권 고지입니다. 원문은 영어로 제공되며 오프라인에서도 볼 수 있습니다.",
+  "website.betaTesterGuide": "베타 테스터 가이드(영어)",
+  "website.privacyNetworkLink": "개인정보 및 네트워크 활동(영어)",
+  "website.securityReportLink": "보안 취약점 신고(영어)",
+  "download.betaScope": "친구와 가족을 위한 베타 1.0.0-beta.1입니다. 설치 경고, 백업, Mac 수동 업데이트는 가이드를 읽어 주세요. 릴리스 페이지에서 제공하고 승인한 패키지만 사용하세요. Windows는 선택 사항입니다."
 }

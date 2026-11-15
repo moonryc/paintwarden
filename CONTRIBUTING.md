@@ -1,5 +1,9 @@
 # Contributing
 
+## Security reports
+
+For a suspected security vulnerability, follow [SECURITY.md](SECURITY.md) and report privately, not in a public issue or pull request.
+
 ## Development setup
 
 Use the Node version in `.nvmrc` (currently 22.22.2), then run `npm ci`.

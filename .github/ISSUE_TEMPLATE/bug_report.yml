@@ -6,6 +6,7 @@ body:
     attributes:
       value: |
         Thank you for helping improve Paintwarden. Please describe the problem in your preferred language.
+        **Security issue?** Do not describe it here. Follow [SECURITY.md](https://github.com/moonryc/paintwarden/blob/main/SECURITY.md) and use Security → Report a vulnerability to report privately.
         **Never include passwords, tokens, setup codes, private server URLs, vault contents, or other secrets.**
         Settings → Help & About can save an optional support bundle. Review it before attaching it below.
         Desktop bundles contain a safe summary and sanitized logs; browser downloads contain a JSON summary only, not server logs.

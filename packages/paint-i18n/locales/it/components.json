@@ -525,5 +525,10 @@
   "supportChannel": "Canale",
   "supportChannelBeta": "Beta",
   "supportChannelStable": "Stabile",
-  "updateReleaseNotes": "Note di rilascio"
+  "updateReleaseNotes": "Note di rilascio",
+  "betaTesterGuide": "Guida per i beta tester (inglese)",
+  "privacyNetworkLink": "Privacy e attività di rete (inglese)",
+  "securityReportLink": "Segnala una vulnerabilità (inglese)",
+  "privacyNetworkSummary": "Gli archivi locali usano questo computer; quelli remoti usano il tuo server. Aggiornamenti, plugin e immagini esterne possono contattare terze parti. I pacchetti di supporto sono esportazioni locali facoltative.",
+  "manufacturerNonAffiliation": "Paintwarden è indipendente e non è affiliato né approvato da alcun produttore di colori o miniature. I marchi e i nomi dei colori nei plugin appartengono ai rispettivi proprietari."
 }

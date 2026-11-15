@@ -19,6 +19,7 @@ import { PageSkeleton } from "../../Components/PageSkeletons";
 import { usePluginSources } from "../../graphql/sources-hooks";
 import { Extension, FileUp, Layers, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
+import { demoPluginZipUrl } from "../../utils/project-links";
 import { PublicError } from "../../utils/public-error";
 import { useInitialPageLoading } from "../useInitialPageLoading";
 
@@ -300,6 +301,14 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         <Box component="p" sx={{ color: "var(--ink-faint)", fontSize: 13, mt: 0.5, mb: 2 }}>
           {t("sourcesPasteAGitHubRepositoryOrUploadAPluginZip")}
         </Box>
+        <Alert severity="info" sx={{ mb: 2 }}>
+          {t("sourcesDemoHelp")}
+          <Box sx={{ mt: 1 }}>
+            <Button href={demoPluginZipUrl} target="_blank" rel="noopener noreferrer" size="small">
+              {t("sourcesDemoDownload")}
+            </Button>
+          </Box>
+        </Alert>
         <Box
           component="form"
           onSubmit={(event) => {

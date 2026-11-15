@@ -596,5 +596,7 @@
   },
   "complementaryPalette": "パレット",
   "complementaryYourPaint": "選んだペイント",
-  "complementaryNoPick": "所持品に一致なし"
+  "complementaryNoPick": "所持品に一致なし",
+  "sourcesDemoDownload": "デモプラグインの ZIP をダウンロード",
+  "sourcesDemoHelp": "初めての方へ：架空の小さなデモをダウンロードし、「ZIP をアップロード」でダウンロードしたファイルを選択してください。ダウンロードリンクをリポジトリ欄に貼り付けないでください。"
 }

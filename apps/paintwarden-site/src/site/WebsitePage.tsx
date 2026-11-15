@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 
 import { Wordmark } from "./components/primitives";
 import { siteT as t, useSiteLanguage, languages } from "./i18n";
-import { koFi, releases, repository } from "./links";
+import { betaTesterGuide, koFi, privacyNetwork, releases, repository, securityReport } from "./links";
 import { DocsPage } from "./pages/DocsPage";
 import { DownloadPage } from "./pages/DownloadPage";
 import { FaqPage } from "./pages/FaqPage";
@@ -281,6 +281,17 @@ function Footer() {
                 {t("website.openSourceLicenses")}
               </Box>
             </li>
+            {[
+              [betaTesterGuide, t("website.betaTesterGuide")],
+              [privacyNetwork, t("website.privacyNetworkLink")],
+              [securityReport, t("website.securityReportLink")],
+            ].map(([href, label]) => (
+              <li key={href}>
+                <Box component="a" href={href} target="_blank" rel="noopener noreferrer" sx={footerLink}>
+                  {label}
+                </Box>
+              </li>
+            ))}
             <li>
               <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
                 <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}

@@ -44,6 +44,11 @@ export const Empty: Story = {
   play: async ({ canvasElement }) => {
     const body = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(body.getByText("No plugins yet")).toBeVisible());
+    await expect(body.getByRole("link", { name: "Download demo plugin ZIP" })).toHaveAttribute(
+      "href",
+      "https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip",
+    );
+    await expect(body.getByText(/Do not paste the download link into the repository field/)).toBeVisible();
   },
 };
 export const Loading: Story = {

@@ -7,6 +7,7 @@ import DnsOutlined from "@mui/icons-material/DnsOutlined";
 import Microsoft from "@mui/icons-material/Microsoft";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import {
+  Alert,
   Box,
   Button,
   Container,
@@ -20,7 +21,7 @@ import { useState, type ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Surface, serif } from "../components/primitives";
 import { siteT as t } from "../i18n";
-import { releases, repository } from "../links";
+import { betaTesterGuide, releases, repository } from "../links";
 
 type Choice = "desktop" | "server";
 
@@ -38,7 +39,7 @@ const platforms = () => [
 ];
 
 const commands = [
-  "git clone https://github.com/moonryc/paintwarden.git",
+  "git clone --branch v1.0.0-beta.1 --depth 1 https://github.com/moonryc/paintwarden.git",
   "cd paintwarden",
   "docker compose up -d --build",
 ];
@@ -351,6 +352,14 @@ export function DownloadPage() {
         title={t("download.pickYourKindOfVault")}
         description={t("download.keepItOnOneComputerConnectTheDesktopAppTo")}
       />
+      <Alert severity="info" sx={{ mb: 3 }}>
+        {t("download.betaScope")}
+        <Box sx={{ mt: 1 }}>
+          <Button href={betaTesterGuide} target="_blank" rel="noopener noreferrer">
+            {t("website.betaTesterGuide")}
+          </Button>
+        </Box>
+      </Alert>
       <ToggleButtonGroup
         exclusive
         value={choice}

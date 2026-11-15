@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import noticesText from "../../../../../THIRD_PARTY_NOTICES.txt?raw";
-
+import { waitForDialogEntered } from "../storybook/dialog";
 import { theme } from "../theme";
 
 import { OpenSourceLicensesModal } from "./OpenSourceLicensesModal";
@@ -41,6 +41,7 @@ export const KeyboardAndScrolling: Story = {
       { name: "Open-source licenses" },
       { timeout: 10000 },
     );
+    await waitForDialogEntered(dialog);
     const close = within(dialog).getByRole("button", { name: "Close" });
     await expect(content).toHaveAttribute("lang", "en");
     // Exact equality checks that the generated text is neither summarized nor truncated.

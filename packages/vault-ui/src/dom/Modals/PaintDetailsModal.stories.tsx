@@ -2,6 +2,7 @@ import type { Operation } from "@apollo/client";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, waitFor, within } from "storybook/test";
 
+import { waitForDialogEntered } from "../storybook/dialog";
 import { paints, vault } from "../storybook/fixtures";
 import { StoryGraphQL } from "../storybook/graphql";
 
@@ -89,6 +90,7 @@ export const ApolloBrokenEmpty: Story = {
   play: async ({ canvasElement, userEvent, args }) => {
     const page = within(canvasElement.ownerDocument.body);
     await expect(await page.findByRole("alert")).toHaveTextContent("Broken substitution: empty recipe.");
+    await waitForDialogEntered(page.getByRole("dialog"));
     await expect(page.getByRole("alert")).toHaveClass("MuiAlert-colorError");
     await expect(page.getByRole("alert").nextElementSibling).toContainElement(
       page.getByRole("button", { name: "Paint substitutions (1)" }),
@@ -122,6 +124,7 @@ export const ApolloBrokenCycle: Story = {
   play: async ({ canvasElement }) => {
     const page = within(canvasElement.ownerDocument.body);
     await expect(await page.findByRole("alert")).toHaveTextContent("Broken substitution: circular recipe.");
+    await waitForDialogEntered(page.getByRole("dialog"));
     await expect(page.getByRole("alert")).toHaveClass("MuiAlert-colorError");
     await expect(page.queryByText(/Available through/)).not.toBeInTheDocument();
   },

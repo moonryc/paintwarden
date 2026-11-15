@@ -46,3 +46,11 @@ yarn-error.log*
 # storybook
 __screenshots__/
 *storybook.log
+
+# Unpublished catalogs and local signing credentials
+prepared-catalog/
+*.p12
+*.pfx
+*.key
+*.cer
+*.provisionprofile

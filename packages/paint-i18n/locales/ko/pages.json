@@ -596,5 +596,7 @@
   },
   "complementaryPalette": "내 팔레트",
   "complementaryYourPaint": "선택한 페인트",
-  "complementaryNoPick": "보유 중인 일치 항목 없음"
+  "complementaryNoPick": "보유 중인 일치 항목 없음",
+  "sourcesDemoDownload": "데모 플러그인 ZIP 다운로드",
+  "sourcesDemoHelp": "처음이신가요? 작은 가상 데모를 다운로드한 후 ZIP 업로드를 선택하고 다운로드한 파일을 지정하세요. 다운로드 링크를 저장소 입력란에 붙여 넣지 마세요."
 }

@@ -5,6 +5,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { MiniatureFixtureContext } from "../../graphql/miniature-list-hooks";
 import { useVaultGraphQL } from "../../graphql/provider";
+import { waitForDialogEntered } from "../../storybook/dialog";
 import { miniatures, paints, schemes, vault } from "../../storybook/fixtures";
 import { StoryGraphQL } from "../../storybook/graphql";
 import { fixtureMiniatureResponse } from "../../storybook/miniature-api-fixtures";
@@ -288,6 +289,7 @@ export const CopyMiniatureOnDemandAndReset: Story = {
     const body = within(document.body);
     const fixture = parameters.editorFixture as FixtureOptions;
     await expect(fixture.request).not.toHaveBeenCalledWith("TemplateSourceMiniature", expect.anything());
+    await waitForDialogEntered(body.getByRole("dialog"));
     const picker = body.getByRole("combobox", { name: "Start from miniature" });
     await userEvent.type(picker, "knight");
     await userEvent.click(await body.findByRole("option", { name: miniatures.knight.title }));
@@ -324,6 +326,7 @@ export const PaginatedCopySearch: Story = {
   parameters: { editorFixture: { paginatedMiniatures: true, request: fn() } },
   play: async ({ parameters }) => {
     const body = within(document.body);
+    await waitForDialogEntered(await body.findByRole("dialog"));
     await userEvent.click(await body.findByRole("button", { name: "Load more miniatures" }));
     await userEvent.click(body.getByRole("combobox", { name: "Start from miniature" }));
     await userEvent.click(await body.findByRole("option", { name: "Copy model 48" }));

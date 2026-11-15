@@ -504,5 +504,10 @@
   "supportChannel": "Kanaal",
   "supportChannelBeta": "Bèta",
   "supportChannelStable": "Stabiel",
-  "updateReleaseNotes": "Versieopmerkingen"
+  "updateReleaseNotes": "Versieopmerkingen",
+  "betaTesterGuide": "Handleiding voor bètatesters (Engels)",
+  "privacyNetworkLink": "Privacy en netwerkactiviteit (Engels)",
+  "securityReportLink": "Een beveiligingslek melden (Engels)",
+  "privacyNetworkSummary": "Lokale kluizen gebruiken deze computer; externe kluizen gebruiken je server. Updates, plug-ins en externe afbeeldingen kunnen derden benaderen. Ondersteuningsbundels zijn optionele lokale exports.",
+  "manufacturerNonAffiliation": "Paintwarden is onafhankelijk en is niet verbonden aan of onderschreven door een verf- of miniaturenfabrikant. Merken en verfnamen in plug-ins zijn van hun respectieve eigenaren."
 }

@@ -45,7 +45,7 @@ export function ComplementaryPalette({
         aria-labelledby={headingId}
         sx={{
           display: "grid",
-          gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+          gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(4, minmax(0, 1fr))" },
           gap: { xs: 1, sm: 1.5 },
           listStyle: "none",
           p: 0,
@@ -69,7 +69,7 @@ export function ComplementaryPalette({
               }}
             />
             <Box sx={{ fontSize: 12, fontWeight: 700, mt: 0.75 }}>{slot.label}</Box>
-            <Box sx={{ fontSize: 12, color: "text.secondary", overflowWrap: "anywhere" }}>
+            <Box sx={{ fontSize: 12, color: "text.secondary", overflowWrap: "break-word" }}>
               {slot.paint?.name ?? t("complementaryNoPick")}
             </Box>
             {slot.input && (

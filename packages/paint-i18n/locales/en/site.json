@@ -270,5 +270,9 @@
   "licenses.description": "Third-party licenses and copyright notices. Original notices are provided in English and are available offline.",
   "licenses.download": "Download notices",
   "meta.licensesTitle": "Open-source licenses | Paintwarden",
-  "meta.licensesDescription": "Third-party licenses and copyright notices. Original notices are provided in English and are available offline."
+  "meta.licensesDescription": "Third-party licenses and copyright notices. Original notices are provided in English and are available offline.",
+  "website.betaTesterGuide": "Beta tester guide (English)",
+  "website.privacyNetworkLink": "Privacy and network activity (English)",
+  "website.securityReportLink": "Report a security vulnerability (English)",
+  "download.betaScope": "Friends-and-family beta 1.0.0-beta.1: read the tester guide for installation warnings, backups and manual Mac upgrades. Use only packages offered and accepted on the release page. Windows is optional."
 }

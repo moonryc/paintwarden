@@ -483,5 +483,10 @@
   "supportChannel": "更新通道",
   "supportChannelBeta": "測試版",
   "supportChannelStable": "穩定版",
-  "updateReleaseNotes": "版本說明"
+  "updateReleaseNotes": "版本說明",
+  "betaTesterGuide": "Beta 測試指南（英文）",
+  "privacyNetworkLink": "隱私與網路活動（英文）",
+  "securityReportLink": "回報安全漏洞（英文）",
+  "privacyNetworkSummary": "本機收藏庫使用此電腦，遠端收藏庫使用你選擇的伺服器。更新、外掛和外部圖片可能連線至第三方。支援套件是選用的本機匯出檔案。",
+  "manufacturerNonAffiliation": "Paintwarden 是獨立專案，與任何顏料或模型製造商均無關聯，也未獲其認可。外掛中的品牌與顏料名稱歸各自擁有者所有。"
 }

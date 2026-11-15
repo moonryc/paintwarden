@@ -151,7 +151,7 @@
     ]
   },
   "candidate": {
-    "directory": "/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-worktrees/graphql-migration/apps/paintwarden-web/dist",
+    "directory": "apps/paintwarden-web/dist",
     "jsBytes": 1291985,
     "sumGzipBytes": 413247,
     "entry": {

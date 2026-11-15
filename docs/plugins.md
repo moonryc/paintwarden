@@ -24,13 +24,19 @@ Every paint, scheme, template and scheme entry has a fixed UUID. Miniatures, rec
 
 ## Trying the demo plugin
 
-From the repository root, pack the folder and upload it:
+For beta.1, download [paintwarden-demo-plugin.zip](https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip)
+from the release, leave it zipped, then open **Settings → Plugins → Upload ZIP**
+and select the downloaded file. This asset is available once beta.1 is published.
+Do not paste the download link or the Paintwarden application repository into
+the GitHub repository field: that field needs a compatible plugin at its root.
 
-```bash
-cd examples && zip -r ../demo-plugin.zip demo-plugin && cd ..
+Developers can instead build the same demo from the repository root:
+
+```sh
+node scripts/package-demo-plugin.mjs outputs/paintwarden-demo-plugin.zip
 ```
 
-In the app, open **Settings → Plugins → Upload .zip** and choose `demo-plugin.zip`. The vault gains:
+The vault gains:
 
 - 8 paints from a made-up brand, _Paintwarden Demo_. One is a varnish with no color, and _Old Bone_ is marked discontinued.
 - 2 schemes. _Harbor Blue Armor_ has step headings, milestones, and an image with a thumbnail. _Brass and Bone_ lists two paints under one step.
@@ -64,7 +70,13 @@ An uploaded plugin is identified by its `name`, ignoring case, accents and punct
 
 ## Updating
 
-**Settings → Plugins** checks each GitHub plugin for a new version when it opens, and again on **Check for updates**. Checking changes nothing. The owner applies a new version with the plugin's update action or **Update all**.
+**Settings → Plugins** probes each GitHub plugin's version when it opens, then
+runs a background update operation that can download and apply newer versions.
+The **Check for updates** button only probes versions; the plugin's update action
+or **Update all** also applies updates. Repository plugins can therefore change
+when you open Plugins, not only when you press an update button. Uploaded ZIP
+plugins have no repository to check; update them by uploading a newer ZIP.
+See [privacy and network activity](privacy.md) for the requests involved.
 
 An update compares `version` in `source.json` with the installed version:
 

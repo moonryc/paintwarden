@@ -656,5 +656,7 @@
   },
   "complementaryPalette": "La tua tavolozza",
   "complementaryYourPaint": "Il tuo colore",
-  "complementaryNoPick": "Nessun colore posseduto corrisponde"
+  "complementaryNoPick": "Nessun colore posseduto corrisponde",
+  "sourcesDemoDownload": "Scarica lo ZIP del plugin dimostrativo",
+  "sourcesDemoHelp": "Prima volta? Scarica la piccola demo fittizia, poi scegli Carica ZIP e seleziona il file scaricato. Non incollare il link di download nel campo del repository."
 }

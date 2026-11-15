@@ -4,8 +4,27 @@ Paintwarden is a miniature-paint inventory and project planner for desktop or a
 self-hosted web server. It tracks paints and quantities, miniature paint recipes,
 wishlists, shopping lists, project photos, and reusable color schemes.
 
-Everything runs on your own machine. App records are stored in a SQLite file and
-uploaded project photos are stored as ordinary files alongside it.
+In local desktop mode, the vault runs on your computer. In remote mode, records
+and uploaded photos live on your selected server. Records use SQLite; uploaded
+photos are ordinary files alongside it. Updates, plugins and external images may
+contact third parties; see [privacy and network activity](docs/privacy.md).
+
+## Friends-and-family beta
+
+Start with the [beta tester guide](docs/beta-testers.md) for **1.0.0-beta.1**:
+choosing local or server mode, safe Mac/optional Windows installation, owner setup,
+the downloadable fictitious starter plugin, backups, manual unsigned Mac upgrades
+and reporting. Use only platforms offered and accepted on the
+[beta release page](https://github.com/moonryc/paintwarden/releases/tag/v1.0.0-beta.1).
+App and server versions must match exactly, including `beta.1`.
+
+**Security vulnerabilities:** use [private reporting](SECURITY.md), not a public
+issue. Ordinary bugs can use [GitHub Issues](https://github.com/moonryc/paintwarden/issues).
+Never attach passwords, databases, backups or private photos to public reports.
+
+Paintwarden is independent and is not affiliated with or endorsed by any paint
+or miniature manufacturer. Brand and paint names in plugins belong to their
+respective owners; this notice does not grant catalog or image permissions.
 
 ## License
 
@@ -38,12 +57,15 @@ version updates also require reviewing `third-party/sources.json` and its full t
 ### Install
 
 ```sh
-git clone https://github.com/moonryc/paintwarden.git
+git clone --branch v1.0.0-beta.1 --depth 1 https://github.com/moonryc/paintwarden.git
 cd paintwarden
 docker compose up -d --build
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). This builds from source at the
+exact beta tag; no prebuilt registry image is promised. Compose publishes to the
+host's interfaces, so restrict network access and keep sign-in required. Do not
+expose it to the internet without appropriate HTTPS and authentication.
 
 The first request creates the database and applies all migrations. On first use,
 create an owner username and password (at least 12 characters). This also applies
@@ -73,9 +95,11 @@ docker compose down
 # Start again
 docker compose up -d
 
-# Update to the latest version
-git pull
-docker compose up -d --build
+# Upgrade only after exporting a ZIP and taking a stopped full volume backup.
+# Select the exact next published version from its release notes, not moving main.
+git fetch --tags
+# git checkout <exact-release-tag>
+# docker compose up -d --build
 ```
 
 Do not run `docker compose down -v` unless you intend to delete the database and
@@ -132,9 +156,11 @@ Backups are streamed, so they don't need much memory, but a restore needs free
 disk space for a temporary copy of the file. A restore accepts files up to 16 GB.
 
 When a new release needs to change an existing database, Paintwarden first saves
-a copy in `backups/` beside it and keeps the five most recent copies. If an
-update goes wrong, stop the server and copy the newest file over
-`paintwarden.sqlite`.
+a database-only copy in `backups/` beside it and keeps the five most recent
+copies. These do not back up photos. Before upgrading, keep both an exported
+ZIP and a full stopped volume copy. If an update fails, preserve the failed
+state and follow [data compatibility and recovery](docs/data-compatibility.md);
+never open an upgraded database with an older app.
 
 Create a full backup while the app is stopped:
 
@@ -288,8 +314,10 @@ bundles no catalog of its own.
 - [docs/plugins.md](docs/plugins.md) explains how plugins are installed, updated, removed,
   backed up, and made.
 - [docs/source-format.md](docs/source-format.md) is the formal specification of the plugin files.
-- [examples/demo-plugin/](examples/demo-plugin/) is a small working plugin you can zip and
-  upload to try it out.
+- [Download the fictitious demo ZIP](https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/paintwarden-demo-plugin.zip),
+  then use **Settings → Plugins → Upload ZIP**. Do not paste its URL or this app's
+  repository into the repository field. [Source](examples/demo-plugin/) is CC0;
+  the release asset becomes available when beta.1 is published.
 
 ## Architecture
 

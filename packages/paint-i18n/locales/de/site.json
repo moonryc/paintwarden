@@ -270,5 +270,9 @@
   "licenses.description": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar.",
   "licenses.download": "Hinweise herunterladen",
   "meta.licensesTitle": "Open-Source-Lizenzen | Paintwarden",
-  "meta.licensesDescription": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar."
+  "meta.licensesDescription": "Lizenzen und Urheberrechtshinweise von Drittanbietern. Die Originalhinweise sind auf Englisch und offline verfügbar.",
+  "website.betaTesterGuide": "Anleitung für Beta-Tester (Englisch)",
+  "website.privacyNetworkLink": "Datenschutz und Netzwerkaktivität (Englisch)",
+  "website.securityReportLink": "Sicherheitslücke melden (Englisch)",
+  "download.betaScope": "Beta 1.0.0-beta.1 für Freunde und Familie: Die Anleitung erklärt Installationswarnungen, Sicherungen und manuelle Mac-Updates. Verwende nur Pakete, die auf der Release-Seite angeboten und freigegeben sind. Windows ist optional."
 }

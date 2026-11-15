@@ -5,6 +5,7 @@ import TextField from "@mui/material/TextField";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 
+import { waitForDialogEntered } from "../storybook/dialog";
 import { paintList } from "../storybook/fixtures";
 import { theme } from "../theme";
 
@@ -130,5 +131,37 @@ export const ScrollingList: Story = {
         )}
       </Box>
     ),
+  },
+};
+
+// A mounted dialog is not necessarily visible: hold the Fade at its opening
+// opacity to deterministically reproduce the fast-query race without timing sleeps.
+export const OpeningVisibility: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await within(canvasElement.ownerDocument.body).findByRole("dialog");
+    await waitForDialogEntered(dialog);
+    const transition = dialog.closest<HTMLElement>(".MuiDialog-container")!;
+    const originalStyle = transition.getAttribute("style");
+    let entered = false;
+    try {
+      transition.style.transition = "none";
+      transition.style.opacity = "0";
+      await expect(within(dialog).getByRole("textbox", { name: "Name" })).toBeInTheDocument();
+      await expect(dialog).not.toBeVisible();
+      const ready = waitForDialogEntered(dialog).then(() => {
+        entered = true;
+      });
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      );
+      await expect(entered).toBe(false);
+      transition.style.opacity = "1";
+      await ready;
+      await expect(entered).toBe(true);
+      await expect(dialog).toBeVisible();
+    } finally {
+      if (originalStyle === null) transition.removeAttribute("style");
+      else transition.setAttribute("style", originalStyle);
+    }
   },
 };

@@ -32,9 +32,9 @@ async function folderView(page) {
 }
 
 async function addChoice(page, choice) {
-  await page.getByRole("button", { name: "Add", exact: true }).click();
+  await page.getByRole("button", { name: "Add miniature", exact: true }).click();
   await page
-    .getByRole("dialog", { name: "Add", exact: true })
+    .getByRole("dialog", { name: "Add a miniature", exact: true })
     .getByRole("button", { name: choice, exact: true })
     .click();
 }

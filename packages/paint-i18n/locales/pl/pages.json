@@ -686,5 +686,7 @@
   },
   "complementaryPalette": "Twoja paleta",
   "complementaryYourPaint": "Twoja farba",
-  "complementaryNoPick": "Brak pasującej posiadanej farby"
+  "complementaryNoPick": "Brak pasującej posiadanej farby",
+  "sourcesDemoDownload": "Pobierz ZIP wtyczki demonstracyjnej",
+  "sourcesDemoHelp": "Zaczynasz? Pobierz małą fikcyjną demonstrację, wybierz Prześlij ZIP i wskaż pobrany plik. Nie wklejaj łącza pobierania w polu repozytorium."
 }

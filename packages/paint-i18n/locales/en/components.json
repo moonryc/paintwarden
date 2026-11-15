@@ -504,5 +504,10 @@
   "supportChannel": "Channel",
   "supportChannelBeta": "Beta",
   "supportChannelStable": "Stable",
-  "updateReleaseNotes": "Release notes"
+  "updateReleaseNotes": "Release notes",
+  "betaTesterGuide": "Beta tester guide (English)",
+  "privacyNetworkLink": "Privacy and network activity (English)",
+  "securityReportLink": "Report a security vulnerability (English)",
+  "privacyNetworkSummary": "Local vaults use this computer; remote vaults use your server. Updates, plugins and external images may contact third parties. Support bundles are optional local exports.",
+  "manufacturerNonAffiliation": "Paintwarden is independent and is not affiliated with or endorsed by any paint or miniature manufacturer. Brand and paint names in plugins belong to their respective owners."
 }

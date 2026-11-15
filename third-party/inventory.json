@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "lockSha256": "b4ab7101b81dde027e388b2aaa9e01733358283c40a1614905eb89472f1519f4",
+  "lockSha256": "61bddb066038155bb53a9981ae2ecfa4fa071c14952a58e31d294133882ea4f8",
   "scope": "All non-dev locked npm locations (including site build tools and all OS/CPU options), plus tools physically copied by server staging. Not every listed component ships on every platform. WASM options are inventoried but deliberately excluded from native desktop/Docker artifacts.",
   "packages": [
     {

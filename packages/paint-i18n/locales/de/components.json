@@ -504,5 +504,10 @@
   "supportChannel": "Kanal",
   "supportChannelBeta": "Beta",
   "supportChannelStable": "Stabil",
-  "updateReleaseNotes": "Versionshinweise"
+  "updateReleaseNotes": "Versionshinweise",
+  "betaTesterGuide": "Anleitung für Beta-Tester (Englisch)",
+  "privacyNetworkLink": "Datenschutz und Netzwerkaktivität (Englisch)",
+  "securityReportLink": "Sicherheitslücke melden (Englisch)",
+  "privacyNetworkSummary": "Lokale Tresore verwenden diesen Computer, entfernte Tresore deinen Server. Updates, Plugins und externe Bilder können Drittanbieter kontaktieren. Support-Pakete sind optionale lokale Exporte.",
+  "manufacturerNonAffiliation": "Paintwarden ist unabhängig und mit keinem Farben- oder Miniaturenhersteller verbunden oder von ihm empfohlen. Marken und Farbnamen in Plugins gehören ihren jeweiligen Eigentümern."
 }

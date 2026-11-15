@@ -3,7 +3,7 @@
 Use **Node 22.22.2** in this isolated worktree. No runner builds or packages. Default execution writes a `NOT RUN` plan; use `--run` only after the coordinator approves stable production artifacts. Do not use personal vaults or main's development servers.
 
 ```sh
-E=/Users/moon/Desktop/REPOS/PERSONAL/paint-tracker-audit/graphql-phase-4-evidence
+E="${TMPDIR:-/tmp}/paintwarden-graphql-phase-4-evidence"
 node scripts/graphql-phase4-browser.mjs "$E/browser/ATTEMPT" --profile realistic
 node scripts/graphql-phase4-browser.mjs "$E/browser/ATTEMPT" --profile stress
 node scripts/graphql-phase4-native.mjs "$E/native/ATTEMPT" --app '/absolute/path/Paintwarden.app'

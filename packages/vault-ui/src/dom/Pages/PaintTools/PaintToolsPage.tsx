@@ -26,7 +26,17 @@ export function PaintToolsPage() {
           if (value) setTool(value);
         }}
         aria-label={t("toolsChooseTool")}
-        sx={{ mb: 2.5 }}
+        sx={{
+          mb: 2.5,
+          "& .MuiToggleButton-root": {
+            // Keep each whole word readable, giving the longer tab its intrinsic width.
+            width: "auto",
+            flex: "1 1 0",
+            minWidth: "min-content",
+            px: { xs: 0.5, sm: 1.5 },
+            overflowWrap: "normal",
+          },
+        }}
       >
         <ToggleButton
           id="paint-tool-compare"
@@ -84,8 +94,6 @@ export function PaintToolsPage() {
             gap: "0.25rem",
             fontSize: "0.75rem",
             lineHeight: "calc(4 / 3)",
-            overflowWrap: "anywhere",
-            minWidth: 0,
             "&.Mui-selected, &.Mui-selected:hover": {
               bgcolor: "var(--brand-soft)",
               color: "var(--brand-text)",

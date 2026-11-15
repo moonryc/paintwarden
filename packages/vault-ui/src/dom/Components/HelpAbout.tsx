@@ -3,6 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import licenseText from "../../../../../LICENSE?raw";
+import { betaTesterGuideUrl, privacyNetworkUrl, securityReportUrl } from "../utils/project-links";
 import { getSupportSummary, saveSupportBundle, type SupportSummary } from "../utils/support";
 
 import { Modal } from "./Modal";
@@ -148,6 +149,23 @@ export function HelpAbout({
           <Box>
             <Button variant="text" onClick={() => setNoticesOpen(true)}>
               {t("noticesRead")}
+            </Button>
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            {t("privacyNetworkSummary")}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t("manufacturerNonAffiliation")}
+          </Typography>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Button href={betaTesterGuideUrl} target="_blank" rel="noopener noreferrer">
+              {t("betaTesterGuide")}
+            </Button>
+            <Button href={privacyNetworkUrl} target="_blank" rel="noopener noreferrer">
+              {t("privacyNetworkLink")}
+            </Button>
+            <Button href={securityReportUrl} target="_blank" rel="noopener noreferrer">
+              {t("securityReportLink")}
             </Button>
           </Box>
           {failed && !preview && <Alert severity="error">{t("supportFailure")}</Alert>}

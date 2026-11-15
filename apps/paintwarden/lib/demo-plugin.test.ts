@@ -5,7 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
-import { zipSync, type Zippable } from "fflate";
+import { unzipSync } from "fflate";
+
+import { buildDemoPlugin, demoPluginAsset } from "../../../scripts/package-demo-plugin.mjs";
 
 // Keeps examples/demo-plugin, the sample linked from docs/plugins.md, valid and installable.
 
@@ -47,10 +49,28 @@ test("the demo plugin installs from a .zip", async () => {
     throw new Error("No network in this test");
   };
   try {
-    const files: Zippable = {};
-    for (const file of ["source.json", "catalog.json", "assets.json", "logo.svg", ...imageFiles])
-      files[file] = new Uint8Array(readFileSync(path.join(root, file)));
-    const result = await addUploadedCatalogSource(zipSync({ "demo-plugin": files }));
+    const zip = buildDemoPlugin();
+    assert.deepEqual(zip, buildDemoPlugin(), "release ZIP is byte-for-byte reproducible");
+    const unpacked = unzipSync(zip);
+    assert.ok(unpacked["source.json"], "the downloadable ZIP has a plugin root");
+    const url = `https://github.com/moonryc/paintwarden/releases/download/v1.0.0-beta.1/${demoPluginAsset}`;
+    let downloads = 0;
+    // Simulate the anonymous public asset endpoint before the private repository is flipped.
+    // No credentials, API token, repository sub-path support or moving main branch required.
+    globalThis.fetch = async (input, init) => {
+      assert.equal(input, url);
+      assert.equal(init?.headers, undefined);
+      downloads++;
+      return new Response(zip, { headers: { "content-type": "application/zip" } });
+    };
+    const downloaded = await fetch(url);
+    assert.equal(downloaded.status, 200);
+    const bytes = new Uint8Array(await downloaded.arrayBuffer());
+    globalThis.fetch = async () => {
+      throw new Error("ZIP install must not fetch a repository");
+    };
+    const result = await addUploadedCatalogSource(bytes);
+    assert.equal(downloads, 1);
     assert.equal(result.name, "Paintwarden demo plugin");
     assert.equal(result.updated, true);
     const [source] = listCatalogSources();
