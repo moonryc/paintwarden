@@ -16,7 +16,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import Colorize from "@mui/icons-material/Colorize";
-import { Button, ButtonBase, Chip, Card, FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
+import { Button, ButtonBase, Card, FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState, type ReactNode } from "react";
 
@@ -28,6 +28,7 @@ import { createClientId } from "../utils/client-id";
 import { noop, getSteps } from "../utils/constants";
 import { mergeRecipePaints } from "../utils/recipe-merge";
 
+import { BetaChip } from "./BetaChip";
 import { DashedAddButton } from "./DashedAddButton";
 import { PaintAutocomplete } from "./PaintAutocomplete";
 import { type RecipePaintStatus } from "./PaintRow";
@@ -397,18 +398,7 @@ export function ProjectRecipeView({
                 }}
               >
                 {t("scanTitle")}
-                <Chip
-                  component="span"
-                  label={t("scanBeta")}
-                  size="small"
-                  sx={{
-                    height: 19,
-                    fontSize: 10,
-                    bgcolor: "var(--sunken)",
-                    color: "var(--ink-soft)",
-                    "& .MuiChip-label": { px: 0.75 },
-                  }}
-                />
+                <BetaChip />
               </Box>
               <Box sx={{ fontSize: 12, color: "var(--ink-soft)", mt: 0.5 }}>
                 {canScan ? t("scanFindPaints") : t("scanExternal")}
@@ -624,7 +614,26 @@ export function ProjectRecipeView({
               >
                 {t("addAStep")}
               </Button>
+              {onScan && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Colorize sx={{ fontSize: 14 }} />}
+                  onClick={onScan}
+                  disabled={!canScan}
+                  aria-describedby={!canScan ? "recipe-scan-hint" : undefined}
+                  sx={{ gap: 0.75 }}
+                >
+                  {t("scanTitle")}
+                  <BetaChip />
+                </Button>
+              )}
             </Box>
+            {onScan && !canScan && (
+              <Box id="recipe-scan-hint" sx={{ fontSize: 12, mt: 1, color: "var(--ink-soft)" }}>
+                {miniature.imageUrl ? t("scanExternal") : t("scanNoImage")}
+              </Box>
+            )}
           </Box>
         )}
       </Box>

@@ -369,18 +369,30 @@ export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
   const noPhotoTitle = "Synthetic model without a photo";
   await createMiniature(first, noPhotoTitle);
   await expect(first.getByText(`Added ${noPhotoTitle}`, { exact: true })).toBeHidden();
-  await first.getByText(noPhotoTitle, { exact: true }).click();
   for (const width of [1440, 390]) {
+    // Switch presentation before opening: changing breakpoint with the drawer open
+    // remounts its responsive host during screenshot scrolling.
     await first.setViewportSize({ width, height: 1050 });
-    await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+    await first.getByText(noPhotoTitle, { exact: true }).click();
+    const scan = first.getByRole("button", { name: "Swatch Scan Beta", exact: true });
+    await expect(scan).toBeDisabled();
+    await expect(scan).toHaveAccessibleDescription("Add a photo to this miniature to use Swatch Scan.");
+    await expect(
+      first.getByText("Add a photo to this miniature to use Swatch Scan.", { exact: true }),
+    ).toBeVisible();
+    await scan.scrollIntoViewIfNeeded();
+    await first.screenshot({
+      path: path.join(artifacts, `scan-zero-no-photo-${width}.png`),
+      animations: "disabled",
+    });
     await first.getByRole("button", { name: "Edit recipe", exact: true }).click();
     await expect(first.getByRole("button", { name: "Done", exact: true })).toBeVisible();
     await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
     await first.getByRole("button", { name: "Done", exact: true }).click();
+    await first.getByRole("button", { name: "Close project", exact: true }).click();
   }
-  await first.getByRole("button", { name: "Close project", exact: true }).click();
   results.checks.push(
-    "PASS no-photo miniature has no Swatch Scan entry in view or recipe edit mode at desktop and phone widths",
+    "PASS no-photo zero-state scan is disabled with photo hint; recipe edit mode hides scan at desktop and phone widths",
   );
   await first.setViewportSize({ width: 1440, height: 1050 });
   const scanTitle = "Synthetic scan model";
@@ -401,39 +413,58 @@ export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
     mimeType: "image/png",
     buffer: scanPhoto,
   });
-  // Exercise the relocated entry independently before the real sampling/ranking flow.
+  // Exercise zero-state and edit-mode entries before the real sampling/ranking flow.
   await expect(first.getByText(`Added ${scanTitle}`, { exact: true })).toBeHidden();
-  await first.getByText(scanTitle, { exact: true }).click();
   const scanEntry = first.getByRole("button", { name: /Swatch Scan.*Beta/ });
-  await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
-  await first.getByRole("button", { name: "Edit recipe", exact: true }).click();
-  await expect(scanEntry).toBeEnabled();
-  await expect(scanEntry).toHaveText(/Swatch Scan.*Beta.*Find paints from your miniature/);
-  assert.equal(
-    await scanEntry.evaluate((entry) => {
-      const recipe = entry.closest("section");
-      const heading = recipe.querySelector("#paint-recipe-heading");
-      const schemes = recipe.querySelector("#recipe-schemes-heading");
-      const paints = recipe.querySelector("#recipe-paints-heading");
-      return (
-        Boolean(heading.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        Boolean(entry.compareDocumentPosition(schemes) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        Boolean(schemes.compareDocumentPosition(paints) & Node.DOCUMENT_POSITION_FOLLOWING)
-      );
-    }),
-    true,
-    "scan row follows Paint recipe heading, before Color schemes and Paint steps",
-  );
-  await scanEntry.click();
-  const scanDialog = first.getByRole("dialog", { name: "Swatch Scan", exact: true });
-  await expect(scanDialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
-  await scanDialog.getByRole("button", { name: "Close", exact: true }).click();
-  await expect(scanEntry).toBeVisible();
-  await first.getByRole("button", { name: "Done", exact: true }).click();
-  await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
-  await first.getByRole("button", { name: "Close project", exact: true }).click();
+  for (const width of [1440, 390]) {
+    await first.setViewportSize({ width, height: 1050 });
+    await first.getByText(scanTitle, { exact: true }).click();
+    await expect(first.getByRole("button", { name: "Swatch Scan Beta", exact: true })).toBeEnabled();
+    await expect(first.getByText("No paints assigned yet", { exact: true })).toBeVisible();
+    await scanEntry.scrollIntoViewIfNeeded();
+    await first.screenshot({
+      path: path.join(artifacts, `scan-zero-photo-${width}.png`),
+      animations: "disabled",
+    });
+    await scanEntry.click();
+    const zeroScanDialog = first.getByRole("dialog", { name: "Swatch Scan", exact: true });
+    await expect(zeroScanDialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
+    await zeroScanDialog.getByRole("button", { name: "Close", exact: true }).click();
+    await first.getByRole("button", { name: "Edit recipe", exact: true }).click();
+    await expect(scanEntry).toBeEnabled();
+    await expect(scanEntry).toHaveText(/Swatch Scan.*Beta.*Find paints from your miniature/);
+    assert.equal(
+      await scanEntry.evaluate((entry) => {
+        const recipe = entry.closest("section");
+        const heading = recipe.querySelector("#paint-recipe-heading");
+        const schemes = recipe.querySelector("#recipe-schemes-heading");
+        const paints = recipe.querySelector("#recipe-paints-heading");
+        return (
+          Boolean(heading.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+          Boolean(entry.compareDocumentPosition(schemes) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+          Boolean(schemes.compareDocumentPosition(paints) & Node.DOCUMENT_POSITION_FOLLOWING)
+        );
+      }),
+      true,
+      "scan row follows Paint recipe heading, before Color schemes and Paint steps",
+    );
+    await scanEntry.scrollIntoViewIfNeeded();
+    await first.screenshot({
+      path: path.join(artifacts, `scan-zero-edit-${width}.png`),
+      animations: "disabled",
+    });
+    await scanEntry.click();
+    const scanDialog = first.getByRole("dialog", { name: "Swatch Scan", exact: true });
+    await expect(scanDialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
+    await scanDialog.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(scanEntry).toBeVisible();
+    await first.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(first.getByRole("button", { name: "Swatch Scan Beta", exact: true })).toBeEnabled();
+    await first.getByRole("button", { name: "Close project", exact: true }).click();
+  }
+  await first.setViewportSize({ width: 1440, height: 1050 });
   results.checks.push(
-    "PASS uploaded-photo Swatch Scan Beta entry opens the canvas from recipe edit mode and hides on Done",
+    "PASS uploaded-photo zero-state scan opens without editing; edit row opens and returns to zero-state button on Done",
   );
   await checkSchemeRanking({
     page: first,

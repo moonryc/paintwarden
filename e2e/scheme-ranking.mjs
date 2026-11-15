@@ -18,25 +18,11 @@ export async function checkSchemeRanking({ page, miniatureId, title, artifacts, 
   await expect(page.getByText(`Added ${title}`, { exact: true })).toBeHidden();
   await page.getByText(title, { exact: true }).click();
   const scanEntry = page.getByRole("button", { name: /Swatch Scan.*Beta/ });
-  await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
-  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
-  await expect(scanEntry).toBeVisible();
-  assert.equal(
-    await scanEntry.evaluate((entry) => {
-      const recipe = entry.closest("section");
-      const heading = recipe.querySelector("#paint-recipe-heading");
-      const schemes = recipe.querySelector("#recipe-schemes-heading");
-      const paints = recipe.querySelector("#recipe-paints-heading");
-      return (
-        Boolean(heading.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        Boolean(entry.compareDocumentPosition(schemes) & Node.DOCUMENT_POSITION_FOLLOWING) &&
-        Boolean(schemes.compareDocumentPosition(paints) & Node.DOCUMENT_POSITION_FOLLOWING)
-      );
-    }),
-    true,
-    "scan row follows Paint recipe heading, before Color schemes and Paint steps",
-  );
-  await expect(scanEntry).toContainText("Find paints from your miniature’s photo");
+  // This fixture has no recipe rows, explicit steps or schemes yet. Enter directly
+  // from its zero state; entering edit mode would miss the first-paint regression.
+  await expect(page.getByText("No paints assigned yet", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit recipe", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Swatch Scan Beta", exact: true })).toBeEnabled();
   await scanEntry.click();
   const dialog = page.getByRole("dialog", { name: "Swatch Scan", exact: true });
   const photo = dialog.getByRole("img", { name: title, exact: true });
@@ -86,6 +72,76 @@ export async function checkSchemeRanking({ page, miniatureId, title, artifacts, 
     `,
   );
   const ids = new Map(colors.library.nodes.map((paint) => [paint.name, paint.id]));
+  // Seed only after measuring the synthetic photo so the closest result is exact.
+  // Assign the first paint while still in the zero-state scan session, before any
+  // scheme is attached or Edit recipe is clicked.
+  const initialPins = dialog.getByRole("list", { name: "Sample pins" });
+  await initialPins.getByRole("button").first().click();
+  const initialPaintList = dialog.getByRole("list", { name: "Closest paint matches" });
+  const firstMatch = initialPaintList.getByRole("listitem").first();
+  await expect(firstMatch).toContainText("Standalone nearest blue");
+  await firstMatch.getByRole("button", { name: "Assign", exact: true }).click();
+  const assign = page.getByRole("dialog", { name: "Assign paint to recipe", exact: true });
+  await expect(assign.getByRole("combobox", { name: "Recipe step", exact: true })).toHaveText("New step");
+  await expect(assign.getByRole("combobox", { name: "Stage", exact: true })).toHaveText("Basecoat");
+  await assign.getByRole("button", { name: "Assign", exact: true }).click();
+  await expect(assign).toBeHidden();
+  const assigned = await graphql(
+    page,
+    `
+      query VerifyFirstPaint($id: ID!) {
+        miniature(id: $id) {
+          recipeSteps
+          recipe(first: 40) {
+            nodes {
+              paint {
+                id
+              }
+              step
+              notes
+              sortOrder
+            }
+          }
+          schemes(first: 40) {
+            totalCount
+          }
+        }
+      }
+    `,
+    { id: miniatureId },
+  );
+  assert.deepEqual(assigned.miniature.recipeSteps, ["BASECOAT"]);
+  assert.deepEqual(assigned.miniature.recipe.nodes, [
+    { paint: { id: ids.get("Standalone nearest blue") }, step: "BASECOAT", notes: "", sortOrder: 0 },
+  ]);
+  assert.equal(assigned.miniature.schemes.totalCount, 0);
+  await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Edit recipe", exact: true })).toBeVisible();
+  await expect(page.getByText("No paints assigned yet", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  // Reopen the drawer to prove the first paint and step survived saving.
+  await page.getByRole("button", { name: "Close project", exact: true }).click();
+  await page.getByText(title, { exact: true }).click();
+  await expect(page.getByText("Standalone nearest blue", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  results.checks.push(
+    "PASS zero-state scan assigns and persists the first paint and Basecoat step without Edit recipe",
+  );
+  // Continue the existing edit-mode ranking checks with a fresh two-pin session.
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
+  await expect(scanEntry).toBeEnabled();
+  await expect(scanEntry).toContainText("Find paints from your miniature’s photo");
+  await scanEntry.click();
+  await expect(dialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
+  const reopenedBox = await photo.boundingBox();
+  assert.ok(reopenedBox);
+  for (const fraction of [0.25, 0.75]) {
+    await page.mouse.click(
+      reopenedBox.x + reopenedBox.width * fraction,
+      reopenedBox.y + reopenedBox.height / 2,
+    );
+  }
+
   // A scheme with paints but no usable hex must be omitted.
   async function scheme(name, paintNames) {
     const data = await graphql(
@@ -221,5 +277,7 @@ export async function checkSchemeRanking({ page, miniatureId, title, artifacts, 
   await expect(scanEntry).toBeVisible();
   await page.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
-  results.checks.push("PASS Swatch Scan Beta entry appears only while editing the photo miniature recipe");
+  results.checks.push(
+    "PASS populated photo recipe hides Swatch Scan in view mode and retains the edit-mode scan row",
+  );
 }

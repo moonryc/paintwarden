@@ -20,6 +20,9 @@ export const colors = {
   brandSoft: "#263452",
   // The brand blue lightened for text on dark surfaces.
   brandText: "#8aaef0",
+  // Dedicated beta badge pair: 6.89:1 contrast, independent of the surrounding theme.
+  beta: "#7040b0",
+  betaFg: "#ffffff",
   gold: "#d9b72b",
   goldFg: "#262626",
   goldSoft: "#36301c",

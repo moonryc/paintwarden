@@ -1,20 +1,21 @@
 import { Button } from "@mui/material";
-import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
-
-import { column } from "../storybook/decorators";
-import { miniatures, paints, vault } from "../storybook/fixtures";
-import type { Paint } from "../types";
-import { schemeOrderEntries } from "../utils/scheme-order";
-import { attachedSchemes, resolvedPaintIds } from "../utils/vault-data";
-
 import {
   isPaintAvailable,
   resolvePaintChoice,
   selectedSubstitution,
 } from "@paintwarden/core/paint-substitutions";
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fn, userEvent, within } from "storybook/test";
+
 import { VaultGraphQLProvider } from "../graphql/provider";
+import { i18n } from "../i18n";
+import { column } from "../storybook/decorators";
+import { miniatures, paints, vault } from "../storybook/fixtures";
 import { mockApi } from "../storybook/mock-api";
+import type { Paint } from "../types";
+import { schemeOrderEntries } from "../utils/scheme-order";
+import { attachedSchemes, resolvedPaintIds } from "../utils/vault-data";
+
 import { Modal } from "./Modal";
 import { ProjectRecipeView } from "./ProjectRecipe";
 
@@ -196,7 +197,7 @@ export const ScanPhotoInEditMode: Story = {
     await expect(scan).toBeEnabled();
     await expect(within(scan).getByText("Beta")).toBeVisible();
     await expect(scan).toHaveAccessibleName("Swatch Scan Beta Find paints from your miniature’s photo");
-    // The row follows the recipe heading, before schemes and paint steps, even in an empty recipe.
+    // The edit row follows the recipe heading, before schemes and paint steps.
     const recipeHeading = canvas.getByRole("heading", { name: "Paint recipe" });
     const schemesHeading = canvas.getByRole("heading", { name: "Color schemes" });
     const paintsHeading = canvas.getByRole("heading", { name: "Paint steps" });
@@ -217,9 +218,81 @@ export const ScanPhotoInEditMode: Story = {
   },
 };
 
+const emptyScanRecipe = { required: [], requirementRows: [], explicitSteps: [], schemes: [] };
+
+async function zeroStateScan(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  await expect(canvas.getByText(i18n.t("components:noPaintsAssignedYet"))).toBeVisible();
+  await expect(canvas.getByRole("button", { name: i18n.t("components:editRecipe") })).toBeVisible();
+  const scan = canvas.getByRole("button", { name: "Swatch Scan Beta" });
+  const actions = within(scan.parentElement!).getAllByRole("button");
+  await expect(actions).toHaveLength(3);
+  await expect(actions[0]).toHaveAccessibleName(i18n.t("components:addAScheme"));
+  await expect(actions[1]).toHaveAccessibleName(i18n.t("components:addAStep"));
+  await expect(actions[2]).toBe(scan);
+  await expect(scan).toHaveClass("MuiButton-outlined");
+  await expect(within(scan).getByText("Beta")).toBeVisible();
+  return { canvas, scan };
+}
+
 export const ScanEmptyRecipe: Story = {
-  ...ScanPhotoInEditMode,
-  args: { ...ScanPhotoInEditMode.args, required: [], requirementRows: [], explicitSteps: [], schemes: [] },
+  args: { ...emptyScanRecipe, miniature: { ...knight, imageUrl: scanPhoto }, onScan: fn() },
+  play: async ({ canvasElement, args }) => {
+    const { canvas, scan } = await zeroStateScan(canvasElement);
+    await expect(scan).toBeEnabled();
+    await userEvent.click(scan);
+    await expect(args.onScan).toHaveBeenCalledTimes(1);
+    // Opening the scan does not require or activate recipe editing.
+    await expect(canvas.getByRole("button", { name: "Edit recipe" })).toBeVisible();
+    await expect(args.setRecipe).not.toHaveBeenCalled();
+    await expect(args.setRecipeSteps).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: "Edit recipe" }));
+    await expect(canvas.getByRole("button", { name: /Swatch Scan.*Beta.*Find paints/ })).toBeEnabled();
+    await userEvent.click(canvas.getByRole("button", { name: "Done" }));
+    await expect(canvas.getByRole("button", { name: "Swatch Scan Beta" })).toBeEnabled();
+  },
+};
+
+export const ScanEmptyRecipeWithoutPhoto: Story = {
+  args: { ...emptyScanRecipe, miniature: { ...knight, imageUrl: null }, onScan: fn() },
+  play: async ({ canvasElement, args }) => {
+    const { canvas, scan } = await zeroStateScan(canvasElement);
+    const hint = i18n.t("components:scanNoImage");
+    await expect(scan).toBeDisabled();
+    await expect(scan).toHaveAccessibleDescription(hint);
+    await expect(canvas.getByText(hint)).toBeVisible();
+    scan.click(); // Native disabled buttons must not dispatch onScan, even programmatically.
+    await expect(args.onScan).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: i18n.t("components:editRecipe") }));
+    await expect(canvas.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await expect(canvas.queryByText(hint)).not.toBeInTheDocument();
+  },
+};
+
+export const ScanEmptyRecipeWithoutPhotoSpanish: Story = {
+  ...ScanEmptyRecipeWithoutPhoto,
+  parameters: { locale: "es" },
+};
+
+export const ScanEmptyRecipeExternalPhoto: Story = {
+  args: {
+    ...emptyScanRecipe,
+    miniature: { ...knight, imageUrl: "https://example.com/miniature.jpg" },
+    onScan: fn(),
+  },
+  play: async ({ canvasElement, args }) => {
+    const { canvas, scan } = await zeroStateScan(canvasElement);
+    const hint = i18n.t("components:scanExternal");
+    await expect(scan).toBeDisabled();
+    await expect(scan).toHaveAccessibleDescription(hint);
+    await expect(canvas.getByText(hint)).toBeVisible();
+    scan.click(); // Native disabled buttons must not dispatch onScan, even programmatically.
+    await expect(args.onScan).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByRole("button", { name: "Edit recipe" }));
+    const row = canvas.getByRole("button", { name: /Swatch Scan.*Beta/ });
+    await expect(row).toBeDisabled();
+    await expect(row).toHaveAccessibleName(/Upload a photo to the vault to use Swatch Scan/);
+  },
 };
 
 export const ScanWithoutPhoto: Story = {
