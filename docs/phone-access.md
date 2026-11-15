@@ -11,6 +11,8 @@ Paintwarden's desktop app can share its **local vault** with your other devices.
 
 ![Desktop Settings showing phone access and a locally generated QR code](images/phone-access-settings.png)
 
+*Illustration with sample addresses and a sample QR; your addresses will differ.*
+
 **Network warning:** anyone who can reach your computer on the network can reach the login page. Plain HTTP does not encrypt your password or vault traffic. Use only a trusted network, or use Tailscale (which encrypts traffic between your devices). Guest Wi-Fi or client isolation may prevent devices from reaching each other. A VPN, sleeping computer or changed Wi-Fi address can also make an old QR stop working; reopen Settings to refresh the addresses. Do not forward this port from your router to the public Internet.
 
 ## Optional HTTPS with Tailscale Serve
