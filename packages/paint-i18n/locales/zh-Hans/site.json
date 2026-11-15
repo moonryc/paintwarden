@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "自托管网页应用",
   "home.yourDataStaysYours": "你的数据，始终属于你",
   "website.license": "许可证",
-  "website.licenseSummary": "源代码可用。个人及其他非商业用途免费。商业使用需要获得许可。"
+  "website.licenseSummary": "源代码可用。个人及其他非商业用途免费。商业使用需要获得许可。",
+  "website.openSourceLicenses": "开源许可证",
+  "licenses.description": "第三方许可证和版权声明。原始声明以英文提供，可离线查看。",
+  "licenses.download": "下载声明",
+  "meta.licensesTitle": "开源许可证 | Paintwarden",
+  "meta.licensesDescription": "第三方许可证和版权声明。原始声明以英文提供，可离线查看。"
 }

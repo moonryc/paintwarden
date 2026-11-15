@@ -515,5 +515,11 @@
   "matchQualityDistant": "Coincidencia aproximada",
   "scanControlsHelp": "Ayuda de controles",
   "scanBestMatch": "Mejor coincidencia",
-  "scanClosestPaint": "Pintura más cercana"
+  "scanClosestPaint": "Pintura más cercana",
+  "noticesTitle": "Licencias de código abierto",
+  "noticesSummary": "Licencias y avisos de derechos de autor de terceros. Los avisos originales están en inglés y disponibles sin conexión.",
+  "noticesRead": "Leer licencias de código abierto",
+  "noticesLoading": "Cargando avisos…",
+  "noticesFailure": "No se pudieron cargar los avisos.",
+  "noticesRetry": "Reintentar"
 }

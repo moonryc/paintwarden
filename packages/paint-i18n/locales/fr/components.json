@@ -515,5 +515,11 @@
   "matchQualityDistant": "Correspondance approximative",
   "scanControlsHelp": "Aide des commandes",
   "scanBestMatch": "Meilleure correspondance",
-  "scanClosestPaint": "Peinture la plus proche"
+  "scanClosestPaint": "Peinture la plus proche",
+  "noticesTitle": "Licences open source",
+  "noticesSummary": "Licences et mentions de droits d’auteur de tiers. Les mentions originales sont en anglais et disponibles hors ligne.",
+  "noticesRead": "Lire les licences open source",
+  "noticesLoading": "Chargement des mentions…",
+  "noticesFailure": "Impossible de charger les mentions.",
+  "noticesRetry": "Réessayer"
 }

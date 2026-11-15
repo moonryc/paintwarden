@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "Aplicación web en tu servidor",
   "home.yourDataStaysYours": "Tus datos siguen siendo tuyos",
   "website.license": "Licencia",
-  "website.licenseSummary": "Código disponible. Gratis para uso personal y otros usos no comerciales. El uso comercial requiere permiso."
+  "website.licenseSummary": "Código disponible. Gratis para uso personal y otros usos no comerciales. El uso comercial requiere permiso.",
+  "website.openSourceLicenses": "Licencias de código abierto",
+  "licenses.description": "Licencias y avisos de derechos de autor de terceros. Los avisos originales están en inglés y disponibles sin conexión.",
+  "licenses.download": "Descargar avisos",
+  "meta.licensesTitle": "Licencias de código abierto | Paintwarden",
+  "meta.licensesDescription": "Licencias y avisos de derechos de autor de terceros. Los avisos originales están en inglés y disponibles sin conexión."
 }

@@ -473,5 +473,11 @@
   "matchQualityDistant": "おおまかな一致",
   "scanControlsHelp": "操作ヘルプ",
   "scanBestMatch": "最も近い一致",
-  "scanClosestPaint": "最も近いペイント"
+  "scanClosestPaint": "最も近いペイント",
+  "noticesTitle": "オープンソースライセンス",
+  "noticesSummary": "サードパーティのライセンスと著作権表示。原文は英語で、オフラインでも閲覧できます。",
+  "noticesRead": "オープンソースライセンスを読む",
+  "noticesLoading": "通知を読み込み中…",
+  "noticesFailure": "通知を読み込めませんでした。",
+  "noticesRetry": "再試行"
 }

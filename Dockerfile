@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:22.22.2-bookworm-slim AS dependencies
 
 WORKDIR /app
@@ -15,10 +16,13 @@ RUN npm ci --no-audit --no-fund
 FROM dependencies AS builder
 COPY . .
 # The image serves only the app, so the website and its dependencies are left out.
-RUN node scripts/nx.mjs build paintwarden
+RUN node scripts/nx.mjs build paintwarden \
+    && node scripts/copy-third-party-notices.mjs apps/paintwarden-web/dist apps/paintwarden/dist/web-dist
 
 FROM dependencies AS production-dependencies
-RUN npm prune --omit=dev
+COPY scripts/prune-sharp-wasm.mjs ./scripts/prune-sharp-wasm.mjs
+RUN npm prune --omit=dev \
+    && node scripts/prune-sharp-wasm.mjs /app
 
 FROM node:22.22.2-bookworm-slim AS runner
 
@@ -38,6 +42,13 @@ COPY --from=builder --chown=node:node /app/apps/paintwarden/dist/drizzle ./drizz
 COPY --from=builder --chown=node:node /app/apps/paintwarden/package.json ./package.json
 
 COPY --from=builder --chown=node:node /app/LICENSE /app/LICENSE
+COPY --from=builder --chown=node:node /app/THIRD_PARTY_NOTICES.txt /app/THIRD_PARTY_NOTICES.txt
+COPY --from=builder --chown=node:node /app/third-party /app/third-party
+
+# Compare the final filesystem to the source inventory, without shipping build tools.
+RUN --mount=type=bind,from=builder,source=/app,target=/notice-source \
+    node /notice-source/scripts/check-notice-artifact.mjs --docker-root /app --root /notice-source \
+    && node -e "require('sharp')({create:{width:16,height:16,channels:3,background:'#345678'}}).webp().toBuffer().then(b=>{if(b.length<20)process.exit(1)}).catch(e=>{console.error(e);process.exit(1)})"
 
 USER node
 EXPOSE 3000

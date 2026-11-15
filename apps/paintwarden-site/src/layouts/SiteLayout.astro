@@ -12,9 +12,10 @@ interface Props {
   page: Page;
   title: string;
   description: string;
+  notices?: string;
 }
 
-const { page, title, description } = Astro.props;
+const { page, title, description, notices } = Astro.props;
 const canonical = new URL(Astro.url.pathname, "https://paintwarden.com").href;
 
 // Same font files and color tokens as the app, so the site and the app render identically.
@@ -55,5 +56,5 @@ const baseStyles = `${fontFaces}:root{${tokens};color-scheme:dark}html{scroll-be
     <title>{title}</title>
     <style is:inline set:html={baseStyles} />
   </head>
-  <body><WebsitePage page={page} client:load /></body>
+  <body><WebsitePage page={page} notices={notices} client:load /></body>
 </html>

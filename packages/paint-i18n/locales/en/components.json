@@ -494,5 +494,11 @@
   "matchQualityDistant": "Loose match",
   "scanControlsHelp": "Controls help",
   "scanBestMatch": "Best match",
-  "scanClosestPaint": "Closest paint"
+  "scanClosestPaint": "Closest paint",
+  "noticesTitle": "Open-source licenses",
+  "noticesSummary": "Third-party licenses and copyright notices. Original notices are provided in English and are available offline.",
+  "noticesRead": "Read open-source licenses",
+  "noticesLoading": "Loading notices…",
+  "noticesFailure": "Could not load the notices.",
+  "noticesRetry": "Try again"
 }

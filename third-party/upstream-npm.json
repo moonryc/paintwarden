@@ -1,0 +1,18 @@
+{
+  "@graphql-tools__utils@13.2.2": {
+    "url": "https://raw.githubusercontent.com/ardatan/graphql-tools/482bdb656e0bf277a2d974ec6cf52f4e20248ef2/LICENSE",
+    "sha256": "1bb892b6b51c3cb3cd8fed2cf896c7f721328f3d4c697360d9e37faf3ebf0d1c"
+  },
+  "@whatwg-node__node-fetch@0.9.4": {
+    "url": "https://raw.githubusercontent.com/ardatan/whatwg-node/9e2fd4faab0ac3970291da1effe8d95a2936a2fc/LICENSE",
+    "sha256": "0647df63578bdb5f7e7694fade053b4f1bd4532776a3a7779ba77bccef84e3d0"
+  },
+  "@whatwg-node__promise-helpers@2.0.2": {
+    "url": "https://raw.githubusercontent.com/ardatan/whatwg-node/9e2fd4faab0ac3970291da1effe8d95a2936a2fc/LICENSE",
+    "sha256": "0647df63578bdb5f7e7694fade053b4f1bd4532776a3a7779ba77bccef84e3d0"
+  },
+  "@whatwg-node__disposablestack@0.1.0": {
+    "url": "https://raw.githubusercontent.com/ardatan/whatwg-node/42bbbf6ec476238b7490d46224933159adc08ee7/LICENSE",
+    "sha256": "0647df63578bdb5f7e7694fade053b4f1bd4532776a3a7779ba77bccef84e3d0"
+  }
+}

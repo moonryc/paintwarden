@@ -473,5 +473,11 @@
   "matchQualityDistant": "大致匹配",
   "scanControlsHelp": "操作帮助",
   "scanBestMatch": "最佳匹配",
-  "scanClosestPaint": "最接近的颜料"
+  "scanClosestPaint": "最接近的颜料",
+  "noticesTitle": "开源许可证",
+  "noticesSummary": "第三方许可证和版权声明。原始声明以英文提供，可离线查看。",
+  "noticesRead": "阅读开源许可证",
+  "noticesLoading": "正在加载声明…",
+  "noticesFailure": "无法加载声明。",
+  "noticesRetry": "重试"
 }

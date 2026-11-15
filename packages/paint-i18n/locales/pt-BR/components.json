@@ -515,5 +515,11 @@
   "matchQualityDistant": "Correspondência aproximada",
   "scanControlsHelp": "Ajuda dos controles",
   "scanBestMatch": "Melhor correspondência",
-  "scanClosestPaint": "Tinta mais próxima"
+  "scanClosestPaint": "Tinta mais próxima",
+  "noticesTitle": "Licenças de código aberto",
+  "noticesSummary": "Licenças e avisos de direitos autorais de terceiros. Os avisos originais estão em inglês e disponíveis offline.",
+  "noticesRead": "Ler licenças de código aberto",
+  "noticesLoading": "Carregando avisos…",
+  "noticesFailure": "Não foi possível carregar os avisos.",
+  "noticesRetry": "Tentar novamente"
 }

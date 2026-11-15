@@ -265,5 +265,10 @@
   "home.selfHostedWebApp": "Zelfgehoste web-app",
   "home.yourDataStaysYours": "Je gegevens blijven van jou",
   "website.license": "Licentie",
-  "website.licenseSummary": "Broncode beschikbaar. Gratis voor persoonlijk en ander niet-commercieel gebruik. Commercieel gebruik vereist toestemming."
+  "website.licenseSummary": "Broncode beschikbaar. Gratis voor persoonlijk en ander niet-commercieel gebruik. Commercieel gebruik vereist toestemming.",
+  "website.openSourceLicenses": "Opensourcelicenties",
+  "licenses.description": "Licenties en auteursrechtvermeldingen van derden. De oorspronkelijke vermeldingen zijn in het Engels en offline beschikbaar.",
+  "licenses.download": "Vermeldingen downloaden",
+  "meta.licensesTitle": "Opensourcelicenties | Paintwarden",
+  "meta.licensesDescription": "Licenties en auteursrechtvermeldingen van derden. De oorspronkelijke vermeldingen zijn in het Engels en offline beschikbaar."
 }

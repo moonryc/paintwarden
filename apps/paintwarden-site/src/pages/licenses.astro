@@ -1,0 +1,12 @@
+---
+import notices from "../../../../THIRD_PARTY_NOTICES.txt?raw";
+import { siteT as t } from "../site/i18n";
+import SiteLayout from "../layouts/SiteLayout.astro";
+---
+
+<SiteLayout
+  page="licenses"
+  title={t("meta.licensesTitle")}
+  description={t("meta.licensesDescription")}
+  notices={notices}
+/>

@@ -494,5 +494,11 @@
   "matchQualityDistant": "Globale overeenkomst",
   "scanControlsHelp": "Hulp bij bediening",
   "scanBestMatch": "Beste overeenkomst",
-  "scanClosestPaint": "Dichtstbijzijnde verf"
+  "scanClosestPaint": "Dichtstbijzijnde verf",
+  "noticesTitle": "Opensourcelicenties",
+  "noticesSummary": "Licenties en auteursrechtvermeldingen van derden. De oorspronkelijke vermeldingen zijn in het Engels en offline beschikbaar.",
+  "noticesRead": "Opensourcelicenties lezen",
+  "noticesLoading": "Vermeldingen laden…",
+  "noticesFailure": "De vermeldingen konden niet worden geladen.",
+  "noticesRetry": "Opnieuw proberen"
 }

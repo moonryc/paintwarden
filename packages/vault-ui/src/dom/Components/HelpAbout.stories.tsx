@@ -138,3 +138,17 @@ export const LicenseJapanese: Story = {
     await userEvent.keyboard("{Escape}");
   },
 };
+
+export const OpenSourceLicenses: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("Open-source licenses")).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Read open-source licenses" }));
+    const dialog = within(await within(document.body).findByRole("dialog", { name: "Open-source licenses" }));
+    await expect(
+      await dialog.findByRole("region", { name: "Open-source licenses" }, { timeout: 10000 }),
+    ).toHaveAttribute("lang", "en");
+    await userEvent.keyboard("{Escape}");
+    await expect(within(document.body).queryByRole("dialog")).not.toBeInTheDocument();
+  },
+};

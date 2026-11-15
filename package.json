@@ -20,7 +20,7 @@
     "storybook": "node scripts/nx.mjs storybook @paintwarden/ui",
     "storybook:build": "node scripts/nx.mjs storybook:build @paintwarden/ui",
     "storybook:test": "node scripts/nx.mjs storybook:test @paintwarden/ui",
-    "build": "node scripts/nx.mjs run-many -t build -p paintwarden paintwarden-site",
+    "build": "node scripts/nx.mjs run-many -t build -p paintwarden paintwarden-site && node scripts/copy-third-party-notices.mjs apps/paintwarden-web/dist apps/paintwarden-site/dist apps/paintwarden/dist/web-dist",
     "start": "node scripts/nx.mjs start paintwarden",
     "test": "npm run test:graphql && node --test scripts/*.test.mjs && node scripts/nx.mjs run-many -t test -p paintwarden @paintwarden/core @paintwarden/ui && npm run test --workspace paintwarden-electron",
     "lint": "npm run lint:eslint && npm run typecheck",
@@ -38,7 +38,10 @@
     "codegen:check": "npm run codegen && git diff --exit-code -- apps/paintwarden/graphql/generated packages/vault-ui/src/dom/graphql/generated",
     "test:graphql": "npm run test:graphql --workspace paintwarden && node --import tsx --test packages/vault-ui/src/dom/graphql/*.test.ts",
     "i18n:check": "node scripts/check-i18n.mjs",
-    "audit:production": "node scripts/check-production-audit.mjs"
+    "audit:production": "node scripts/check-production-audit.mjs",
+    "notices:generate": "node scripts/generate-notices.mjs",
+    "notices:check": "node scripts/generate-notices.mjs --check",
+    "notices:artifact": "node scripts/check-notice-artifact.mjs"
   },
   "devDependencies": {
     "@graphql-codegen/add": "^8.0.0",
