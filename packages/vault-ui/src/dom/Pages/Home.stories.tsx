@@ -1,6 +1,9 @@
+import { ApolloLink, Observable } from "@apollo/client";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useLayoutEffect, type ReactNode } from "react";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
+import { useVaultGraphQL } from "../graphql/provider";
 import { miniatures, paints, vault } from "../storybook/fixtures";
 import { MiniatureApolloFixture } from "../storybook/miniature-apollo-fixture";
 import { MiniatureFixtureProvider } from "../storybook/miniature-fixtures";
@@ -215,6 +218,37 @@ export const ApolloErrorRetry: Story = {
   },
 };
 
+// Hold pagination requests, not a fixed number of milliseconds: both keyboard stories
+// must exercise the pending-focus path even on a slow test runner. The real Apollo
+// loader/cache and fixture still handle the request after the play function releases it.
+function HoldMiniaturePages({ until, children }: { until: Promise<void>; children: ReactNode }) {
+  const scope = useVaultGraphQL();
+  useLayoutEffect(() => {
+    if (!scope) return;
+    const original = scope.client.link;
+    const gate = new ApolloLink((operation, forward) => {
+      if (operation.operationName !== "MiniatureList" || !operation.variables.after)
+        return forward(operation);
+      return new Observable((observer) => {
+        let active = true;
+        let cancel = () => {};
+        void until.then(() => {
+          if (!active) return;
+          const subscription = forward(operation).subscribe(observer);
+          cancel = () => subscription.unsubscribe();
+        });
+        return () => {
+          active = false;
+          cancel();
+        };
+      });
+    });
+    scope.client.setLink(ApolloLink.from([gate, original]));
+    return () => scope.client.setLink(original);
+  }, [scope, until]);
+  return children;
+}
+
 export const ApolloKeyboardCrossesPageBoundary: Story = {
   args: { view: "miniatures" },
   parameters: apolloParameters,
@@ -223,20 +257,40 @@ export const ApolloKeyboardCrossesPageBoundary: Story = {
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ mount, args }) => {
+    const page = Promise.withResolvers<void>();
+    const canvas = await mount(
+      <MiniatureApolloFixture data={apolloVault}>
+        <HoldMiniaturePages until={page.promise}>
+          <Home {...args} />
+        </HoldMiniaturePages>
+      </MiniatureApolloFixture>,
+    );
     try {
       const list = await canvas.findByRole("list", { name: "Miniature shelf" });
       await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
       window.scrollTo(0, document.documentElement.scrollHeight);
       const last = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0072/ });
+      // Outside edit mode the tile has exactly one control, not an action menu or
+      // checkbox. One Tab must cross the page boundary; extra Tabs race the response.
+      await expect(
+        within(last.closest<HTMLElement>("[data-mini-index]")!).getAllByRole("button"),
+      ).toHaveLength(1);
       last.focus();
       await userEvent.tab();
-      await userEvent.tab();
-      await userEvent.tab();
+      await expect(last).toHaveFocus();
+      await expect(list).toHaveAttribute("data-loaded-count", "48");
+      page.resolve();
       await waitFor(() => expect(document.activeElement).toHaveAccessibleName(/Synthetic Miniature 0071/));
       await expect(document.activeElement?.tagName).toBe("BUTTON");
+      await expect(list).toHaveAttribute("data-loaded-count", "96");
+      // Once loaded, the same single-step traversal works in both directions.
+      await userEvent.tab({ shift: true });
+      await expect(last).toHaveFocus();
+      await userEvent.tab();
+      await expect(document.activeElement).toHaveAccessibleName(/Synthetic Miniature 0071/);
     } finally {
+      page.resolve();
       window.scrollTo(0, 0);
     }
   },
@@ -279,8 +333,15 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ mount, args }) => {
+    const page = Promise.withResolvers<void>();
+    const canvas = await mount(
+      <MiniatureApolloFixture data={apolloVault}>
+        <HoldMiniaturePages until={page.promise}>
+          <Home {...args} />
+        </HoldMiniaturePages>
+      </MiniatureApolloFixture>,
+    );
     try {
       const list = await canvas.findByRole("list", { name: "Miniature shelf" });
       await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
@@ -288,13 +349,15 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
       const last = await canvas.findByRole("button", { name: /^(?!Actions for).*Synthetic Miniature 0072/ });
       last.focus();
       await userEvent.tab();
-      await userEvent.tab();
-      await userEvent.tab();
+      await expect(last).toHaveFocus();
       const search = canvas.getByRole("textbox", { name: /Search miniatures/ });
       await userEvent.click(search);
-      await waitFor(() => expect(Number(list.getAttribute("data-loaded-count"))).toBeGreaterThan(48));
+      await expect(list).toHaveAttribute("data-loaded-count", "48");
+      page.resolve();
+      await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "96"));
       await expect(search).toHaveFocus();
     } finally {
+      page.resolve();
       window.scrollTo(0, 0);
     }
   },
