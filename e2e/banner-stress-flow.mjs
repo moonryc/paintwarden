@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 // autocomplete-shift's debounce so the request budget cannot depend on a picker.
 export async function runBannerStressFlow(page) {
   const started = Date.now();
+  const originalViewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
   const requests = [];
   const rendererErrors = [];
   const response = (reply) => {
@@ -34,8 +35,16 @@ export async function runBannerStressFlow(page) {
     // Fast normal navigation exposed a second source: the old key={tab}
     // remounted the identical folder browser on every Home view change.
     for (let index = 0; index < 40; index++) {
+      // Windows runners can start narrower than the permanent drawer. Exercise
+      // that real navigation path on every platform, including a 390px phone.
+      if (index === 20) await page.setViewportSize({ width: 390, height: 844 });
       const tab = index % 2 ? "Workbench" : "Miniatures";
-      await page.getByRole("button", { name: tab, exact: true }).click();
+      const menu = page.getByRole("button", { name: "Open navigation", exact: true });
+      if (await menu.isVisible()) await menu.click();
+      await page
+        .getByRole("navigation", { name: "Primary", exact: true })
+        .getByRole("button", { name: tab, exact: true })
+        .click();
       await page.getByRole("heading", { name: tab, exact: true, level: 1 }).waitFor();
     }
     const beforeFocus = requests.filter((entry) => entry.operation === "VaultInvalidation").length;
@@ -74,6 +83,7 @@ export async function runBannerStressFlow(page) {
       rendererErrors,
     };
   } finally {
+    await page.setViewportSize(originalViewport);
     page.off("response", response);
     page.off("pageerror", error);
   }
