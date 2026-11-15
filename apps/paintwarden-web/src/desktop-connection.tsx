@@ -20,6 +20,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import { useTranslation } from "react-i18next";
 
 import { HelpAbout } from "../../../packages/vault-ui/src/dom/Components/HelpAbout";
+import type { PhoneAccessState } from "../../../packages/vault-ui/src/dom/types";
 
 // Set when the saved remote server runs a different Paintwarden version than this app.
 export type VersionProblem = {
@@ -35,6 +36,8 @@ export type ConnectionChoice = {
 };
 type StartupState = { phase: "idle" | "starting" | "backing-up" | "migrating" | "ready" | "failed" };
 export type PaintwardenDesktopBridge = {
+  getPhoneAccess(): Promise<PhoneAccessState>;
+  setPhoneAccess(enabled: boolean): Promise<PhoneAccessState>;
   getStartupState?(): Promise<StartupState>;
   onStartupState?(listener: (state: StartupState) => void): () => void;
   openLogsFolder?(): Promise<string>;

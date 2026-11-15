@@ -2,6 +2,8 @@ import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
+import { isDesktopNetworkRequest } from "./desktop-network.ts";
+
 type Choice = { mode: "local" | "remote"; serverUrl?: string };
 function configPath() {
   const directory = process.env.DATA_DIR;
@@ -14,7 +16,10 @@ function localOnly(request: Request) {
   return process.env.PAINTWARDEN_DESKTOP === "1" && ["127.0.0.1", "localhost", "[::1]"].includes(address);
 }
 export async function clientConfig(request: Request) {
-  if (!localOnly(request)) return new Response("Not found", { status: 404 });
+  // The loopback alias on the network listener is only a Tailscale Serve target,
+  // never a route to desktop preferences (even for an authenticated phone).
+  if (isDesktopNetworkRequest(request) || !localOnly(request))
+    return new Response("Not found", { status: 404 });
   if (request.method === "GET") {
     try {
       return Response.json(JSON.parse(readFileSync(configPath(), "utf8")) as Choice, {

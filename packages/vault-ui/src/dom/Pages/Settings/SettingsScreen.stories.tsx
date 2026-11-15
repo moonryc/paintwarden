@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
+import { desktopBridge } from "../../storybook/decorators";
 import { SourcesApolloFixture } from "../../storybook/sources-apollo-fixture";
 
 import { SettingsScreen } from "./SettingsScreen";
@@ -94,5 +95,47 @@ export const AccountErrorsAreLocalized: Story = {
     } finally {
       window.fetch = original;
     }
+  },
+};
+
+export const DesktopPhoneAccess: Story = {
+  decorators: [
+    desktopBridge({
+      status: "disabled",
+      currentVersion: "1.0.0",
+      version: null,
+      progress: null,
+      error: null,
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toggle = await canvas.findByRole("switch", { name: "Allow access from my other devices" });
+    await waitFor(() => expect(toggle).toBeEnabled());
+    await expect(toggle).not.toBeChecked();
+    await userEvent.click(toggle);
+    await expect(
+      await canvas.findByRole("img", { name: "QR code for http://192.168.1.10:3180" }),
+    ).toBeVisible();
+    await userEvent.click(toggle);
+    await waitFor(() => expect(canvas.queryByRole("img", { name: /QR code/ })).not.toBeInTheDocument());
+  },
+};
+
+export const DesktopRemoteHasNoPhoneAccess: Story = {
+  decorators: [
+    desktopBridge(
+      { status: "disabled", currentVersion: "1.0.0", version: null, progress: null, error: null },
+      {
+        getConnection: async () => ({ mode: "remote", serverUrl: "https://vault.example.test" }),
+      },
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("https://vault.example.test")).toBeVisible();
+    await expect(
+      canvas.queryByRole("switch", { name: "Allow access from my other devices" }),
+    ).not.toBeInTheDocument();
   },
 };

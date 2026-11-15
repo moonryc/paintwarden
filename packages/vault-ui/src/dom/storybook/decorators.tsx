@@ -66,6 +66,16 @@ function fakeBridge(state: DesktopUpdateState, overrides: Partial<DesktopBridge>
     return Promise.resolve(current);
   };
   return {
+    getPhoneAccess: () =>
+      Promise.resolve({ available: true, enabled: false, port: 3180, addresses: [], tailscale: false }),
+    setPhoneAccess: (enabled) =>
+      Promise.resolve({
+        available: true,
+        enabled,
+        port: 3180,
+        addresses: enabled ? ["http://192.168.1.10:3180"] : [],
+        tailscale: false,
+      }),
     getSupportSummary: (language) =>
       Promise.resolve({ version: "1.0.0", os: "macOS", mode: "local", language }),
     saveSupportBundle: () => Promise.resolve(true),

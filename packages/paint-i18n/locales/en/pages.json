@@ -613,5 +613,30 @@
   },
   "complementaryPalette": "Your palette",
   "complementaryYourPaint": "Your paint",
-  "complementaryNoPick": "No owned match"
+  "complementaryNoPick": "No owned match",
+  "phoneAccess": {
+    "title": "Allow access from my other devices",
+    "description": "Off by default. Keep this desktop app open while connecting.",
+    "loading": "Updating device access…",
+    "retry": "Retry",
+    "error": "Could not update device access. Try again.",
+    "warning": "Anyone on your network can reach the login page while this is on. Signing in with the same Paintwarden account is always required, even if local sign-in is turned off.",
+    "firewall": "macOS may ask you to allow incoming connections. The operating system controls whether this prompt appears again.",
+    "networkHint": "Connect your phone to the same Wi-Fi, or connect both devices to your Tailscale network. Select an address to scan.",
+    "tailscaleDetected": "Tailscale detected. Its addresses also work on your private Tailscale network.",
+    "noAddresses": "No network address found. Connect to Wi-Fi or Tailscale, then turn access off and on again.",
+    "addresses": "Device addresses",
+    "copyAddress": "Copy address {{address}}",
+    "copy": "Copy",
+    "qrAlt": "QR code for {{address}}",
+    "qrError": "Could not create the QR code. Use the address instead.",
+    "qrLoading": "Creating QR code…",
+    "scan": "Scan with your phone camera, then sign in with the same account. The QR code is generated locally.",
+    "httpLimit": "These addresses use plain HTTP, not encrypted HTTPS. Add to Home Screen and some browser features may be unavailable or limited. Use only a trusted network.",
+    "httpsTitle": "Optional: HTTPS with Tailscale Serve",
+    "httpsInstructions": "Install and sign in to Tailscale on both devices. While access is on, manually run this command on this computer. Follow Tailscale’s HTTPS setup prompts, then open the HTTPS address it prints on your phone. Paintwarden does not run this command for you.",
+    "copyCommand": "Copy command",
+    "copied": "Copied to clipboard.",
+    "copyFailed": "Could not copy. Select the address or command and copy it manually."
+  }
 }

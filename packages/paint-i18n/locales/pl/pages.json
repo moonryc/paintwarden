@@ -669,5 +669,30 @@
   },
   "complementaryPalette": "Twoja paleta",
   "complementaryYourPaint": "Twoja farba",
-  "complementaryNoPick": "Brak pasującej posiadanej farby"
+  "complementaryNoPick": "Brak pasującej posiadanej farby",
+  "phoneAccess": {
+    "title": "Zezwalaj na dostęp z moich innych urządzeń",
+    "description": "Domyślnie wyłączone. Podczas łączenia nie zamykaj tej aplikacji komputerowej.",
+    "loading": "Aktualizowanie dostępu urządzeń…",
+    "retry": "Ponów próbę",
+    "error": "Nie udało się zaktualizować dostępu urządzeń. Spróbuj ponownie.",
+    "warning": "Gdy ta opcja jest włączona, każda osoba w Twojej sieci może otworzyć stronę logowania. Zawsze wymagane jest zalogowanie na to samo konto Paintwarden, nawet gdy logowanie lokalne jest wyłączone.",
+    "firewall": "macOS może poprosić o zezwolenie na połączenia przychodzące. System operacyjny decyduje, czy to pytanie pojawi się ponownie.",
+    "networkHint": "Połącz telefon z tą samą siecią Wi-Fi lub oba urządzenia z siecią Tailscale. Wybierz adres do zeskanowania.",
+    "tailscaleDetected": "Wykryto Tailscale. Te adresy działają również w Twojej prywatnej sieci Tailscale.",
+    "noAddresses": "Nie znaleziono adresu sieciowego. Połącz się z Wi-Fi lub Tailscale, a następnie wyłącz i włącz dostęp.",
+    "addresses": "Adresy urządzeń",
+    "copyAddress": "Kopiuj adres {{address}}",
+    "copy": "Kopiuj",
+    "qrAlt": "Kod QR dla {{address}}",
+    "qrError": "Nie udało się utworzyć kodu QR. Użyj adresu.",
+    "qrLoading": "Tworzenie kodu QR…",
+    "scan": "Zeskanuj aparatem telefonu, a następnie zaloguj się na to samo konto. Kod QR jest generowany lokalnie.",
+    "httpLimit": "Te adresy używają nieszyfrowanego HTTP zamiast HTTPS. Dodawanie do ekranu głównego i niektóre funkcje przeglądarki mogą być niedostępne lub ograniczone. Korzystaj wyłącznie z zaufanej sieci.",
+    "httpsTitle": "Opcjonalnie: HTTPS z Tailscale Serve",
+    "httpsInstructions": "Zainstaluj Tailscale i zaloguj się na obu urządzeniach. Przy włączonym dostępie uruchom to polecenie ręcznie na tym komputerze. Wykonaj instrukcje konfiguracji HTTPS w Tailscale, a następnie otwórz wyświetlony adres HTTPS na telefonie. Paintwarden nie uruchamia tego polecenia za Ciebie.",
+    "copyCommand": "Kopiuj polecenie",
+    "copied": "Skopiowano do schowka.",
+    "copyFailed": "Nie udało się skopiować. Zaznacz adres lub polecenie i skopiuj ręcznie."
+  }
 }

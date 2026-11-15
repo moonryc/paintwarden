@@ -111,6 +111,49 @@ test("setup, authentication and data routes retain their API contract", async (t
     }>(cookie, "{miniatures(first:1){miniatures{nodes{id}}} library(first:1){nodes{id}}}");
     assert.deepEqual(payload.miniatures.miniatures.nodes, []);
     assert.deepEqual(payload.library.nodes, []);
+    await t.test("LAN identity survives body wrapping and always requires the owner session", async () => {
+      const { markDesktopNetworkRequest } = await import("../lib/desktop-network");
+      assert.equal(
+        (await request("/api/auth/settings", "POST", { requireSignIn: false }, { cookie })).status,
+        200,
+      );
+      try {
+        const lanRequest = (endpoint: string, method = "GET", body?: object, authenticated = false) => {
+          const incoming = new Request(`${base}${endpoint}`, {
+            method,
+            headers: {
+              ...(body ? { "content-type": "application/json" } : {}),
+              ...(authenticated ? { cookie } : {}),
+            },
+            body: body ? JSON.stringify(body) : undefined,
+          });
+          markDesktopNetworkRequest(incoming);
+          return routeApi(incoming);
+        };
+        assert.equal(
+          (await request("/api/graphql", "POST", { query: "{vaultRevision{epoch seq}}" })).status,
+          200,
+        );
+        for (const [endpoint, method, body] of [
+          ["/api/graphql", "POST", { query: "{vaultRevision{epoch seq}}" }],
+          ["/api/miniatures", "POST", { title: "Unauthorized" }],
+          ["/api/backup", "GET", undefined],
+          ["/api/miniatures/not-real/image", "GET", undefined],
+        ] as const) {
+          assert.equal((await lanRequest(endpoint, method, body)).status, 401, `${method} ${endpoint}`);
+        }
+        assert.equal(
+          (await lanRequest("/api/graphql", "POST", { query: "{vaultRevision{epoch seq}}" }, true)).status,
+          200,
+        );
+        assert.equal((await (await lanRequest("/api/auth/status")).json()).requireSignIn, true);
+      } finally {
+        assert.equal(
+          (await request("/api/auth/settings", "POST", { requireSignIn: true }, { cookie })).status,
+          200,
+        );
+      }
+    });
     await t.test("deleted snapshot and row-delta endpoints are not mounted", async () => {
       for (const endpoint of [
         "/api/state",

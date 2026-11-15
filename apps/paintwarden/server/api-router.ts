@@ -23,6 +23,7 @@ import { MAX_BACKUP_BYTES } from "../lib/backup";
 import { UPLOAD_MAX_BYTES } from "../lib/catalog-source-upload";
 import { sourceImage, sourceLogo } from "../lib/catalog-sources";
 import { clientConfig } from "../lib/client-config";
+import { isDesktopNetworkRequest, markDesktopNetworkRequest } from "../lib/desktop-network";
 import { limitRequestBody, type BodyLimit } from "../lib/request-limits";
 
 type Handler = (request: Request) => Response | Promise<Response>;
@@ -94,6 +95,8 @@ async function routeApiInternal(incoming: Request): Promise<Response> {
   const body = limitRequestBody(incoming, limit);
   const tooLarge = () => Response.json({ error: limit.message }, { status: 413 });
   if (!body) return tooLarge();
+  // Body limiting wraps POST requests; retain the unforgeable listener identity.
+  if (isDesktopNetworkRequest(incoming)) markDesktopNetworkRequest(body.request);
   try {
     const response = await dispatch(body.request, path, method);
     // A handler may have caught the read failure and answered as if the body were invalid.

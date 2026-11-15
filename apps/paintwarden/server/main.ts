@@ -11,18 +11,29 @@ import express, { type Request as ExpressRequest, type Response as ExpressRespon
 
 import { migrationBackupPath } from "../db";
 import { CLIENT_ADDRESS_HEADER, clientAddress, pendingSetupCode, trustProxy } from "../lib/auth";
-import { sweepPluginUploads } from "../lib/catalog-install-upload";
-import { sweepCatalogImageStages } from "../lib/catalog-image-staging";
 import { clearBackupUploads } from "../lib/backup";
+import { sweepCatalogImageStages } from "../lib/catalog-image-staging";
+import { sweepPluginUploads } from "../lib/catalog-install-upload";
+import {
+  createDesktopNetworkServer,
+  desktopNetworkOrigin,
+  installDesktopNetworkIpc,
+  markDesktopNetworkRequest,
+} from "../lib/desktop-network";
 import { compressJsonResponse } from "../lib/http-compression";
 import { reportStartupProgress } from "../lib/startup-progress";
 
 import { routeApi } from "./api-router";
 
+const desktop = process.env.PAINTWARDEN_DESKTOP === "1";
+
 function requestUrl(request: ExpressRequest) {
   // request.protocol reads X-Forwarded-Proto only when "trust proxy" is on.
+  const networkOrigin = desktopNetworkOrigin(request);
+  if (networkOrigin) return `${networkOrigin}${request.originalUrl}`;
   const protocol = request.protocol;
-  const forwardedHost = trustProxy() ? request.get("x-forwarded-host")?.split(",")[0].trim() : undefined;
+  const forwardedHost =
+    !desktop && trustProxy() ? request.get("x-forwarded-host")?.split(",")[0].trim() : undefined;
   const host = forwardedHost || request.headers.host || "localhost";
   return `${protocol}://${host}${request.originalUrl}`;
 }
@@ -32,7 +43,7 @@ async function forward(request: ExpressRequest, response: ExpressResponse) {
   const headers = new Headers(request.headers as HeadersInit);
   headers.set(
     CLIENT_ADDRESS_HEADER,
-    clientAddress(request.socket.remoteAddress, request.get("x-forwarded-for")),
+    clientAddress(request.socket.remoteAddress, request.get("x-forwarded-for"), !desktop && trustProxy()),
   );
   const abort = new AbortController();
   const disconnect = () => abort.abort();
@@ -44,6 +55,7 @@ async function forward(request: ExpressRequest, response: ExpressResponse) {
     headers,
     ...(hasBody ? { body: Readable.toWeb(request) as ReadableStream, duplex: "half" as const } : {}),
   });
+  if (desktopNetworkOrigin(request)) markDesktopNetworkRequest(webRequest);
   try {
     const result = await compressJsonResponse(webRequest, await routeApi(webRequest));
     response.status(result.status);
@@ -93,7 +105,16 @@ class AppModule {}
 
 async function listenServer() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
-  app.set("trust proxy", trustProxy());
+  app.set("trust proxy", !desktop && trustProxy());
+  if (desktop) {
+    app.use((request: ExpressRequest, _response: ExpressResponse, next: () => void) => {
+      // No ambient proxy setting may change the desktop client identity or URL.
+      for (const name of Object.keys(request.headers)) {
+        if (name === "forwarded" || name.startsWith("x-forwarded-")) delete request.headers[name];
+      }
+      next();
+    });
+  }
   app.disable("x-powered-by");
   app.use((_request: ExpressRequest, response: ExpressResponse, next: () => void) => {
     // Defaults for every response; an API route can replace them, as the source logos do.
@@ -111,6 +132,10 @@ async function listenServer() {
   await sweepCatalogImageStages();
   const port = Number(process.env.PORT || 3000);
   await app.listen(port, process.env.HOST || "0.0.0.0");
+  if (desktop) {
+    const network = createDesktopNetworkServer(app.getHttpAdapter().getInstance());
+    installDesktopNetworkIpc(network);
+  }
   const setupCode = pendingSetupCode();
   if (setupCode) Logger.warn(`Enter this setup code to create the owner account: ${setupCode}`);
   return app;

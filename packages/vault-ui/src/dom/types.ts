@@ -236,7 +236,18 @@ export type DesktopStartupState = {
   phase: "idle" | "starting" | "backing-up" | "migrating" | "ready" | "failed";
 };
 
+export type PhoneAccessState = {
+  available: boolean;
+  enabled: boolean;
+  port: number;
+  addresses: string[];
+  tailscale: boolean;
+  error?: string;
+};
+
 export type DesktopBridge = {
+  getPhoneAccess(): Promise<PhoneAccessState>;
+  setPhoneAccess(enabled: boolean): Promise<PhoneAccessState>;
   getSupportSummary(language: string): Promise<SupportSummary>;
   saveSupportBundle(language: string): Promise<boolean>;
   openBugReport(language: string): Promise<boolean>;

@@ -172,7 +172,10 @@ export const schema = createSchema({
 });
 
 function makeYoga(endpoint: string) {
-  return createYoga<{ metrics?: { rows: number } }, GraphQLContext>({
+  return createYoga<{ metrics?: { rows: number }; vaultRequest?: Request }, GraphQLContext>({
+    // Yoga may rebuild its HTTP request. Subscriptions must reauthorize the original
+    // request, retaining the desktop listener's private network identity on every tick.
+    context: ({ vaultRequest, request }) => ({ request: vaultRequest ?? request }),
     graphqlEndpoint: endpoint,
     schema,
     graphiql: false,
@@ -269,7 +272,10 @@ export async function graphqlResponse(request: Request, stream: boolean): Promis
       body: JSON.stringify(params),
       signal: request.signal,
     });
-    const response = await (stream ? streamYoga : queryYoga).fetch(forwarded, { metrics });
+    const response = await (stream ? streamYoga : queryYoga).fetch(forwarded, {
+      metrics,
+      vaultRequest: request,
+    });
     response.headers.set("cache-control", "no-store");
     if (!stream || !response.body || !response.headers.get("content-type")?.startsWith("text/event-stream"))
       return response;

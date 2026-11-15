@@ -25,6 +25,7 @@ import { describeUpdate, useDesktopUpdate } from "../../utils/desktop-update";
 import { PublicError, publicErrorMessage } from "../../utils/public-error";
 
 import { ChangePasswordDialog, ChangeUsernameDialog, SignInSettingDialog } from "./AccountDialogs";
+import { PhoneAccessSettings } from "./PhoneAccessSettings";
 import { type PendingBackup, type RestoreMode, RestoreBackupDialog } from "./RestoreBackupDialog";
 import { SettingsSection, SettingsRow } from "./SettingsSection";
 
@@ -223,6 +224,7 @@ export function SettingsScreen({
             )
           }
         />
+        {localServer && <PhoneAccessSettings />}
         {update.state && (
           <SettingsRow
             icon={<SystemUpdateAltOutlinedIcon />}

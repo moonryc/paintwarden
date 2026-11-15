@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld("paintwardenDesktop", {
   },
   getLanguage: () => ipcRenderer.invoke("language:get"),
   setLanguage: (language) => ipcRenderer.invoke("language:set", language),
+  getPhoneAccess: () => ipcRenderer.invoke("phone-access:get"),
+  setPhoneAccess: (enabled) => ipcRenderer.invoke("phone-access:set", enabled),
   getConnection: () => ipcRenderer.invoke("connection:get"),
   setConnection: (choice) => ipcRenderer.invoke("connection:set", choice),
   saveBinary: (input) => ipcRenderer.invoke("file:save-binary", input),

@@ -13,6 +13,8 @@ function localServer() {
   const startupEvents = [];
   let probes = 0;
   const context = vm.createContext({
+    phoneAccess: undefined,
+    connection: { mode: "local" },
     t: desktopTranslate,
     console,
     ...require("./desktop-startup.cjs"),
@@ -171,6 +173,7 @@ function remoteVersions() {
   const requests = [];
   const updaterChanges = [];
   const context = vm.createContext({
+    phoneAccess: undefined,
     t: desktopTranslate,
     changingConnection: 0,
     connection: { mode: "remote", serverUrl: "https://fixture.invalid" },
@@ -256,6 +259,7 @@ test("static shell responses cache only hashed assets and preserve errors and se
   ]);
   let reads = 0;
   const context = vm.createContext({
+    phoneAccess: undefined,
     t: desktopTranslate,
     path,
     Response,
@@ -309,6 +313,7 @@ function imageProxy() {
   const calls = [];
   let pending;
   const context = vm.createContext({
+    phoneAccess: undefined,
     t: desktopTranslate,
     console,
     URL,
@@ -525,6 +530,7 @@ async function subscriptionProxy(t, mode, handler) {
     setConnection: (next) => updaterChanges.push({ ...next }),
   };
   const context = vm.createContext({
+    phoneAccess: undefined,
     t: desktopTranslate,
     updater,
     console,

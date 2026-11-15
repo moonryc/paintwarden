@@ -585,5 +585,30 @@
   },
   "complementaryPalette": "你的調色盤",
   "complementaryYourPaint": "你的顏料",
-  "complementaryNoPick": "沒有符合的已擁有顏料"
+  "complementaryNoPick": "沒有符合的已擁有顏料",
+  "phoneAccess": {
+    "title": "允許我的其他裝置存取",
+    "description": "預設關閉。連線時請保持此桌面應用程式開啟。",
+    "loading": "正在更新裝置存取…",
+    "retry": "重試",
+    "error": "無法更新裝置存取，請重試。",
+    "warning": "開啟後，網路中的任何人都能存取登入頁面。即使關閉了本機登入，也一律需要使用同一個 Paintwarden 帳號登入。",
+    "firewall": "macOS 可能會詢問是否允許傳入連線。是否再次顯示此提示由作業系統決定。",
+    "networkHint": "將手機連接到同一個 Wi-Fi，或將兩部裝置都連接到你的 Tailscale 網路。選擇要掃描的位址。",
+    "tailscaleDetected": "已偵測到 Tailscale。其位址也可在你的私人 Tailscale 網路中使用。",
+    "noAddresses": "找不到網路位址。請連接 Wi-Fi 或 Tailscale，然後關閉並重新開啟存取。",
+    "addresses": "裝置位址",
+    "copyAddress": "複製位址 {{address}}",
+    "copy": "複製",
+    "qrAlt": "{{address}} 的 QR 碼",
+    "qrError": "無法產生 QR 碼，請改用位址。",
+    "qrLoading": "正在產生 QR 碼…",
+    "scan": "使用手機相機掃描，然後使用同一個帳號登入。QR 碼在本機產生。",
+    "httpLimit": "這些位址使用未加密的 HTTP，而非 HTTPS。「加入主畫面」及部分瀏覽器功能可能無法使用或受到限制。請僅在可信任的網路中使用。",
+    "httpsTitle": "選用：使用 Tailscale Serve 啟用 HTTPS",
+    "httpsInstructions": "在兩部裝置上安裝 Tailscale 並登入。開啟存取後，在此電腦上手動執行以下指令。按照 Tailscale 的 HTTPS 設定提示操作，然後在手機上開啟輸出的 HTTPS 位址。Paintwarden 不會替你執行此指令。",
+    "copyCommand": "複製指令",
+    "copied": "已複製到剪貼簿。",
+    "copyFailed": "無法複製。請選取位址或指令並手動複製。"
+  }
 }

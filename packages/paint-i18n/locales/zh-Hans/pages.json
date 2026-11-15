@@ -585,5 +585,30 @@
   },
   "complementaryPalette": "你的调色板",
   "complementaryYourPaint": "你的颜料",
-  "complementaryNoPick": "没有匹配的已拥有颜料"
+  "complementaryNoPick": "没有匹配的已拥有颜料",
+  "phoneAccess": {
+    "title": "允许我的其他设备访问",
+    "description": "默认关闭。连接时请保持此桌面应用打开。",
+    "loading": "正在更新设备访问…",
+    "retry": "重试",
+    "error": "无法更新设备访问，请重试。",
+    "warning": "开启后，网络中的任何人都可以访问登录页面。即使关闭了本地登录，也始终需要使用同一个 Paintwarden 账户登录。",
+    "firewall": "macOS 可能会询问是否允许传入连接。是否再次显示此提示由操作系统决定。",
+    "networkHint": "将手机连接到同一个 Wi-Fi，或将两台设备都连接到你的 Tailscale 网络。选择要扫描的地址。",
+    "tailscaleDetected": "已检测到 Tailscale。其地址也可在你的私有 Tailscale 网络中使用。",
+    "noAddresses": "未找到网络地址。请连接 Wi-Fi 或 Tailscale，然后关闭并重新开启访问。",
+    "addresses": "设备地址",
+    "copyAddress": "复制地址 {{address}}",
+    "copy": "复制",
+    "qrAlt": "{{address}} 的二维码",
+    "qrError": "无法生成二维码，请改用地址。",
+    "qrLoading": "正在生成二维码…",
+    "scan": "使用手机相机扫描，然后使用同一个账户登录。二维码在本地生成。",
+    "httpLimit": "这些地址使用未加密的 HTTP，而非 HTTPS。“添加到主屏幕”和部分浏览器功能可能不可用或受到限制。请仅在可信网络中使用。",
+    "httpsTitle": "可选：使用 Tailscale Serve 启用 HTTPS",
+    "httpsInstructions": "在两台设备上安装 Tailscale 并登录。开启访问后，在此电脑上手动运行以下命令。按照 Tailscale 的 HTTPS 设置提示操作，然后在手机上打开输出的 HTTPS 地址。Paintwarden 不会替你运行此命令。",
+    "copyCommand": "复制命令",
+    "copied": "已复制到剪贴板。",
+    "copyFailed": "无法复制。请选择地址或命令并手动复制。"
+  }
 }

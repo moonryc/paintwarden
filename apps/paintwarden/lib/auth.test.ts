@@ -34,8 +34,24 @@ test("setup, access control, sign-in, and password changes", async (t) => {
         },
         body: JSON.stringify(body),
       });
+    const { markDesktopNetworkRequest } = await import("./desktop-network.ts");
+    const fromNetwork = (request: Request) => {
+      markDesktopNetworkRequest(request);
+      return request;
+    };
     assert.equal((await authStatus(new Request(url)).json()).setupRequired, true);
     assert.equal(authorizeVault(new Request(url))?.status, 428);
+    process.env.HOST = "127.0.0.1";
+    assert.equal(
+      (
+        await authAction(
+          fromNetwork(post("auth/setup", { username: "stranger", password: "not the owner password" })),
+          "auth/setup",
+        )
+      ).status,
+      401,
+      "The network listener cannot claim a new desktop vault even when localhost setup needs no code",
+    );
     // A server only this machine can reach needs no setup code.
     process.env.HOST = "127.0.0.1";
     assert.equal((await authStatus(new Request(url)).json()).setupCodeRequired, false);
@@ -85,6 +101,13 @@ test("setup, access control, sign-in, and password changes", async (t) => {
       "auth/login",
     );
     assert.equal(login.status, 200);
+    assert.doesNotMatch(login.headers.get("set-cookie") ?? "", /; Secure/);
+    const httpsLogin = new Request("https://paint.example/api/auth/login", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(owner),
+    });
+    assert.match((await authAction(httpsLogin, "auth/login")).headers.get("set-cookie") ?? "", /; Secure/);
     assert.equal(
       (await authAction(post("auth/settings", { requireSignIn: false }), "auth/settings")).status,
       401,
@@ -94,6 +117,22 @@ test("setup, access control, sign-in, and password changes", async (t) => {
       200,
     );
     assert.equal(authorizeVault(new Request(url)), null);
+    const lanUrl = "http://192.168.1.5:48177/api/graphql";
+    assert.equal(authorizeVault(fromNetwork(new Request(lanUrl)))?.status, 401);
+    assert.equal((await authStatus(fromNetwork(new Request(lanUrl))).json()).requireSignIn, true);
+    assert.equal(
+      authorizeVault(fromNetwork(new Request(lanUrl, { headers: { cookie: `pv_session=${token}` } }))),
+      null,
+    );
+    assert.equal(
+      hostRefused(fromNetwork(new Request("http://desktop.tailnet.ts.net:48177/api/graphql"))),
+      null,
+    );
+    assert.equal(
+      authorizeVault(new Request(url, { headers: { "x-paintwarden-network": "1" } })),
+      null,
+      "Network access is not selected with a spoofable header",
+    );
     // While sign-in is off, a page that points its own domain at the server (DNS rebinding) is
     // refused: only addresses, localhost names and listed names reach the vault.
     const at = (host: string) => new Request(`http://${host}:3000/api/graphql`);

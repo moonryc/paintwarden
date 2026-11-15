@@ -613,5 +613,30 @@
   },
   "complementaryPalette": "Jouw palet",
   "complementaryYourPaint": "Jouw verf",
-  "complementaryNoPick": "Geen eigen verf komt overeen"
+  "complementaryNoPick": "Geen eigen verf komt overeen",
+  "phoneAccess": {
+    "title": "Toegang vanaf mijn andere apparaten toestaan",
+    "description": "Standaard uit. Houd deze desktopapp open tijdens het verbinden.",
+    "loading": "Apparaattoegang bijwerken…",
+    "retry": "Opnieuw proberen",
+    "error": "Apparaattoegang kon niet worden bijgewerkt. Probeer het opnieuw.",
+    "warning": "Iedereen op je netwerk kan de inlogpagina bereiken zolang dit aanstaat. Inloggen met hetzelfde Paintwarden-account is altijd verplicht, ook als lokaal inloggen uitstaat.",
+    "firewall": "macOS kan vragen of je inkomende verbindingen wilt toestaan. Het besturingssysteem bepaalt of deze vraag opnieuw verschijnt.",
+    "networkHint": "Verbind je telefoon met dezelfde wifi of verbind beide apparaten met je Tailscale-netwerk. Selecteer een adres om te scannen.",
+    "tailscaleDetected": "Tailscale gedetecteerd. Deze adressen werken ook op je privénetwerk van Tailscale.",
+    "noAddresses": "Geen netwerkadres gevonden. Verbind met wifi of Tailscale en schakel de toegang uit en weer in.",
+    "addresses": "Apparaatadressen",
+    "copyAddress": "Adres {{address}} kopiëren",
+    "copy": "Kopiëren",
+    "qrAlt": "QR-code voor {{address}}",
+    "qrError": "De QR-code kon niet worden gemaakt. Gebruik in plaats daarvan het adres.",
+    "qrLoading": "QR-code maken…",
+    "scan": "Scan met de camera van je telefoon en log in met hetzelfde account. De QR-code wordt lokaal gegenereerd.",
+    "httpLimit": "Deze adressen gebruiken onversleuteld HTTP, geen HTTPS. Toevoegen aan het beginscherm en sommige browserfuncties zijn mogelijk niet of beperkt beschikbaar. Gebruik alleen een vertrouwd netwerk.",
+    "httpsTitle": "Optioneel: HTTPS met Tailscale Serve",
+    "httpsInstructions": "Installeer Tailscale en log in op beide apparaten. Voer deze opdracht handmatig uit op deze computer terwijl toegang aanstaat. Volg de HTTPS-instructies van Tailscale en open het weergegeven HTTPS-adres op je telefoon. Paintwarden voert deze opdracht niet voor je uit.",
+    "copyCommand": "Opdracht kopiëren",
+    "copied": "Gekopieerd naar klembord.",
+    "copyFailed": "Kopiëren mislukt. Selecteer het adres of de opdracht en kopieer dit handmatig."
+  }
 }

@@ -585,5 +585,30 @@
   },
   "complementaryPalette": "パレット",
   "complementaryYourPaint": "選んだペイント",
-  "complementaryNoPick": "所持品に一致なし"
+  "complementaryNoPick": "所持品に一致なし",
+  "phoneAccess": {
+    "title": "他の自分のデバイスからのアクセスを許可",
+    "description": "初期設定はオフです。接続中はこのデスクトップアプリを開いたままにしてください。",
+    "loading": "デバイスのアクセスを更新中…",
+    "retry": "再試行",
+    "error": "デバイスのアクセスを更新できませんでした。もう一度お試しください。",
+    "warning": "オンにすると、同じネットワーク上の誰でもログインページにアクセスできます。ローカルのログインがオフでも、常に同じPaintwardenアカウントでのログインが必要です。",
+    "firewall": "macOSが受信接続の許可を求める場合があります。この確認を再表示するかどうかはOSが制御します。",
+    "networkHint": "スマートフォンを同じWi-Fiに接続するか、両方のデバイスをTailscaleネットワークに接続してください。スキャンするアドレスを選択します。",
+    "tailscaleDetected": "Tailscaleを検出しました。そのアドレスはプライベートTailscaleネットワークでも使用できます。",
+    "noAddresses": "ネットワークアドレスが見つかりません。Wi-FiまたはTailscaleに接続し、アクセスをオフにしてから再度オンにしてください。",
+    "addresses": "デバイスのアドレス",
+    "copyAddress": "アドレス {{address}} をコピー",
+    "copy": "コピー",
+    "qrAlt": "{{address}} のQRコード",
+    "qrError": "QRコードを作成できませんでした。アドレスを使用してください。",
+    "qrLoading": "QRコードを作成中…",
+    "scan": "スマートフォンのカメラでスキャンし、同じアカウントでログインしてください。QRコードはローカルで生成されます。",
+    "httpLimit": "これらのアドレスは暗号化されたHTTPSではなく、平文のHTTPを使用します。「ホーム画面に追加」や一部のブラウザー機能は利用できないか制限される場合があります。信頼できるネットワークでのみ使用してください。",
+    "httpsTitle": "任意：Tailscale ServeでHTTPSを使用",
+    "httpsInstructions": "両方のデバイスにTailscaleをインストールしてログインします。アクセスがオンの間に、このコンピューターで次のコマンドを手動実行してください。TailscaleのHTTPS設定手順に従い、表示されたHTTPSアドレスをスマートフォンで開きます。Paintwardenがこのコマンドを実行することはありません。",
+    "copyCommand": "コマンドをコピー",
+    "copied": "クリップボードにコピーしました。",
+    "copyFailed": "コピーできませんでした。アドレスまたはコマンドを選択し、手動でコピーしてください。"
+  }
 }

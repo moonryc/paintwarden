@@ -177,6 +177,7 @@ try {
   Object.assign(env, {
     PAINTWARDEN_DESKTOP_DATA_DIR: results.profile,
     PAINTWARDEN_DISABLE_UPDATES: "1",
+    PAINTWARDEN_E2E: "1",
     NODE_ENV: "production",
     LANG: "en_US.UTF-8",
     LC_ALL: "en_US.UTF-8",
@@ -184,7 +185,7 @@ try {
   const { _electron: electron } = await import("playwright");
   application = await electron.launch({
     executablePath: executable,
-    args: ["--lang=en-US"],
+    args: ["--lang=en-US", "--hidden"],
     env,
     timeout: 60000,
   });
@@ -219,6 +220,15 @@ try {
 
   page = await application.firstWindow({ timeout: 45000 });
   page.setDefaultTimeout(45000);
+  assert.equal(
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows().every(
+        (window) => !window.isVisible() && window.webContents.getBackgroundThrottling() === false,
+      ),
+    ),
+    true,
+    "Packaged E2E windows stay hidden and unthrottled",
+  );
   // firstWindow may already exist before the application 'window' subscription.
   page.on("pageerror", (error) => {
     if (!results.rendererErrors.includes(error.message)) results.rendererErrors.push(error.message);
@@ -274,6 +284,9 @@ try {
   record(
     "Rapid Model typing, fast navigation and focus storms do not trigger a global request error or throttle authenticated use",
   );
+
+  const { runPhoneAccessFlow } = await import("./phone-access-flow.mjs");
+  await runPhoneAccessFlow({ application, page, artifacts: evidence, record });
 
   if (values["plugin-zip"]) {
     const { runPluginInstallFlow } = await import("./plugin-install-flow.mjs");

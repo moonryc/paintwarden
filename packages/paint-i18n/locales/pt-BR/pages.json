@@ -641,5 +641,30 @@
   },
   "complementaryPalette": "Sua paleta",
   "complementaryYourPaint": "Sua tinta",
-  "complementaryNoPick": "Nenhuma tinta sua corresponde"
+  "complementaryNoPick": "Nenhuma tinta sua corresponde",
+  "phoneAccess": {
+    "title": "Permitir acesso dos meus outros dispositivos",
+    "description": "Desativado por padrão. Mantenha este aplicativo de desktop aberto durante a conexão.",
+    "loading": "Atualizando o acesso de dispositivos…",
+    "retry": "Tentar novamente",
+    "error": "Não foi possível atualizar o acesso de dispositivos. Tente novamente.",
+    "warning": "Qualquer pessoa na sua rede pode acessar a página de login enquanto esta opção estiver ativada. É sempre necessário entrar com a mesma conta do Paintwarden, mesmo se o login local estiver desativado.",
+    "firewall": "O macOS pode pedir permissão para conexões de entrada. O sistema operacional controla se essa solicitação aparece novamente.",
+    "networkHint": "Conecte o celular ao mesmo Wi-Fi ou conecte os dois dispositivos à sua rede Tailscale. Selecione um endereço para escanear.",
+    "tailscaleDetected": "Tailscale detectado. Os endereços dele também funcionam na sua rede privada Tailscale.",
+    "noAddresses": "Nenhum endereço de rede encontrado. Conecte-se ao Wi-Fi ou Tailscale e desative e reative o acesso.",
+    "addresses": "Endereços dos dispositivos",
+    "copyAddress": "Copiar endereço {{address}}",
+    "copy": "Copiar",
+    "qrAlt": "Código QR para {{address}}",
+    "qrError": "Não foi possível criar o código QR. Use o endereço.",
+    "qrLoading": "Criando código QR…",
+    "scan": "Escaneie com a câmera do celular e entre com a mesma conta. O código QR é gerado localmente.",
+    "httpLimit": "Estes endereços usam HTTP sem criptografia, não HTTPS. Adicionar à tela inicial e alguns recursos do navegador podem estar indisponíveis ou limitados. Use apenas uma rede confiável.",
+    "httpsTitle": "Opcional: HTTPS com Tailscale Serve",
+    "httpsInstructions": "Instale o Tailscale e entre nos dois dispositivos. Com o acesso ativado, execute este comando manualmente neste computador. Siga as instruções de configuração de HTTPS do Tailscale e abra no celular o endereço HTTPS exibido. O Paintwarden não executa este comando por você.",
+    "copyCommand": "Copiar comando",
+    "copied": "Copiado para a área de transferência.",
+    "copyFailed": "Não foi possível copiar. Selecione o endereço ou comando e copie manualmente."
+  }
 }

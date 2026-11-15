@@ -3,6 +3,7 @@ import { isIP } from "node:net";
 
 import { getSqlite } from "../db/index.ts";
 
+import { isDesktopNetworkRequest } from "./desktop-network.ts";
 import { PasswordCheckBusyError, hashPassword, needsRehash, verifyPassword } from "./password-hash.ts";
 import { isPublicAddress } from "./public-fetch.ts";
 
@@ -54,6 +55,9 @@ function rebindingRisk() {
 }
 
 export function hostRefused(request: Request) {
+  // The second desktop listener has already checked its exact, advertised origin before
+  // forwarding. Its private WeakSet marker cannot be forged with a request header.
+  if (isDesktopNetworkRequest(request)) return null;
   const { hostname } = new URL(request.url);
   if (hostAllowed(hostname) || !rebindingRisk()) return null;
   return error(
@@ -186,7 +190,7 @@ export function authStatus(request: Request) {
       setupRequired: !owner,
       setupCodeRequired: !owner && setupCodeNeeded(),
       username: owner?.username ?? null,
-      requireSignIn: Boolean(owner?.require_sign_in),
+      requireSignIn: isDesktopNetworkRequest(request) || Boolean(owner?.require_sign_in),
       authenticated: authenticated(request),
     },
     { headers: { "cache-control": "no-store" } },
@@ -195,7 +199,8 @@ export function authStatus(request: Request) {
 export function authorizeVault(request: Request) {
   const owner = account();
   if (!owner) return error("Account setup required", 428);
-  if (owner.require_sign_in && !authenticated(request)) return error("Sign in required", 401);
+  if ((isDesktopNetworkRequest(request) || owner.require_sign_in) && !authenticated(request))
+    return error("Sign in required", 401);
   return null;
 }
 export function sameOrigin(request: Request) {
@@ -233,6 +238,9 @@ async function runAuthAction(
   const password = typeof body.password === "string" ? body.password : "";
   const client = attemptClient(request);
   if (path === "auth/setup") {
+    // Even when a new local vault needs no setup code, another device must never
+    // claim its owner. Complete first-run setup in the desktop window instead.
+    if (isDesktopNetworkRequest(request)) return error("Sign in required", 401);
     if (account()) return error("Account already set up", 409);
     if (!setupCodeMatches(body.setupCode)) return error("Enter the setup code from the server log", 403);
     if (username.length < 2 || username.length > 64 || password.length < 12 || password.length > 1024)

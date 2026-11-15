@@ -426,6 +426,42 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       }
     });
 
+    await t.test(
+      "desktop LAN subscriptions retain their listener identity through Yoga and revoke idle sessions",
+      async () => {
+        const { markDesktopNetworkRequest } = await import("../lib/desktop-network.ts");
+        process.env.PAINTWARDEN_DESKTOP = "1";
+        owner(0);
+        const incoming = new Request("http://192.168.1.2:48177/api/graphql/stream", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            accept: "text/event-stream",
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(streamBody()),
+        });
+        markDesktopNetworkRequest(incoming);
+        let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+        try {
+          const response = await routeApi(incoming);
+          assert.equal(response.status, 200);
+          reader = response.body!.getReader();
+          assert.ok(nextData(await nextFrame(reader)).data.vaultChanges);
+          sqlite.prepare("UPDATE vault_sessions SET expires_at=0 WHERE token_hash=?").run(tokenHash);
+          assert.match(
+            await nextFrame(reader),
+            /UNAUTHENTICATED/,
+            "LAN sign-in remains mandatory on idle streams even when desktop sign-in is off",
+          );
+        } finally {
+          await reader?.cancel();
+          delete process.env.PAINTWARDEN_DESKTOP;
+          owner();
+        }
+      },
+    );
+
     await t.test("session expiry terminates an idle SSE connection", async () => {
       const response = await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream");
       const reader = response.body!.getReader();

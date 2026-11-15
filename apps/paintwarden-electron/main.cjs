@@ -27,6 +27,7 @@ const { createServerLog, createStartupProgress, waitForServer } = require("./des
 const { createUpdater } = require("./desktop-update.cjs");
 const { t, setLanguage, getLanguage, resolveLanguage } = require("./desktop-i18n.cjs");
 const { createPreferences } = require("./desktop-preferences.cjs");
+const { createPhoneAccess } = require("./desktop-network.cjs");
 const { menuTemplate } = require("./desktop-menu.cjs");
 const { supportSummary, createSupportBundle, openBugReport } = require("./desktop-support.cjs");
 
@@ -34,6 +35,7 @@ const { supportSummary, createSupportBundle, openBugReport } = require("./deskto
 app.setName("Paintwarden");
 const appOrigin = "paintwarden://app";
 const testPort = !app.isPackaged && Number(process.env.PAINTWARDEN_DESKTOP_PORT);
+const hiddenTestWindow = process.env.PAINTWARDEN_E2E === "1" && process.argv.includes("--hidden");
 // Packaged builds use the bundle icon from build/; unpackaged runs would otherwise show Electron's default.
 const devIcon = app.isPackaged ? undefined : path.join(__dirname, "build", "icon.png");
 const explicitPort = Number.isInteger(testPort) && testPort > 0 && testPort <= 65535 ? testPort : null;
@@ -144,6 +146,8 @@ function connectionPath() {
 }
 
 let preferences;
+let phoneAccess;
+let quitting = false;
 async function readConnection() {
   const saved = await preferences.read();
   setLanguage(saved.language);
@@ -185,6 +189,7 @@ async function launchLocalServer() {
     await waitForServer({ child: serverProcess, healthy: serverHealthy, progress: serverProgress });
     readyServer = serverProcess;
     startupChanged({ phase: "ready" });
+    if (connection.mode === "local") await phoneAccess?.restore();
     return;
   }
   startupChanged({ phase: "starting" });
@@ -216,7 +221,7 @@ async function launchLocalServer() {
       DATA_DIR: dataDirectory,
       PAINTWARDEN_DESKTOP: "1",
     },
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe", "ipc"],
     windowsHide: true,
   });
   serverProcess = child;
@@ -269,6 +274,7 @@ async function launchLocalServer() {
   await waitForServer({ child, healthy: serverHealthy, progress });
   if (serverProcess === child) readyServer = child;
   startupChanged({ phase: "ready" });
+  if (connection.mode === "local") await phoneAccess?.restore();
 }
 
 function ensureLocalServer() {
@@ -334,7 +340,10 @@ async function setConnection(input) {
     return await chooseConnection(input);
   } finally {
     changingConnection--;
-    if (!changingConnection) updater?.setConnection(updaterConnection());
+    if (!changingConnection) {
+      updater?.setConnection(updaterConnection());
+      if (connection.mode === "local") await phoneAccess?.restore();
+    }
   }
 }
 
@@ -362,7 +371,10 @@ async function chooseConnection(input) {
   subscriptionStreams.abortAll();
   authorizationIdentity = undefined;
   rotateImageScope();
-  if (next.mode === "remote") stopLocalServer();
+  if (next.mode === "remote") {
+    await phoneAccess?.stop();
+    stopLocalServer();
+  } else await phoneAccess?.restore();
   return next;
 }
 
@@ -582,6 +594,8 @@ function allowRenderer(event) {
 async function createWindow() {
   mainWindow = new BrowserWindow({
     title: "Paintwarden",
+    // Test-only offscreen launch; --hidden alone never changes normal startup.
+    show: !hiddenTestWindow,
     width: 1280,
     height: 800,
     minWidth: 360,
@@ -592,6 +606,7 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      backgroundThrottling: !hiddenTestWindow,
     },
   });
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -610,9 +625,15 @@ app
   .whenReady()
   .then(async () => {
     if (devIcon) app.dock?.setIcon(devIcon);
+    if (hiddenTestWindow) app.dock?.hide();
     localUrl = `http://127.0.0.1:${explicitPort ?? (await freeLoopbackPort())}`;
     preferences = createPreferences(connectionPath(), resolveLanguage(app.getLocale()));
     connection = await readConnection();
+    phoneAccess = createPhoneAccess({
+      getChild: () => (readyServer === serverProcess ? serverProcess : undefined),
+      available: () => connection.mode === "local" && !quitting && !changingConnection,
+      preferences,
+    });
     updateMenu();
     ipcMain.handle("language:get", (event) => {
       allowRenderer(event);
@@ -677,6 +698,15 @@ app
     ipcMain.handle("startup:logs", (event) => {
       allowRenderer(event);
       return shell.openPath(app.getPath("logs"));
+    });
+    ipcMain.handle("phone-access:get", (event) => {
+      allowRenderer(event);
+      return phoneAccess.get();
+    });
+    ipcMain.handle("phone-access:set", async (event, enabled) => {
+      allowRenderer(event);
+      if (connection.mode === "local") await ensureLocalServer();
+      return phoneAccess.set(enabled);
     });
     ipcMain.handle("connection:get", async (event) => {
       allowRenderer(event);
@@ -818,6 +848,8 @@ app
   });
 
 app.on("before-quit", (event) => {
+  quitting = true;
+  void phoneAccess?.stop();
   if (localStartupInProgress()) {
     event.preventDefault();
     quitWhenSafe = true;

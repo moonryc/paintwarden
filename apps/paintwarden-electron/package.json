@@ -29,6 +29,7 @@
       "package.json",
       "desktop-i18n.cjs",
       "desktop-preferences.cjs",
+      "desktop-network.cjs",
       "desktop-menu.cjs",
       "desktop-support.cjs",
       "desktop-release-notes.cjs"

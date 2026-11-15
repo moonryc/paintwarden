@@ -5,6 +5,7 @@ import path from "node:path";
 import test from "node:test";
 
 import { clientConfig } from "./client-config.ts";
+import { markDesktopNetworkRequest } from "./desktop-network.ts";
 
 test("desktop connection choice persists and rejects foreign origins", async () => {
   const directory = mkdtempSync(path.join(tmpdir(), "paintwarden-client-"));
@@ -19,6 +20,10 @@ test("desktop connection choice persists and rejects foreign origins", async () 
     });
   try {
     assert.equal((await (await clientConfig(new Request(url))).json()).mode, null);
+    for (const request of [new Request(url), put({ mode: "remote", serverUrl: "https://outside.example" })]) {
+      markDesktopNetworkRequest(request);
+      assert.equal((await clientConfig(request)).status, 404);
+    }
     assert.equal(
       (
         await clientConfig(
