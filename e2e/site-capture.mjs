@@ -1,9 +1,9 @@
 // Capture a real production app in a fresh, synthetic-only vault. Never uses a running app.
 // npm run build && node e2e/site-capture.mjs [absolute artifacts directory]
 import assert from "node:assert/strict";
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
@@ -335,7 +335,7 @@ try {
     await p.locator("#paint-tool-complementary").click();
     await p.getByRole("combobox", { name: "Paint", exact: true }).fill("Harbor Blue");
     await p.getByRole("option", { name: /Harbor Blue/ }).click();
-    await expect(p.getByText("Copper Glow", { exact: true }).first()).toBeVisible();
+    await expect(p.getByText("Citron Brass", { exact: true }).first()).toBeVisible();
     if (phone)
       await p
         .getByText("Your palette", { exact: true })
@@ -371,7 +371,9 @@ try {
     await expect(progress).toHaveAttribute("aria-valuenow", /[1-9]/);
     await capture(p, "plugins", phone);
     await p.getByRole("button", { name: "Cancel installation", exact: true }).click();
-    await expect(progress).toBeHidden();
+    await expect
+      .poll(async () => (await gql("{ pluginInstallJob { stage } }")).pluginInstallJob?.stage)
+      .toBe("CANCELLED");
     await ctx.close();
   }
   assert.deepEqual(errors, []);
@@ -383,6 +385,7 @@ try {
     path.join(artifacts, "capture-results.json"),
     JSON.stringify(
       {
+        revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: repo, encoding: "utf8" }).trim(),
         dataDir,
         checks,
         errors,

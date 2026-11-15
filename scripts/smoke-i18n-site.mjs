@@ -131,7 +131,12 @@ async function inspect(code, route, phase, mobile) {
     docs: catalogs[code]["docs.getFromShelfToSession"],
     faq: catalogs[code]["faq.theLittleDetailsMatter"],
     phone: catalogs[code]["phone.title"],
-    download: catalogs[code]["download.pickYourKindOfVault"],
+    download:
+      catalogs[code][
+        process.env.PUBLIC_RELEASES_AVAILABLE === "true"
+          ? "download.pickYourKindOfVault"
+          : "download.getPaintwarden"
+      ],
   }[route.page];
   const normalize = (text) => text.replace(/\s+/g, " ").trim();
   row.heading = await page.locator("main h1").innerText();
@@ -331,7 +336,9 @@ try {
   // MUI does not fire onChange for reselecting the current option. Start with
   // another real selection so English is tested as a persisted change too.
   await selectLanguage("es", routes[0]);
-  for (const { code } of languages) {
+  for (const { code } of languages.filter(
+    ({ code }) => !process.env.SITE_SMOKE_LOCALES || process.env.SITE_SMOKE_LOCALES.split(",").includes(code),
+  )) {
     // Each locale is selected through the actual header control, never injected storage.
     await page.goto(origin);
     await ready(current, routes[0]);
@@ -346,7 +353,9 @@ try {
     console.log(`Desktop ${code}: all five routes, metadata, picker, navigation and reload passed`);
   }
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const { code } of languages) {
+  for (const { code } of languages.filter(
+    ({ code }) => !process.env.SITE_SMOKE_LOCALES || process.env.SITE_SMOKE_LOCALES.split(",").includes(code),
+  )) {
     await page.goto(origin);
     await ready(current, routes[0]);
     await selectLanguage(code, routes[0]);

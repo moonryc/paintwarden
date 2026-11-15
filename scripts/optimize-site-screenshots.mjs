@@ -31,7 +31,7 @@ for (const name of [
     assert.equal(metadata.height, phone ? 1688 : 1000, `${stem}: capture height`);
     for (const width of phone ? [390, 780] : [720, 1080, 1440]) {
       const file = `${stem}${width === metadata.width ? "" : `-${width}`}.webp`;
-      const { info } = await sharp(input)
+      const info = await sharp(input)
         .resize({ width })
         .webp({ quality: 88, effort: 6 })
         .toFile(path.join(output, file));
