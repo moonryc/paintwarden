@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { desktopBridge } from "../storybook/decorators";
+import { waitForDialogEntered } from "../storybook/dialog";
 
 import { AppErrorBoundary, CrashScreen } from "./AppErrorBoundary";
 
@@ -46,13 +47,27 @@ export const SupportExcludesRenderingError: Story = {
   ],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: "Report a bug" }));
+    const reportRow = canvas.getByRole("button", { name: /^Report a bug\b/ });
+    await userEvent.click(reportRow);
+    const reportElement = await within(document.body).findByRole("dialog", { name: "Report a bug" });
+    await waitForDialogEntered(reportElement);
+    const reportDialog = within(reportElement);
+    await expect(report).not.toHaveBeenCalled();
+    await expect(reportDialog.queryByText(/private-render-context|vault.sqlite/)).not.toBeInTheDocument();
+    await userEvent.click(reportDialog.getByRole("button", { name: "Report a bug" }));
     await expect(report).toHaveBeenCalledWith("en");
-    await userEvent.click(await canvas.findByRole("button", { name: "Save support bundle" }));
-    const dialog = within(await within(document.body).findByRole("dialog"));
-    await expect(dialog.getByText(/"version": "1.0.0"/)).toBeInTheDocument();
+    await userEvent.click(reportDialog.getByRole("button", { name: "Save support bundle" }));
+    const preview = await within(document.body).findByRole("dialog", { name: "Review support bundle" });
+    await waitForDialogEntered(preview);
+    const dialog = within(preview);
+    await expect(await dialog.findByText(/"version": "1.0.0"/)).toBeVisible();
     await expect(dialog.queryByText(/private-render-context/)).not.toBeInTheDocument();
     await expect(dialog.queryByText(/vault.sqlite/)).not.toBeInTheDocument();
     await userEvent.click(dialog.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(preview).not.toBeInTheDocument());
+    await expect(reportDialog.getByRole("button", { name: "Save support bundle" })).toHaveFocus();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(reportElement).not.toBeInTheDocument());
+    await expect(reportRow).toHaveFocus();
   },
 };

@@ -510,5 +510,13 @@
   "privacyNetworkLink": "Privacy and network activity (English)",
   "securityReportLink": "Report a security vulnerability (English)",
   "privacyNetworkSummary": "Local vaults use this computer; remote vaults use your server. Updates, plugins and external images may contact third parties. Support bundles are optional local exports.",
-  "manufacturerNonAffiliation": "Paintwarden is independent and is not affiliated with or endorsed by any paint or miniature manufacturer. Brand and paint names in plugins belong to their respective owners."
+  "manufacturerNonAffiliation": "Paintwarden is independent and is not affiliated with or endorsed by any paint or miniature manufacturer. Brand and paint names in plugins belong to their respective owners.",
+  "supportAboutTitle": "About Paintwarden",
+  "supportPrivacyTitle": "Privacy",
+  "supportTrademarksTitle": "Trademarks & non-affiliation",
+  "supportAboutDescription": "Version, channel and system information",
+  "supportReportDescription": "Open a GitHub issue or save diagnostic information",
+  "supportBundleDescription": "Review and save a private diagnostic bundle",
+  "supportPrivacyDescription": "Privacy, network access and security reporting",
+  "supportTrademarksDescription": "Product names and manufacturer independence"
 }

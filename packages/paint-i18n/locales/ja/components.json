@@ -489,5 +489,13 @@
   "privacyNetworkLink": "プライバシーとネットワーク通信（英語）",
   "securityReportLink": "脆弱性を報告（英語）",
   "privacyNetworkSummary": "ローカル保管庫はこのコンピューターを、リモート保管庫は選択したサーバーを使用します。更新、プラグイン、外部画像は第三者に通信する場合があります。サポートバンドルは任意のローカル書き出しです。",
-  "manufacturerNonAffiliation": "Paintwarden は独立したプロジェクトであり、塗料・ミニチュアのメーカーとの提携や、メーカーからの推奨はありません。プラグイン内のブランド名と塗料名は、それぞれの所有者に帰属します。"
+  "manufacturerNonAffiliation": "Paintwarden は独立したプロジェクトであり、塗料・ミニチュアのメーカーとの提携や、メーカーからの推奨はありません。プラグイン内のブランド名と塗料名は、それぞれの所有者に帰属します。",
+  "supportAboutTitle": "Paintwarden について",
+  "supportPrivacyTitle": "プライバシー",
+  "supportTrademarksTitle": "商標と非提携について",
+  "supportAboutDescription": "バージョン、チャンネル、システム情報",
+  "supportReportDescription": "GitHub で問題を報告するか、診断情報を保存",
+  "supportBundleDescription": "非公開の診断バンドルを確認して保存",
+  "supportPrivacyDescription": "プライバシー、ネットワークアクセス、脆弱性の報告",
+  "supportTrademarksDescription": "製品名とメーカーからの独立性"
 }

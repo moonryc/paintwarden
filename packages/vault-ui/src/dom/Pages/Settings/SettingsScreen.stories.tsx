@@ -35,8 +35,13 @@ export const Connected: Story = {
     await expect(canvas.getByRole("heading", { name: "Data & settings" })).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Manage plugins" })).toBeVisible();
     await expect(canvas.getByRole("heading", { name: "Help & About" })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: "Report a bug" })).toBeVisible();
-    await expect(canvas.getByRole("button", { name: "Save support bundle" })).toBeVisible();
+    const help = within(canvas.getByRole("region", { name: "Help & About" }));
+    await expect(help.getAllByRole("button")).toHaveLength(7);
+    await expect(help.getByRole("button", { name: /^About Paintwarden/ })).toBeVisible();
+    await expect(help.getByRole("button", { name: /^Report a bug/ })).toBeVisible();
+    await expect(help.getByRole("button", { name: /^Save support bundle/ })).toBeVisible();
+    await expect(help.queryByText("Channel", { exact: true })).not.toBeInTheDocument();
+    await expect(help.queryByRole("link")).not.toBeInTheDocument();
     await expect(canvas.getByRole("switch", { name: "Require sign-in" })).not.toBeChecked();
   },
 };

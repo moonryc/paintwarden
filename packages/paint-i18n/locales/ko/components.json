@@ -489,5 +489,13 @@
   "privacyNetworkLink": "개인정보 및 네트워크 활동(영어)",
   "securityReportLink": "보안 취약점 신고(영어)",
   "privacyNetworkSummary": "로컬 보관함은 이 컴퓨터를, 원격 보관함은 선택한 서버를 사용합니다. 업데이트, 플러그인, 외부 이미지는 제3자에게 연결할 수 있습니다. 지원 번들은 선택적으로 로컬에 내보내는 파일입니다.",
-  "manufacturerNonAffiliation": "Paintwarden는 독립 프로젝트이며 어떤 페인트 또는 미니어처 제조사와도 제휴하거나 이들의 보증을 받지 않습니다. 플러그인의 브랜드와 페인트 이름은 각 소유자에게 속합니다."
+  "manufacturerNonAffiliation": "Paintwarden는 독립 프로젝트이며 어떤 페인트 또는 미니어처 제조사와도 제휴하거나 이들의 보증을 받지 않습니다. 플러그인의 브랜드와 페인트 이름은 각 소유자에게 속합니다.",
+  "supportAboutTitle": "Paintwarden 정보",
+  "supportPrivacyTitle": "개인정보 보호",
+  "supportTrademarksTitle": "상표 및 비제휴 안내",
+  "supportAboutDescription": "버전, 채널 및 시스템 정보",
+  "supportReportDescription": "GitHub 이슈를 열거나 진단 정보 저장",
+  "supportBundleDescription": "비공개 진단 번들 검토 및 저장",
+  "supportPrivacyDescription": "개인정보 보호, 네트워크 액세스 및 보안 신고",
+  "supportTrademarksDescription": "제품명 및 제조사로부터의 독립성"
 }

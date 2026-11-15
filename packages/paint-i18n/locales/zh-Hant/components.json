@@ -489,5 +489,13 @@
   "privacyNetworkLink": "隱私與網路活動（英文）",
   "securityReportLink": "回報安全漏洞（英文）",
   "privacyNetworkSummary": "本機收藏庫使用此電腦，遠端收藏庫使用你選擇的伺服器。更新、外掛和外部圖片可能連線至第三方。支援套件是選用的本機匯出檔案。",
-  "manufacturerNonAffiliation": "Paintwarden 是獨立專案，與任何顏料或模型製造商均無關聯，也未獲其認可。外掛中的品牌與顏料名稱歸各自擁有者所有。"
+  "manufacturerNonAffiliation": "Paintwarden 是獨立專案，與任何顏料或模型製造商均無關聯，也未獲其認可。外掛中的品牌與顏料名稱歸各自擁有者所有。",
+  "supportAboutTitle": "關於 Paintwarden",
+  "supportPrivacyTitle": "隱私",
+  "supportTrademarksTitle": "商標與無關聯聲明",
+  "supportAboutDescription": "版本、通道和系統資訊",
+  "supportReportDescription": "在 GitHub 上提交問題或儲存診斷資訊",
+  "supportBundleDescription": "檢視並儲存私密診斷套件",
+  "supportPrivacyDescription": "隱私、網路存取和安全問題回報",
+  "supportTrademarksDescription": "產品名稱及與製造商的獨立關係"
 }

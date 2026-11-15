@@ -531,5 +531,13 @@
   "privacyNetworkLink": "Privacidad y actividad de red (inglés)",
   "securityReportLink": "Informar de una vulnerabilidad (inglés)",
   "privacyNetworkSummary": "Las bóvedas locales usan este equipo; las remotas, tu servidor. Las actualizaciones, los plugins y las imágenes externas pueden contactar con terceros. Los paquetes de soporte son exportaciones locales opcionales.",
-  "manufacturerNonAffiliation": "Paintwarden es independiente y no está afiliado ni respaldado por ningún fabricante de pinturas o miniaturas. Las marcas y los nombres de pinturas de los plugins pertenecen a sus respectivos propietarios."
+  "manufacturerNonAffiliation": "Paintwarden es independiente y no está afiliado ni respaldado por ningún fabricante de pinturas o miniaturas. Las marcas y los nombres de pinturas de los plugins pertenecen a sus respectivos propietarios.",
+  "supportAboutTitle": "Acerca de Paintwarden",
+  "supportPrivacyTitle": "Privacidad",
+  "supportTrademarksTitle": "Marcas e independencia",
+  "supportAboutDescription": "Versión, canal e información del sistema",
+  "supportReportDescription": "Abrir una incidencia en GitHub o guardar información de diagnóstico",
+  "supportBundleDescription": "Revisar y guardar un paquete privado de diagnóstico",
+  "supportPrivacyDescription": "Privacidad, acceso a la red e informes de seguridad",
+  "supportTrademarksDescription": "Nombres de productos e independencia de los fabricantes"
 }

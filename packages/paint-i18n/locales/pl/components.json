@@ -552,5 +552,13 @@
   "privacyNetworkLink": "Prywatność i aktywność sieciowa (angielski)",
   "securityReportLink": "Zgłoś lukę bezpieczeństwa (angielski)",
   "privacyNetworkSummary": "Lokalne skarbce używają tego komputera, a zdalne — Twojego serwera. Aktualizacje, wtyczki i obrazy zewnętrzne mogą łączyć się z podmiotami trzecimi. Pakiety pomocy to opcjonalne eksporty lokalne.",
-  "manufacturerNonAffiliation": "Paintwarden jest niezależny i nie jest powiązany z żadnym producentem farb ani figurek ani przez niego polecany. Marki i nazwy farb we wtyczkach należą do ich właścicieli."
+  "manufacturerNonAffiliation": "Paintwarden jest niezależny i nie jest powiązany z żadnym producentem farb ani figurek ani przez niego polecany. Marki i nazwy farb we wtyczkach należą do ich właścicieli.",
+  "supportAboutTitle": "O Paintwarden",
+  "supportPrivacyTitle": "Prywatność",
+  "supportTrademarksTitle": "Znaki towarowe i brak powiązań",
+  "supportAboutDescription": "Wersja, kanał i informacje o systemie",
+  "supportReportDescription": "Otwórz zgłoszenie w GitHub lub zapisz informacje diagnostyczne",
+  "supportBundleDescription": "Przejrzyj i zapisz prywatny pakiet diagnostyczny",
+  "supportPrivacyDescription": "Prywatność, dostęp do sieci i zgłaszanie luk bezpieczeństwa",
+  "supportTrademarksDescription": "Nazwy produktów i niezależność od producentów"
 }

@@ -1,10 +1,12 @@
-import { Alert, Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { reportBug } from "../utils/support";
 
-// Reports contain only the allowlisted support summary, never the rendering error or vault data.
+import { ReportBugModal } from "./HelpAbout";
+
+// Recovery screens and Settings use the same report and support-bundle dialogs.
 export function ReportBugButton({
   report = reportBug,
   showHint = true,
@@ -12,23 +14,11 @@ export function ReportBugButton({
   report?: typeof reportBug;
   showHint?: boolean;
 }) {
-  const { t, i18n } = useTranslation("components");
-  const [busy, setBusy] = useState(false);
-  const [failed, setFailed] = useState(false);
-  async function openReport() {
-    setBusy(true);
-    setFailed(false);
-    try {
-      await report(i18n.resolvedLanguage ?? i18n.language);
-    } catch {
-      setFailed(true);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const { t } = useTranslation("components");
+  const [open, setOpen] = useState(false);
   return (
     <Box>
-      <Button variant="outlined" loading={busy} onClick={() => void openReport()}>
+      <Button variant="outlined" aria-haspopup="dialog" onClick={() => setOpen(true)}>
         {t("reportBug")}
       </Button>
       {showHint && (
@@ -36,11 +26,7 @@ export function ReportBugButton({
           {t("reportBugHint")}
         </Typography>
       )}
-      {failed && (
-        <Alert severity="error" sx={{ mt: 1 }}>
-          {t("supportFailure")}
-        </Alert>
-      )}
+      {open && <ReportBugModal report={report} onClose={() => setOpen(false)} />}
     </Box>
   );
 }

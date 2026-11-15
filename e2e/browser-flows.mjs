@@ -93,6 +93,65 @@ async function settings(page) {
   await page.getByRole("heading", { name: "Data & settings", exact: true, level: 1 }).waitFor();
 }
 
+async function checkHelpAbout(page, artifacts) {
+  const help = page.getByRole("region", { name: "Help & About", exact: true });
+  const originalViewport = page.viewportSize();
+  const noticesText = await readFile(new URL("../THIRD_PARTY_NOTICES.txt", import.meta.url), "utf8");
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 1050 });
+    await expect(help.getByRole("button")).toHaveCount(7);
+    await expect(help.getByText("Channel", { exact: true })).toHaveCount(0);
+    await expect(help.getByText(/Paintwarden is independent/)).toHaveCount(0);
+    await expect(help.getByRole("link")).toHaveCount(0);
+    await help.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: path.join(artifacts, `help-list-${width}.png`), animations: "disabled" });
+    const aboutRow = help.getByRole("button", { name: /^About Paintwarden\b/ });
+    await aboutRow.click();
+    const about = page.getByRole("dialog", { name: "About Paintwarden", exact: true });
+    await expect(about.getByText("Beta", { exact: true })).toBeVisible();
+    await expect(about.getByText("Stable", { exact: true })).toHaveCount(0);
+    await expect(
+      about.getByRole("link", { name: "Beta tester guide (English)", exact: true }),
+    ).toHaveAttribute("href", "https://github.com/moonryc/paintwarden/blob/main/docs/beta-testers.md");
+    if (width < 600) await expect(about).toHaveClass(/MuiDialog-paperFullScreen/);
+    else await expect(about).not.toHaveClass(/MuiDialog-paperFullScreen/);
+    await page.screenshot({ path: path.join(artifacts, `help-about-${width}.png`), animations: "disabled" });
+    await page.keyboard.press("Escape");
+    await expect(about).toHaveCount(0);
+    await expect(aboutRow).toBeFocused();
+    const noticesRow = help.getByRole("button", { name: /^Open-source licenses\b/ });
+    await noticesRow.click();
+    const notices = page.getByRole("dialog", { name: "Open-source licenses", exact: true });
+    const content = notices.getByRole("region", { name: "Open-source licenses", exact: true });
+    await expect(content).toBeVisible();
+    await expect(content).toHaveAttribute("lang", "en");
+    assert.equal(
+      await content.textContent(),
+      noticesText,
+      "Help opens the complete offline third-party notices",
+    );
+    await page.screenshot({
+      path: path.join(artifacts, `help-notices-${width}.png`),
+      animations: "disabled",
+    });
+    await notices.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(notices).toHaveCount(0);
+    await expect(noticesRow).toBeFocused();
+    await help.getByRole("button", { name: /^Privacy\b/ }).click();
+    const privacy = page.getByRole("dialog", { name: "Privacy", exact: true });
+    await expect(
+      privacy.getByRole("link", { name: "Privacy and network activity (English)", exact: true }),
+    ).toBeVisible();
+    await page.screenshot({
+      path: path.join(artifacts, `help-privacy-${width}.png`),
+      animations: "disabled",
+    });
+    await privacy.getByRole("button", { name: "Close", exact: true }).click();
+    await expect(privacy).toHaveCount(0);
+  }
+  if (originalViewport) await page.setViewportSize(originalViewport);
+}
+
 async function workbench(page) {
   await page.getByRole("button", { name: "Workbench", exact: true }).click();
   await page.getByRole("heading", { name: "Workbench", exact: true, level: 1 }).waitFor();
@@ -312,6 +371,10 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   await first.getByRole("option", { name: "English", exact: true }).click();
   await first.getByRole("heading", { name: "Data & settings", exact: true, level: 1 }).waitFor();
   check("language switch loads Spanish UI and returns to English");
+  await checkHelpAbout(first, artifacts);
+  check(
+    "compact Help list opens Beta About and complete offline notices at desktop and phone widths with focus restoration",
+  );
 
   const baseline = await exportBackup(first, artifacts, "baseline.zip");
   assert.equal(baseline.snapshot.tables.miniatures.length, 1);

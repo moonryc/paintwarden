@@ -531,5 +531,13 @@
   "privacyNetworkLink": "Confidentialité et activité réseau (anglais)",
   "securityReportLink": "Signaler une vulnérabilité (anglais)",
   "privacyNetworkSummary": "Les coffres locaux utilisent cet ordinateur ; les coffres distants utilisent votre serveur. Les mises à jour, plugins et images externes peuvent contacter des tiers. Les archives de diagnostic sont des exports locaux facultatifs.",
-  "manufacturerNonAffiliation": "Paintwarden est indépendant, sans affiliation ni approbation d’un fabricant de peintures ou de figurines. Les marques et noms de peintures des plugins appartiennent à leurs propriétaires respectifs."
+  "manufacturerNonAffiliation": "Paintwarden est indépendant, sans affiliation ni approbation d’un fabricant de peintures ou de figurines. Les marques et noms de peintures des plugins appartiennent à leurs propriétaires respectifs.",
+  "supportAboutTitle": "À propos de Paintwarden",
+  "supportPrivacyTitle": "Confidentialité",
+  "supportTrademarksTitle": "Marques et absence d’affiliation",
+  "supportAboutDescription": "Version, canal et informations système",
+  "supportReportDescription": "Ouvrir un ticket GitHub ou enregistrer les informations de diagnostic",
+  "supportBundleDescription": "Vérifier et enregistrer un dossier de diagnostic privé",
+  "supportPrivacyDescription": "Confidentialité, accès réseau et signalements de sécurité",
+  "supportTrademarksDescription": "Noms de produits et indépendance vis-à-vis des fabricants"
 }

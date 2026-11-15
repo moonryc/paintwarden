@@ -531,5 +531,13 @@
   "privacyNetworkLink": "Privacy e attività di rete (inglese)",
   "securityReportLink": "Segnala una vulnerabilità (inglese)",
   "privacyNetworkSummary": "Gli archivi locali usano questo computer; quelli remoti usano il tuo server. Aggiornamenti, plugin e immagini esterne possono contattare terze parti. I pacchetti di supporto sono esportazioni locali facoltative.",
-  "manufacturerNonAffiliation": "Paintwarden è indipendente e non è affiliato né approvato da alcun produttore di colori o miniature. I marchi e i nomi dei colori nei plugin appartengono ai rispettivi proprietari."
+  "manufacturerNonAffiliation": "Paintwarden è indipendente e non è affiliato né approvato da alcun produttore di colori o miniature. I marchi e i nomi dei colori nei plugin appartengono ai rispettivi proprietari.",
+  "supportAboutTitle": "Informazioni su Paintwarden",
+  "supportPrivacyTitle": "Privacy",
+  "supportTrademarksTitle": "Marchi e assenza di affiliazione",
+  "supportAboutDescription": "Versione, canale e informazioni di sistema",
+  "supportReportDescription": "Apri una segnalazione su GitHub o salva le informazioni diagnostiche",
+  "supportBundleDescription": "Controlla e salva un pacchetto diagnostico privato",
+  "supportPrivacyDescription": "Privacy, accesso alla rete e segnalazioni di sicurezza",
+  "supportTrademarksDescription": "Nomi dei prodotti e indipendenza dai produttori"
 }

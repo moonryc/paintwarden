@@ -1,4 +1,4 @@
-import { Alert, Box, Button, Typography } from "@mui/material";
+import { Alert, Box, Button, Skeleton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,7 +36,11 @@ export function OpenSourceLicensesModal({ onClose }: { onClose: () => void }) {
           {t("noticesFailure")}
         </Alert>
       ) : text === null ? (
-        <Typography role="status">{t("noticesLoading")}</Typography>
+        <Box role="status" aria-label={t("noticesLoading")}>
+          <Skeleton />
+          <Skeleton />
+          <Skeleton width="65%" />
+        </Box>
       ) : (
         <Box
           component="pre"

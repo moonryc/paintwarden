@@ -3,6 +3,7 @@ import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import DesktopConnection from "../../../../../apps/paintwarden-web/src/desktop-connection";
 import { desktopBridge } from "../storybook/decorators";
+import { waitForDialogEntered } from "../storybook/dialog";
 
 const openBugReport = fn(async () => true);
 const saveSupportBundle = fn(async () => true);
@@ -33,16 +34,28 @@ export const Failed: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("heading", { name: "Your vault could not start" })).toBeVisible();
-    await userEvent.click(canvas.getByRole("button", { name: "Report a bug" }));
+    const reportRow = canvas.getByRole("button", { name: /^Report a bug/ });
+    await userEvent.click(reportRow);
+    const reportElement = await within(document.body).findByRole("dialog", { name: "Report a bug" });
+    await waitForDialogEntered(reportElement);
+    await expect(openBugReport).not.toHaveBeenCalled();
+    await userEvent.click(within(reportElement).getByRole("button", { name: "Report a bug" }));
     await expect(openBugReport).toHaveBeenCalledWith("en");
-    await userEvent.click(await canvas.findByRole("button", { name: "Save support bundle" }));
-    const dialog = within(
-      await within(document.body).findByRole("dialog", { name: "Review support bundle" }),
-    );
-    await expect(saveSupportBundle).not.toHaveBeenCalled();
-    await waitFor(() => expect(dialog.getByText(/Free-text details are omitted/)).toBeVisible());
     await userEvent.keyboard("{Escape}");
-    await expect(await canvas.findByRole("button", { name: "Save support bundle" })).toBeVisible();
+    await waitFor(() => expect(reportElement).not.toBeInTheDocument());
+    await expect(reportRow).toHaveFocus();
+    const supportRow = canvas.getByRole("button", { name: /^Save support bundle/ });
+    await userEvent.click(supportRow);
+    const preview = await within(document.body).findByRole("dialog", { name: "Review support bundle" });
+    await waitForDialogEntered(preview);
+    const dialog = within(preview);
+    await expect(saveSupportBundle).not.toHaveBeenCalled();
+    await expect(dialog.getByText(/Free-text details are omitted/)).toBeVisible();
+    await expect(await dialog.findByText(/"version": "1.0.0"/)).toBeVisible();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(preview).not.toBeInTheDocument());
+    await expect(supportRow).toHaveFocus();
+    await expect(saveSupportBundle).not.toHaveBeenCalled();
     await userEvent.click(canvas.getByRole("button", { name: "Open logs folder" }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent(
       "Could not complete this support action.",

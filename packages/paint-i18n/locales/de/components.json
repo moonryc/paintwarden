@@ -510,5 +510,13 @@
   "privacyNetworkLink": "Datenschutz und Netzwerkaktivität (Englisch)",
   "securityReportLink": "Sicherheitslücke melden (Englisch)",
   "privacyNetworkSummary": "Lokale Tresore verwenden diesen Computer, entfernte Tresore deinen Server. Updates, Plugins und externe Bilder können Drittanbieter kontaktieren. Support-Pakete sind optionale lokale Exporte.",
-  "manufacturerNonAffiliation": "Paintwarden ist unabhängig und mit keinem Farben- oder Miniaturenhersteller verbunden oder von ihm empfohlen. Marken und Farbnamen in Plugins gehören ihren jeweiligen Eigentümern."
+  "manufacturerNonAffiliation": "Paintwarden ist unabhängig und mit keinem Farben- oder Miniaturenhersteller verbunden oder von ihm empfohlen. Marken und Farbnamen in Plugins gehören ihren jeweiligen Eigentümern.",
+  "supportAboutTitle": "Über Paintwarden",
+  "supportPrivacyTitle": "Datenschutz",
+  "supportTrademarksTitle": "Marken & Unabhängigkeit",
+  "supportAboutDescription": "Version, Kanal und Systeminformationen",
+  "supportReportDescription": "Ein GitHub-Issue öffnen oder Diagnoseinformationen speichern",
+  "supportBundleDescription": "Ein privates Diagnosepaket prüfen und speichern",
+  "supportPrivacyDescription": "Datenschutz, Netzwerkzugriff und Sicherheitsmeldungen",
+  "supportTrademarksDescription": "Produktnamen und Unabhängigkeit von Herstellern"
 }
