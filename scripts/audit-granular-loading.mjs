@@ -102,7 +102,13 @@ const report = {
 };
 let browser;
 function observe() {
-  window.__layoutAudit = { shifts: [], samples: [], shellAt: null, start: performance.now() };
+  window.__layoutAudit = {
+    shifts: [],
+    samples: [],
+    shellAt: null,
+    contentAt: null,
+    start: performance.now(),
+  };
   new PerformanceObserver((entries) => {
     for (const entry of entries.getEntries())
       window.__layoutAudit.shifts.push({
@@ -130,6 +136,13 @@ function observe() {
       (!state.expected || header.textContent.includes(state.expected))
     ) {
       if (state.shellAt === null) state.shellAt = performance.now();
+      if (
+        state.contentAt === null &&
+        !document.querySelector(
+          "main [data-skeleton], main [aria-busy=true], main .MuiSkeleton-root, main [role=progressbar]:not([aria-valuenow])",
+        )
+      )
+        state.contentAt = performance.now();
       const elements = [header, document.querySelector("[data-filter-toolbar]")].filter(Boolean);
       state.samples.push(
         elements.map((el) => {
@@ -308,7 +321,9 @@ try {
         await page.waitForFunction(
           () =>
             !!document.querySelector("main h2") &&
-            !document.querySelector("main [data-skeleton], main [aria-busy=true]"),
+            !document.querySelector(
+              "main [data-skeleton], main [aria-busy=true], main .MuiSkeleton-root, main [role=progressbar]:not([aria-valuenow])",
+            ),
         );
       }
       for (const mode of matrix ? ["navigation"] : ["cold", "navigation"])
@@ -320,7 +335,9 @@ try {
             await page.waitForFunction(
               () =>
                 !!document.querySelector("main h2") &&
-                !document.querySelector("main [data-skeleton], main [aria-busy=true]"),
+                !document.querySelector(
+                  "main [data-skeleton], main [aria-busy=true], main .MuiSkeleton-root, main [role=progressbar]:not([aria-valuenow])",
+                ),
             );
           }
           const expected = strings[titleKeys[route]];
@@ -338,6 +355,7 @@ try {
               shifts: [],
               samples: [],
               shellAt: null,
+              contentAt: null,
               start: performance.now(),
               expected,
             };
@@ -346,7 +364,9 @@ try {
           await page.waitForFunction(
             (expected) =>
               [...document.querySelectorAll("main h2")].some((el) => el.textContent === expected) &&
-              !document.querySelector("main [data-skeleton], main [aria-busy=true]"),
+              !document.querySelector(
+                "main [data-skeleton], main [aria-busy=true], main .MuiSkeleton-root, main [role=progressbar]:not([aria-valuenow])",
+              ),
             expected,
             { timeout: 20_000 },
           );
@@ -363,29 +383,26 @@ try {
             },
             matrix ? 350 : 1100,
           );
-          const row = await page.evaluate(
-            (settleMs) => {
-              const state = window.__layoutAudit;
-              const initial = state.samples[0] || [];
-              let shellMovementPx = 0;
-              for (const sample of state.samples)
-                sample.forEach((box, i) =>
-                  box.forEach((value, axis) => {
-                    if (initial[i])
-                      shellMovementPx = Math.max(shellMovementPx, Math.abs(value - initial[i][axis]));
-                  }),
-                );
-              return {
-                timeToShellMs: state.shellAt === null ? null : state.shellAt - state.start,
-                timeToContentMs: performance.now() - state.start - settleMs,
-                cls: state.shifts.filter((s) => !s.recentInput).reduce((sum, s) => sum + s.value, 0),
-                allShifts: state.shifts.reduce((sum, s) => sum + s.value, 0),
-                shellMovementPx,
-                shifts: state.shifts,
-              };
-            },
-            matrix ? 350 : 1100,
-          );
+          const row = await page.evaluate(() => {
+            const state = window.__layoutAudit;
+            const initial = state.samples[0] || [];
+            let shellMovementPx = 0;
+            for (const sample of state.samples)
+              sample.forEach((box, i) =>
+                box.forEach((value, axis) => {
+                  if (initial[i])
+                    shellMovementPx = Math.max(shellMovementPx, Math.abs(value - initial[i][axis]));
+                }),
+              );
+            return {
+              timeToShellMs: state.shellAt === null ? null : state.shellAt - state.start,
+              timeToContentMs: state.contentAt === null ? null : state.contentAt - state.start,
+              cls: state.shifts.filter((s) => !s.recentInput).reduce((sum, s) => sum + s.value, 0),
+              allShifts: state.shifts.reduce((sum, s) => sum + s.value, 0),
+              shellMovementPx,
+              shifts: state.shifts,
+            };
+          });
           Object.assign(row, { route, mode, locale, width, overflow: await page.evaluate(overflow) });
           report.rows.push(row);
           await writeFile(path.join(evidence, "results.json"), JSON.stringify(report, null, 2));
@@ -417,6 +434,7 @@ try {
           row.overflow.bodyWidth <= row.overflow.width + 1,
         `${row.route} ${row.width} ${row.locale}: horizontal overflow`,
       );
+      assert.ok(row.timeToContentMs !== null, `${row.route} ${row.width}: content never painted`);
       assert.ok(row.shellMovementPx <= 1, `${row.route} ${row.width}: shell moved ${row.shellMovementPx}px`);
       assert.ok(row.cls <= 0.001, `${row.route} ${row.width}: CLS ${row.cls}`);
     }
