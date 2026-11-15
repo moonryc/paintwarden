@@ -560,5 +560,12 @@
   "supportReportDescription": "Создать обращение на GitHub или сохранить диагностические сведения",
   "supportBundleDescription": "Проверить и сохранить частный диагностический пакет",
   "supportPrivacyDescription": "Конфиденциальность, доступ к сети и сообщения об уязвимостях",
-  "supportTrademarksDescription": "Названия продуктов и независимость от производителей"
+  "supportTrademarksDescription": "Названия продуктов и независимость от производителей",
+  "scanPinScope": "Точки для подбора",
+  "scanThisPin": "Эта точка",
+  "scanAllPins": "Все точки ({{count}})",
+  "scanCombined": "Объединено точек: {{count}} · {{hex}}",
+  "scanCoverage": "Общее покрытие · среднее ΔE",
+  "scanWorstPin": "Худшая точка · ΔE {{value}}",
+  "scanPinNumber": "Точка {{number}} → краска"
 }

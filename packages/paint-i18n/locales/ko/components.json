@@ -497,5 +497,12 @@
   "supportReportDescription": "GitHub 이슈를 열거나 진단 정보 저장",
   "supportBundleDescription": "비공개 진단 번들 검토 및 저장",
   "supportPrivacyDescription": "개인정보 보호, 네트워크 액세스 및 보안 신고",
-  "supportTrademarksDescription": "제품명 및 제조사로부터의 독립성"
+  "supportTrademarksDescription": "제품명 및 제조사로부터의 독립성",
+  "scanPinScope": "비교할 핀",
+  "scanThisPin": "이 핀",
+  "scanAllPins": "모든 핀 ({{count}})",
+  "scanCombined": "핀 {{count}}개 결합: {{hex}}",
+  "scanCoverage": "전체 커버리지 · 평균 ΔE",
+  "scanWorstPin": "가장 먼 핀 · ΔE {{value}}",
+  "scanPinNumber": "핀 {{number}} → 도료"
 }

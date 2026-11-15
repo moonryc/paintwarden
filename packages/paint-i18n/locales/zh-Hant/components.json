@@ -497,5 +497,12 @@
   "supportReportDescription": "在 GitHub 上提交問題或儲存診斷資訊",
   "supportBundleDescription": "檢視並儲存私密診斷套件",
   "supportPrivacyDescription": "隱私、網路存取和安全問題回報",
-  "supportTrademarksDescription": "產品名稱及與製造商的獨立關係"
+  "supportTrademarksDescription": "產品名稱及與製造商的獨立關係",
+  "scanPinScope": "要比對的取樣點",
+  "scanThisPin": "此取樣點",
+  "scanAllPins": "所有取樣點（{{count}}）",
+  "scanCombined": "合併 {{count}} 個取樣點：{{hex}}",
+  "scanCoverage": "整體涵蓋 · 平均 ΔE",
+  "scanWorstPin": "最差取樣點 · ΔE {{value}}",
+  "scanPinNumber": "取樣點 {{number}} → 顏料"
 }

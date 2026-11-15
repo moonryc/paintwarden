@@ -518,5 +518,12 @@
   "supportReportDescription": "Open a GitHub issue or save diagnostic information",
   "supportBundleDescription": "Review and save a private diagnostic bundle",
   "supportPrivacyDescription": "Privacy, network access and security reporting",
-  "supportTrademarksDescription": "Product names and manufacturer independence"
+  "supportTrademarksDescription": "Product names and manufacturer independence",
+  "scanPinScope": "Pins to match",
+  "scanThisPin": "This pin",
+  "scanAllPins": "All pins ({{count}})",
+  "scanCombined": "Combined {{count}} pins: {{hex}}",
+  "scanCoverage": "Overall coverage · mean ΔE",
+  "scanWorstPin": "Worst pin · ΔE {{value}}",
+  "scanPinNumber": "Pin {{number}} → paint"
 }

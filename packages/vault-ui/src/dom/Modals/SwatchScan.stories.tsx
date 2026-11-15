@@ -324,6 +324,9 @@ function Example() {
 const meta = {
   title: "Color tools/Swatch Scan",
   component: SwatchScan,
+  beforeEach: () => {
+    sessionStorage.removeItem("paintwarden:scan-pin-scope");
+  },
   args: { miniatureId: "mini", onClose: () => {} },
   render: () => <Example />,
   decorators: [
@@ -554,4 +557,60 @@ export const SchemeReadFailureRetry: Story = {
     await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     await expect(await screen.findByText("Matched scheme")).toBeInTheDocument();
   },
+};
+
+async function allPinsStory(canvasElement: HTMLElement) {
+  const screen = await sample(canvasElement);
+  await expect(screen.getByRole("button", { name: i18n.t("components:scanThisPin") })).toBeDisabled();
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:scanSampleCursor") }));
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:scanAllPins", { count: 2 }) }));
+  await expect(screen.getByRole("heading", { name: /#.*$/ })).toBeInTheDocument();
+  await userEvent.click(screen.getAllByRole("button", { name: i18n.t("components:scanAssign") })[0]);
+  const assign = within(screen.getByRole("dialog", { name: i18n.t("components:scanAssignTitle") }));
+  await userEvent.click(assign.getByRole("button", { name: i18n.t("components:scanAssign") }));
+  await expect(await screen.findByTestId("saved-recipe")).toHaveTextContent("white");
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:scanByScheme") }));
+  const list = await screen.findByRole("list", { name: i18n.t("components:scanSchemeMatches") });
+  const best = within(list).getAllByRole("listitem")[0];
+  await expect(within(best).getByText(i18n.t("components:scanCoverage"))).toBeInTheDocument();
+  await expect(within(best).getByText(i18n.t("components:scanPinNumber", { number: 1 }))).toBeInTheDocument();
+  await expect(within(best).getByText(i18n.t("components:scanPinNumber", { number: 2 }))).toBeInTheDocument();
+  await userEvent.click(within(best).getByRole("button", { name: i18n.t("components:scanAttach") }));
+  await expect(await screen.findByTestId("saved-schemes")).toHaveTextContent("matched");
+  const pins = within(screen.getByRole("list", { name: i18n.t("components:scanPins") }));
+  await userEvent.click(pins.getAllByRole("button")[1]);
+  await userEvent.keyboard("{Delete}");
+  await expect(screen.getByRole("button", { name: i18n.t("components:scanThisPin") })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(screen.queryByText(i18n.t("components:scanCoverage"))).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:scanSampleCursor") }));
+  await expect(
+    screen.getByRole("button", { name: i18n.t("components:scanAllPins", { count: 2 }) }),
+  ).toHaveAttribute("aria-pressed", "true");
+  const dialog = screen.getByRole("dialog", { name: "Swatch Scan" });
+  await expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth);
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:close") }));
+  await userEvent.click(screen.getByRole("button", { name: "Open scan" }));
+  await sample(canvasElement);
+  await sample(canvasElement);
+  await expect(
+    screen.getByRole("button", { name: i18n.t("components:scanAllPins", { count: 2 }) }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await userEvent.click(screen.getByRole("button", { name: i18n.t("components:scanClear") }));
+  await expect(
+    screen.getByRole("button", { name: i18n.t("components:scanAllPins", { count: 0 }) }),
+  ).toBeDisabled();
+}
+export const AllPinsPaintAndScheme: Story = { play: ({ canvasElement }) => allPinsStory(canvasElement) };
+export const AllPinsGermanNarrow: Story = {
+  parameters: { locale: "de" },
+  decorators: narrow,
+  play: ({ canvasElement }) => allPinsStory(canvasElement),
+};
+export const AllPinsJapaneseNarrow: Story = {
+  parameters: { locale: "ja" },
+  decorators: narrow,
+  play: ({ canvasElement }) => allPinsStory(canvasElement),
 };

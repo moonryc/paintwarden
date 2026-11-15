@@ -15,14 +15,19 @@ import {
   Typography,
 } from "@mui/material";
 import {
+  averageLab,
   buildColorIndex,
   buildSchemeColorIndex,
+  hexToLab,
+  labToHex,
   nearestPaints,
   rankSchemeColorIndex,
+  rankSchemeColorIndexForPins,
 } from "@paintwarden/core/color-matching";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { MatchQualityChip } from "../Components/MatchQualityChip";
 import { Modal } from "../Components/Modal";
 import { SwatchScanCanvas, type ScanPin } from "../Components/SwatchScanCanvas";
 import { useColorIndex, useSchemeColorIndex } from "../graphql/color-tools-hooks";
@@ -34,6 +39,16 @@ import { getSteps } from "../utils/constants";
 
 import { SwatchScanMatch } from "./SwatchScanMatch";
 import { SwatchScanPins } from "./SwatchScanPins";
+
+type PinScope = "pin" | "all";
+const scopeKey = "paintwarden:scan-pin-scope";
+function readScope(): PinScope {
+  try {
+    return sessionStorage.getItem(scopeKey) === "all" ? "all" : "pin";
+  } catch {
+    return "pin";
+  }
+}
 
 const wide = "@container (min-width: 880px)";
 
@@ -54,9 +69,19 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
 
   const serial = useRef(0);
   const [mode, setMode] = useState<"paint" | "scheme">("paint");
+  const [scope, setScope] = useState<PinScope>(readScope);
+  const allPins = scope === "all" && pins.length > 1;
+  const aggregate = useMemo(
+    () => (pins.length ? averageLab(pins.map((row) => hexToLab(row.hex))) : null),
+    [pins],
+  );
   const [assignPaint, setAssignPaint] = useState<string | null>(null);
   const pin = pins.find((row) => row.id === selected);
-  const matches = pin ? nearestPaints(index, pin.hex, { limit: 5 }) : [];
+  const sampleHex = allPins && aggregate ? labToHex(aggregate) : pin?.hex;
+  const matches = sampleHex
+    ? nearestPaints(index, allPins && aggregate ? aggregate : sampleHex, { limit: 5 })
+    : [];
+  const schemePins = useMemo(() => (allPins ? pins : pin ? [pin] : []), [allPins, pins, pin]);
   const miniature = detail.data?.miniature;
   const ready = !colors.loading && !colors.error && !detail.loading && !detail.error;
   const removePin = (id: number) => {
@@ -162,16 +187,37 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
             </Typography>
           </Stack>
           <Stack spacing={2} sx={{ minWidth: 0 }}>
-            <ToggleButtonGroup
-              exclusive
-              fullWidth
-              value={mode}
-              onChange={(_, value: "paint" | "scheme" | null) => value && setMode(value)}
-              aria-label={t("scanMode")}
-            >
-              <ToggleButton value="paint">{t("scanByPaint")}</ToggleButton>
-              <ToggleButton value="scheme">{t("scanByScheme")}</ToggleButton>
-            </ToggleButtonGroup>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <ToggleButtonGroup
+                exclusive
+                fullWidth
+                value={mode}
+                onChange={(_, value: "paint" | "scheme" | null) => value && setMode(value)}
+                aria-label={t("scanMode")}
+              >
+                <ToggleButton value="paint">{t("scanByPaint")}</ToggleButton>
+                <ToggleButton value="scheme">{t("scanByScheme")}</ToggleButton>
+              </ToggleButtonGroup>
+              <ToggleButtonGroup
+                exclusive
+                fullWidth
+                value={allPins ? "all" : "pin"}
+                disabled={pins.length < 2}
+                onChange={(_, value: PinScope | null) => {
+                  if (!value) return;
+                  setScope(value);
+                  try {
+                    sessionStorage.setItem(scopeKey, value);
+                  } catch {
+                    /* Session storage can be unavailable. */
+                  }
+                }}
+                aria-label={t("scanPinScope")}
+              >
+                <ToggleButton value="pin">{t("scanThisPin")}</ToggleButton>
+                <ToggleButton value="all">{t("scanAllPins", { count: pins.length })}</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
             <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
               <Typography component="h3" variant="subtitle2" color="text.secondary">
                 {t("scanPins")}
@@ -225,19 +271,25 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
                 aria-atomic="true"
                 sx={{ alignItems: "center", gap: 1 }}
               >
-                <Box
-                  aria-hidden
-                  sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    bgcolor: pin.hex,
-                    border: "1px solid",
-                    borderColor: "divider",
-                  }}
-                />
+                {(!allPins || mode === "paint") && (
+                  <Box
+                    aria-hidden
+                    sx={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: "50%",
+                      bgcolor: sampleHex,
+                      border: "1px solid",
+                      borderColor: "divider",
+                    }}
+                  />
+                )}
                 <Typography component="h3" variant="subtitle1">
-                  {t("scanSampled", { hex: pin.hex })}
+                  {allPins
+                    ? mode === "paint"
+                      ? t("scanCombined", { count: pins.length, hex: sampleHex })
+                      : t("scanAllPins", { count: pins.length })
+                    : t("scanSampled", { hex: pin.hex })}
                 </Typography>
               </Stack>
             )}
@@ -256,7 +308,7 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
                     {t("scanBestMatch")}
                   </Typography>
                   <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5, mt: 0.5 }}>
-                    <SwatchScanMatch sample={pin.hex} match={matches[0]} size={64} />
+                    <SwatchScanMatch sample={sampleHex!} match={matches[0]} size={64} />
                     {assignButton(matches[0].paint.id, true)}
                   </Stack>
                 </Box>
@@ -269,7 +321,7 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
                       {matches.slice(1).map((match) => (
                         <Box component="li" key={match.paint.id} sx={card}>
                           <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
-                            <SwatchScanMatch sample={pin.hex} match={match} size={44} />
+                            <SwatchScanMatch sample={sampleHex!} match={match} size={44} />
                             {assignButton(match.paint.id, false)}
                           </Stack>
                         </Box>
@@ -281,7 +333,8 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
             )}
             {pin && mode === "scheme" && (
               <ScanSchemes
-                hex={pin.hex}
+                pins={schemePins}
+                allPins={allPins}
                 miniatureId={miniatureId}
                 detail={detail.data}
                 disabled={detail.loading || Boolean(detail.error)}
@@ -303,27 +356,44 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
 }
 
 function ScanSchemes({
-  hex,
+  pins,
+  allPins,
   miniatureId,
   detail,
   disabled,
 }: {
-  hex: string;
+  pins: ScanPin[];
+  allPins: boolean;
   miniatureId: string;
   detail: MiniatureDetailView | null;
   disabled: boolean;
 }) {
-  const { t } = useTranslation("components");
+  const { t, i18n } = useTranslation("components");
   const schemes = useSchemeColorIndex();
   const index = useMemo(() => buildSchemeColorIndex(schemes.schemes), [schemes.schemes]);
-  const matches = useMemo(() => rankSchemeColorIndex(index, hex), [index, hex]);
+  const hex = pins[0].hex;
+  const matches = useMemo(
+    () =>
+      allPins
+        ? rankSchemeColorIndexForPins(
+            index,
+            pins.map((row) => row.hex),
+          )
+        : rankSchemeColorIndex(index, hex).map((match) => ({
+            ...match,
+            matches: [{ paint: match.paint, deltaE: match.deltaE }],
+            worstDeltaE: match.deltaE,
+          })),
+    [index, hex, pins, allPins],
+  );
+  const sampleKey = allPins ? `all:${pins.map((row) => `${row.id}:${row.hex}`).join(";")}` : hex;
   const [visible, setVisible] = useState(10);
   const actions = useMiniatureActions();
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
-  const [previousHex, setPreviousHex] = useState(hex);
-  if (previousHex !== hex) {
-    setPreviousHex(hex);
+  const [previousHex, setPreviousHex] = useState(sampleKey);
+  if (previousHex !== sampleKey) {
+    setPreviousHex(sampleKey);
     setVisible(10);
     setSaved(null);
   }
@@ -363,7 +433,7 @@ function ScanSchemes({
         aria-label={t("scanSchemeMatches")}
         sx={{ p: 0, m: 0, listStyle: "none" }}
       >
-        {matches.slice(0, visible).map(({ scheme, paint, deltaE }) => (
+        {matches.slice(0, visible).map(({ scheme, matches: pinMatches, deltaE, worstDeltaE }) => (
           <Stack
             component="li"
             key={scheme.id}
@@ -381,13 +451,42 @@ function ScanSchemes({
                     flex: 1,
                     minWidth: 0,
                     bgcolor: entry.hex,
-                    ...(entry.id === paint.id && { border: "2px solid", borderColor: "primary.main" }),
+                    ...(pinMatches.some((match) => match.paint.id === entry.id) && {
+                      border: "2px solid",
+                      borderColor: "primary.main",
+                    }),
                   }}
                 />
               ))}
             </Box>
             <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
-              <SwatchScanMatch sample={hex} match={{ paint, deltaE }} size={52} />
+              <Stack spacing={1} sx={{ minWidth: 0, flex: "1 1 200px" }}>
+                {allPins && (
+                  <>
+                    <Typography variant="body2">{t("scanCoverage")}</Typography>
+                    <Box>
+                      <MatchQualityChip deltaE={deltaE} />
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                      {t("scanWorstPin", {
+                        value: worstDeltaE.toLocaleString(i18n.resolvedLanguage ?? i18n.language, {
+                          maximumFractionDigits: 1,
+                        }),
+                      })}
+                    </Typography>
+                  </>
+                )}
+                {pinMatches.map((match, i) => (
+                  <Stack key={pins[i].id} spacing={0.5}>
+                    {allPins && (
+                      <Typography variant="caption">{t("scanPinNumber", { number: i + 1 })}</Typography>
+                    )}
+                    <Stack direction="row">
+                      <SwatchScanMatch sample={pins[i].hex} match={match} size={allPins ? 36 : 52} />
+                    </Stack>
+                  </Stack>
+                ))}
+              </Stack>
               <Button
                 variant="outlined"
                 size="small"

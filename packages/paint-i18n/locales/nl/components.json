@@ -518,5 +518,12 @@
   "supportReportDescription": "Een GitHub-issue openen of diagnostische informatie opslaan",
   "supportBundleDescription": "Een privé-diagnosebundel controleren en opslaan",
   "supportPrivacyDescription": "Privacy, netwerktoegang en beveiligingsmeldingen",
-  "supportTrademarksDescription": "Productnamen en onafhankelijkheid van fabrikanten"
+  "supportTrademarksDescription": "Productnamen en onafhankelijkheid van fabrikanten",
+  "scanPinScope": "Te vergelijken pinnen",
+  "scanThisPin": "Deze pin",
+  "scanAllPins": "Alle pinnen ({{count}})",
+  "scanCombined": "{{count}} pinnen gecombineerd: {{hex}}",
+  "scanCoverage": "Totale dekking · gemiddelde ΔE",
+  "scanWorstPin": "Slechtste pin · ΔE {{value}}",
+  "scanPinNumber": "Pin {{number}} → verf"
 }

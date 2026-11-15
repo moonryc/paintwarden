@@ -539,5 +539,12 @@
   "supportReportDescription": "Abrir una incidencia en GitHub o guardar información de diagnóstico",
   "supportBundleDescription": "Revisar y guardar un paquete privado de diagnóstico",
   "supportPrivacyDescription": "Privacidad, acceso a la red e informes de seguridad",
-  "supportTrademarksDescription": "Nombres de productos e independencia de los fabricantes"
+  "supportTrademarksDescription": "Nombres de productos e independencia de los fabricantes",
+  "scanPinScope": "Puntos a comparar",
+  "scanThisPin": "Este punto",
+  "scanAllPins": "Todos los puntos ({{count}})",
+  "scanCombined": "{{count}} puntos combinados: {{hex}}",
+  "scanCoverage": "Cobertura global · ΔE medio",
+  "scanWorstPin": "Peor punto · ΔE {{value}}",
+  "scanPinNumber": "Punto {{number}} → pintura"
 }

@@ -6,6 +6,7 @@ import { unzipSync } from "fflate";
 import { expect as playwrightExpect } from "playwright/test";
 import sharp from "sharp";
 
+import { checkScanAggregateFixture } from "./scan-aggregate.mjs";
 import { checkSchemeRanking } from "./scheme-ranking.mjs";
 
 const expect = playwrightExpect.configure({ timeout: 12_000 });
@@ -555,4 +556,28 @@ export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
     artifacts,
     results,
   });
+}
+
+export async function runScanAggregateFlows({ newPage, artifacts, results }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  const title = "Synthetic aggregate scan model";
+  const photo = await sharp({ create: { width: 1024, height: 768, channels: 3, background: "#427ea8" } })
+    .composite([
+      {
+        input: await sharp({ create: { width: 512, height: 768, channels: 3, background: "#b74a31" } })
+          .png()
+          .toBuffer(),
+        left: 512,
+        top: 0,
+      },
+    ])
+    .png()
+    .toBuffer();
+  const model = await createMiniature(page, title, {
+    name: "aggregate.png",
+    mimeType: "image/png",
+    buffer: photo,
+  });
+  await checkScanAggregateFixture({ page, miniatureId: model.miniatureId, title, artifacts, results });
 }

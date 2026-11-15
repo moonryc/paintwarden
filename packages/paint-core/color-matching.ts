@@ -106,6 +106,25 @@ export function hexToLab(hex: string): Lab {
   return xyzToLab(linearToXyz(srgbToLinear(hexToSrgb(hex))));
 }
 
+function requireLab(lab: Lab): Lab {
+  if (!lab || ![lab.l, lab.a, lab.b].every(Number.isFinite))
+    throw new RangeError("Expected finite Lab coordinates");
+  return lab;
+}
+
+/** Arithmetic mean in CIELAB, without gamut mapping or display-hex quantization. */
+export function averageLab(colors: readonly Lab[]): Lab {
+  if (colors.length === 0) throw new RangeError("Expected at least one Lab color");
+  const mean = { l: 0, a: 0, b: 0 };
+  for (const color of colors) {
+    requireLab(color);
+    mean.l += color.l / colors.length;
+    mean.a += color.a / colors.length;
+    mean.b += color.b / colors.length;
+  }
+  return mean;
+}
+
 export function labToHex(lab: Lab): string {
   return srgbToHex(linearToSrgb(xyzToLinear(labToXyz(lab))));
 }
@@ -244,15 +263,16 @@ function insertNearest<T extends IndexedPaint>(
   if (result.length > count) result.pop();
 }
 
-/** Exact CIEDE2000 scan with bounded top-N storage, not a full-catalog sort. Equal scores
- * break by ID (lexicographic order, independent of locale), then original catalog order.
+/** Exact CIEDE2000 scan with bounded top-N storage, not a full-catalog sort. Lab targets
+ * are scored directly, without display-hex quantization. Equal scores break by ID
+ * (lexicographic order, independent of locale), then original catalog order.
  */
 export function nearestPaints<T extends IndexedPaint>(
   index: ColorIndex<T>,
-  hex: string,
+  hex: string | Lab,
   { limit = 5, filter = "library", excludeIds = [] }: NearestPaintOptions = {},
 ): { paint: T; deltaE: number }[] {
-  const target = hexToLab(hex);
+  const target = typeof hex === "string" ? hexToLab(hex) : requireLab(hex);
   if (!Number.isFinite(limit) || limit < 0) throw new RangeError("limit must be finite and nonnegative");
   const count = Math.min(Math.floor(limit), index.paints.length);
   const result: { paint: T; deltaE: number }[] = [];
@@ -316,26 +336,66 @@ export function rankSchemeColorIndex<S extends SchemeColorSource>(
   index: SchemeColorIndex<S>,
   hex: string,
 ): SchemeColorMatch<S>[] {
-  const target = hexToLab(hex);
-  const result: SchemeColorMatch<S>[] = [];
-  // A shared paint/color only needs one distance calculation per target.
-  const distances = new Map<Lab, number>();
-  for (const { scheme, paints } of index) {
-    let best: SchemeColorMatch<S> | undefined;
-    for (const { paint, lab } of paints) {
-      let deltaE = distances.get(lab);
-      if (deltaE === undefined) {
-        deltaE = deltaE2000(target, lab);
-        distances.set(lab, deltaE);
-      }
-      if (!best || deltaE < best.deltaE || (deltaE === best.deltaE && paint.id < best.paint.id))
-        best = { scheme, paint, deltaE };
+  return rankSchemeColorIndexForPins(index, [hex]).map(({ scheme, matches, deltaE }) => ({
+    scheme,
+    paint: matches[0].paint,
+    deltaE,
+  }));
+}
+
+export type SchemeColorPinsMatch<S extends SchemeColorSource> = {
+  scheme: S;
+  matches: { paint: S["paints"][number]; deltaE: number }[];
+  deltaE: number;
+  worstDeltaE: number;
+};
+
+/** Independently match each pin to its closest authored paint (paints may be reused).
+ * Score by mean distance, then worst distance, scheme name and ID. Paint ties break by ID.
+ * Pin order and multiplicity are preserved; repeated colors share cached distances.
+ */
+export function rankSchemeColorIndexForPins<S extends SchemeColorSource>(
+  index: SchemeColorIndex<S>,
+  hexes: readonly string[],
+): SchemeColorPinsMatch<S>[] {
+  if (hexes.length === 0) return [];
+  const targetsByHex = new Map<string, { lab: Lab; distances: Map<Lab, number> }>();
+  const targets = hexes.map((hex) => {
+    const normalized = requireHex(hex);
+    let target = targetsByHex.get(normalized);
+    if (!target) {
+      target = { lab: hexToLab(normalized), distances: new Map() };
+      targetsByHex.set(normalized, target);
     }
-    if (best) result.push(best);
+    return target;
+  });
+  const result: SchemeColorPinsMatch<S>[] = [];
+  for (const { scheme, paints } of index) {
+    if (paints.length === 0) continue;
+    const matches = targets.map((target) => {
+      let best: { paint: S["paints"][number]; deltaE: number } | undefined;
+      for (const { paint, lab } of paints) {
+        let deltaE = target.distances.get(lab);
+        if (deltaE === undefined) {
+          deltaE = deltaE2000(target.lab, lab);
+          target.distances.set(lab, deltaE);
+        }
+        if (!best || deltaE < best.deltaE || (deltaE === best.deltaE && paint.id < best.paint.id))
+          best = { paint, deltaE };
+      }
+      return best!;
+    });
+    result.push({
+      scheme,
+      matches,
+      deltaE: matches.reduce((sum, match) => sum + match.deltaE, 0) / matches.length,
+      worstDeltaE: matches.reduce((worst, match) => Math.max(worst, match.deltaE), 0),
+    });
   }
   return result.sort(
     (a, b) =>
       a.deltaE - b.deltaE ||
+      a.worstDeltaE - b.worstDeltaE ||
       compareColorText(a.scheme.name, b.scheme.name) ||
       compareColorText(a.scheme.id, b.scheme.id),
   );

@@ -497,5 +497,12 @@
   "supportReportDescription": "GitHub で問題を報告するか、診断情報を保存",
   "supportBundleDescription": "非公開の診断バンドルを確認して保存",
   "supportPrivacyDescription": "プライバシー、ネットワークアクセス、脆弱性の報告",
-  "supportTrademarksDescription": "製品名とメーカーからの独立性"
+  "supportTrademarksDescription": "製品名とメーカーからの独立性",
+  "scanPinScope": "照合するピン",
+  "scanThisPin": "このピン",
+  "scanAllPins": "すべてのピン（{{count}}）",
+  "scanCombined": "{{count}}個のピンの合成色：{{hex}}",
+  "scanCoverage": "全体のカバー率 · 平均 ΔE",
+  "scanWorstPin": "最も遠いピン · ΔE {{value}}",
+  "scanPinNumber": "ピン {{number}} → 塗料"
 }

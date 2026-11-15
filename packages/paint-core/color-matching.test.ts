@@ -2,10 +2,12 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  averageLab,
   buildColorIndex,
   buildSchemeColorIndex,
   rankSchemes,
   rankSchemeColorIndex,
+  rankSchemeColorIndexForPins,
   deltaE2000,
   derivePaintRoles,
   hexToLab,
@@ -30,7 +32,7 @@ import {
   xyzToLab,
   xyzToLinear,
 } from "./color-matching.ts";
-import type { Lab, PaintRole } from "./color-matching.ts";
+import type { Lab, PaintRole, SchemeColorIndex } from "./color-matching.ts";
 
 function near(actual: number, expected: number, tolerance = 1e-5): void {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected} (±${tolerance})`);
@@ -275,10 +277,12 @@ void test("bounded top-N agrees with an exhaustive CIEDE2000 sort for a large de
       .map((paint) => ({ paint, deltaE: deltaE2000(target, hexToLab(paint.hex)) }))
       .sort((a, b) => a.deltaE - b.deltaE || (a.paint.id < b.paint.id ? -1 : 1));
     for (const limit of [1, 5, 25, 3000]) {
-      assert.deepEqual(
-        nearestPaints(index, "#7c4a95", { filter, limit, excludeIds: ["0000"] }),
-        expected.slice(0, limit),
-      );
+      for (const color of ["#7c4a95", target]) {
+        assert.deepEqual(
+          nearestPaints(index, color, { filter, limit, excludeIds: ["0000"] }),
+          expected.slice(0, limit),
+        );
+      }
     }
   }
 });
@@ -433,4 +437,223 @@ void test("precomputed scheme colors are snapshots and agree with exhaustive sco
   assert.deepEqual(rankSchemeColorIndex(index, "#7c4a95"), expected);
   paints[0].hex = "#ffffff";
   assert.deepEqual(rankSchemeColorIndex(index, "#7c4a95"), expected);
+});
+
+void test("averageLab averages coordinates without rounding, clipping, hex conversion or mutation", () => {
+  const colors = Object.freeze([
+    Object.freeze(hexToLab("#f00")),
+    Object.freeze(hexToLab("#00f")),
+    Object.freeze(hexToLab("#123456")),
+  ]);
+  const mean = averageLab(colors);
+  for (const coordinate of ["l", "a", "b"] as const) {
+    near(mean[coordinate], colors.reduce((sum, lab) => sum + lab[coordinate], 0) / colors.length, 1e-12);
+  }
+  assert.ok(deltaE2000(mean, hexToLab(labToHex(mean))) > 0.01);
+  assert.deepEqual(averageLab([colors[0]]), colors[0]);
+  assert.notEqual(averageLab([colors[0]]), colors[0]);
+  assert.deepEqual(averageLab([{ l: 120.25, a: -200.5, b: 300.75 }]), {
+    l: 120.25,
+    a: -200.5,
+    b: 300.75,
+  });
+  assert.deepEqual(
+    averageLab([
+      { l: 0, a: 0, b: 0 },
+      { l: 1, a: -1, b: 1 },
+    ]),
+    {
+      l: 0.5,
+      a: -0.5,
+      b: 0.5,
+    },
+  );
+});
+
+void test("Lab averages and nearest targets reject nonfinite and malformed coordinates", () => {
+  assert.throws(() => averageLab([]), RangeError);
+  const index = buildColorIndex(paints);
+  for (const coordinate of ["l", "a", "b"] as const) {
+    for (const invalid of [NaN, Infinity, -Infinity, undefined, "1"]) {
+      const lab = { l: 50, a: 0, b: 0, [coordinate]: invalid } as Lab;
+      assert.throws(() => averageLab([hexToLab("#123"), lab]), RangeError);
+      assert.throws(() => nearestPaints(index, lab), RangeError);
+      assert.throws(() => nearestPaints(buildColorIndex([]), lab, { limit: 0 }), RangeError);
+    }
+  }
+  for (const lab of [null, undefined, {}] as unknown as Lab[]) {
+    assert.throws(() => averageLab([lab]), RangeError);
+    assert.throws(() => nearestPaints(index, lab), RangeError);
+  }
+});
+
+void test("nearestPaints scores an averaged Lab directly, not its quantized display hex", () => {
+  const target = averageLab([hexToLab("#f00"), hexToLab("#00f")]);
+  const catalog = [{ id: "display", hex: labToHex(target), owned: true, available: true }, ...paints];
+  const index = buildColorIndex(catalog);
+  const original = { ...target };
+  const result = nearestPaints(index, target, { limit: 99 });
+  const expected = index.paints
+    .map((paint) => ({ paint, deltaE: deltaE2000(target, hexToLab(paint.hex!)) }))
+    .sort((a, b) => a.deltaE - b.deltaE || (a.paint.id < b.paint.id ? -1 : 1));
+  assert.deepEqual(result, expected);
+  assert.deepEqual(target, original);
+  assert.ok(result.find(({ paint }) => paint.id === "display")!.deltaE > 0.01);
+  assert.equal(nearestPaints(index, labToHex(target))[0].deltaE, 0);
+  assert.deepEqual(nearestPaints(index, target, { limit: 0 }), []);
+  for (const limit of [-1, NaN, Infinity])
+    assert.throws(() => nearestPaints(index, target, { limit }), RangeError);
+});
+
+void test("multi-pin schemes preserve pin order and multiplicity, reuse paints and omit invalid schemes", () => {
+  const red = { id: "red", hex: "#f00", owned: false, available: false };
+  const blue = { id: "blue", hex: "#00f", owned: false, available: false };
+  const schemes = [
+    { id: "both", name: "Both", paints: [blue, red] },
+    { id: "red", name: "Red", paints: [red] },
+    { id: "empty", name: "Empty", paints: [] },
+    { id: "invalid", name: "Invalid", paints: [{ id: "bad", hex: null }] },
+  ];
+  const index = buildSchemeColorIndex(schemes);
+  const result = rankSchemeColorIndexForPins(index, [" #F00 ", "#00f", "ff0000"]);
+  assert.deepEqual(
+    result.map(({ scheme }) => scheme.id),
+    ["both", "red"],
+  );
+  assert.equal(result[0].scheme, schemes[0]);
+  assert.deepEqual(
+    result[0].matches.map(({ paint }) => paint),
+    [red, blue, red],
+  );
+  assert.equal(result[0].matches[0].paint, red);
+  assert.equal(result[0].deltaE, 0);
+  assert.equal(result[0].worstDeltaE, 0);
+  const distance = deltaE2000(hexToLab("#f00"), hexToLab("#00f"));
+  assert.deepEqual(
+    result[1].matches.map(({ deltaE }) => deltaE),
+    [0, distance, 0],
+  );
+  assert.equal(result[1].deltaE, distance / 3);
+  assert.equal(result[1].worstDeltaE, distance);
+  assert.deepEqual(rankSchemeColorIndexForPins(index, []), []);
+  assert.deepEqual(rankSchemeColorIndexForPins([], ["#123"]), []);
+  for (const hexes of [["bad!"], ["#f00", "bad!"]]) {
+    assert.throws(() => rankSchemeColorIndexForPins(index, hexes), RangeError);
+    assert.throws(() => rankSchemeColorIndexForPins([], hexes), RangeError);
+  }
+  for (const hex of ["#f00", "#7c4a95"]) {
+    assert.deepEqual(
+      rankSchemeColorIndexForPins(index, [hex]).map(({ scheme, matches, deltaE }) => ({
+        scheme,
+        paint: matches[0].paint,
+        deltaE,
+      })),
+      rankSchemeColorIndex(index, hex),
+    );
+  }
+});
+
+void test("multi-pin means take priority over worst distance", () => {
+  const schemes = [
+    { id: "balanced", name: "A balanced", paints: [{ id: "gray", hex: "#777" }] },
+    { id: "black", name: "Z black", paints: [{ id: "black", hex: "#000" }] },
+  ];
+  const result = rankSchemeColorIndexForPins(buildSchemeColorIndex(schemes), ["#000", "#000", "#fff"]);
+  assert.deepEqual(
+    result.map(({ scheme }) => scheme.id),
+    ["black", "balanced"],
+  );
+  assert.ok(result[0].deltaE < result[1].deltaE);
+  assert.ok(result[0].worstDeltaE > result[1].worstDeltaE);
+});
+
+void test("equal multi-pin means break by worst distance before scheme name or ID", () => {
+  // Synthetic, out-of-gamut Lab chosen so the two endpoint distances sum to the
+  // black/white distance exactly, without rounding scores to manufacture a tie.
+  const balanced = { l: 50, a: 147.45008612254833, b: 0 };
+  const schemes = [
+    { id: "a", name: "A uneven", paints: [{ id: "black", hex: "#000" }] },
+    { id: "z", name: "Z balanced", paints: [{ id: "balanced", hex: "#fff" }] },
+  ];
+  const index: SchemeColorIndex<(typeof schemes)[number]> = [
+    { scheme: schemes[0], paints: [{ paint: schemes[0].paints[0], lab: hexToLab("#000") }] },
+    { scheme: schemes[1], paints: [{ paint: schemes[1].paints[0], lab: balanced }] },
+  ];
+  const result = rankSchemeColorIndexForPins(index, ["#000", "#fff"]);
+  assert.equal(result[0].deltaE, result[1].deltaE);
+  assert.ok(result[0].worstDeltaE < result[1].worstDeltaE);
+  assert.deepEqual(
+    result.map(({ scheme }) => scheme.id),
+    ["z", "a"],
+  );
+});
+
+void test("multi-pin exact ties use locale-independent names/IDs then stable input order", () => {
+  const first = { id: "a", hex: "#abc", sequence: 1 };
+  const second = { id: "a", hex: "#abc", sequence: 2 };
+  const paints = [{ id: "z", hex: "#abc", sequence: 0 }, first, second];
+  const schemes = [
+    { id: "z", name: "Same", paints, sequence: 0 },
+    { id: "a", name: "Same", paints, sequence: 1 },
+    { id: "a", name: "Same", paints, sequence: 2 },
+    { id: "z", name: "Alpha", paints, sequence: 3 },
+    { id: "a", name: "alpha", paints, sequence: 4 },
+  ];
+  const index = buildSchemeColorIndex(schemes);
+  const result = rankSchemeColorIndexForPins(index, ["#123", "#fff"]);
+  assert.deepEqual(
+    result.map(({ scheme }) => scheme.sequence),
+    [3, 1, 2, 0, 4],
+  );
+  assert.ok(result.every(({ matches }) => matches.every(({ paint }) => paint === first)));
+  assert.deepEqual(rankSchemeColorIndexForPins(index, ["#123", "#fff"]), result);
+  const reversed = rankSchemeColorIndexForPins(buildSchemeColorIndex([...schemes].reverse()), [
+    "#123",
+    "#fff",
+  ]);
+  assert.deepEqual(
+    reversed.map(({ scheme }) => scheme.sequence),
+    [3, 2, 1, 0, 4],
+  );
+});
+
+void test("multi-pin shared-color snapshots agree with independent exhaustive scoring", () => {
+  const paints = Array.from({ length: 60 }, (_, i) => ({
+    id: String(i),
+    hex: `#${((i * 7919) % 0x1000000).toString(16).padStart(6, "0")}`,
+  }));
+  const schemes = Array.from({ length: 100 }, (_, i) => ({
+    id: String(i),
+    name: `Scheme ${i}`,
+    paints: Array.from({ length: 10 }, (_, j) => paints[(i + j) % paints.length]),
+  }));
+  const hexes = ["#7c4a95", "#000", "#abc", "#7C4A95"];
+  const compare = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+  const expected = schemes
+    .map((scheme) => {
+      const matches = hexes.map(
+        (hex) =>
+          scheme.paints
+            .map((paint) => ({ paint, deltaE: deltaE2000(hexToLab(hex), hexToLab(paint.hex)) }))
+            .sort((a, b) => a.deltaE - b.deltaE || compare(a.paint.id, b.paint.id))[0],
+      );
+      return {
+        scheme,
+        matches,
+        deltaE: matches.reduce((sum, match) => sum + match.deltaE, 0) / matches.length,
+        worstDeltaE: Math.max(...matches.map(({ deltaE }) => deltaE)),
+      };
+    })
+    .sort(
+      (a, b) =>
+        a.deltaE - b.deltaE ||
+        a.worstDeltaE - b.worstDeltaE ||
+        compare(a.scheme.name, b.scheme.name) ||
+        compare(a.scheme.id, b.scheme.id),
+    );
+  const index = buildSchemeColorIndex(schemes);
+  assert.equal(index[0].paints[1].lab, index[1].paints[0].lab);
+  assert.deepEqual(rankSchemeColorIndexForPins(index, hexes), expected);
+  paints[0].hex = "#fff";
+  assert.deepEqual(rankSchemeColorIndexForPins(index, hexes), expected);
 });
