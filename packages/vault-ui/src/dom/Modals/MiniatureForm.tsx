@@ -1,6 +1,6 @@
+import { StableAutocomplete } from "../Components/StableAutocomplete";
 import {
   Alert,
-  Autocomplete,
   Button,
   Chip,
   CircularProgress,
@@ -232,8 +232,10 @@ export function MiniatureForm({
                   </MenuItem>
                 ))}
               </TextField>
-              <Autocomplete
+              <StableAutocomplete
                 options={templateMatches}
+                hasNextPage={templateCatalog?.hasNextPage}
+                onLoadMore={catalogQuery.loadMore}
                 filterOptions={(options) => options}
                 value={selectedTemplate}
                 inputValue={templateSearch}
@@ -266,11 +268,6 @@ export function MiniatureForm({
                 )}
               />
             </Box>
-            {templateCatalog?.hasNextPage && (
-              <Button disabled={catalogQuery.loading} onClick={catalogQuery.loadMore}>
-                {t("loadMoreModels")}
-              </Button>
-            )}
             {templateError && (
               <Alert
                 severity="warning"

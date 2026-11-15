@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
@@ -274,6 +275,7 @@ export function useWishlist(miniatureId: string | null) {
 }
 
 export function useWishlistModelOptions(search: string) {
+  search = normalizeSearch(search);
   const scope = useVaultGraphQL();
   const fixture = useContext(WishlistFixtureContext);
   const key = search.trim();
@@ -388,7 +390,7 @@ export function useWishlistModelOptions(search: string) {
       () => {
         void run();
       },
-      key ? 100 : 0,
+      key ? SEARCH_DEBOUNCE_MS : 0,
     );
     return () => {
       active = false;
@@ -398,13 +400,9 @@ export function useWishlistModelOptions(search: string) {
     };
   }, [scope, key, fixture]);
   return {
-    options: fixture
-      ? fixture.modelOptions(key)
-      : state.key === key && state.scope === scope
-        ? state.options
-        : [],
+    options: fixture ? fixture.modelOptions(key) : state.scope === scope ? state.options : [],
     hasNextPage: fixture ? false : state.hasNextPage,
-    loading: fixture ? false : state.loading,
+    loading: fixture ? false : state.key !== key || state.scope !== scope || state.loading,
     error: fixture ? "" : state.error,
     loadMore: useCallback(() => commands.current.more(), []),
     retry: useCallback(() => commands.current.retry(), []),

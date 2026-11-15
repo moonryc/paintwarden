@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS, useSearchResults } from "../utils/use-search-results";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { readPaintDetail, type PaintDetailView, type DetailWindow } from "./detail-loader";
@@ -129,6 +130,7 @@ export function usePaintDetail(id: string) {
 }
 
 export function usePaintOptions(search: string, excludeIds: string[], first = 30) {
+  search = normalizeSearch(search);
   const graphql = useVaultGraphQL();
   const accepted = useRef<AcceptedRead | null>(null);
   const key = JSON.stringify([...new Set(excludeIds)].sort());
@@ -159,47 +161,59 @@ export function usePaintOptions(search: string, excludeIds: string[], first = 30
   );
   useEffect(() => {
     if (!graphql) return;
+    const abort = new AbortController();
     let current = true;
     const ticket = graphql.controller.capture();
     setResult((old) => ({ ...old, loading: true, error: null }));
-    // Debounce typing without allowing an older query/exclusion set to remain selectable.
-    const timeout = setTimeout(() => {
-      void graphql.client
-        .query({ query: PaintPickerOptionsDocument, variables, fetchPolicy: "no-cache" })
-        .then(({ data }) => {
-          if (!current || !data) return;
-          if (!graphql.controller.accepts(ticket, data.paintOptions.revision, OPTION_FAMILIES)) {
-            setVersion((value) => value + 1);
-            return;
-          }
-          accepted.current = { ticket, revision: data.paintOptions.revision };
-          graphql.client.writeQuery({ query: PaintPickerOptionsDocument, variables, data });
-          setResult({
+    // Retain accepted results during the debounce; exclusions are applied below.
+    const timeout = setTimeout(
+      () => {
+        void graphql.client
+          .query({
+            query: PaintPickerOptionsDocument,
             variables,
-            scope: graphql,
-            items: data.paintOptions.items.map((paint) => getFragmentData(DetailPaintFragmentDoc, paint)),
-            loading: false,
-            error: null,
-          });
-        })
-        .catch((error: unknown) => {
-          if (current)
+            fetchPolicy: "no-cache",
+            context: { fetchOptions: { signal: abort.signal }, queryDeduplication: false },
+          })
+          .then(({ data }) => {
+            if (!current || !data) return;
+            if (!graphql.controller.accepts(ticket, data.paintOptions.revision, OPTION_FAMILIES)) {
+              setVersion((value) => value + 1);
+              return;
+            }
+            accepted.current = { ticket, revision: data.paintOptions.revision };
+            graphql.client.writeQuery({ query: PaintPickerOptionsDocument, variables, data });
             setResult({
               variables,
               scope: graphql,
-              items: [],
+              items: data.paintOptions.items.map((paint) => getFragmentData(DetailPaintFragmentDoc, paint)),
               loading: false,
-              error: error instanceof Error ? error : new Error(String(error)),
+              error: null,
             });
-        });
-    }, 120);
+          })
+          .catch((error: unknown) => {
+            if (current)
+              setResult({
+                variables,
+                scope: graphql,
+                items: [],
+                loading: false,
+                error: error instanceof Error ? error : new Error(String(error)),
+              });
+          });
+      },
+      variables.search.trim() ? SEARCH_DEBOUNCE_MS : 0,
+    );
     return () => {
       current = false;
+      abort.abort();
       clearTimeout(timeout);
     };
   }, [graphql, variables, version]);
+  const pending = result.variables !== variables || result.scope !== graphql || result.loading;
+  const items = useSearchResults(!pending ? result.items : null, pending, graphql) ?? [];
   return {
-    items: result.variables === variables && result.scope === graphql && !result.loading ? result.items : [],
+    items: items.filter((item) => !excludeIds.includes(item.id)),
     loading: result.variables !== variables || result.scope !== graphql || result.loading,
     error: result.variables === variables && result.scope === graphql ? result.error : null,
   };

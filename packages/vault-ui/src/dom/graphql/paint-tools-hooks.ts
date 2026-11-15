@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -51,12 +52,14 @@ export function usePaintConversion(ids: string[], choiceIds: string[]) {
   return { ...result, data };
 }
 export function useOwnedPaintOptions(search: string) {
+  search = normalizeSearch(search);
   const read = useCallback(
-    async (client: ApolloClient) => {
+    async (client: ApolloClient, _pages: number, signal?: AbortSignal) => {
       const { data } = await client.query({
         query: OwnedPaintPickerOptionsDocument,
         variables: { search },
         fetchPolicy: "no-cache",
+        context: { fetchOptions: { signal }, queryDeduplication: false },
       });
       if (!data) throw new Error(i18n.t("shell:ownedPaintsResponseWasEmpty"));
       return data.ownedPaintOptions;
@@ -73,6 +76,6 @@ export function useOwnedPaintOptions(search: string) {
     },
     [search],
   );
-  const { data, ...result } = useSchemeWindow(search, read, write, noMore);
+  const { data, ...result } = useSchemeWindow(search, read, write, noMore, true, search);
   return { ...result, items: data ? getFragmentData(DetailPaintFragmentDoc, data.items) : [] };
 }

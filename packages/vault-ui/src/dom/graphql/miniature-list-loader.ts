@@ -45,11 +45,13 @@ export async function readMiniaturePage(
   client: ApolloClient,
   variables: MiniatureListVariables,
   after: string | null = null,
+  signal?: AbortSignal,
 ) {
   const { data } = await client.query({
     query: MiniatureListDocument,
     variables: { ...variables, first: MINIATURE_PAGE_SIZE, after },
     fetchPolicy: "no-cache",
+    context: { fetchOptions: { signal }, queryDeduplication: false },
   });
   if (!data) throw new Error(i18n.t("shell:miniatureListResponseWasEmpty"));
   miniatureListEnvelope(data);
@@ -60,6 +62,7 @@ export async function readMiniatureWindow(
   client: ApolloClient,
   pages: number,
   variables: MiniatureListVariables,
+  signal?: AbortSignal,
 ): Promise<MiniatureListQuery> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     let combined: MiniatureListQuery | undefined;
@@ -67,7 +70,7 @@ export async function readMiniatureWindow(
     for (let page = 0; page < Math.max(1, pages); page += 1) {
       let data: MiniatureListQuery;
       try {
-        data = await readMiniaturePage(client, variables, after);
+        data = await readMiniaturePage(client, variables, after, signal);
       } catch (error) {
         if (!isStaleLibraryCursor(error)) throw error;
         combined = undefined;

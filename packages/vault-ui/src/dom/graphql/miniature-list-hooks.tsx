@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
@@ -123,7 +124,7 @@ type NetworkState = {
 export function useMiniatureList(filters: MiniatureListFilters): MiniatureListResult {
   const fixture = useContext(MiniatureFixtureContext);
   const scope = useVaultGraphQL();
-  const filterKey = JSON.stringify(filters);
+  const filterKey = JSON.stringify({ ...filters, search: normalizeSearch(filters.search) });
   const stableFilters = useMemo(() => JSON.parse(filterKey) as MiniatureListFilters, [filterKey]);
   const key = JSON.stringify(miniatureListVariables(stableFilters));
   const variables = useMemo(() => JSON.parse(key) as MiniatureListVariables, [key]);
@@ -139,6 +140,7 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
       });
       return;
     }
+    const abort = new AbortController();
     let active = true;
     let running = false;
     let refreshPending = true;
@@ -168,16 +170,17 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
                 client,
                 variables,
                 miniatureListEnvelope(current).miniatures.pageInfo.endCursor ?? null,
+                abort.signal,
               );
               next = sameMiniatureRevision(current, page)
                 ? appendMiniaturePage(current, page)
-                : await readMiniatureWindow(client, targetPages, variables);
+                : await readMiniatureWindow(client, targetPages, variables, abort.signal);
             } catch (error) {
               if (!isStaleLibraryCursor(error)) throw error;
-              next = await readMiniatureWindow(client, targetPages, variables);
+              next = await readMiniatureWindow(client, targetPages, variables, abort.signal);
             }
           } else {
-            next = await readMiniatureWindow(client, targetPages, variables);
+            next = await readMiniatureWindow(client, targetPages, variables, abort.signal);
           }
           if (!active) return;
           if (
@@ -247,17 +250,18 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
         return;
       refresh();
     });
-    // Match the previous fuzzy worker's 80ms search debounce, without delaying edits
+    // Debounce server searches without delaying edits
     // or invalidations. Fast typing must not consume one network request per keystroke.
     const searchTimer = variables.search
       ? setTimeout(() => {
           void run();
-        }, 80)
+        }, SEARCH_DEBOUNCE_MS)
       : undefined;
     if (!searchTimer) void run();
     return () => {
       clearTimeout(searchTimer);
       active = false;
+      abort.abort();
       unsubscribe();
     };
   }, [scope, variables, key, fixture]);
@@ -266,14 +270,15 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
   const view = useMemo(() => {
     if (fixture) return fixture(stableFilters);
     if (!state.data || state.scope !== scope) return emptyMiniatureView;
-    const accepted = miniatureListView(state.data);
-    // Keep global options while a different filter is loading, but never show rows from
-    // the old query (even for the render before its effect runs).
-    return state.dataKey === key ? accepted : { ...accepted, rows: [], totalCount: 0, hasNextPage: false };
-  }, [fixture, stableFilters, state.data, state.dataKey, state.scope, key, scope]);
+    // Keep the last accepted window visible until the next search settles.
+    return miniatureListView(state.data);
+  }, [fixture, stableFilters, state.data, state.scope, scope]);
   return {
     ...view,
-    loading: fixture ? false : state.loading,
+    loading: fixture
+      ? false
+      : state.loading ||
+        (!state.error && Boolean(state.data) && (state.dataKey !== key || state.scope !== scope)),
     refreshing: fixture ? false : state.refreshing,
     error: fixture ? "" : state.error,
     loadMore,

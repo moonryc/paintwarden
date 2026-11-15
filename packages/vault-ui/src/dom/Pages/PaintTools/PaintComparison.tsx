@@ -1,4 +1,5 @@
-import { Alert, Autocomplete, Box, Button, Card, Divider, TextField } from "@mui/material";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
+import { Alert, Box, Button, Card, Divider, TextField } from "@mui/material";
 import { rankPaintsByColor } from "@paintwarden/core/paint-color-similarity";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,7 +22,7 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
 
   return (
     <Card sx={{ p: { xs: 2, sm: 4 } }}>
-      <Autocomplete<Paint>
+      <StableAutocomplete<Paint>
         noOptionsText={t("toolsNoOptions")}
         loadingText={t("toolsLoadingOptions")}
         clearText={t("toolsClear")}

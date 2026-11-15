@@ -1,5 +1,6 @@
+import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { useFragment } from "@apollo/client/react";
-import { Alert, Autocomplete, Button, CircularProgress, TextField } from "@mui/material";
+import { Alert, Button, CircularProgress, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -196,10 +197,12 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
         </Box>
       )}
       <Box sx={{ mb: 1.5, display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
-        <Autocomplete
+        <StableAutocomplete
           size="small"
           sx={{ flex: "0 1 340px", minWidth: 180 }}
           options={models.options}
+          hasNextPage={models.hasNextPage}
+          onLoadMore={models.loadMore}
           value={selectedMini}
           onChange={(_event, value) => setSelectedMini(value)}
           onInputChange={(_event, value, reason) => {
@@ -231,11 +234,6 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
             />
           )}
         />
-        {models.hasNextPage && (
-          <Button onClick={models.loadMore} disabled={models.loading}>
-            {t("wishlistLoadMoreMiniatures")}
-          </Button>
-        )}
         <Button
           variant="outlined"
           onClick={share}

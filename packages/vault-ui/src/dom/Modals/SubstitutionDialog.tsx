@@ -1,5 +1,6 @@
+import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { useTranslation } from "react-i18next";
-import { Alert, Autocomplete, Button, Card, IconButton, TextField } from "@mui/material";
+import { Alert, Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
 
@@ -398,7 +399,7 @@ function IngredientPickerView({
 }: PickerProps & { options: Paint[]; loading?: boolean; error?: string }) {
   const { t } = useTranslation("components");
   return (
-    <Autocomplete
+    <StableAutocomplete
       fullWidth
       size="small"
       value={choice}

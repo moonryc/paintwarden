@@ -546,5 +546,7 @@
   "scanCombined": "{{count}} points combinés : {{hex}}",
   "scanCoverage": "Couverture globale · ΔE moyen",
   "scanWorstPin": "Point le moins proche · ΔE {{value}}",
-  "scanPinNumber": "Point {{number}} → peinture"
+  "scanPinNumber": "Point {{number}} → peinture",
+  "searchResultCount": "{{count}} résultats disponibles.",
+  "searchResults": "Résultats de recherche"
 }

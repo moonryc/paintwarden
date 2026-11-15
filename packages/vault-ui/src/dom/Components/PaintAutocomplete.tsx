@@ -1,5 +1,6 @@
+import { StableAutocomplete } from "./StableAutocomplete";
 import { useTranslation } from "react-i18next";
-import { Autocomplete, TextField } from "@mui/material";
+import { TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import { usePaintOptions } from "../graphql/detail-hooks";
@@ -43,7 +44,7 @@ function PaintAutocompleteView<T extends PaintOption>({
 }: PickerProps<T> & { matches: T[]; loading?: boolean; error?: Error | null }) {
   const { t } = useTranslation("components");
   return (
-    <Autocomplete
+    <StableAutocomplete
       fullWidth
       size="small"
       openOnFocus

@@ -525,5 +525,7 @@
   "scanCombined": "{{count}} pinnen gecombineerd: {{hex}}",
   "scanCoverage": "Totale dekking · gemiddelde ΔE",
   "scanWorstPin": "Slechtste pin · ΔE {{value}}",
-  "scanPinNumber": "Pin {{number}} → verf"
+  "scanPinNumber": "Pin {{number}} → verf",
+  "searchResultCount": "{{count}} resultaten beschikbaar.",
+  "searchResults": "Zoekresultaten"
 }

@@ -93,18 +93,19 @@ export function FilterToolbar({
                 <Search size={17} />
               </InputAdornment>
             ),
-            endAdornment: search ? (
-              <InputAdornment position="end">
+            endAdornment: (
+              <InputAdornment position="end" sx={{ width: 28, visibility: search ? "visible" : "hidden" }}>
                 <IconButton
                   size="small"
                   edge="end"
                   onClick={() => setSearch("")}
                   aria-label={t("clearSearch")}
+                  tabIndex={search ? 0 : -1}
                 >
                   <X size={15} />
                 </IconButton>
               </InputAdornment>
-            ) : null,
+            ),
           },
         }}
       />

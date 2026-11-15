@@ -567,5 +567,7 @@
   "scanCombined": "Połączone punkty ({{count}}): {{hex}}",
   "scanCoverage": "Łączne pokrycie · średnie ΔE",
   "scanWorstPin": "Najgorszy punkt · ΔE {{value}}",
-  "scanPinNumber": "Punkt {{number}} → farba"
+  "scanPinNumber": "Punkt {{number}} → farba",
+  "searchResultCount": "Liczba dostępnych wyników: {{count}}.",
+  "searchResults": "Wyniki wyszukiwania"
 }

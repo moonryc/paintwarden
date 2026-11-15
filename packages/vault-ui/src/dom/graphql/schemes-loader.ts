@@ -35,6 +35,7 @@ export async function readSchemes(
   client: ApolloClient,
   variables: SchemesVariables,
   pages = 1,
+  signal?: AbortSignal,
 ): Promise<SchemesRead> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
@@ -45,6 +46,7 @@ export async function readSchemes(
           query: SchemesPageDocument,
           variables: { ...variables, after },
           fetchPolicy: "no-cache",
+          context: { fetchOptions: { signal }, queryDeduplication: false },
         });
         if (!data) throw new Error(i18n.t("shell:schemesResponseWasEmpty"));
         const next = unpack(data.schemes);

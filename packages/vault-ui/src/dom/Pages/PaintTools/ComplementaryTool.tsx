@@ -1,7 +1,7 @@
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import Check from "@mui/icons-material/Check";
 import {
   Alert,
-  Autocomplete,
   Box,
   Button,
   Card,
@@ -145,7 +145,7 @@ export function ComplementaryTool() {
       </Box>
       <Box sx={{ color: "text.secondary", fontSize: 13, mb: 3 }}>{t("complementaryDescription")}</Box>
       <Box sx={{ display: "grid", gap: 3 }}>
-        <Autocomplete<Paint>
+        <StableAutocomplete<Paint>
           options={options.items.map(paintModel)}
           value={selected}
           inputValue={query}

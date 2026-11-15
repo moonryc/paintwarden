@@ -504,5 +504,7 @@
   "scanCombined": "{{count}}個のピンの合成色：{{hex}}",
   "scanCoverage": "全体のカバー率 · 平均 ΔE",
   "scanWorstPin": "最も遠いピン · ΔE {{value}}",
-  "scanPinNumber": "ピン {{number}} → 塗料"
+  "scanPinNumber": "ピン {{number}} → 塗料",
+  "searchResultCount": "検索結果：{{count}}件。",
+  "searchResults": "検索結果"
 }

@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS, useSearchResults } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -22,7 +23,7 @@ import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 
 export function useFolderSearch(filters: FolderSearchVariables) {
   const scope = useVaultGraphQL();
-  const key = JSON.stringify(filters);
+  const key = JSON.stringify({ ...filters, search: normalizeSearch(filters.search) });
   const variables = useMemo(() => JSON.parse(key) as FolderSearchVariables, [key]);
   const enabled = Boolean(filters.search.trim());
   const [state, setState] = useState<{
@@ -36,6 +37,7 @@ export function useFolderSearch(filters: FolderSearchVariables) {
   useEffect(() => {
     commands.current = { retry: () => {}, more: () => {} };
     if (!enabled || !scope) return;
+    const abort = new AbortController();
     let active = true;
     let running = false;
     let pending = true;
@@ -50,7 +52,7 @@ export function useFolderSearch(filters: FolderSearchVariables) {
         while (active && pending) {
           pending = false;
           const ticket = scope.controller.capture();
-          const next = await readFolderSearch(scope.client, variables, pages);
+          const next = await readFolderSearch(scope.client, variables, pages, abort.signal);
           if (!active) return;
           if (!scope.controller.accepts(ticket, next.folderSearch.revision, families)) {
             pending = true;
@@ -85,15 +87,17 @@ export function useFolderSearch(filters: FolderSearchVariables) {
       },
     };
     const unsubscribe = scope.controller.listen(families, retry);
-    const timer = setTimeout(() => void run(), 80);
+    const timer = setTimeout(() => void run(), SEARCH_DEBOUNCE_MS);
     return () => {
       active = false;
+      abort.abort();
       clearTimeout(timer);
       unsubscribe();
     };
   }, [enabled, scope, key, variables]);
   const matching = enabled && state.scope === scope && state.key === key;
-  const data = matching ? state.data : undefined;
+  const pending = enabled && (!matching || state.loading);
+  const data = useSearchResults(matching ? (state.data ?? null) : null, pending, scope);
   const result = useMemo(() => {
     const folders: FolderView[] = [];
     const miniatures: MiniatureTileProjection[] = [];
@@ -117,7 +121,7 @@ export function useFolderSearch(filters: FolderSearchVariables) {
   return {
     ...result,
     loading: enabled && Boolean(scope) && (!matching || (state.loading && !data)),
-    refreshing: matching && Boolean(data) && state.loading,
+    refreshing: Boolean(data) && pending,
     error: matching ? state.error : "",
     totalCount: data?.folderSearch.results.totalCount ?? 0,
     hasNextPage: data?.folderSearch.results.pageInfo.hasNextPage ?? false,

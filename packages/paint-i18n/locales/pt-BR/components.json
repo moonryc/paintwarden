@@ -546,5 +546,7 @@
   "scanCombined": "{{count}} pontos combinados: {{hex}}",
   "scanCoverage": "Cobertura geral · ΔE médio",
   "scanWorstPin": "Pior ponto · ΔE {{value}}",
-  "scanPinNumber": "Ponto {{number}} → tinta"
+  "scanPinNumber": "Ponto {{number}} → tinta",
+  "searchResultCount": "{{count}} resultados disponíveis.",
+  "searchResults": "Resultados da busca"
 }

@@ -1,3 +1,4 @@
+import { normalizeSearch } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -15,10 +16,12 @@ import { readSchemes, type SchemesRead, type SchemesVariables } from "./schemes-
 
 const moreSchemes = (data: SchemesRead) => data.pageInfo.hasNextPage;
 export function useSchemes(filters: SchemesVariables) {
+  filters = { ...filters, search: normalizeSearch(filters.search ?? "") };
   const key = JSON.stringify({ ...filters, usesPaintIds: [...new Set(filters.usesPaintIds)].sort() });
   const variables = useMemo(() => JSON.parse(key) as SchemesVariables, [key]);
   const read = useCallback(
-    (client: ApolloClient, pages: number) => readSchemes(client, variables, pages),
+    (client: ApolloClient, pages: number, signal?: AbortSignal) =>
+      readSchemes(client, variables, pages, signal),
     [variables],
   );
   const write = useCallback(
@@ -43,7 +46,7 @@ export function useSchemes(filters: SchemesVariables) {
     },
     [variables],
   );
-  const { data, ...result } = useSchemeWindow(key, read, write, moreSchemes);
+  const { data, ...result } = useSchemeWindow(key, read, write, moreSchemes, true, filters.search ?? "");
   const scope = useVaultGraphQL();
   const [previousFacets, setPreviousFacets] = useState<{
     scope: typeof scope;
@@ -63,14 +66,16 @@ export function useSchemes(filters: SchemesVariables) {
 
 const noMore = () => false;
 export function useSchemePaintOptions(search: string, excludeIds: string[]) {
+  search = normalizeSearch(search);
   const key = JSON.stringify({ search, excludeIds: [...new Set(excludeIds)].sort() });
   const variables = useMemo(() => JSON.parse(key) as { search: string; excludeIds: string[] }, [key]);
   const read = useCallback(
-    async (client: ApolloClient) => {
+    async (client: ApolloClient, _pages: number, signal?: AbortSignal) => {
       const { data } = await client.query({
         query: SchemeUsedPaintOptionsDocument,
         variables,
         fetchPolicy: "no-cache",
+        context: { fetchOptions: { signal }, queryDeduplication: false },
       });
       if (!data) throw new Error(i18n.t("shell:schemePaintsResponseWasEmpty"));
       return data.schemePaintOptions;
@@ -87,6 +92,6 @@ export function useSchemePaintOptions(search: string, excludeIds: string[]) {
     },
     [variables],
   );
-  const { data, ...result } = useSchemeWindow(`used-paints:${key}`, read, write, noMore);
+  const { data, ...result } = useSchemeWindow(`used-paints:${key}`, read, write, noMore, true, search);
   return { ...result, items: data ? getFragmentData(DetailPaintFragmentDoc, data.items) : [] };
 }

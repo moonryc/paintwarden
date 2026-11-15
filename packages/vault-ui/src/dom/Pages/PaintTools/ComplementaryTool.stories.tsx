@@ -364,11 +364,15 @@ export const Loading: Story = {
   parameters: { queryDelay: 750 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
-    await expect(canvasElement.querySelector('[data-skeleton="complementary"]')).toHaveAttribute(
-      "aria-busy",
-      "true",
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-skeleton="complementary"]')).toHaveAttribute(
+        "aria-busy",
+        "true",
+      ),
     );
+    await expect(
+      canvas.getAllByRole("status").some((status) => status.getAttribute("aria-live") === "polite"),
+    ).toBe(true);
     await expect(
       await canvas.findByText("Choose a paint to generate the other three roles."),
     ).toBeInTheDocument();

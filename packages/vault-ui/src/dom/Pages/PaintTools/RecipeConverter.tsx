@@ -1,4 +1,5 @@
-import { Alert, Autocomplete, Box, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
+import { Alert, Box, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
 import { COLOR_CATEGORIES, type ColorCategory } from "@paintwarden/core/color-categories";
 import { paintType, rankOwnedPaintMatches } from "@paintwarden/core/recipe-converter";
 import { useEffect, useMemo, useState } from "react";
@@ -133,13 +134,15 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
     <Card sx={{ p: { xs: 2, sm: 4 } }}>
       <Box sx={{ fontWeight: 700, fontSize: 18, mb: 0.5 }}>{t("toolsConverter")}</Box>
       <Box sx={{ color: "text.secondary", fontSize: 13, mb: 3 }}>{t("toolsConverterDescription")}</Box>
-      <Autocomplete<SchemeSummaryModel>
+      <StableAutocomplete<SchemeSummaryModel>
         noOptionsText={t("toolsNoOptions")}
         loadingText={t("toolsLoadingOptions")}
         clearText={t("toolsClear")}
         openText={t("toolsOpen")}
         closeText={t("toolsClose")}
         options={schemeMatches}
+        hasNextPage={schemeOptions.hasNextPage}
+        onLoadMore={schemeOptions.loadMore}
         loading={schemeOptions.loading}
         inputValue={schemeQuery}
         onInputChange={(_, value) => setSchemeQuery(value)}
@@ -161,11 +164,6 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
         >
           {schemeOptions.error.message}
         </Alert>
-      )}
-      {schemeOptions.hasNextPage && (
-        <Button onClick={schemeOptions.loadMore} disabled={schemeOptions.loading}>
-          {t("toolsMoreSchemes")}
-        </Button>
       )}
       {!scheme && (
         <Box sx={{ mt: 3, color: "text.secondary", fontSize: 13 }}>{t("toolsOriginalUnchanged")}</Box>
@@ -420,7 +418,7 @@ function ConversionPaintPicker({
   const options = useOwnedPaintOptions(query.trim());
   const matches = [original, ...options.items.map(paintModel).filter((paint) => paint.id !== original.id)];
   return (
-    <Autocomplete<Paint>
+    <StableAutocomplete<Paint>
       loadingText={t("toolsLoadingOptions")}
       clearText={t("toolsClear")}
       openText={t("toolsOpen")}

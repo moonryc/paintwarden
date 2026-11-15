@@ -87,6 +87,7 @@ export function readSchemeOptions(
   client: ApolloClient,
   variables: SchemeOptionsVariables,
   pages = 1,
+  signal?: AbortSignal,
 ): Promise<SchemeOptionsRead> {
   return readStableWindow(async () => {
     let combined: SchemeOptionsRead | undefined;
@@ -96,6 +97,7 @@ export function readSchemeOptions(
         query: SchemePickerOptionsDocument,
         variables: { ...variables, after },
         fetchPolicy: "no-cache",
+        context: { fetchOptions: { signal }, queryDeduplication: false },
       });
       if (!data) throw new Error(i18n.t("shell:schemeOptionsResponseWasEmpty"));
       const next = unpackOptions(data.schemeOptions);

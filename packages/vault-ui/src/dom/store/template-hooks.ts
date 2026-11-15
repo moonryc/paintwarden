@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS, useSearchResults } from "../utils/use-search-results";
 import type { ApolloClient } from "@apollo/client";
 import type { RecipeStep } from "@paintwarden/core/recipe-steps";
 import { i18n } from "@paintwarden/i18n/runtime";
@@ -45,10 +46,12 @@ function useTemplateWindow<T>(
   key: string,
   enabled: boolean,
   families: readonly VaultFamily[],
-  read: (client: ApolloClient, pages: number) => Promise<T>,
+  read: (client: ApolloClient, pages: number, signal?: AbortSignal) => Promise<T>,
   revision: (data: T) => Revision,
   write: (client: ApolloClient, data: T) => void,
   hasMore: (data: T) => boolean,
+  retainSearch = false,
+  search = "",
 ) {
   const scope = useVaultGraphQL();
   const [state, setState] = useState<WindowState<T>>({
@@ -71,6 +74,7 @@ function useTemplateWindow<T>(
       });
       return;
     }
+    const abort = new AbortController();
     let active = true;
     let running = false;
     let pending = true;
@@ -86,7 +90,7 @@ function useTemplateWindow<T>(
         while (active && pending) {
           pending = false;
           const ticket = controller.capture();
-          const next = await read(client, pages);
+          const next = await read(client, pages, abort.signal);
           if (!active) return;
           if (!controller.accepts(ticket, revision(next), families)) {
             pending = true;
@@ -133,16 +137,19 @@ function useTemplateWindow<T>(
       refetch();
     });
     setState({ key, scope, data: null, loading: true, error: null });
-    const timer = setTimeout(() => void run(), 80);
+    const timer = setTimeout(() => void run(), retainSearch && search.trim() ? SEARCH_DEBOUNCE_MS : 0);
     return () => {
       clearTimeout(timer);
       active = false;
+      abort.abort();
       unsubscribe();
     };
-  }, [scope, key, enabled, families, read, revision, write, hasMore]);
+  }, [scope, key, enabled, families, read, revision, write, hasMore, retainSearch, search]);
   const matches = state.key === key && state.scope === scope;
+  const pending = enabled && (!matches || state.loading);
+  const data = useSearchResults(enabled && matches ? state.data : null, retainSearch && pending, scope);
   return {
-    data: enabled && matches ? state.data : null,
+    data,
     loading: enabled && (!matches || state.loading),
     error: matches ? state.error : null,
     refetch: useCallback(() => commands.current.refetch(), []),
@@ -162,7 +169,7 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
   }>({ scope, categoryCounts: [], sourceCounts: [] });
   const key = JSON.stringify({
     id: filters.id ?? null,
-    search: filters.search?.trim() || null,
+    search: normalizeSearch(filters.search ?? "") || null,
     category: filters.category || null,
     sourceId: filters.sourceId || null,
     noSource: filters.noSource ?? false,
@@ -171,7 +178,8 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
   });
   const variables = useMemo(() => JSON.parse(key) as TemplateVariables, [key]);
   const read = useCallback(
-    (client: ApolloClient, pages: number) => readTemplateSummaries(client, variables, pages),
+    (client: ApolloClient, pages: number, signal?: AbortSignal) =>
+      readTemplateSummaries(client, variables, pages, signal),
     [variables],
   );
   const write = useCallback(
@@ -192,6 +200,8 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
     summaryRevision,
     write,
     summaryHasMore,
+    !filters.id,
+    variables.search ?? "",
   );
   if (result.data)
     facets.current = {

@@ -33,11 +33,13 @@ export async function readLibraryPage(
   client: ApolloClient,
   variables: LibraryVariables = {},
   after: string | null = null,
+  signal?: AbortSignal,
 ) {
   const { data } = await client.query({
     query: LibraryPageDocument,
     variables: { ...variables, first: LIBRARY_PAGE_SIZE, after },
     fetchPolicy: "no-cache",
+    context: { fetchOptions: { signal }, queryDeduplication: false },
   });
   if (!data) throw new Error(i18n.t("shell:libraryResponseWasEmpty"));
   return data;
@@ -50,6 +52,7 @@ export async function readLibraryWindow(
   client: ApolloClient,
   pages: number,
   variables: LibraryVariables = {},
+  signal?: AbortSignal,
 ): Promise<LibraryPageQuery> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     let combined: LibraryPageQuery | undefined;
@@ -57,7 +60,7 @@ export async function readLibraryWindow(
     for (let page = 0; page < Math.max(pages, 1); page += 1) {
       let data: LibraryPageQuery;
       try {
-        data = await readLibraryPage(client, variables, after);
+        data = await readLibraryPage(client, variables, after, signal);
       } catch (error) {
         if (isStaleLibraryCursor(error)) {
           combined = undefined;

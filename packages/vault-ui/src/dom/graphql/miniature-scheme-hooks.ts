@@ -1,3 +1,4 @@
+import { normalizeSearch, SEARCH_DEBOUNCE_MS, useSearchResults } from "../utils/use-search-results";
 import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,9 +36,11 @@ type WindowState<T> = {
 // reach normalized entities, including when a scope, filter, or ID changes.
 export function useSchemeWindow<T extends { revision: Revision }>(
   key: string,
-  read: (client: ApolloClient, pages: number) => Promise<T>,
+  read: (client: ApolloClient, pages: number, signal?: AbortSignal) => Promise<T>,
   write: (client: ApolloClient, data: T) => void,
   hasMore: (data: T) => boolean,
+  retainSearch = false,
+  search = "",
 ) {
   const scope = useVaultGraphQL();
   const commands = useRef({ refetch: () => {}, loadMore: () => {} });
@@ -54,6 +57,7 @@ export function useSchemeWindow<T extends { revision: Revision }>(
       commands.current = { refetch: () => {}, loadMore: () => {} };
       return;
     }
+    const abort = new AbortController();
     let active = true;
     let running = false;
     let pending = true;
@@ -69,7 +73,7 @@ export function useSchemeWindow<T extends { revision: Revision }>(
         while (active && pending) {
           pending = false;
           const ticket = controller.capture();
-          const next = await read(client, pages);
+          const next = await read(client, pages, abort.signal);
           if (!active) return;
           if (!controller.accepts(ticket, next.revision, FAMILIES)) {
             pending = true;
@@ -117,15 +121,19 @@ export function useSchemeWindow<T extends { revision: Revision }>(
       refetch();
     });
     setState({ key, scope, data: null, loading: true, error: null });
-    void run();
+    const timer = setTimeout(() => void run(), retainSearch && search.trim() ? SEARCH_DEBOUNCE_MS : 0);
     return () => {
+      clearTimeout(timer);
       active = false;
+      abort.abort();
       unsubscribe();
     };
-  }, [scope, key, read, write, hasMore]);
+  }, [scope, key, read, write, hasMore, retainSearch, search]);
   const matches = state.key === key && state.scope === scope;
+  const pending = !matches || state.loading;
+  const data = useSearchResults(matches ? state.data : null, retainSearch && pending, scope);
   return {
-    data: matches ? state.data : null,
+    data,
     loading: !matches || state.loading,
     error: matches ? state.error : null,
     refetch: useCallback(() => commands.current.refetch(), []),
@@ -164,11 +172,13 @@ export function useMiniatureScheme(id: string) {
 
 const moreOptions = (data: SchemeOptionsRead) => data.pageInfo.hasNextPage;
 export function useSchemeOptions(search: string, category: string | null = null, excludeIds: string[] = []) {
+  search = normalizeSearch(search);
   // Canonicalize exclusions so a new array identity does not reset pagination.
   const key = JSON.stringify({ search, category, excludeIds: [...new Set(excludeIds)].sort() });
   const variables = useMemo(() => JSON.parse(key) as SchemeOptionsVariables, [key]);
   const read = useCallback(
-    (client: ApolloClient, pages: number) => readSchemeOptions(client, variables, pages),
+    (client: ApolloClient, pages: number, signal?: AbortSignal) =>
+      readSchemeOptions(client, variables, pages, signal),
     [variables],
   );
   const write = useCallback(
@@ -186,7 +196,7 @@ export function useSchemeOptions(search: string, category: string | null = null,
     },
     [variables],
   );
-  const { data, ...result } = useSchemeWindow(key, read, write, moreOptions);
+  const { data, ...result } = useSchemeWindow(key, read, write, moreOptions, true, search);
   // Selection belongs to the picker, not a particular search window. Do not
   // replace its retained selected rows when this result resets on search.
   return {

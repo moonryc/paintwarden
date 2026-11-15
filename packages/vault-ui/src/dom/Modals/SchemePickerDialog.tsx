@@ -1,3 +1,4 @@
+import { nearSearchBottom } from "../utils/use-search-results";
 import { colorCategoryLabel } from "../Components/component-labels";
 import { useTranslation } from "react-i18next";
 import { Alert, Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
@@ -218,11 +219,6 @@ export function SchemePickerDialogView({
           {error.message}
         </Alert>
       )}
-      {loading && schemes.length > 0 && (
-        <Box role="status" sx={{ fontSize: 13 }}>
-          {t("refreshingSchemes")}
-        </Box>
-      )}
       <TextField
         fullWidth
         size="small"
@@ -276,7 +272,12 @@ export function SchemePickerDialogView({
         component="ul"
         ref={listRef}
         aria-label={t("colorSchemes")}
-        onScroll={(event) => setScrollTop(event.currentTarget.scrollTop)}
+        aria-busy={loading}
+        onScroll={(event) => {
+          setScrollTop(event.currentTarget.scrollTop);
+          if (hasMore && !loading && filter !== "SELECTED" && nearSearchBottom(event.currentTarget))
+            onLoadMore?.();
+        }}
         sx={{
           listStyle: "none",
           m: 0,
@@ -288,7 +289,7 @@ export function SchemePickerDialogView({
           overscrollBehavior: "contain",
           // On phones the list fills the full-screen sheet and scrolls on its own.
           flex: { xs: "1 1 auto", sm: "none" },
-          minHeight: { xs: 0, sm: "auto" },
+          minHeight: { xs: 0, sm: "max(calc(min(52dvh, 460px) - 171px), 120px)" },
           maxHeight: { xs: "none", sm: "max(calc(min(52dvh, 460px) - 171px), 120px)" }, // About three rows shorter than the old cap, never under two rows.
           bgcolor: "var(--surface-raised)",
         }}
@@ -406,11 +407,13 @@ export function SchemePickerDialogView({
         )}
       </Box>
 
-      {hasMore && filter !== "SELECTED" && (
-        <Button onClick={onLoadMore} disabled={loading} sx={{ flexShrink: 0, mt: 1 }}>
-          {loading ? t("loading") : t("loadMoreSchemes")}
-        </Button>
-      )}
+      <Box
+        role="status"
+        aria-live="polite"
+        sx={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }}
+      >
+        {!loading ? t("searchResultCount", { count: matches.length }) : ""}
+      </Box>
       {picked.length > 0 && (
         <Box sx={{ flexShrink: 0, mt: 1.5 }}>
           <Box sx={{ mb: 0.75, fontSize: 12, fontWeight: 650, color: "var(--ink-faint)" }}>{t("toAdd")}</Box>

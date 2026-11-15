@@ -1,4 +1,5 @@
-import { Alert, Autocomplete, Button, CircularProgress, MenuItem, TextField } from "@mui/material";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
+import { Alert, Button, CircularProgress, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -368,13 +369,15 @@ function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void })
   });
   return (
     <>
-      <Autocomplete
+      <StableAutocomplete
         noOptionsText={t("templatesNoOptions")}
         loadingText={t("templatesLoadingOptions")}
         clearText={t("templatesClear")}
         openText={t("templatesOpen")}
         closeText={t("templatesClose")}
         options={miniatures.rows.map(({ mini }) => ({ id: mini.id, name: mini.title }))}
+        hasNextPage={miniatures.hasNextPage}
+        onLoadMore={miniatures.loadMore}
         value={selected}
         loading={miniatures.loading || miniatures.refreshing}
         filterOptions={(options) => options}
@@ -407,11 +410,6 @@ function SourceMiniaturePicker({ onSelect }: { onSelect: (id: string) => void })
         </Button>
       )}
       {miniatures.error && <ReadError error={new Error(miniatures.error)} retry={miniatures.retry} />}
-      {miniatures.hasNextPage && (
-        <Button disabled={miniatures.loading || miniatures.refreshing} onClick={miniatures.loadMore}>
-          {t("templatesLoadMoreMiniatures")}
-        </Button>
-      )}
     </>
   );
 }
@@ -428,7 +426,7 @@ function TemplateSchemePicker({
   const schemes = useSchemeOptions(search);
   return (
     <>
-      <Autocomplete
+      <StableAutocomplete
         noOptionsText={t("templatesNoOptions")}
         loadingText={t("templatesLoadingOptions")}
         clearText={t("templatesClear")}
@@ -437,6 +435,8 @@ function TemplateSchemePicker({
         multiple
         filterSelectedOptions
         options={schemes.items}
+        hasNextPage={schemes.hasNextPage}
+        onLoadMore={schemes.loadMore}
         value={selected}
         loading={schemes.loading}
         filterOptions={(options) => options}
@@ -449,11 +449,6 @@ function TemplateSchemePicker({
         renderInput={(params) => <TextField {...params} label={t("templatesSchemes")} />}
       />
       {schemes.error && <ReadError error={schemes.error} retry={schemes.refetch} />}
-      {schemes.hasNextPage && (
-        <Button disabled={schemes.loading} onClick={schemes.loadMore}>
-          {t("templatesLoadMoreSchemes")}
-        </Button>
-      )}
     </>
   );
 }
@@ -482,7 +477,7 @@ function TemplatePaintOptions({
   );
   return (
     <>
-      <Autocomplete
+      <StableAutocomplete
         noOptionsText={t("templatesNoOptions")}
         loadingText={t("templatesLoadingOptions")}
         clearText={t("templatesClear")}

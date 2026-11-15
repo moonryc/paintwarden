@@ -1,4 +1,5 @@
-import { Alert, Autocomplete, Button, MenuItem, TextField } from "@mui/material";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
+import { Alert, Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isColorCategory } from "@paintwarden/core/color-categories";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -58,18 +59,8 @@ export function ColorSchemesPage() {
     [selectedPaints, setSelectedPaints] = useState<Paint[]>([]);
   const [paintQuery, setPaintQuery] = useState("");
   const [sourceFilter, setSourceFilter] = useState("ALL");
-  const [debouncedSearch, setDebouncedSearch] = useState(search);
-  const [debouncedPaintQuery, setDebouncedPaintQuery] = useState(paintQuery);
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedSearch(search), 120);
-    return () => clearTimeout(timeout);
-  }, [search]);
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedPaintQuery(paintQuery), 120);
-    return () => clearTimeout(timeout);
-  }, [paintQuery]);
   const result = useSchemes({
-    search: debouncedSearch.trim(),
+    search: search.trim(),
     category: categoryFilter === "ALL" ? null : categoryFilter === "UNCATEGORIZED" ? "" : categoryFilter,
     sourceId: sourceFilter === "ALL" || sourceFilter === "NONE" ? null : sourceFilter,
     noSource: sourceFilter === "NONE",
@@ -78,10 +69,10 @@ export function ColorSchemesPage() {
   });
   const initialLoading = useInitialPageLoading(result.loading, Boolean(result.error));
   const paintOptions = useSchemePaintOptions(
-    debouncedPaintQuery.trim(),
+    paintQuery.trim(),
     selectedPaints.map((paint) => paint.id),
   );
-  const paintMatches = paintQuery === debouncedPaintQuery ? paintOptions.items.map(paintModel) : [];
+  const paintMatches = paintOptions.items.map(paintModel);
   const schemes = result.items;
   const facets = result.facets;
   const globalCount = facets?.categories.reduce((sum, facet) => sum + facet.count, 0) ?? 0;
@@ -274,14 +265,14 @@ export function ColorSchemesPage() {
                   </MenuItem>
                 ))}
               </TextField>
-              <Autocomplete<Paint, true, false, false>
+              <StableAutocomplete<Paint, true, false, false>
                 multiple
                 fullWidth
                 size="small"
                 limitTags={2}
                 filterSelectedOptions
                 options={paintMatches}
-                loading={paintOptions.loading || paintQuery !== debouncedPaintQuery}
+                loading={paintOptions.loading}
                 noOptionsText={paintOptions.error ? t("schemesPaintsLoadError") : t("schemesNoPaintMatches")}
                 inputValue={paintQuery}
                 onInputChange={(_, value) => setPaintQuery(value)}
@@ -331,7 +322,7 @@ export function ColorSchemesPage() {
               {result.error.message}
             </Alert>
           )}
-          {result.loading && (
+          {result.loading && schemes.length === 0 && (
             <Box role="status" sx={{ mb: 2 }}>
               {t("schemesLoading")}
             </Box>

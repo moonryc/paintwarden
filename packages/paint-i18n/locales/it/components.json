@@ -546,5 +546,7 @@
   "scanCombined": "{{count}} punti combinati: {{hex}}",
   "scanCoverage": "Copertura complessiva · ΔE medio",
   "scanWorstPin": "Punto peggiore · ΔE {{value}}",
-  "scanPinNumber": "Punto {{number}} → colore"
+  "scanPinNumber": "Punto {{number}} → colore",
+  "searchResultCount": "{{count}} risultati disponibili.",
+  "searchResults": "Risultati di ricerca"
 }

@@ -38,7 +38,12 @@ async function stable<T>(read: () => Promise<T | undefined>): Promise<T> {
 
 // Only the explicitly loaded summary window is rebuilt after invalidation. No
 // recipe read or normalized entity write is permitted from this loader.
-export function readTemplateSummaries(client: ApolloClient, variables: TemplateVariables, pages = 1) {
+export function readTemplateSummaries(
+  client: ApolloClient,
+  variables: TemplateVariables,
+  pages = 1,
+  signal?: AbortSignal,
+) {
   return stable(async () => {
     let combined: TemplateSummariesQuery | undefined;
     let after: string | null = null;
@@ -47,6 +52,7 @@ export function readTemplateSummaries(client: ApolloClient, variables: TemplateV
         query: TemplateSummariesDocument,
         variables: { ...variables, first: TEMPLATE_PAGE_SIZE, after },
         fetchPolicy: "no-cache",
+        context: { fetchOptions: { signal }, queryDeduplication: false },
       });
       if (!data) throw new Error(i18n.t("shell:templateSummariesResponseWasEmpty"));
       if (combined && !sameRevision(combined.templates.revision, data.templates.revision)) return undefined;

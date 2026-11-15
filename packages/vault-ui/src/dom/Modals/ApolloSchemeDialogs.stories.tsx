@@ -172,7 +172,10 @@ export const StageAcrossSearchAndPages: Story = {
   play: async ({ canvasElement, args }) => {
     const screen = within(canvasElement.ownerDocument.body);
     await userEvent.click(await screen.findByRole("button", { name: first.name }));
-    await userEvent.click(screen.getByRole("button", { name: "Load more schemes" }));
+    const list = screen.getByRole("list", { name: "Color schemes" });
+    list.scrollTop = list.scrollHeight;
+    list.dispatchEvent(new Event("scroll", { bubbles: true }));
+    await expect(screen.queryByRole("button", { name: "Load more schemes" })).not.toBeInTheDocument();
     await userEvent.click(await screen.findByRole("button", { name: second.name }));
     await userEvent.type(screen.getByRole("textbox", { name: "Search color schemes" }), "snow");
     await userEvent.click(await screen.findByRole("button", { name: third.name }));

@@ -504,5 +504,7 @@
   "scanCombined": "合併 {{count}} 個取樣點：{{hex}}",
   "scanCoverage": "整體涵蓋 · 平均 ΔE",
   "scanWorstPin": "最差取樣點 · ΔE {{value}}",
-  "scanPinNumber": "取樣點 {{number}} → 顏料"
+  "scanPinNumber": "取樣點 {{number}} → 顏料",
+  "searchResultCount": "找到 {{count}} 個結果。",
+  "searchResults": "搜尋結果"
 }

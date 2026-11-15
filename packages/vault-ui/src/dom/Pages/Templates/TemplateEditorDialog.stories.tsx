@@ -327,8 +327,12 @@ export const PaginatedCopySearch: Story = {
   play: async ({ parameters }) => {
     const body = within(document.body);
     await waitForDialogEntered(await body.findByRole("dialog"));
-    await userEvent.click(await body.findByRole("button", { name: "Load more miniatures" }));
     await userEvent.click(body.getByRole("combobox", { name: "Start from miniature" }));
+    const list = await body.findByRole("listbox");
+    await waitFor(() => expect(body.getAllByRole("option").length).toBeGreaterThan(0));
+    list.scrollTop = list.scrollHeight;
+    list.dispatchEvent(new Event("scroll", { bubbles: true }));
+    await expect(body.queryByRole("button", { name: "Load more miniatures" })).not.toBeInTheDocument();
     await userEvent.click(await body.findByRole("option", { name: "Copy model 48" }));
     await expect(await body.findByDisplayValue(miniatures.knight.manufacturer)).toBeVisible();
     const fixture = parameters.editorFixture as FixtureOptions;

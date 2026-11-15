@@ -525,5 +525,7 @@
   "scanCombined": "Combined {{count}} pins: {{hex}}",
   "scanCoverage": "Overall coverage · mean ΔE",
   "scanWorstPin": "Worst pin · ΔE {{value}}",
-  "scanPinNumber": "Pin {{number}} → paint"
+  "scanPinNumber": "Pin {{number}} → paint",
+  "searchResultCount": "{{count}} results available.",
+  "searchResults": "Search results"
 }

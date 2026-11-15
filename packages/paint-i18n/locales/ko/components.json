@@ -504,5 +504,7 @@
   "scanCombined": "핀 {{count}}개 결합: {{hex}}",
   "scanCoverage": "전체 커버리지 · 평균 ΔE",
   "scanWorstPin": "가장 먼 핀 · ΔE {{value}}",
-  "scanPinNumber": "핀 {{number}} → 도료"
+  "scanPinNumber": "핀 {{number}} → 도료",
+  "searchResultCount": "검색 결과 {{count}}개.",
+  "searchResults": "검색 결과"
 }

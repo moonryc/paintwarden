@@ -14,6 +14,7 @@ export async function readFolderSearch(
   client: ApolloClient,
   variables: FolderSearchVariables,
   pages: number,
+  signal?: AbortSignal,
 ): Promise<SearchFolderContentsQuery> {
   for (let attempt = 0; attempt < 3; attempt += 1) {
     let combined: SearchFolderContentsQuery | undefined;
@@ -25,6 +26,7 @@ export async function readFolderSearch(
           query: SearchFolderContentsDocument,
           variables: { ...variables, first: FOLDER_SEARCH_PAGE_SIZE, after },
           fetchPolicy: "no-cache",
+          context: { fetchOptions: { signal }, queryDeduplication: false },
         });
         data = result.data;
       } catch (error) {
