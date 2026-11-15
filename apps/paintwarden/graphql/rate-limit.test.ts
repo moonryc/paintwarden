@@ -66,3 +66,47 @@ void test("long-lived streams cannot exhaust mutation/query concurrency and both
   recoveredStream();
   recoveredOperation();
 });
+
+void test("stream reconnect rates cannot starve edits or bypass client/session budgets", () => {
+  // Rotating credentials does not evade a client's stream-start allowance.
+  for (let i = 0; i < 120; i++) {
+    const release = acquireOperation(request("stream-rate-client", `rotated-stream-${i}`), true);
+    assert.ok(release);
+    release();
+  }
+  assert.equal(acquireOperation(request("stream-rate-client", "fresh-stream-token"), true), null);
+  const edit = acquireOperation(request("stream-rate-client", "fresh-edit-token"), false);
+  assert.ok(edit, "120 stream reconnects must leave all ordinary rate slots available");
+  edit();
+  // Rotating addresses cannot evade a credential's stream-start allowance.
+  for (let i = 0; i < 120; i++) {
+    const release = acquireOperation(request(`stream-peer-${i}`, "one-stream-credential"), true);
+    assert.ok(release);
+    release();
+  }
+  assert.equal(acquireOperation(request("new-stream-peer", "one-stream-credential"), true), null);
+  const credentialEdit = acquireOperation(request("new-stream-peer", "one-stream-credential"), false);
+  assert.ok(credentialEdit);
+  credentialEdit();
+  // Exhausting the ordinary rate allowance must not prevent reconnecting live updates.
+  const reconnect = acquireOperation(request("rate-client", "new-reconnect-credential"), true);
+  assert.ok(reconnect);
+  reconnect();
+});
+
+void test("independent budgets preserve the global 128-stream cap", () => {
+  const releases: (() => void)[] = [];
+  try {
+    for (let i = 0; i < 128; i++) {
+      const release = acquireOperation(request(`global-peer-${i}`, `global-session-${i}`), true);
+      assert.ok(release);
+      releases.push(release);
+    }
+    assert.equal(acquireOperation(request("global-overflow-peer", "global-overflow-session"), true), null);
+    const operation = acquireOperation(request("global-overflow-peer", "global-overflow-session"), false);
+    assert.ok(operation);
+    operation();
+  } finally {
+    releases.forEach((release) => release());
+  }
+});
