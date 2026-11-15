@@ -20,6 +20,8 @@ import {
   runConnectionRecoveryFlows,
 } from "./browser-flows.mjs";
 
+import { isDiscardedResponseBody } from "./browser-response-diagnostics.mjs";
+
 const repo = fileURLToPath(new URL("../", import.meta.url));
 const aggregate = process.argv.includes("--scan-aggregate");
 const schemeRanking = process.argv.includes("--scheme-ranking");
@@ -250,14 +252,14 @@ try {
           if (body.errors?.length) results.errors.push(JSON.stringify(body.errors));
         }
       })().catch((error) => {
-        // Chromium discards an old document's response bodies on real navigation.
+        // Chromium discards response bodies on navigation or an explicit request abort.
         // The smoke deliberately reloads pages; that diagnostic race is not an API
         // failure. Still fail HTTP/GraphQL/JSON errors and errors in the live document.
         if (
-          responseGeneration !== documentGeneration &&
-          /Protocol error \(Network\.getResponseBody\): No data found for resource with given identifier/.test(
-            error.message,
-          )
+          isDiscardedResponseBody(error, {
+            documentChanged: responseGeneration !== documentGeneration,
+            requestFailure: response.request().failure()?.errorText,
+          })
         )
           return;
         console.error("Response diagnostic context:", {
