@@ -162,5 +162,6 @@
   "retryVaultStartup": "重试",
   "openLogsFolder": "打开日志文件夹",
   "updateNeedsConsent": "{{value1}} · 更新需要您的同意。",
-  "updateDeferred": "{{value1}} · 已推迟到下次检查更新。"
+  "updateDeferred": "{{value1}} · 已推迟到下次检查更新。",
+  "connectionLostReconnecting": "连接已断开。正在重新连接…"
 }

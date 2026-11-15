@@ -162,5 +162,6 @@
   "retryVaultStartup": "重試",
   "openLogsFolder": "開啟日誌資料夾",
   "updateNeedsConsent": "{{value1}} · 更新需要您的同意。",
-  "updateDeferred": "{{value1}} · 已延後至下次檢查更新。"
+  "updateDeferred": "{{value1}} · 已延後至下次檢查更新。",
+  "connectionLostReconnecting": "連線已中斷。正在重新連線…"
 }

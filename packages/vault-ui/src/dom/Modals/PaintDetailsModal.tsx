@@ -11,6 +11,7 @@ import { Modal } from "../Components/Modal";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { PluginChip } from "../Components/PluginChip";
 import { QuantityCounter } from "../Components/QuantityCounter";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { dialogPreloadHandlers } from "../dialog-preload";
 import { usePaintDetail } from "../graphql/detail-hooks";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
@@ -46,9 +47,7 @@ export function PaintDetailsModal(props: DetailProps) {
         onClose={props.onClose}
       >
         {detail.error ? (
-          <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
-            {detail.error.message}
-          </Alert>
+          <QueryErrorNotice error={detail.error.message} onRetry={detail.refresh} />
         ) : detail.data ? (
           <Alert severity="info">{t("thisPaintIsNoLongerAvailable")}</Alert>
         ) : (
@@ -206,11 +205,7 @@ function PaintDetailsView({
             </Box>
           )}
         </Box>
-        {error && (
-          <Alert severity="error" action={<Button onClick={refresh}>{t("retry")}</Button>}>
-            {error.message}
-          </Alert>
-        )}
+        {error && <QueryErrorNotice error={error.message} onRetry={refresh} />}
         <ToggleButtonGroup
           exclusive
           disabled={loading}

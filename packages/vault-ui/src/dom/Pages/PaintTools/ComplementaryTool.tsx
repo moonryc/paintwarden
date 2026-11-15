@@ -1,4 +1,3 @@
-import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import Check from "@mui/icons-material/Check";
 import {
   Alert,
@@ -24,6 +23,8 @@ import { useTranslation } from "react-i18next";
 
 import { ColorMatchSwatch } from "../../Components/ColorMatchSwatch";
 import { MatchQualityChip } from "../../Components/MatchQualityChip";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { useColorIndex } from "../../graphql/color-tools-hooks";
 import { usePaintOptions } from "../../graphql/detail-hooks";
 import { paintModel } from "../../graphql/miniature-scheme-model";
@@ -242,20 +243,8 @@ export function ComplementaryTool() {
           </Box>
         </Box>
       </Box>
-      {options.error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {options.error.message}
-        </Alert>
-      )}
-      {colors.error && (
-        <Alert
-          severity="error"
-          sx={{ mt: 2 }}
-          action={<Button onClick={colors.refetch}>{t("toolsRetry")}</Button>}
-        >
-          {colors.error.message}
-        </Alert>
-      )}
+      {options.error && <QueryErrorNotice error={options.error.message} />}
+      {colors.error && <QueryErrorNotice error={colors.error.message} onRetry={colors.refetch} />}
       {colors.loading && colors.paints.length === 0 ? (
         <ComplementaryLoading />
       ) : (

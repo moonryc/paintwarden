@@ -11,12 +11,13 @@ import { Observable, catchError, map, throwError } from "rxjs";
 import { createVaultCache } from "./cache";
 
 type Revision = { epoch: string; seq: string };
-export type VaultGraphQLError = { message: string; accessDenied: boolean };
+export type VaultGraphQLError = { message: string; accessDenied: boolean; connectionLost?: boolean };
 type Options = {
   authHeaders: () => Record<string, string>;
   onError?: (error: VaultGraphQLError) => void;
   fetch?: typeof fetch;
   sseRetry?: (retries: number) => Promise<void>;
+  onDisconnect?: () => void;
 };
 
 // Preserve the status through the sanitized Error wrapper. Background health
@@ -28,6 +29,22 @@ export function isVaultRateLimited(error: unknown): boolean {
   return error instanceof Error && error.cause !== error && error.cause !== undefined
     ? isVaultRateLimited(error.cause)
     : false;
+}
+
+// Inspect original transport failures, including the sanitizing wrapper's cause.
+// HTTP 500 and GraphQL/validation errors are NOT connectivity failures.
+export function isVaultConnectionLost(error: unknown): boolean {
+  if (ServerError.is(error)) return [502, 503, 504].includes(error.statusCode);
+  if (CombinedGraphQLErrors.is(error)) return false;
+  if (error instanceof Error && error.cause !== undefined && error.cause !== error)
+    return isVaultConnectionLost(error.cause);
+  return (
+    error instanceof TypeError ||
+    (error instanceof Error &&
+      /failed to fetch|fetch failed|network ?error|network request failed|ECONNREFUSED|ECONNRESET/i.test(
+        error.message,
+      ))
+  );
 }
 
 function revisionFromResult(data: unknown): Revision | null {
@@ -59,6 +76,11 @@ export function createVaultSSELink(options: Options) {
           credentials: "same-origin",
           headers: options.authHeaders,
           retryAttempts: 5,
+          on: {
+            connecting: (reconnecting) => {
+              if (reconnecting) options.onDisconnect?.();
+            },
+          },
           retry: options.sseRetry,
           fetchFn: async (input: RequestInfo | URL, init?: RequestInit) => {
             const response = await (options.fetch ?? fetch)(input, {
@@ -140,6 +162,8 @@ export function createVaultGraphQLClient(options: Options) {
           ["UNAUTHENTICATED", "FORBIDDEN"].includes(String(entry.extensions?.code)),
         ));
     if (accessDenied) dispose();
+    const connectionLost = isVaultConnectionLost(error);
+    if (connectionLost) options.onDisconnect?.();
     options.onError?.({
       message: translateServerError({
         errorCode: accessDenied
@@ -149,6 +173,7 @@ export function createVaultGraphQLClient(options: Options) {
             : "REQUEST_FAILED",
       }),
       accessDenied,
+      ...(connectionLost ? { connectionLost: true } : {}),
     });
   });
   const auth = new SetContextLink(() => ({ headers: options.authHeaders() }));

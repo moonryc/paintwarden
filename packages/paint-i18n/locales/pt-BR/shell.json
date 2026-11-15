@@ -176,5 +176,6 @@
   "retryVaultStartup": "Tentar novamente",
   "openLogsFolder": "Abrir pasta de logs",
   "updateNeedsConsent": "{{value1}} · Uma atualização precisa da sua permissão.",
-  "updateDeferred": "{{value1}} · Atualização adiada até a próxima verificação."
+  "updateDeferred": "{{value1}} · Atualização adiada até a próxima verificação.",
+  "connectionLostReconnecting": "Conexão perdida. Reconectando…"
 }

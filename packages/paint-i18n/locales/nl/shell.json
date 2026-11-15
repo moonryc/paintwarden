@@ -169,5 +169,6 @@
   "retryVaultStartup": "Opnieuw proberen",
   "openLogsFolder": "Logmap openen",
   "updateNeedsConsent": "{{value1}} · Een update heeft je toestemming nodig.",
-  "updateDeferred": "{{value1}} · Update uitgesteld tot de volgende updatecontrole."
+  "updateDeferred": "{{value1}} · Update uitgesteld tot de volgende updatecontrole.",
+  "connectionLostReconnecting": "Verbinding verbroken. Opnieuw verbinden…"
 }

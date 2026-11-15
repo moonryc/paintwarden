@@ -6,7 +6,12 @@ import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 
 import { createVaultStore } from "../store/vault-store";
 
-import { createVaultGraphQLClient, isVaultRateLimited, type VaultGraphQLError } from "./client";
+import {
+  createVaultGraphQLClient,
+  isVaultConnectionLost,
+  isVaultRateLimited,
+  type VaultGraphQLError,
+} from "./client";
 import { LibraryPageDocument, VaultChangesDocument } from "./generated/graphql";
 import { readLibraryWindow } from "./library-loader";
 
@@ -265,7 +270,13 @@ void test("network and unknown transport failures expose localized generic text,
           if (cause instanceof Error) assert.notEqual(cause.message, error.message);
           return true;
         });
-        assert.deepEqual(errors, [{ message: i18n.t("errors:REQUEST_FAILED"), accessDenied: false }]);
+        assert.deepEqual(errors, [
+          {
+            message: i18n.t("errors:REQUEST_FAILED"),
+            accessDenied: false,
+            ...(cause instanceof TypeError ? { connectionLost: true } : {}),
+          },
+        ]);
       } finally {
         scope.dispose();
       }
@@ -453,6 +464,60 @@ void test("aborting superseded picker work rejects its caller without a shared e
     await rejected;
     assert.deepEqual(reported, []);
   } finally {
+    scope.dispose();
+  }
+});
+
+void test("only network errors and gateway outages enter connection recovery", async () => {
+  for (const status of [400, 401, 403, 429, 500, 502, 503, 504]) {
+    let disconnected = false;
+    const scope = createVaultGraphQLClient({
+      authHeaders: () => ({}),
+      onDisconnect: () => {
+        disconnected = true;
+      },
+      fetch: async () => new Response("gateway", { status }),
+    });
+    await assert.rejects(scope.client.query({ query: LibraryPageDocument }), (error: unknown) => {
+      assert.equal(isVaultConnectionLost(error), [502, 503, 504].includes(status));
+      return true;
+    });
+    assert.equal(disconnected, [502, 503, 504].includes(status));
+    scope.dispose();
+  }
+  assert.equal(isVaultConnectionLost(new TypeError("Failed to fetch")), true);
+  assert.equal(isVaultConnectionLost(new Error("validation failed")), false);
+});
+
+void test("errored Apollo observables refetch after the server recovers without replaying writes", async () => {
+  let offline = true;
+  let reads = 0;
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: async () => {
+      reads++;
+      if (offline) throw new TypeError("fetch failed");
+      return json(page("recovered"));
+    },
+  });
+  const failed = deferred<void>();
+  const restored = deferred<void>();
+  const observable = scope.client.watchQuery({ query: LibraryPageDocument, fetchPolicy: "no-cache" });
+  const subscription = observable.subscribe({
+    next: (result) => {
+      if (result.error) failed.resolve();
+      if (result.data?.library?.revision?.seq === "1") restored.resolve();
+    },
+    error: failed.resolve,
+  });
+  try {
+    await failed.promise;
+    offline = false;
+    await Promise.allSettled(scope.client.refetchQueries({ include: "all" }).results);
+    await restored.promise;
+    assert.equal(reads, 2);
+  } finally {
+    subscription.unsubscribe();
     scope.dispose();
   }
 });

@@ -169,5 +169,6 @@
   "retryVaultStartup": "Erneut versuchen",
   "openLogsFolder": "Protokollordner öffnen",
   "updateNeedsConsent": "{{value1}} · Ein Update benötigt deine Zustimmung.",
-  "updateDeferred": "{{value1}} · Update bis zur nächsten Updateprüfung verschoben."
+  "updateDeferred": "{{value1}} · Update bis zur nächsten Updateprüfung verschoben.",
+  "connectionLostReconnecting": "Verbindung verloren. Verbindung wird wiederhergestellt…"
 }

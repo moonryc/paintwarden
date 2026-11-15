@@ -1,12 +1,12 @@
-import { nearSearchBottom } from "../utils/use-search-results";
-import { colorCategoryLabel } from "../Components/component-labels";
-import { useTranslation } from "react-i18next";
-import { Alert, Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
+import { Button, ButtonBase, InputAdornment, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { COLOR_CATEGORIES, type ColorCategory } from "@paintwarden/core/color-categories";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { colorCategoryLabel } from "../Components/component-labels";
 import { Modal } from "../Components/Modal";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SchemeChipView } from "../Components/SchemeChip";
 import { SchemeSwatchPreview } from "../Components/SchemeSwatch";
 import { Check, Plus, Search } from "../icons";
@@ -14,6 +14,7 @@ import type { ColorScheme } from "../types";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { truncateSx } from "../utils/truncate";
 import { useFuzzySearch } from "../utils/use-fuzzy-search";
+import { nearSearchBottom } from "../utils/use-search-results";
 
 const schemeSearchText = (scheme: SchemePickerOption) =>
   `${scheme.name} ${scheme.category ? colorCategoryLabel(scheme.category) : ""}`;
@@ -213,12 +214,12 @@ export function SchemePickerDialogView({
         </>
       }
     >
-      {saveError && <Alert severity="error">{saveError}</Alert>}
-      {error && (
-        <Alert severity="error" action={<Button onClick={onRetry}>{t("retry")}</Button>}>
-          {error.message}
-        </Alert>
+      {saveError && (
+        <Box role="alert" sx={{ color: "error.main", mb: 2 }}>
+          {saveError}
+        </Box>
       )}
+      {error && <QueryErrorNotice error={error.message} onRetry={onRetry} />}
       <TextField
         fullWidth
         size="small"

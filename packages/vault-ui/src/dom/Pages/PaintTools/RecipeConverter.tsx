@@ -1,4 +1,3 @@
-import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { Alert, Box, Button, Card, Chip, MenuItem, TextField } from "@mui/material";
 import { COLOR_CATEGORIES, type ColorCategory } from "@paintwarden/core/color-categories";
 import { paintType, rankOwnedPaintMatches } from "@paintwarden/core/recipe-converter";
@@ -7,6 +6,8 @@ import { useTranslation } from "react-i18next";
 
 import { PaintBottle } from "../../Components/PaintBottle";
 import { PaintDetailsButton } from "../../Components/PaintDetailsButton";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { useMiniatureScheme, useSchemeOptions } from "../../graphql/miniature-scheme-hooks";
 import {
   paintModel,
@@ -157,13 +158,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
         fullWidth
       />
       {schemeOptions.error && (
-        <Alert
-          severity="error"
-          sx={{ mt: 2 }}
-          action={<Button onClick={schemeOptions.refetch}>{t("toolsRetry")}</Button>}
-        >
-          {schemeOptions.error.message}
-        </Alert>
+        <QueryErrorNotice error={schemeOptions.error.message} onRetry={schemeOptions.refetch} />
       )}
       {!scheme && (
         <Box sx={{ mt: 3, color: "text.secondary", fontSize: 13 }}>{t("toolsOriginalUnchanged")}</Box>
@@ -174,22 +169,13 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
         </Box>
       )}
       {scheme && error && (
-        <Alert
-          severity="error"
-          sx={{ mt: 2 }}
-          action={
-            <Button
-              onClick={() => {
-                detail.refetch();
-                conversion.refetch();
-              }}
-            >
-              {t("toolsRetry")}
-            </Button>
-          }
-        >
-          {error.message}
-        </Alert>
+        <QueryErrorNotice
+          error={error.message}
+          onRetry={() => {
+            detail.refetch();
+            conversion.refetch();
+          }}
+        />
       )}
       {scheme && !loading && !error && !detail.data?.scheme && (
         <Alert severity="info" sx={{ mt: 2 }}>

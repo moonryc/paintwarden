@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
-import { Alert, Button, Card, IconButton } from "@mui/material";
+import { Button, Card, IconButton, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
 
 import { Trash2 } from "../icons";
@@ -100,9 +100,9 @@ function SavedMixCardView({
         </Button>
       )}
       {brokenReason && (
-        <Alert severity="error" variant="outlined" sx={{ mt: 1.5 }}>
+        <Typography component="div" role="alert" variant="body2" color="error" sx={{ mt: 1.5 }}>
           {brokenReason === "EMPTY" ? t("brokenEmptySubstitution") : t("brokenCircularSubstitution")}
-        </Alert>
+        </Typography>
       )}
     </Card>
   );

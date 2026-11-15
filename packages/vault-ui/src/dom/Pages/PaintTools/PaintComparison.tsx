@@ -1,4 +1,3 @@
-import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { Alert, Box, Button, Card, Divider, TextField } from "@mui/material";
 import { rankPaintsByColor } from "@paintwarden/core/paint-color-similarity";
 import { useState } from "react";
@@ -7,6 +6,8 @@ import { useTranslation } from "react-i18next";
 import { PaintBottle } from "../../Components/PaintBottle";
 import { PaintDetailsButton } from "../../Components/PaintDetailsButton";
 import { PaintSimilarityList } from "../../Components/PaintSimilarityList";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { usePaintOptions } from "../../graphql/detail-hooks";
 import { paintModel } from "../../graphql/miniature-scheme-model";
 import { usePaintRanking } from "../../graphql/paint-tools-hooks";
@@ -58,11 +59,7 @@ export function PaintComparison({ onOpenPaint }: { onOpenPaint(id: string): void
         }}
         fullWidth
       />
-      {options.error && (
-        <Alert severity="error" sx={{ mt: 2 }}>
-          {options.error.message}
-        </Alert>
-      )}
+      {options.error && <QueryErrorNotice error={options.error.message} />}
       {!selectedPaint && (
         <Box
           sx={{
@@ -100,15 +97,7 @@ function SelectedComparison({ id, onOpenPaint }: { id: string; onOpenPaint(id: s
           {t("toolsLoadingMatches")}
         </Box>
       )}
-      {result.error && (
-        <Alert
-          severity="error"
-          sx={{ mt: 2 }}
-          action={<Button onClick={result.refetch}>{t("toolsRetry")}</Button>}
-        >
-          {result.error.message}
-        </Alert>
-      )}
+      {result.error && <QueryErrorNotice error={result.error.message} onRetry={result.refetch} />}
       {!result.loading && !result.error && !selectedPaint && (
         <Alert severity="info" sx={{ mt: 2 }}>
           {t("toolsPaintUnavailable")}

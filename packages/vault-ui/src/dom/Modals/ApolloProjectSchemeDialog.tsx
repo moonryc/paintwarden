@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
-import { Alert, Button } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SchemePreview as ProjectSchemePreviewView } from "../Components/SchemePreview";
 import { useMiniatureScheme } from "../graphql/miniature-scheme-hooks";
 import { schemeEntryModels, schemeSummaryModel } from "../graphql/miniature-scheme-model";
@@ -35,9 +35,7 @@ function ProjectSchemeContent({ schemeId, toggleOwned, markOwnedOnly = true, onC
     return (
       <Modal title={t("colorScheme")} subtitle={t("orderedPaintRecipeAndReferenceImages")} onClose={onClose}>
         {result.error ? (
-          <Alert severity="error" action={<Button onClick={result.refetch}>{t("retry")}</Button>}>
-            {result.error.message}
-          </Alert>
+          <QueryErrorNotice error={result.error.message} onRetry={result.refetch} />
         ) : (
           <Box role="status">
             {result.loading ? t("loadingColorScheme") : t("thisColorSchemeIsNoLongerAvailable")}

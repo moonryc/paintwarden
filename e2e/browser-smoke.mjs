@@ -17,12 +17,14 @@ import {
   runSchemeRankingFlows,
   runScanAggregateFlows,
   runNoRefetchLoadingFlows,
+  runConnectionRecoveryFlows,
 } from "./browser-flows.mjs";
 
 const repo = fileURLToPath(new URL("../", import.meta.url));
 const aggregate = process.argv.includes("--scan-aggregate");
 const schemeRanking = process.argv.includes("--scheme-ranking");
 const autocompleteSearch = process.argv.includes("--autocomplete-search");
+const connectionRecovery = process.argv.includes("--connection-recovery");
 const noRefetchLoading = process.argv.includes("--no-refetch-loading");
 const artifactsRoot = process.env.E2E_ARTIFACTS_DIR
   ? path.resolve(process.env.E2E_ARTIFACTS_DIR)
@@ -94,6 +96,7 @@ async function startServer(port) {
   delete env.PAINTWARDEN_ALLOWED_HOSTS;
   delete env.WEB_DIST;
   checkInterrupted();
+  let startupLogs = "";
   child = spawn(process.execPath, ["server.mjs"], {
     cwd: path.join(repo, "apps/paintwarden/dist"),
     env,
@@ -116,7 +119,8 @@ async function startServer(port) {
     child.once("error", failed);
     child.stdout.on("data", (bytes) => {
       logs += bytes;
-      if (logs.includes('"phase":"ready"')) finish();
+      startupLogs += bytes;
+      if (startupLogs.includes('"phase":"ready"')) finish();
     });
     child.stderr.on("data", (bytes) => {
       logs += bytes;
@@ -245,18 +249,22 @@ try {
     return page;
   }
   await Promise.race([
-    (aggregate
-      ? runScanAggregateFlows
-      : autocompleteSearch
-        ? runAutocompleteFlows
-        : noRefetchLoading
-          ? runNoRefetchLoadingFlows
-          : schemeRanking
-            ? runSchemeRankingFlows
-            : runBrowserFlows)({
+    (connectionRecovery
+      ? runConnectionRecoveryFlows
+      : aggregate
+        ? runScanAggregateFlows
+        : autocompleteSearch
+          ? runAutocompleteFlows
+          : noRefetchLoading
+            ? runNoRefetchLoadingFlows
+            : schemeRanking
+              ? runSchemeRankingFlows
+              : runBrowserFlows)({
       newPage,
       artifacts,
       results,
+      stopServer,
+      restartServer: () => startServer(port),
     }),
     new Promise((_, reject) => {
       overallTimer = setTimeout(() => reject(Error("Browser flows exceeded 240s")), 240_000);

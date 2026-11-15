@@ -1,5 +1,5 @@
 import { useFragment } from "@apollo/client/react";
-import { Alert, Button, Chip } from "@mui/material";
+import { Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { Modal } from "../Components/Modal";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { ProjectPaintSummaryView } from "../Components/ProjectPaintSummary";
 import { ProjectRecipeView } from "../Components/ProjectRecipe";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { StageStepper } from "../Components/StageStepper";
 import { dialogPreloadHandlers } from "../dialog-preload";
 import { MiniatureTileFragmentDoc, type DetailPaintFragment } from "../graphql/generated/graphql";
@@ -59,9 +60,7 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
     return (
       <Modal title={t("project")} subtitle={t("miniatureDetails")} onClose={onClose}>
         {detail.error ? (
-          <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
-            {detail.error.message}
-          </Alert>
+          <QueryErrorNotice error={detail.error.message} onRetry={detail.refresh} />
         ) : (
           <Box role="status">
             {detail.loading ? t("loadingProject") : t("thisMiniatureIsNoLongerAvailable")}
@@ -207,11 +206,7 @@ function ProjectContent({
           },
         }}
       >
-        {error && (
-          <Alert severity="error" action={<Button onClick={refresh}>{t("retry")}</Button>}>
-            {error.message}
-          </Alert>
-        )}
+        {error && <QueryErrorNotice error={error.message} onRetry={refresh} />}
         <Box component="div" sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1.5 }}>
           <Box component="div" sx={{ minWidth: "min(100%, 12rem)", flex: 1 }}>
             {details.length > 0 && (

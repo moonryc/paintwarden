@@ -131,7 +131,7 @@ export const SummaryFailure: Story = {
     ).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Save file" })).toBeDisabled();
     await expect(dialog.queryByText(/Private internal failure/)).not.toBeInTheDocument();
-    await userEvent.click(dialog.getByRole("button", { name: "Try again" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(args.loadSummary).toHaveBeenCalledTimes(2));
     await expect(args.saveBundle).not.toHaveBeenCalled();
     await dismissDialog();
@@ -149,7 +149,7 @@ export const SummaryRetry: Story = {
       await dialog.findByText("Could not complete this support action. Please try again."),
     ).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Save file" })).toBeDisabled();
-    await userEvent.click(dialog.getByRole("button", { name: "Try again" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Retry" }));
     await expect(await dialog.findByText(/"migrationState": "ready"/)).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Save file" })).toBeEnabled();
     await expect(dialog.queryByText(/Private failure/)).not.toBeInTheDocument();

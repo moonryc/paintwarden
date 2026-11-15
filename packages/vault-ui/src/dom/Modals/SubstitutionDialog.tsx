@@ -1,11 +1,12 @@
-import { StableAutocomplete } from "../Components/StableAutocomplete";
-import { useTranslation } from "react-i18next";
-import { Alert, Button, Card, IconButton, TextField } from "@mui/material";
+import { Button, Card, IconButton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
 import { PaintBottle } from "../Components/PaintBottle";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { usePaintDetail, usePaintOptions } from "../graphql/detail-hooks";
 import type { DetailPaintFragment } from "../graphql/generated/graphql";
 import { usePaintCommands } from "../graphql/paint-actions";
@@ -175,18 +176,7 @@ function SubstitutionDialogView({
             {t("substitutions")}
           </Box>
         </Box>
-        {error && (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={onRetry}>
-                {t("retry")}
-              </Button>
-            }
-          >
-            {error}
-          </Alert>
-        )}
+        {error && <QueryErrorNotice error={error} onRetry={onRetry} />}
         {recipes.map((projection) => (
           <SavedMixCard
             key={projection.mix.id}

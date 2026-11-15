@@ -2,7 +2,6 @@ import EditOutlined from "@mui/icons-material/EditOutlined";
 import FolderOutlined from "@mui/icons-material/FolderOutlined";
 import ViewModule from "@mui/icons-material/ViewModuleOutlined";
 import {
-  Alert,
   Box,
   Button,
   FormControlLabel,
@@ -25,6 +24,7 @@ import { FolderNameDialog } from "./FolderNameDialog";
 import { FolderPicker } from "./FolderPicker";
 import { FolderTile, type FolderView } from "./FolderTile";
 import { Modal } from "./Modal";
+import { QueryErrorNotice } from "./QueryErrorNotice";
 
 // Header toggles fill with the brand color when on, so the current mode is obvious.
 const selectedFillSx = {
@@ -98,7 +98,11 @@ export function FolderBrowser({
       }
     }
   }
-  const error = <Alert severity="error">{t("folders.error")}</Alert>;
+  const error = (
+    <Box role="alert" sx={{ color: "error.main" }}>
+      {t("folders.error")}
+    </Box>
+  );
   const renderFolder: RenderFolder = (folder, sx) => (
     <FolderTile
       key={folder.id}
@@ -167,22 +171,11 @@ export function FolderBrowser({
             </ToggleButtonGroup>
           </Box>
         </Box>
-        {(browser.error || (operationError && !dialog)) && (
-          <Alert
-            severity="error"
-            action={
-              <Button
-                color="inherit"
-                disabled={pending}
-                onClick={() => void run(() => browser.refresh(), false)}
-              >
-                {t("folders.retry")}
-              </Button>
-            }
-          >
-            {t("folders.error")}
-          </Alert>
-        )}
+        <QueryErrorNotice
+          error={browser.error ? t("folders.error") : null}
+          onRetry={() => browser.refresh()}
+        />
+        {operationError && !dialog && error}
       </Stack>
       {children(renderFolder)}
       {dialog?.type === "rename" && (

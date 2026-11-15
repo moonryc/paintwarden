@@ -597,3 +597,12 @@ export async function runScanAggregateFlows({ newPage, artifacts, results }) {
   });
   await checkScanAggregateFixture({ page, miniatureId: model.miniatureId, title, artifacts, results });
 }
+
+export async function runConnectionRecoveryFlows({ newPage, artifacts, results, stopServer, restartServer }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  const title = "Synthetic recovery model";
+  await createMiniature(page, title);
+  const { checkConnectionRecovery } = await import("./connection-recovery.mjs");
+  await checkConnectionRecovery({ page, title, artifacts, results, stopServer, restartServer });
+}

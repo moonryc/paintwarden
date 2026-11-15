@@ -196,3 +196,52 @@ for (const retire of ["epoch", "dispose"]) {
     }
   });
 }
+
+test("offline stock failure rolls back its optimistic layer once; reconciliation never replays the mutation", async () => {
+  let writes = 0;
+  const transport = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: async () => {
+      writes++;
+      throw new TypeError("fetch failed");
+    },
+  });
+  const controller = new VaultInvalidationController();
+  controller.observe({ epoch: "vault", seq: "1" });
+  const scope = { ...transport, controller };
+  const id = transport.client.cache.identify({ __typename: "Paint", id: "paint" });
+  const original = {
+    __typename: "Paint",
+    id: "paint",
+    inventory: { __typename: "Inventory", state: "OWNED", stockLevel: "FULL", quantity: 1 },
+  };
+  transport.client.cache.writeFragment({
+    id,
+    fragment: PaintStockFragmentDoc,
+    data: original,
+  });
+  const quantity = () =>
+    transport.client.cache.readFragment({ id, fragment: PaintStockFragmentDoc, optimistic: true })?.inventory
+      ?.quantity;
+  const errors: string[] = [];
+  const actions = createPaintStockActions(scope, (message, tone) => {
+    if (tone === "error") errors.push(message);
+  });
+  try {
+    actions.setPaintState("paint", "OWNED", "FULL", 8);
+    assert.equal(quantity(), 8);
+    await turn();
+    await turn();
+    assert.equal(quantity(), 1);
+    assert.equal(errors.length, 1, "the failed action is reported once, not silently lost");
+    controller.refresh();
+    await transport.client.refetchQueries({ include: "all" });
+    await turn();
+    assert.equal(writes, 1, "lost mutations must not be replayed");
+    assert.equal(quantity(), 1, "no optimistic layer survives recovery");
+    assert.equal(errors.length, 1);
+  } finally {
+    controller.dispose();
+    transport.dispose();
+  }
+});

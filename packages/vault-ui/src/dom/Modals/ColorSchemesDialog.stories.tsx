@@ -226,7 +226,7 @@ export const FullyPagedDraftSurvivesRefresh: Story = {
     window.dispatchEvent(new Event("color-scheme-background-refresh"));
     await expect(await screen.findByRole("alert")).toHaveTextContent("Scheme refresh interrupted");
     await expect(name).toHaveValue("Unsaved projected draft");
-    await userEvent.click(screen.getByRole("button", { name: "Retry refresh" }));
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
     await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
     await expect(name).toHaveValue("Unsaved projected draft");
     await userEvent.click(screen.getByRole("button", { name: "Save" }));

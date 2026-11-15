@@ -1,10 +1,11 @@
-import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { Alert, Button, CircularProgress, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Modal } from "../../Components/Modal";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { usePaintOptions } from "../../graphql/detail-hooks";
 import { useMiniatureList } from "../../graphql/miniature-list-hooks";
 import { useSchemeOptions } from "../../graphql/miniature-scheme-hooks";
@@ -74,7 +75,9 @@ function SelectedTemplateEditor(props: EditorProps) {
         {readError ? (
           <ReadError error={readError} retry={retry} />
         ) : summary.data && !currentTemplate && !summary.loading ? (
-          <Alert severity="error">{t("templatesUnavailable")}</Alert>
+          <Box role="status" sx={{ color: "var(--ink-soft)" }}>
+            {t("templatesUnavailable")}
+          </Box>
         ) : (
           <CircularProgress size={24} aria-label={t("templatesLoadingRecipe")} />
         )}
@@ -93,12 +96,7 @@ function SelectedTemplateEditor(props: EditorProps) {
 }
 
 function ReadError({ error, retry }: { error: Error; retry: () => unknown }) {
-  const { t } = useTranslation("pages");
-  return (
-    <Alert severity="error" action={<Button onClick={() => void retry()}>{t("templatesRetry")}</Button>}>
-      {error.message}
-    </Alert>
-  );
+  return <QueryErrorNotice error={error.message} onRetry={() => void retry()} />;
 }
 
 function TemplateEditorFields({
@@ -226,7 +224,9 @@ function TemplateEditorFields({
                 ) : !source.data || source.isStale ? (
                   <CircularProgress size={24} aria-label={t("templatesLoadingSourceRecipe")} />
                 ) : !source.data.miniature ? (
-                  <Alert severity="error">{t("templatesSourceUnavailable")}</Alert>
+                  <Box role="status" sx={{ color: "var(--ink-soft)" }}>
+                    {t("templatesSourceUnavailable")}
+                  </Box>
                 ) : (
                   <Alert severity="info">
                     {t("templatesCopyRecipe", {
@@ -339,16 +339,12 @@ function TemplateEditorFields({
           </>
         )}
         {saveError && (
-          <Alert
-            severity="error"
-            action={
-              <Button disabled={busy} onClick={() => void save()}>
-                {t("templatesRetry")}
-              </Button>
-            }
-          >
+          <Box role="alert" sx={{ color: "error.main" }}>
             {saveError.message}
-          </Alert>
+            <Button disabled={busy} onClick={() => void save()}>
+              {t("templatesRetry")}
+            </Button>
+          </Box>
         )}
         <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, pt: 1 }}>
           <Button type="button" onClick={onClose}>

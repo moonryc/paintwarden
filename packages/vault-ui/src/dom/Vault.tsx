@@ -4,12 +4,12 @@ import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 import { lazy, Suspense, useState, type ComponentProps, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AppBanner } from "./Components/AppBanner";
 import { AppErrorBoundary } from "./Components/AppErrorBoundary";
 import { ContentSnackbar } from "./Components/ContentSnackbar";
 import { DeferredDialog } from "./Components/DeferredDialog";
 import { PageSkeleton } from "./Components/PageSkeletons";
 import { PasswordField } from "./Components/PasswordField";
+import { QueryErrorNotice } from "./Components/QueryErrorNotice";
 import { UpdatePrompt } from "./Components/UpdatePrompt";
 import { VaultLoadError } from "./Components/VaultLoadError";
 import { dialogs } from "./dialog-preload";
@@ -263,11 +263,10 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
             }
           >
             <VaultGraphQLStatus />
-            {loadError && (
-              <AppBanner severity="error" onRetry={() => void refresh()}>
-                {i18n.t("shell:couldNotRefreshYourVaultShowingTheLastLoaded")}
-              </AppBanner>
-            )}
+            <QueryErrorNotice
+              error={loadError ? i18n.t("shell:couldNotRefreshYourVaultShowingTheLastLoaded") : null}
+              onRetry={() => refresh()}
+            />
             {loading ? (
               <PageSkeleton page={tab === "dashboard" ? "home" : tab} />
             ) : (

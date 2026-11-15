@@ -4,6 +4,7 @@ import type { Theme } from "@mui/material/styles";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { ErrorSurface } from "../Components/QueryErrorNotice";
 import { X } from "../icons";
 import { up } from "../theme-tokens";
 import { noop } from "../utils/constants";
@@ -48,7 +49,9 @@ export function ProjectDrawerFrame({
           <X size={18} />
         </IconButton>
       </Box>
-      {children}
+      <ErrorSurface showConnection bannerSx={{ px: { xs: 2, md: 3.5 }, pt: 2 }}>
+        {children}
+      </ErrorSurface>
     </>
   );
   return phone ? (

@@ -176,5 +176,6 @@
   "retryVaultStartup": "Riprova",
   "openLogsFolder": "Apri cartella dei log",
   "updateNeedsConsent": "{{value1}} · Un aggiornamento richiede il tuo consenso.",
-  "updateDeferred": "{{value1}} · Aggiornamento rimandato al prossimo controllo."
+  "updateDeferred": "{{value1}} · Aggiornamento rimandato al prossimo controllo.",
+  "connectionLostReconnecting": "Connessione persa. Riconnessione…"
 }

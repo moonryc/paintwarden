@@ -169,5 +169,6 @@
   "retryVaultStartup": "Retry",
   "openLogsFolder": "Open logs folder",
   "updateNeedsConsent": "{{value1}} · An update needs your permission.",
-  "updateDeferred": "{{value1}} · Update postponed until the next update check."
+  "updateDeferred": "{{value1}} · Update postponed until the next update check.",
+  "connectionLostReconnecting": "Connection lost. Reconnecting…"
 }

@@ -183,5 +183,6 @@
   "retryVaultStartup": "Ponów próbę",
   "openLogsFolder": "Otwórz folder dzienników",
   "updateNeedsConsent": "{{value1}} · Aktualizacja wymaga Twojej zgody.",
-  "updateDeferred": "{{value1}} · Aktualizacja odłożona do następnego sprawdzania."
+  "updateDeferred": "{{value1}} · Aktualizacja odłożona do następnego sprawdzania.",
+  "connectionLostReconnecting": "Utracono połączenie. Ponowne łączenie…"
 }

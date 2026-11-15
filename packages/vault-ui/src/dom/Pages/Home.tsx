@@ -23,6 +23,7 @@ import type { FolderView } from "../Components/FolderTile";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SectionHeader } from "../Components/SectionHeader";
 import { SelectionBar } from "../Components/SelectionBar";
 import { tileControlSx } from "../Components/tile-control";
@@ -555,18 +556,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
         >
           {(renderFolder) => (
             <>
-              {listError && (
-                <Alert
-                  severity="error"
-                  action={
-                    <Button color="inherit" onClick={retry}>
-                      {t("homeRetry")}
-                    </Button>
-                  }
-                >
-                  {listError}
-                </Alert>
-              )}
+              {listError && <QueryErrorNotice error={listError} onRetry={retry} />}
               {hasShelf ? (
                 <Box
                   component="div"

@@ -176,5 +176,6 @@
   "retryVaultStartup": "Reintentar",
   "openLogsFolder": "Abrir carpeta de registros",
   "updateNeedsConsent": "{{value1}} · Una actualización necesita tu permiso.",
-  "updateDeferred": "{{value1}} · Actualización aplazada hasta la próxima búsqueda."
+  "updateDeferred": "{{value1}} · Actualización aplazada hasta la próxima búsqueda.",
+  "connectionLostReconnecting": "Conexión perdida. Reconectando…"
 }

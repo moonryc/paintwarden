@@ -176,5 +176,6 @@
   "retryVaultStartup": "Réessayer",
   "openLogsFolder": "Ouvrir le dossier des journaux",
   "updateNeedsConsent": "{{value1}} · Une mise à jour nécessite votre accord.",
-  "updateDeferred": "{{value1}} · Mise à jour reportée à la prochaine recherche."
+  "updateDeferred": "{{value1}} · Mise à jour reportée à la prochaine recherche.",
+  "connectionLostReconnecting": "Connexion perdue. Reconnexion…"
 }

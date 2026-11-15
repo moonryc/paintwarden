@@ -4,6 +4,7 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import { createContext, useContext, useId, type ReactNode } from "react";
 
 import { ModalHeader } from "./ModalHeader";
+import { ErrorSurface } from "./QueryErrorNotice";
 
 /**
  * Lets a wrapper place a control above the body of the form Modal it renders, such as
@@ -64,8 +65,10 @@ export function Modal({
   // Nested modals opened from this one's content do not repeat the lead.
   const content = (
     <ModalLeadContext.Provider value={null}>
-      {slot && <Box sx={{ mb: 2.5 }}>{slot.lead}</Box>}
-      {children}
+      <ErrorSurface showConnection>
+        {slot && <Box sx={{ mb: 2.5 }}>{slot.lead}</Box>}
+        {children}
+      </ErrorSurface>
     </ModalLeadContext.Provider>
   );
   const footerContent = footer && (

@@ -1,11 +1,11 @@
 import type { ApolloClient } from "@apollo/client";
-import { Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AppBanner } from "../Components/AppBanner";
 import { PluginInstallProgress } from "../Components/PluginInstallProgress";
+import { ConnectionLostContext } from "../Components/QueryErrorNotice";
 import { useVaultStore } from "../store/hooks";
 
 import {
@@ -187,6 +187,7 @@ export function PluginInstallProvider({
 export function PluginInstallStatus({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("pages");
   const { job, cancelling, disconnected, cancel, retry } = usePluginInstall();
+  const connectionLost = useContext(ConnectionLostContext);
   // Both surfaces represent live work only. Terminal snapshots are retained by
   // the provider solely for deduplication; results belong in transient toasts.
   if (!job || !isPluginInstallActive(job)) return null;
@@ -198,8 +199,13 @@ export function PluginInstallStatus({ compact = false }: { compact?: boolean }) 
         cancelling={cancelling}
         onCancel={cancel}
       />
-      {disconnected && isPluginInstallActive(job) && (
-        <AppBanner onRetry={retry}>{t("sourcesJobReconnecting")}</AppBanner>
+      {disconnected && !connectionLost && isPluginInstallActive(job) && (
+        <Box role="status" sx={{ fontSize: 13, color: "var(--ink-soft)" }}>
+          {t("sourcesJobReconnecting")}
+          <Button size="small" onClick={retry}>
+            {i18n.t("common:retry")}
+          </Button>
+        </Box>
       )}
     </Box>
   );

@@ -28,6 +28,7 @@ import { betaTesterGuideUrl, privacyNetworkUrl, securityReportUrl } from "../uti
 import { getSupportSummary, reportBug, saveSupportBundle, type SupportSummary } from "../utils/support";
 
 import { Modal } from "./Modal";
+import { QueryErrorNotice } from "./QueryErrorNotice";
 import { OpenSourceLicensesModal } from "./OpenSourceLicensesModal";
 
 type SupportProps = {
@@ -167,22 +168,14 @@ function useSupportSummary(loadSummary: typeof getSupportSummary) {
 function SummaryStatus({ failed, retry }: { failed: boolean; retry(): void }) {
   const { t } = useTranslation("components");
   return failed ? (
-    <Alert
-      severity="error"
-      action={
-        <Button
-          onClick={(event) => {
-            // The retry control disappears while loading. Keep keyboard focus in the dialog.
-            event.currentTarget.closest<HTMLElement>('[role="dialog"]')?.focus();
-            retry();
-          }}
-        >
-          {t("noticesRetry")}
-        </Button>
-      }
-    >
-      {t("supportFailure")}
-    </Alert>
+    <QueryErrorNotice
+      error={t("supportFailure")}
+      onRetry={() => {
+        // The retry control disappears while loading; retain focus in the dialog.
+        document.activeElement?.closest<HTMLElement>('[role="dialog"]')?.focus();
+        retry();
+      }}
+    />
   ) : (
     <Box role="status" aria-label={t("supportLoading")}>
       <Skeleton />

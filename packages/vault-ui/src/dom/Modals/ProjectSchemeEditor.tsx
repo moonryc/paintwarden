@@ -1,5 +1,3 @@
-import { colorCategoryLabel } from "../Components/component-labels";
-import { useTranslation } from "react-i18next";
 import type { DragEndEvent } from "@dnd-kit/core";
 import {
   closestCenter,
@@ -15,8 +13,11 @@ import Box from "@mui/material/Box";
 import type { ColorCategory } from "@paintwarden/core/color-categories";
 import { COLOR_CATEGORIES } from "@paintwarden/core/color-categories";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
+import { colorCategoryLabel } from "../Components/component-labels";
 import { Modal } from "../Components/Modal";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { useSchemeActions } from "../graphql/scheme-actions";
 import { Plus, Save, Trash2 } from "../icons";
 import { useVaultStore } from "../store/hooks";
@@ -221,13 +222,10 @@ export function ProjectSchemeEditor({
   return (
     <Modal title={t("colorSchemes")} subtitle={t("groupPaintsIntoReusableOrderedPalettes")} onClose={onClose}>
       {refreshError && (
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-          action={<Button onClick={onRefresh}>{t("retryRefresh")}</Button>}
-        >
-          {t("schemeRefreshError", { message: refreshError.message })}
-        </Alert>
+        <QueryErrorNotice
+          error={t("schemeRefreshError", { message: refreshError.message })}
+          onRetry={onRefresh}
+        />
       )}
       {refreshing && (
         <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
@@ -452,20 +450,15 @@ export function ProjectSchemeEditor({
         </Box>
       </Box>
       {error && (
-        <Alert
-          severity="error"
-          sx={{ mt: 2 }}
-          action={
-            <Button
-              disabled={busy || (error.operation === "save" && !canSave)}
-              onClick={error.operation === "save" ? save : deleteScheme}
-            >
-              {t("retry")}
-            </Button>
-          }
-        >
+        <Box role="alert" sx={{ mt: 2, color: "error.main" }}>
           {error.message}
-        </Alert>
+          <Button
+            disabled={busy || (error.operation === "save" && !canSave)}
+            onClick={error.operation === "save" ? save : deleteScheme}
+          >
+            {t("retry")}
+          </Button>
+        </Box>
       )}
       {addItem && (
         <AddSchemeItemDialog

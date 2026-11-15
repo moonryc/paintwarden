@@ -162,5 +162,6 @@
   "retryVaultStartup": "再試行",
   "openLogsFolder": "ログフォルダーを開く",
   "updateNeedsConsent": "{{value1}} · 更新には許可が必要です。",
-  "updateDeferred": "{{value1}} · 次回の更新確認まで延期しました。"
+  "updateDeferred": "{{value1}} · 次回の更新確認まで延期しました。",
+  "connectionLostReconnecting": "接続が切れました。再接続中…"
 }

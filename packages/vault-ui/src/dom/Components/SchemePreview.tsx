@@ -1,4 +1,4 @@
-import { Alert, Button, ButtonBase, Card, Chip } from "@mui/material";
+import { Button, ButtonBase, Card, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,7 @@ import { colorCategoryLabel, dividerLabel } from "./component-labels";
 import { LibraryPaintRow } from "./LibraryPaintRow";
 import { Modal } from "./Modal";
 import { PluginChip } from "./PluginChip";
+import { QueryErrorNotice } from "./QueryErrorNotice";
 import { SchemeProgressChip } from "./SchemeProgressChip";
 
 export function SchemePreview({
@@ -53,11 +54,7 @@ export function SchemePreview({
   const [openImage, setOpenImage] = useState<{ src: string; alt: string } | null>(null);
   return (
     <Modal title={active.name} subtitle={t("orderedPaintRecipeAndReferenceImages")} onClose={onClose}>
-      {error && (
-        <Alert severity="error" action={<Button onClick={onRetry}>{t("retry")}</Button>}>
-          {error.message}
-        </Alert>
-      )}
+      <QueryErrorNotice error={error} onRetry={onRetry} />
       {loading && (
         <Box role="status" sx={{ mb: 1, fontSize: 13 }}>
           {t("refreshingScheme")}

@@ -42,7 +42,7 @@
     "notices:generate": "node scripts/generate-notices.mjs",
     "notices:check": "node scripts/generate-notices.mjs --check",
     "notices:artifact": "node scripts/check-notice-artifact.mjs",
-    "e2e:browser": "node e2e/browser-smoke.mjs && node e2e/browser-smoke.mjs --scheme-ranking && node e2e/browser-smoke.mjs --scan-aggregate && node e2e/browser-smoke.mjs --autocomplete-search && node e2e/browser-smoke.mjs --no-refetch-loading",
+    "e2e:browser": "node e2e/browser-smoke.mjs && node e2e/browser-smoke.mjs --scheme-ranking && node e2e/browser-smoke.mjs --scan-aggregate && node e2e/browser-smoke.mjs --autocomplete-search && node e2e/browser-smoke.mjs --no-refetch-loading && node e2e/browser-smoke.mjs --connection-recovery",
     "e2e:native": "node e2e/native-smoke.mjs"
   },
   "devDependencies": {

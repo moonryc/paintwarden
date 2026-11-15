@@ -1,4 +1,4 @@
-import { Alert, Button, Card, MenuItem, TextField } from "@mui/material";
+import { Button, Card, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -8,6 +8,7 @@ import { FilterToolbar, filterGridSx } from "../Components/FilterToolbar";
 import { LibraryPaintRow } from "../Components/LibraryPaintRow";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { dialogPreloadHandlers } from "../dialog-preload";
 import { ALL_LIBRARY_SOURCES, NO_LIBRARY_SOURCE, useLibraryPaints } from "../graphql/library-hooks";
 import { FlaskConical, Heart, PaintDrop, Plus, SearchX } from "../icons";
@@ -233,18 +234,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           </TextField>
         </Box>
       </FilterToolbar>
-      {library.error && (
-        <Alert
-          severity="error"
-          action={
-            <Button color="inherit" onClick={library.retry}>
-              {t("libraryRetry")}
-            </Button>
-          }
-        >
-          {library.error}
-        </Alert>
-      )}
+      {library.error && <QueryErrorNotice error={library.error} onRetry={library.retry} />}
       {list.length ? (
         <Card
           component="ul"

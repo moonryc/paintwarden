@@ -273,9 +273,9 @@ export const LiveUpdatesDisconnected: Story = {
     await canvas.findByRole("heading", { level: 2, name: /Workbench/ });
     window.dispatchEvent(new Event("focus"));
     await waitFor(() => expect(unavailableReconciliation).toHaveBeenCalledWith("VaultInvalidation"));
-    const notice = (
-      await within(main).findByText("The request could not be completed. Please try again.")
-    ).closest("[data-app-banner]") as HTMLElement;
+    const notice = (await within(main).findByText("Connection lost. Reconnecting…")).closest(
+      "[data-app-banner]",
+    ) as HTMLElement;
     await expect(within(notice).getByRole("button", { name: "Retry" })).toBeVisible();
     await userEvent.click(within(notice).getByRole("button", { name: "Close" }));
     await expect(notice).not.toBeInTheDocument();

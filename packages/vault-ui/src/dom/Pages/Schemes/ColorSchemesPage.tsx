@@ -1,5 +1,4 @@
-import { StableAutocomplete } from "../../Components/StableAutocomplete";
-import { Alert, Button, MenuItem, TextField } from "@mui/material";
+import { Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isColorCategory } from "@paintwarden/core/color-categories";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -10,6 +9,8 @@ import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../../Components/StableAutocomplete";
 import { dialogPreloadHandlers } from "../../dialog-preload";
 import { schemeSummaryModel, paintModel } from "../../graphql/miniature-scheme-model";
 import { useSchemes, useSchemePaintOptions } from "../../graphql/schemes-hooks";
@@ -317,11 +318,7 @@ export function ColorSchemesPage() {
               />
             </Box>
           </FilterToolbar>
-          {result.error && (
-            <Alert severity="error" action={<Button onClick={result.refetch}>{t("schemesRetry")}</Button>}>
-              {result.error.message}
-            </Alert>
-          )}
+          {result.error && <QueryErrorNotice error={result.error.message} onRetry={result.refetch} />}
           {result.loading && schemes.length === 0 && (
             <Box role="status" sx={{ mb: 2 }}>
               {t("schemesLoading")}

@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
 import { PageSkeleton } from "../../Components/PageSkeletons";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { PluginInstallStatus, usePluginInstall } from "../../graphql/plugin-install-hooks";
 import { isPluginInstallActive, type PluginInstallJob } from "../../graphql/plugin-install-observer";
 import { usePluginSources } from "../../graphql/sources-hooks";
@@ -430,21 +431,11 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         )}
       </Box>
 
-      {(error || sourceRead.error) && (
-        <Alert
-          severity="error"
-          onClose={error ? () => setError("") : undefined}
-          action={
-            sourceRead.error ? (
-              <Button color="inherit" onClick={() => void loadSources()}>
-                {t("sourcesRetry")}
-              </Button>
-            ) : undefined
-          }
-          sx={{ mb: 2 }}
-        >
-          {error || sourceRead.error}
-        </Alert>
+      <QueryErrorNotice error={sourceRead.error} onRetry={() => loadSources()} />
+      {error && (
+        <Box role="alert" sx={{ color: "error.main", mb: 2 }}>
+          {error}
+        </Box>
       )}
 
       {!sources.length && !sourceRead.error ? (

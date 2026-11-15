@@ -34,7 +34,15 @@ export function AppBanner({
       action={
         <>
           {onRetry && (
-            <Button color="inherit" size="small" onClick={onRetry}>
+            <Button
+              color="inherit"
+              size="small"
+              onClick={(event) => {
+                // A successful retry can remove this notice immediately.
+                event.currentTarget.closest<HTMLElement>('[role="dialog"]')?.focus();
+                onRetry();
+              }}
+            >
               {i18n.t("shell:retry")}
             </Button>
           )}
@@ -42,7 +50,9 @@ export function AppBanner({
             color="inherit"
             size="small"
             aria-label={i18n.t("common:close")}
-            onClick={() => {
+            onClick={(event) => {
+              // Keep keyboard focus inside an open dialog after the button unmounts.
+              event.currentTarget.closest<HTMLElement>('[role="dialog"]')?.focus();
               setDismissed(true);
               onClose?.();
             }}

@@ -183,5 +183,6 @@
   "retryVaultStartup": "Повторить",
   "openLogsFolder": "Открыть папку журналов",
   "updateNeedsConsent": "{{value1}} · Для обновления нужно ваше разрешение.",
-  "updateDeferred": "{{value1}} · Обновление отложено до следующей проверки."
+  "updateDeferred": "{{value1}} · Обновление отложено до следующей проверки.",
+  "connectionLostReconnecting": "Соединение потеряно. Переподключение…"
 }

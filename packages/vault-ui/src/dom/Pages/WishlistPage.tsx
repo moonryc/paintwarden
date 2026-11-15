@@ -1,6 +1,5 @@
-import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { useFragment } from "@apollo/client/react";
-import { Alert, Button, TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +9,8 @@ import { MissingProjectPaints } from "../Components/MissingProjectPaints";
 import { Modal } from "../Components/Modal";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
+import { QueryErrorNotice } from "../Components/QueryErrorNotice";
+import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { WishlistPaintList } from "../Components/WishlistPaintList";
 import { WishlistPaintRow } from "../Components/WishlistPaintRow";
 import { PaintStockFragmentDoc } from "../graphql/generated/graphql";
@@ -244,19 +245,8 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
           {sharing ? t("wishlistSharingList") : t("wishlistShareList")}
         </Button>
       </Box>
-      {models.error && (
-        <Alert
-          severity="error"
-          action={<Button onClick={models.retry}>{t("wishlistRetryMiniatureSearch")}</Button>}
-        >
-          {models.error}
-        </Alert>
-      )}
-      {list.error && (
-        <Alert severity="error" action={<Button onClick={list.retry}>{t("wishlistRetryWishlist")}</Button>}>
-          {list.error}
-        </Alert>
-      )}
+      {models.error && <QueryErrorNotice error={models.error} onRetry={models.retry} />}
+      {list.error && <QueryErrorNotice error={list.error} onRetry={list.retry} />}
       {groups.length ? (
         <WishlistPaintList
           groups={groups}
@@ -439,14 +429,7 @@ function RelatedProjects({ paint, read, onClose }: { paint: Paint; read: Project
       onClose={onClose}
     >
       {loading && <Box role="status">{t("wishlistLoadingProjects")}</Box>}
-      {error && (
-        <Alert
-          severity="error"
-          action={<Button onClick={() => void load()}>{t("wishlistRetryProjects")}</Button>}
-        >
-          {error}
-        </Alert>
-      )}
+      {error && <QueryErrorNotice error={error} onRetry={() => void load()} />}
       <Box component="ul" sx={{ pl: 2.5 }}>
         {page?.nodes.map((project) => (
           <li key={project.id}>{project.title}</li>

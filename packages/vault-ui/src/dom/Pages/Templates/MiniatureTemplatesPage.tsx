@@ -1,4 +1,4 @@
-import { Alert, Button, MenuItem, TextField } from "@mui/material";
+import { Button, MenuItem, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,6 +12,7 @@ import { FolderPicker } from "../../Components/FolderPicker";
 import type { FolderView } from "../../Components/FolderTile";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
+import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { SelectionBar } from "../../Components/SelectionBar";
 import { useFolderBrowser } from "../../graphql/folder-hooks";
 import { useFolderSearch } from "../../graphql/folder-search-hooks";
@@ -192,15 +193,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         title={t("templatesPageTitle")}
         body={t("templatesPageBody")}
       />
-      {error && (
-        <Alert
-          severity="error"
-          sx={{ mb: 2 }}
-          action={<Button onClick={() => void retry()}>{t("templatesRetry")}</Button>}
-        >
-          {error}
-        </Alert>
-      )}
+      {error && <QueryErrorNotice error={error} onRetry={() => void retry()} />}
       <FilterToolbar
         search={search}
         setSearch={(value) => {

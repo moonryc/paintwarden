@@ -1,8 +1,9 @@
-import { Alert, Box, Button, Skeleton } from "@mui/material";
+import { Box, Skeleton } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Modal } from "./Modal";
+import { QueryErrorNotice } from "./QueryErrorNotice";
 
 // Vite emits a local chunk containing the complete text. Load it only when
 // opened: notices can be large, and must not require an external service.
@@ -29,12 +30,7 @@ export function OpenSourceLicensesModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal title={t("noticesTitle")} subtitle={t("noticesSummary")} onClose={onClose} fillBody>
       {failed ? (
-        <Alert
-          severity="error"
-          action={<Button onClick={() => setAttempt(attempt + 1)}>{t("noticesRetry")}</Button>}
-        >
-          {t("noticesFailure")}
-        </Alert>
+        <QueryErrorNotice error={t("noticesFailure")} onRetry={() => setAttempt(attempt + 1)} />
       ) : text === null ? (
         <Box role="status" aria-label={t("noticesLoading")}>
           <Skeleton />
