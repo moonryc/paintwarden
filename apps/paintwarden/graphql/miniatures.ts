@@ -10,7 +10,7 @@ import { GraphQLError } from "graphql";
 import { getSqlite } from "../db/index.ts";
 
 import { readPaintProjection, readRevision, validatePage, validateText, type PaintRead } from "./library.ts";
-import { readAttachedMiniatureSchemes } from "./miniature-schemes.ts";
+import { readAttachedMiniatureSchemes, readMiniatureSchemeEntries } from "./miniature-schemes.ts";
 
 type Revision = ReturnType<typeof readRevision>;
 type Page = { first: number; after?: string | null };
@@ -68,19 +68,20 @@ export function cursorAnchor(after: string, revision: Revision, scope: string): 
     return bad("Invalid miniature cursor");
   }
 }
-// A cursor anchors the last unique item in an immutable generation/filter ordered set.
+// A cursor anchors the last unique identity (scheme entries may share raw IDs) in an immutable generation/filter ordered set.
 // No SQL/order text or client-chosen offset is evaluated. A revision change restarts paging.
 export function paginateProjection<T extends { id: string }>(
   items: T[],
   args: Page,
   revision: Revision,
   scope: string,
+  identity: (item: T) => string = (item) => item.id,
 ) {
   validatePage(args);
   let start = 0;
   if (args.after != null) {
     const anchor = cursorAnchor(args.after, revision, scope),
-      index = items.findIndex((item) => item.id === anchor);
+      index = items.findIndex((item) => identity(item) === anchor);
     if (index < 0) bad("Invalid miniature cursor");
     start = index + 1;
   }
@@ -92,7 +93,7 @@ export function paginateProjection<T extends { id: string }>(
       hasNextPage: start + nodes.length < items.length,
       endCursor: nodes.length
         ? Buffer.from(
-            JSON.stringify(["miniatures-v1", scope, revision.epoch, revision.seq, nodes.at(-1)!.id]),
+            JSON.stringify(["miniatures-v1", scope, revision.epoch, revision.seq, identity(nodes.at(-1)!)]),
           ).toString("base64url")
         : null,
     },
@@ -458,12 +459,18 @@ export function readMiniature(id: string) {
       ).map((r) => r.step),
     );
     for (const row of rows) steps.add(row.step);
+    const schemeRows = readAttachedMiniatureSchemes(id, s.paint.byId);
+    const entriesByScheme = readMiniatureSchemeEntries(
+      schemeRows.map((row) => row.scheme.id),
+      s.paint.byId,
+    );
     return {
       revision: s.revision,
       miniature: s.byId.get(id) ?? null,
       recipeSteps: RECIPE_STEP_VALUES.filter((step) => steps.has(step)),
       recipeRows: recipe,
-      schemeRows: readAttachedMiniatureSchemes(id, s.paint.byId),
+      schemeRows,
+      attachedSchemeEntryRows: schemeRows.flatMap((row) => entriesByScheme.get(row.scheme.id)!),
       missingRows: s.missing.get(id) ?? [],
       requiredRows: s.required.get(id) ?? [],
       id,
@@ -475,6 +482,10 @@ export const miniatureRecipe = (v: MiniatureViewRead, a: Page) =>
   paginateProjection(v.recipeRows, a, v.revision, `recipe:${v.id}`);
 export const miniatureSchemes = (v: MiniatureViewRead, a: Page) =>
   paginateProjection(v.schemeRows, a, v.revision, `schemes:${v.id}`);
+export const miniatureAttachedSchemeEntries = (v: MiniatureViewRead, a: Page) =>
+  paginateProjection(v.attachedSchemeEntryRows, a, v.revision, `attached-scheme-entries:${v.id}`, (entry) =>
+    JSON.stringify([entry.schemeId, entry.kind, entry.id]),
+  );
 export const miniatureMissing = (v: MiniatureViewRead, a: Page) =>
   paginateProjection(v.missingRows, a, v.revision, `missing:${v.id}`);
 export const miniatureRequired = (v: MiniatureViewRead, a: Page) =>

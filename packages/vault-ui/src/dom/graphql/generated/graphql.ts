@@ -454,6 +454,7 @@ export type ProjectMiniatureDetailsQueryVariables = Exact<{
   schemesAfter?: string | null | undefined;
   missingAfter?: string | null | undefined;
   requiredAfter?: string | null | undefined;
+  entriesAfter?: string | null | undefined;
 }>;
 
 export type ProjectMiniatureDetailsQuery = {
@@ -496,7 +497,31 @@ export type ProjectMiniatureDetailsQuery = {
           isSystem: boolean;
           sourceName: string | null;
           sourceLogoUrl: string | null;
+          paintCount: number;
+          availableCount: number;
+          previewSwatchesTruncated: boolean;
+          imageUrl: string | null;
+          thumbnailUrl: string | null;
+          previewSwatches: Array<{ paintId: string; colorHex: string }>;
         };
+      }>;
+      pageInfo: { hasNextPage: boolean; endCursor: string | null };
+    };
+    attachedSchemeEntries: {
+      totalCount: number;
+      nodes: Array<{
+        id: string;
+        schemeId: string;
+        kind: MiniatureSchemeEntryKind;
+        sortOrder: number;
+        label: string | null;
+        tone: string | null;
+        role: string | null;
+        imageUrl: string | null;
+        thumbnailUrl: string | null;
+        imageType: string | null;
+        method: string | null;
+        paint: { " $fragmentRefs"?: { DetailPaintFragment: DetailPaintFragment } } | null;
       }>;
       pageInfo: { hasNextPage: boolean; endCursor: string | null };
     };
@@ -3683,6 +3708,11 @@ export const ProjectMiniatureDetailsDocument = {
           variable: { kind: "Variable", name: { kind: "Name", value: "requiredAfter" } },
           type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
         },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "entriesAfter" } },
+          type: { kind: "NamedType", name: { kind: "Name", value: "String" } },
+        },
       ],
       selectionSet: {
         kind: "SelectionSet",
@@ -3826,9 +3856,91 @@ export const ProjectMiniatureDetailsDocument = {
                                   { kind: "Field", name: { kind: "Name", value: "isSystem" } },
                                   { kind: "Field", name: { kind: "Name", value: "sourceName" } },
                                   { kind: "Field", name: { kind: "Name", value: "sourceLogoUrl" } },
+                                  { kind: "Field", name: { kind: "Name", value: "paintCount" } },
+                                  { kind: "Field", name: { kind: "Name", value: "availableCount" } },
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "previewSwatches" },
+                                    selectionSet: {
+                                      kind: "SelectionSet",
+                                      selections: [
+                                        { kind: "Field", name: { kind: "Name", value: "paintId" } },
+                                        { kind: "Field", name: { kind: "Name", value: "colorHex" } },
+                                      ],
+                                    },
+                                  },
+                                  {
+                                    kind: "Field",
+                                    name: { kind: "Name", value: "previewSwatchesTruncated" },
+                                  },
+                                  { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+                                  { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
                                 ],
                               },
                             },
+                          ],
+                        },
+                      },
+                      { kind: "Field", name: { kind: "Name", value: "totalCount" } },
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "pageInfo" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "hasNextPage" } },
+                            { kind: "Field", name: { kind: "Name", value: "endCursor" } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "attachedSchemeEntries" },
+                  arguments: [
+                    {
+                      kind: "Argument",
+                      name: { kind: "Name", value: "first" },
+                      value: { kind: "IntValue", value: "40" },
+                    },
+                    {
+                      kind: "Argument",
+                      name: { kind: "Name", value: "after" },
+                      value: { kind: "Variable", name: { kind: "Name", value: "entriesAfter" } },
+                    },
+                  ],
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      {
+                        kind: "Field",
+                        name: { kind: "Name", value: "nodes" },
+                        selectionSet: {
+                          kind: "SelectionSet",
+                          selections: [
+                            { kind: "Field", name: { kind: "Name", value: "id" } },
+                            { kind: "Field", name: { kind: "Name", value: "schemeId" } },
+                            { kind: "Field", name: { kind: "Name", value: "kind" } },
+                            { kind: "Field", name: { kind: "Name", value: "sortOrder" } },
+                            {
+                              kind: "Field",
+                              name: { kind: "Name", value: "paint" },
+                              selectionSet: {
+                                kind: "SelectionSet",
+                                selections: [
+                                  { kind: "FragmentSpread", name: { kind: "Name", value: "DetailPaint" } },
+                                ],
+                              },
+                            },
+                            { kind: "Field", name: { kind: "Name", value: "label" } },
+                            { kind: "Field", name: { kind: "Name", value: "tone" } },
+                            { kind: "Field", name: { kind: "Name", value: "role" } },
+                            { kind: "Field", name: { kind: "Name", value: "imageUrl" } },
+                            { kind: "Field", name: { kind: "Name", value: "thumbnailUrl" } },
+                            { kind: "Field", name: { kind: "Name", value: "imageType" } },
+                            { kind: "Field", name: { kind: "Name", value: "method" } },
                           ],
                         },
                       },

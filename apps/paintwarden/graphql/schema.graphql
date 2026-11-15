@@ -374,6 +374,7 @@ type MiniatureView {
   recipeSteps: [String!]!
   recipe(first: Int! = 100, after: String): MiniatureRecipeConnection!
   schemes(first: Int! = 100, after: String): MiniatureSchemeConnection!
+  attachedSchemeEntries(first: Int! = 100, after: String): MiniatureSchemeEntryConnection!
   missing(first: Int! = 100, after: String): MiniatureMissingConnection!
   required(first: Int! = 100, after: String): MiniatureRequiredConnection!
 }
@@ -391,6 +392,7 @@ type MiniatureSchemeView {
 }
 type MiniatureSchemeEntry {
   id: ID!
+  schemeId: ID!
   kind: MiniatureSchemeEntryKind!
   sortOrder: Int!
   paint: Paint

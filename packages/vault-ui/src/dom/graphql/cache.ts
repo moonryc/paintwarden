@@ -88,6 +88,9 @@ export function createVaultCache(): InMemoryCache {
       // These are revision-bound aggregate summaries, not optimistic entities.
       // Embedding them keeps an unrelated older detail from regressing readiness.
       MiniatureScheme: { keyFields: false },
+      // Divider/image IDs are scoped to a scheme (and kind), not globally unique.
+      // Keep batched, revision-bound entries embedded rather than merging raw IDs.
+      MiniatureSchemeEntry: { keyFields: false },
       TemplateSummary: { keyFields: false },
       WishlistRow: { keyFields: false },
       WishlistView: { keyFields: false },

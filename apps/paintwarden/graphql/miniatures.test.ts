@@ -20,6 +20,7 @@ const {
   readVaultNavigation,
   miniatureRecipe,
   miniatureSchemes,
+  miniatureAttachedSchemeEntries,
   miniatureMissing,
   miniatureRequired,
   clearMiniatureProjectionCache,
@@ -134,7 +135,13 @@ function link(miniatureId: string, schemeId: string, order = 0) {
 function code(expected: string) {
   return (error: unknown) => error instanceof GraphQLError && error.extensions.code === expected;
 }
-const nested = [miniatureRecipe, miniatureSchemes, miniatureMissing, miniatureRequired] as const;
+const nested = [
+  miniatureRecipe,
+  miniatureSchemes,
+  miniatureAttachedSchemeEntries,
+  miniatureMissing,
+  miniatureRequired,
+] as const;
 
 beforeEach(() => {
   sqlite.exec(
@@ -864,6 +871,7 @@ void test("GraphQL HTTP exposes Home, Miniatures, detail connections and navigat
   assert.deepEqual(payload.data.vaultNavigation, { availablePaints: 0, shoppingPaints: 0 });
   const detail = await post(`query {miniature(id:"${id}") {miniature {id notes paintingStatus} recipeSteps
     recipe(first:1) {nodes {paint {id} step notes} totalCount}
+    attachedSchemeEntries(first:1) {nodes {schemeId kind paint {id}} totalCount}
     schemes(first:1) {nodes {scheme {paintCount availableCount}} totalCount}
     required(first:1) {nodes {id} totalCount} missing(first:1) {nodes {id missingStock brokenSubstitution} totalCount}}}`);
   assert.equal(detail.status, 200);
@@ -878,6 +886,12 @@ void test("GraphQL HTTP exposes Home, Miniatures, detail connections and navigat
     { id: p, missingStock: true, brokenSubstitution: false },
   ]);
   assert.deepEqual(result.data.miniature.schemes.nodes, [{ scheme: { paintCount: 1, availableCount: 0 } }]);
+  assert.equal(result.data.miniature.attachedSchemeEntries.totalCount, 1);
+  assert.deepEqual(result.data.miniature.attachedSchemeEntries.nodes[0], {
+    schemeId: readMiniature(id).schemeRows[0].scheme.id,
+    kind: "PAINT",
+    paint: { id: p },
+  });
 });
 
 void test("home and miniature lists expose bounded local thumbnails while details retain originals", () => {
@@ -899,5 +913,83 @@ void test("home and miniature lists expose bounded local thumbnails while detail
   assert.equal(
     readMiniatures({ first: 40 }).miniatures.nodes[0].thumbnailUrl,
     "https://external.test/original.png?v=external",
+  );
+});
+
+void test("attached entries batch all links, retain duplicate paints and shared entry IDs, and page to completion", async () => {
+  const { readMiniatureScheme, miniatureSchemeEntries } = await import("./miniature-schemes.ts");
+  const id = miniature("Many schemes");
+  const p = paint("Repeated paint");
+  const sharedDividerId = nextId();
+  const sharedImageId = nextId();
+  const schemes: string[] = [];
+  for (let i = 0; i < 45; i++) {
+    const sid = scheme([], `Scheme ${i}`);
+    schemes.push(sid);
+    link(id, sid, 44 - i);
+    for (let order = 0; order < 42; order++)
+      sqlite
+        .prepare("INSERT INTO color_scheme_paints(scheme_id,paint_id,sort_order,updated_at) VALUES(?,?,?,?)")
+        .run(sid, p, order * 3, timestamp);
+    sqlite
+      .prepare(
+        "INSERT INTO color_scheme_dividers(id,scheme_id,label,tone,sort_order,updated_at) VALUES(?,?,?,'SECTION',1,?)",
+      )
+      .run(sharedDividerId, sid, `Divider ${i}`, timestamp);
+    sqlite
+      .prepare(
+        "INSERT INTO color_scheme_images(id,scheme_id,image_url,sort_order,updated_at) VALUES(?,?,?,2,?)",
+      )
+      .run(sharedImageId, sid, `https://example.invalid/${i}.png`, timestamp);
+  }
+  const originalPrepare = sqlite.prepare.bind(sqlite);
+  let entryScans = 0;
+  sqlite.prepare = (sql: string) => {
+    if (
+      /FROM color_scheme_(paints|dividers|images) WHERE scheme_id IN \(SELECT value FROM json_each\(\?\)\)/.test(
+        sql,
+      )
+    )
+      entryScans++;
+    return originalPrepare(sql);
+  };
+  let view: ReturnType<typeof readMiniature>;
+  try {
+    view = readMiniature(id);
+  } finally {
+    sqlite.prepare = originalPrepare;
+  }
+  assert.equal(entryScans, 3, "one scan per entry table, not per linked scheme");
+  const expected = schemes.toReversed().flatMap((sid) => readMiniatureScheme(sid).entries);
+  assert.equal(expected.length, 45 * 44);
+  assert.deepEqual(
+    miniatureAttachedSchemeEntries(view, { first: 4 }).nodes.map((entry) => entry.kind),
+    ["PAINT", "DIVIDER", "IMAGE", "PAINT"],
+  );
+  const actual: typeof expected = [];
+  let after: string | null = null;
+  for (let pageNumber = 0; pageNumber < 1000; pageNumber++) {
+    const page = miniatureAttachedSchemeEntries(view, { first: 17, after });
+    assert.equal(page.totalCount, expected.length);
+    actual.push(...page.nodes);
+    if (!page.pageInfo.hasNextPage) break;
+    assert.notEqual(page.pageInfo.endCursor, after);
+    after = page.pageInfo.endCursor;
+  }
+  assert.deepEqual(actual, expected);
+  assert.equal(actual.filter((entry) => entry.paint?.id === p).length, 45 * 42);
+  const cursor = miniatureAttachedSchemeEntries(view, { first: 2 }).pageInfo.endCursor;
+  assert.throws(
+    () => miniatureSchemeEntries(readMiniatureScheme(schemes[0]), { first: 1, after: cursor }),
+    code("BAD_USER_INPUT"),
+  );
+  assert.throws(() => miniatureAttachedSchemeEntries(view, { first: 101 }), code("BAD_USER_INPUT"));
+  sqlite.prepare("UPDATE color_scheme_dividers SET label='Changed'").run();
+  sqlite.prepare("UPDATE color_scheme_images SET image_url='https://example.invalid/changed.png'").run();
+  sqlite.prepare("DELETE FROM color_scheme_paints WHERE scheme_id=? AND sort_order=0").run(schemes[44]);
+  assert.deepEqual(miniatureAttachedSchemeEntries(view, { first: 100 }).nodes, expected.slice(0, 100));
+  assert.throws(
+    () => miniatureAttachedSchemeEntries(readMiniature(id), { first: 1, after: cursor }),
+    code("STALE_CURSOR"),
   );
 });

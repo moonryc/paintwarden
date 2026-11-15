@@ -196,6 +196,44 @@ export function fixtureMiniatureResponse(
       },
     };
   }
+  const schemeEntries = (schemeId: string) => {
+    const base = {
+      paint: null,
+      label: null,
+      tone: null,
+      role: null,
+      imageUrl: null,
+      thumbnailUrl: null,
+      imageType: null,
+      method: null,
+    };
+    return [
+      ...data.colorSchemePaints
+        .filter((row) => row.schemeId === schemeId)
+        .flatMap((row) => {
+          const paint = data.catalog.find((paint) => paint.id === row.paintId);
+          return paint
+            ? [
+                {
+                  __typename: "MiniatureSchemeEntry",
+                  ...base,
+                  schemeId,
+                  id: JSON.stringify([schemeId, "PAINT", row.sortOrder]),
+                  sortOrder: row.sortOrder,
+                  kind: "PAINT",
+                  paint: projectPaint(paint),
+                },
+              ]
+            : [];
+        }),
+      ...data.colorSchemeDividers
+        .filter((row) => row.schemeId === schemeId)
+        .map((row) => ({ __typename: "MiniatureSchemeEntry", ...base, ...row, kind: "DIVIDER" })),
+      ...data.colorSchemeImages
+        .filter((row) => row.schemeId === schemeId)
+        .map((row) => ({ __typename: "MiniatureSchemeEntry", ...base, ...row, kind: "IMAGE" })),
+    ].sort((a, b) => a.sortOrder - b.sortOrder);
+  };
   if (operation === "ProjectMiniatureDetails") {
     const id = String(vars.id),
       miniature = data.miniatures.find((mini) => mini.id === id) ?? null;
@@ -239,6 +277,12 @@ export function fixtureMiniatureResponse(
         ],
         recipe: page(recipe, 40, vars.recipeAfter, "MiniatureRecipeConnection"),
         schemes: page(schemes, 40, vars.schemesAfter, "MiniatureSchemeConnection"),
+        attachedSchemeEntries: page(
+          schemes.flatMap((link) => schemeEntries(link.scheme.id)),
+          40,
+          vars.entriesAfter,
+          "MiniatureSchemeEntryConnection",
+        ),
         required: page(required.map(projectPaint), 40, vars.requiredAfter, "MiniatureRequiredConnection"),
         missing: page(
           required
@@ -259,43 +303,7 @@ export function fixtureMiniatureResponse(
   }
   if (operation === "MiniatureSchemeDetails") {
     const scheme = data.colorSchemes.find((scheme) => scheme.id === vars.id);
-    const base = {
-      paint: null,
-      label: null,
-      tone: null,
-      role: null,
-      imageUrl: null,
-      thumbnailUrl: null,
-      imageType: null,
-      method: null,
-    };
-    const entries = scheme
-      ? [
-          ...data.colorSchemePaints
-            .filter((row) => row.schemeId === scheme.id)
-            .flatMap((row) => {
-              const paint = data.catalog.find((paint) => paint.id === row.paintId);
-              return paint
-                ? [
-                    {
-                      __typename: "MiniatureSchemeEntry",
-                      ...base,
-                      id: row.paintId,
-                      sortOrder: row.sortOrder,
-                      kind: "PAINT",
-                      paint: projectPaint(paint),
-                    },
-                  ]
-                : [];
-            }),
-          ...data.colorSchemeDividers
-            .filter((row) => row.schemeId === scheme.id)
-            .map((row) => ({ __typename: "MiniatureSchemeEntry", ...base, ...row, kind: "DIVIDER" })),
-          ...data.colorSchemeImages
-            .filter((row) => row.schemeId === scheme.id)
-            .map((row) => ({ __typename: "MiniatureSchemeEntry", ...base, ...row, kind: "IMAGE" })),
-        ].sort((a, b) => a.sortOrder - b.sortOrder)
-      : [];
+    const entries = scheme ? schemeEntries(scheme.id) : [];
     return {
       miniatureScheme: {
         __typename: "MiniatureSchemeView",

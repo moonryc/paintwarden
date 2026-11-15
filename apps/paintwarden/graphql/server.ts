@@ -39,6 +39,7 @@ import {
   readVaultNavigation,
   miniatureRecipe,
   miniatureSchemes,
+  miniatureAttachedSchemeEntries,
   miniatureMissing,
   miniatureRequired,
 } from "./miniatures.ts";
@@ -113,6 +114,7 @@ const resolvers: Resolvers<GraphQLContext> = {
   MiniatureView: {
     recipe: (parent, args) => miniatureRecipe(parent, args),
     schemes: (parent, args) => miniatureSchemes(parent, args),
+    attachedSchemeEntries: (parent, args) => miniatureAttachedSchemeEntries(parent, args),
     missing: (parent, args) => miniatureMissing(parent, args),
     required: (parent, args) => miniatureRequired(parent, args),
   },

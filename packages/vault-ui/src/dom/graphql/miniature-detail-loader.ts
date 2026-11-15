@@ -8,7 +8,7 @@ import {
   ProjectMiniatureDetailsDocument,
   type ProjectMiniatureDetailsQuery,
 } from "./generated/graphql";
-import { readMiniatureScheme } from "./miniature-scheme-hooks";
+import type { MiniatureSchemeRead } from "./miniature-scheme-loader";
 
 function unpack(view: ProjectMiniatureDetailsQuery["miniature"]) {
   return {
@@ -34,10 +34,10 @@ function unpack(view: ProjectMiniatureDetailsQuery["miniature"]) {
   };
 }
 type Detail = ReturnType<typeof unpack>;
-type Scheme = Awaited<ReturnType<typeof readMiniatureScheme>>;
+type Scheme = MiniatureSchemeRead;
 export type MiniatureDetailView = Detail & { attachedSchemes: Scheme[] };
 const sameRevision = (a: Detail["revision"], b: Detail["revision"]) => a.epoch === b.epoch && a.seq === b.seq;
-const families = ["recipe", "schemes", "missing", "required"] as const;
+const families = ["recipe", "schemes", "missing", "required", "attachedSchemeEntries"] as const;
 
 // A replacement recipe must never be built from a truncated page. Read bounded
 // pages to completion, including attached scheme entries, and publish one revision.
@@ -51,6 +51,7 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
         schemes: null,
         missing: null,
         required: null,
+        attachedSchemeEntries: null,
       };
       let changed = false;
       do {
@@ -62,6 +63,7 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
             schemesAfter: after.schemes,
             missingAfter: after.missing,
             requiredAfter: after.required,
+            entriesAfter: after.attachedSchemeEntries,
           },
           fetchPolicy: "no-cache",
         });
@@ -81,6 +83,11 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
             view.missing = { ...next.missing, nodes: [...view.missing.nodes, ...next.missing.nodes] };
           if (after.required)
             view.required = { ...next.required, nodes: [...view.required.nodes, ...next.required.nodes] };
+          if (after.attachedSchemeEntries)
+            view.attachedSchemeEntries = {
+              ...next.attachedSchemeEntries,
+              nodes: [...view.attachedSchemeEntries.nodes, ...next.attachedSchemeEntries.nodes],
+            };
         }
         for (const family of families) {
           const page = view[family].pageInfo;
@@ -91,16 +98,24 @@ export async function readMiniatureDetail(client: ApolloClient, id: string): Pro
         }
       } while (families.some((family) => after[family]));
       if (!view || changed) continue;
-      const attachedSchemes: Scheme[] = [];
-      for (const link of view.schemes.nodes) {
-        const scheme = await readMiniatureScheme(client, link.scheme.id);
-        if (!sameRevision(view.revision, scheme.revision) || !scheme.scheme) {
-          changed = true;
-          break;
-        }
-        attachedSchemes.push(scheme);
+      // One flat, bounded entry stream avoids a request per attached scheme and
+      // nested schemes × entries cost. Keep its raw paint fragments for the caller's
+      // atomic cache publication; only the reconstructed editor view is unmasked.
+      const entriesByScheme = new Map<string, Scheme["entries"]["nodes"]>();
+      for (const entry of view.attachedSchemeEntries.nodes) {
+        const entries = entriesByScheme.get(entry.schemeId) ?? [];
+        entries.push({ ...entry, paint: getFragmentData(DetailPaintFragmentDoc, entry.paint) });
+        entriesByScheme.set(entry.schemeId, entries);
       }
-      if (!changed) return { ...view, attachedSchemes };
+      const attachedSchemes: Scheme[] = view.schemes.nodes.map((link) => {
+        const nodes = entriesByScheme.get(link.scheme.id) ?? [];
+        return {
+          revision: view.revision,
+          scheme: link.scheme,
+          entries: { nodes, totalCount: nodes.length, pageInfo: { hasNextPage: false, endCursor: null } },
+        };
+      });
+      return { ...view, attachedSchemes };
     } catch (error) {
       if (
         CombinedGraphQLErrors.is(error) &&

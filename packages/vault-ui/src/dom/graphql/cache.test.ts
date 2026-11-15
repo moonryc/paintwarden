@@ -251,3 +251,49 @@ test("miniature atomic windows share pagination slot but not filters and normali
   assert.deepEqual(readIds(), ["b"]);
   assert.ok(cache.identify({ __typename: "Miniature", id: "b" }));
 });
+
+void test("batched attached entries retain scheme-scoped duplicate IDs after atomic cache publication", () => {
+  const cache = createVaultCache();
+  const query = gql`
+    query AttachedEntries {
+      miniature(id: "miniature") {
+        attachedSchemeEntries(first: 40) {
+          nodes {
+            id
+            schemeId
+            kind
+            label
+          }
+        }
+      }
+    }
+  `;
+  const nodes = ["scheme-a", "scheme-b"].map((schemeId) => ({
+    __typename: "MiniatureSchemeEntry",
+    id: "shared-divider-id",
+    schemeId,
+    kind: "DIVIDER",
+    label: schemeId,
+  }));
+  cache.writeQuery({
+    query,
+    data: {
+      miniature: {
+        __typename: "MiniatureView",
+        attachedSchemeEntries: {
+          __typename: "MiniatureSchemeEntryConnection",
+          nodes,
+        },
+      },
+    },
+  });
+  assert.deepEqual(
+    cache.readQuery<{ miniature: { attachedSchemeEntries: { nodes: unknown[] } } }>({ query })?.miniature
+      .attachedSchemeEntries.nodes,
+    nodes,
+  );
+  assert.equal(
+    Object.keys(cache.extract()).some((key) => key.startsWith("MiniatureSchemeEntry:")),
+    false,
+  );
+});

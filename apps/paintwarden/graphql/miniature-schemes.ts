@@ -35,6 +35,7 @@ export type MiniatureSchemeSummary = {
 };
 export type MiniatureSchemeEntry = {
   id: string;
+  schemeId: string;
   kind: "PAINT" | "DIVIDER" | "IMAGE";
   sortOrder: number;
   paint?: PaintRead | null;
@@ -337,6 +338,70 @@ export function readAttachedMiniatureSchemes(
     }));
   })();
 }
+// Hydrate all selected schemes with three batched scans, preserving row identity and mixed order.
+export function readMiniatureSchemeEntries(
+  ids: string[],
+  byId: Map<string, PaintRead>,
+): Map<string, MiniatureSchemeEntry[]> {
+  const result = new Map<string, MiniatureSchemeEntry[]>(ids.map((id) => [id, []]));
+  if (!ids.length) return result;
+  const sqlite = getSqlite(),
+    encodedIds = JSON.stringify(ids);
+  const paints = sqlite
+    .prepare(
+      `SELECT scheme_id AS schemeId,paint_id AS paintId,sort_order AS sortOrder FROM color_scheme_paints WHERE scheme_id IN (SELECT value FROM json_each(?)) ORDER BY scheme_id,sort_order`,
+    )
+    .all(encodedIds) as { schemeId: string; paintId: string; sortOrder: number }[];
+  const entries: MiniatureSchemeEntry[] = paints.map((paint) => ({
+    id: opaque(["scheme-entry", paint.schemeId, "PAINT", paint.sortOrder]),
+    schemeId: paint.schemeId,
+    kind: "PAINT",
+    sortOrder: paint.sortOrder,
+    paint: byId.get(paint.paintId) ?? null,
+  }));
+  const dividers = sqlite
+    .prepare(
+      `SELECT scheme_id AS schemeId,id,label,tone,role,sort_order AS sortOrder FROM color_scheme_dividers WHERE scheme_id IN (SELECT value FROM json_each(?)) ORDER BY scheme_id,sort_order,id`,
+    )
+    .all(encodedIds) as {
+    schemeId: string;
+    id: string;
+    label: string;
+    tone: string;
+    role: string | null;
+    sortOrder: number;
+  }[];
+  const images = sqlite
+    .prepare(
+      `SELECT scheme_id AS schemeId,id,image_url AS imageUrl,thumbnail_url AS thumbnailUrl,image_type AS imageType,method,sort_order AS sortOrder FROM color_scheme_images WHERE scheme_id IN (SELECT value FROM json_each(?)) ORDER BY scheme_id,sort_order,id`,
+    )
+    .all(encodedIds) as {
+    schemeId: string;
+    id: string;
+    imageUrl: string;
+    thumbnailUrl: string | null;
+    imageType: string | null;
+    method: string | null;
+    sortOrder: number;
+  }[];
+  entries.push(
+    ...dividers.map((entry) => ({
+      ...entry,
+      kind: "DIVIDER" as const,
+    })),
+  );
+  entries.push(
+    ...images.map((entry) => ({
+      ...entry,
+      kind: "IMAGE" as const,
+    })),
+  );
+  entries.sort(
+    (a, b) => a.sortOrder - b.sortOrder || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id),
+  );
+  for (const entry of entries) result.get(entry.schemeId)!.push(entry);
+  return result;
+}
 export function readMiniatureScheme(id: string): MiniatureSchemeRead {
   validateText(id, "id");
   const sqlite = getSqlite(),
@@ -347,50 +412,8 @@ export function readMiniatureScheme(id: string): MiniatureSchemeRead {
       .prepare(`SELECT ${summaryColumns} FROM color_schemes s ${sourceJoin} WHERE s.id=?`)
       .get(id) as SummaryRow | undefined;
     if (!row) return { revision, scheme: null, entries: [] };
-    const paints = sqlite
-      .prepare(
-        `SELECT paint_id AS paintId,sort_order AS sortOrder FROM color_scheme_paints WHERE scheme_id=? ORDER BY sort_order`,
-      )
-      .all(id) as { paintId: string; sortOrder: number }[];
     const byId = readPaintProjection(allowCache).byId;
-    const entries: MiniatureSchemeEntry[] = paints.map((paint) => ({
-      id: opaque(["scheme-entry", id, "PAINT", paint.sortOrder]),
-      kind: "PAINT",
-      sortOrder: paint.sortOrder,
-      paint: byId.get(paint.paintId) ?? null,
-    }));
-    const dividers = sqlite
-      .prepare(
-        `SELECT id,label,tone,role,sort_order AS sortOrder FROM color_scheme_dividers WHERE scheme_id=? ORDER BY sort_order,id`,
-      )
-      .all(id) as { id: string; label: string; tone: string; role: string | null; sortOrder: number }[];
-    const images = sqlite
-      .prepare(
-        `SELECT id,image_url AS imageUrl,thumbnail_url AS thumbnailUrl,image_type AS imageType,method,sort_order AS sortOrder FROM color_scheme_images WHERE scheme_id=? ORDER BY sort_order,id`,
-      )
-      .all(id) as {
-      id: string;
-      imageUrl: string;
-      thumbnailUrl: string | null;
-      imageType: string | null;
-      method: string | null;
-      sortOrder: number;
-    }[];
-    entries.push(
-      ...dividers.map((entry) => ({
-        ...entry,
-        kind: "DIVIDER" as const,
-      })),
-    );
-    entries.push(
-      ...images.map((entry) => ({
-        ...entry,
-        kind: "IMAGE" as const,
-      })),
-    );
-    entries.sort(
-      (a, b) => a.sortOrder - b.sortOrder || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id),
-    );
+    const entries = readMiniatureSchemeEntries([id], byId).get(id)!;
     return { revision, scheme: summary(row, schemeStats([row], byId).get(id)!), entries };
   })();
 }

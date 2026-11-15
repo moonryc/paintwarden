@@ -50,7 +50,7 @@ const connection = <T,>(nodes: T[]) => ({
   pageInfo: { hasNextPage: false, endCursor: null },
 });
 
-type Mode = "default" | "empty" | "broken" | "loading" | "retry";
+type Mode = "default" | "empty" | "broken" | "loading" | "retry" | "delayed";
 const photo = new URL("../../../../../apps/paintwarden-web/public/icon-512.png", import.meta.url).href;
 function ProjectConnection({
   children,
@@ -83,103 +83,107 @@ function ProjectConnection({
         (operation) =>
           new Observable((observer) => {
             if (mode === "loading") return undefined;
-            const timer = setTimeout(() => {
-              if (operation.operationName === "ProjectMiniatureDetails") {
-                if (mode === "retry" && !failed) {
-                  failed = true;
-                  observer.error(new Error("Project temporarily unavailable"));
+            const timer = setTimeout(
+              () => {
+                if (operation.operationName === "ProjectMiniatureDetails") {
+                  if (mode === "retry" && !failed) {
+                    failed = true;
+                    observer.error(new Error("Project temporarily unavailable"));
+                    return;
+                  }
+                  observer.next({
+                    data: {
+                      miniature: {
+                        revision: { epoch: "project-story", seq: String(seq) },
+                        miniature,
+                        recipeSteps: mode === "empty" ? [] : steps,
+                        recipe: connection(entries),
+                        schemes: connection([]),
+                        attachedSchemeEntries: connection([]),
+                        missing: connection(
+                          paints.map((row) => ({
+                            id: row.id,
+                            paint: row,
+                            missingStock: row.missingStock,
+                            brokenSubstitution: row.brokenSubstitution,
+                          })),
+                        ),
+                        required: connection(paints),
+                      },
+                    },
+                  });
+                } else if (
+                  operation.operationName === "UpdateProjectMiniature" ||
+                  operation.operationName === "SetProjectRecipe"
+                ) {
+                  saved(operation.operationName, operation.variables);
+                  if (operation.operationName === "UpdateProjectMiniature")
+                    miniature = { ...miniature, ...operation.variables.input };
+                  else {
+                    steps = operation.variables.steps as string[];
+                    entries = (
+                      operation.variables.entries as Array<{
+                        id: string;
+                        paintId: string;
+                        step: string;
+                        notes: string;
+                        sortOrder: number;
+                      }>
+                    ).map((entry) => ({
+                      ...entry,
+                      __typename: "MiniatureRecipeEntry",
+                      paint: paints.find((row) => row.id === entry.paintId)!,
+                    }));
+                  }
+                  seq++;
+                  const field =
+                    operation.operationName === "UpdateProjectMiniature"
+                      ? "updateMiniature"
+                      : "setMiniatureRecipe";
+                  observer.next({
+                    data: {
+                      [field]: {
+                        revision: { epoch: "project-story", seq: String(seq) },
+                        miniatureId: project.id,
+                        clientMutationId: null,
+                        invalidatedFamilies: ["MINIATURES", "HOME"],
+                      },
+                    },
+                  });
+                } else if (operation.operationName === "SetPaintStock") {
+                  stockSaved(operation.variables.paintId);
+                  paints = paints.map((row) =>
+                    row.id === operation.variables.paintId
+                      ? {
+                          ...row,
+                          inventory: {
+                            __typename: "Inventory",
+                            state: "WISHLIST",
+                            stockLevel: "FULL",
+                            quantity: 0,
+                          },
+                        }
+                      : row,
+                  );
+                  seq++;
+                  observer.next({
+                    data: {
+                      setPaintStock: {
+                        revision: { epoch: "project-story", seq: String(seq) },
+                        paint: paints.find((row) => row.id === operation.variables.paintId),
+                        clientMutationId: null,
+                        invalidatedFamilies: ["PAINT", "MINIATURES"],
+                      },
+                    },
+                  });
+                } else {
+                  observer.error(new Error(`Unexpected operation ${operation.operationName}`));
                   return;
                 }
-                observer.next({
-                  data: {
-                    miniature: {
-                      revision: { epoch: "project-story", seq: String(seq) },
-                      miniature,
-                      recipeSteps: mode === "empty" ? [] : steps,
-                      recipe: connection(entries),
-                      schemes: connection([]),
-                      missing: connection(
-                        paints.map((row) => ({
-                          id: row.id,
-                          paint: row,
-                          missingStock: row.missingStock,
-                          brokenSubstitution: row.brokenSubstitution,
-                        })),
-                      ),
-                      required: connection(paints),
-                    },
-                  },
-                });
-              } else if (
-                operation.operationName === "UpdateProjectMiniature" ||
-                operation.operationName === "SetProjectRecipe"
-              ) {
-                saved(operation.operationName, operation.variables);
-                if (operation.operationName === "UpdateProjectMiniature")
-                  miniature = { ...miniature, ...operation.variables.input };
-                else {
-                  steps = operation.variables.steps as string[];
-                  entries = (
-                    operation.variables.entries as Array<{
-                      id: string;
-                      paintId: string;
-                      step: string;
-                      notes: string;
-                      sortOrder: number;
-                    }>
-                  ).map((entry) => ({
-                    ...entry,
-                    __typename: "MiniatureRecipeEntry",
-                    paint: paints.find((row) => row.id === entry.paintId)!,
-                  }));
-                }
-                seq++;
-                const field =
-                  operation.operationName === "UpdateProjectMiniature"
-                    ? "updateMiniature"
-                    : "setMiniatureRecipe";
-                observer.next({
-                  data: {
-                    [field]: {
-                      revision: { epoch: "project-story", seq: String(seq) },
-                      miniatureId: project.id,
-                      clientMutationId: null,
-                      invalidatedFamilies: ["MINIATURES", "HOME"],
-                    },
-                  },
-                });
-              } else if (operation.operationName === "SetPaintStock") {
-                stockSaved(operation.variables.paintId);
-                paints = paints.map((row) =>
-                  row.id === operation.variables.paintId
-                    ? {
-                        ...row,
-                        inventory: {
-                          __typename: "Inventory",
-                          state: "WISHLIST",
-                          stockLevel: "FULL",
-                          quantity: 0,
-                        },
-                      }
-                    : row,
-                );
-                seq++;
-                observer.next({
-                  data: {
-                    setPaintStock: {
-                      revision: { epoch: "project-story", seq: String(seq) },
-                      paint: paints.find((row) => row.id === operation.variables.paintId),
-                      clientMutationId: null,
-                      invalidatedFamilies: ["PAINT", "MINIATURES"],
-                    },
-                  },
-                });
-              } else {
-                observer.error(new Error(`Unexpected operation ${operation.operationName}`));
-                return;
-              }
-              observer.complete();
-            }, 15);
+                observer.complete();
+              },
+              mode === "delayed" ? 350 : 15,
+            );
             return () => clearTimeout(timer);
           }),
       ),
@@ -357,5 +361,20 @@ export const RecipeStepSave: Story = {
         }),
       ),
     );
+  },
+};
+
+export const HydrationKeepsDrawerShell: Story = {
+  render: (args) => (
+    <ProjectConnection mode="delayed">
+      <ApolloProjectDrawer {...args} />
+    </ProjectConnection>
+  ),
+  play: async ({ canvasElement }) => {
+    const screen = within(canvasElement.ownerDocument.body);
+    const shell = await screen.findByRole("dialog");
+    await expect(shell.querySelector('[data-skeleton="miniature-detail"]')).not.toBeNull();
+    await expect(await screen.findByRole("heading", { name: project.title })).toBeVisible();
+    await expect(screen.getByRole("dialog")).toBe(shell);
   },
 };

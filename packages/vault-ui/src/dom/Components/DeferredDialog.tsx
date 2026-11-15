@@ -11,7 +11,7 @@ function DelayedDialogSkeleton({
   title: string;
   onClose: () => void;
 }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(kind === "project");
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 150);
     return () => clearTimeout(timer);
@@ -37,7 +37,7 @@ function DelayedDialogSkeleton({
 }
 
 // Rejected imports propagate to the app's existing recovery/error boundary.
-// Each pending mount owns its delay, so fast/preloaded imports never flash a shell.
+// Other dialogs delay skeletons; a project drawer acknowledges the click immediately.
 export function DeferredDialog({
   kind,
   title,

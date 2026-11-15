@@ -204,6 +204,7 @@ function Connection({
                           scheme: summary(id),
                         })),
                       ),
+                      attachedSchemeEntries: windowOf([]),
                       required: windowOf([]),
                       missing: windowOf([]),
                     },

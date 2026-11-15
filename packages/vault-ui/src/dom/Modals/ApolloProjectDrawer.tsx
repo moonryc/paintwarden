@@ -1,10 +1,9 @@
 import { useFragment } from "@apollo/client/react";
 import { Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { Modal } from "../Components/Modal";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { ProjectPaintSummaryView } from "../Components/ProjectPaintSummary";
 import { ProjectRecipeView } from "../Components/ProjectRecipe";
@@ -24,19 +23,26 @@ import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { Miniature, Paint, PaintingStatus, PaintStatus, RecipeStep } from "../types";
 import { getStages, getSteps, noop } from "../utils/constants";
+import { useDrawerRenderTiming } from "../utils/drawer-render-timing";
 
-import { ApolloProjectSchemeDialog } from "./ApolloProjectSchemeDialog";
 import { ApolloSchemePickerDialog } from "./ApolloSchemePickerDialog";
 import { ImageViewer } from "./ImageViewer";
 import { MiniatureForm } from "./MiniatureForm";
-import { PaintDetailsOverlay } from "./PaintDetailsOverlay";
 import { ProjectDrawerFrame } from "./ProjectDrawerFrame";
 import { ProjectHero } from "./ProjectHero";
-import { SwatchScan } from "./SwatchScan";
+// Scanning/color tools and secondary overlays must not be parsed on first open.
+const SwatchScan = lazy(() => import("./SwatchScan").then((m) => ({ default: m.SwatchScan })));
+const PaintDetailsOverlay = lazy(() =>
+  import("./PaintDetailsOverlay").then((m) => ({ default: m.PaintDetailsOverlay })),
+);
+const ApolloProjectSchemeDialog = lazy(() =>
+  import("./ApolloProjectSchemeDialog").then((m) => ({ default: m.ApolloProjectSchemeDialog })),
+);
 
 // This boundary never loads the legacy State snapshot, even when a project is
 // opened directly from a paint's Used by link.
 export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: string; onClose(): void }) {
+  useDrawerRenderTiming("shell");
   const { t } = useTranslation("components");
   const detail = useMiniatureDetail(miniatureId);
   const scope = useVaultGraphQL();
@@ -47,27 +53,6 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
     client: scope?.client,
     from: { __typename: "Miniature", id: miniatureId },
   });
-  if (detail.loading && !detail.data?.miniature && !detail.error)
-    return (
-      <ProjectDrawerFrame title={t("miniature")} onClose={onClose}>
-        <PageSkeleton
-          page="miniature-detail"
-          miniatureImage={preview.data.imageUrl === undefined ? undefined : Boolean(preview.data.imageUrl)}
-        />
-      </ProjectDrawerFrame>
-    );
-  if (!detail.data?.miniature)
-    return (
-      <Modal title={t("project")} subtitle={t("miniatureDetails")} onClose={onClose}>
-        {detail.error ? (
-          <QueryErrorNotice error={detail.error.message} onRetry={detail.refresh} />
-        ) : (
-          <Box role="status">
-            {detail.loading ? t("loadingProject") : t("thisMiniatureIsNoLongerAvailable")}
-          </Box>
-        )}
-      </Modal>
-    );
   return (
     <ProjectContent
       key={miniatureId}
@@ -76,6 +61,8 @@ export function ApolloProjectDrawer({ miniatureId, onClose }: { miniatureId: str
       error={detail.error}
       refresh={detail.refresh}
       onClose={onClose}
+      title={detail.data?.miniature?.title ?? preview.data.title ?? t("miniature")}
+      previewImage={preview.data.imageUrl === undefined ? undefined : Boolean(preview.data.imageUrl)}
     />
   );
 }
@@ -92,15 +79,20 @@ function ProjectContent({
   error,
   refresh,
   onClose,
+  title,
+  previewImage,
 }: {
-  data: MiniatureDetailView;
+  data: MiniatureDetailView | null;
+  title: string;
+  previewImage?: boolean;
   loading: boolean;
   error: Error | null;
   refresh(): void;
   onClose(): void;
 }) {
   const { t } = useTranslation("components");
-  const miniature = data.miniature!;
+  useDrawerRenderTiming("content", Boolean(data?.miniature));
+  const miniature = data?.miniature;
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
   const actions = useMiniatureActions();
@@ -114,45 +106,65 @@ function ProjectContent({
       setPending((old) => old - 1);
     }
   };
-  const schemes = data.attachedSchemes.map((read) => ({
-    id: read.scheme!.id,
-    name: read.scheme!.name,
-    paintCount: read.scheme!.paintCount,
-    ...schemeEntryModels(read.entries.nodes),
-  }));
-  const projections = new Map<string, DetailPaintFragment>();
-  for (const row of data.recipe.nodes) projections.set(row.paint.id, row.paint);
-  for (const paint of data.required.nodes) projections.set(paint.id, paint);
-  for (const row of data.missing.nodes) projections.set(row.paint.id, row.paint);
-  for (const read of data.attachedSchemes)
-    for (const row of read.entries.nodes) if (row.paint) projections.set(row.paint.id, row.paint);
-  const catalog = [...projections.values()].map(paintModel);
-  const required = data.required.nodes.map(paintModel);
-  const missing = data.missing.nodes.map((row) => paintModel(row.paint));
-  const requirementRows = data.recipe.nodes.map((row) => ({
-    ...row,
-    miniatureId: miniature.id,
-    paintId: row.paint.id,
-    step: recipeStep(row.step),
-  }));
-  const issues = new Map(
-    data.missing.nodes.map((row) => [
-      row.paint.id,
-      new Set<"missingStock" | "brokenSubstitution">([
-        ...(row.missingStock ? ["missingStock" as const] : []),
-        ...(row.brokenSubstitution ? ["brokenSubstitution" as const] : []),
+  const model = useMemo(() => {
+    if (!data || !miniature) return null;
+    const schemes = data.attachedSchemes.map((read) => ({
+      id: read.scheme!.id,
+      name: read.scheme!.name,
+      paintCount: read.scheme!.paintCount,
+      ...schemeEntryModels(read.entries.nodes),
+    }));
+    const projections = new Map<string, DetailPaintFragment>();
+    for (const row of data.recipe.nodes) projections.set(row.paint.id, row.paint);
+    for (const paint of data.required.nodes) projections.set(paint.id, paint);
+    for (const row of data.missing.nodes) projections.set(row.paint.id, row.paint);
+    for (const read of data.attachedSchemes)
+      for (const row of read.entries.nodes) if (row.paint) projections.set(row.paint.id, row.paint);
+    const catalog = [...projections.values()].map(paintModel);
+    const required = data.required.nodes.map(paintModel);
+    const missing = data.missing.nodes.map((row) => paintModel(row.paint));
+    const requirementRows = data.recipe.nodes.map((row) => ({
+      ...row,
+      miniatureId: miniature.id,
+      paintId: row.paint.id,
+      step: recipeStep(row.step),
+    }));
+    const issues = new Map(
+      data.missing.nodes.map((row) => [
+        row.paint.id,
+        new Set<"missingStock" | "brokenSubstitution">([
+          ...(row.missingStock ? ["missingStock" as const] : []),
+          ...(row.brokenSubstitution ? ["brokenSubstitution" as const] : []),
+        ]),
       ]),
-    ]),
-  );
-  const paintStates: Record<string, PaintStatus> = {};
-  for (const paint of projections.values())
-    if (paint.inventory?.state === "OWNED" || paint.inventory?.state === "WISHLIST")
-      paintStates[paint.id] = paint.inventory.state;
+    );
+    const paintStates: Record<string, PaintStatus> = {};
+    for (const paint of projections.values())
+      if (paint.inventory?.state === "OWNED" || paint.inventory?.state === "WISHLIST")
+        paintStates[paint.id] = paint.inventory.state;
+    return { schemes, projections, catalog, required, missing, requirementRows, issues, paintStates };
+  }, [data, miniature]);
   const [editingDetails, setEditingDetails] = useState(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [openPaintId, setOpenPaintId] = useState<string | null>(null);
   const [openSchemeId, setOpenSchemeId] = useState<string | null>(null);
+  // Keep both the frame and its session-state owner mounted when data arrives.
+  // State stays above the responsive drawer/dialog host, so resizing still resets
+  // scan pins without dismissing an open scan or losing pending edit UI.
+  if (!data || !miniature || !model)
+    return (
+      <ProjectDrawerFrame title={title} onClose={onClose}>
+        {error ? (
+          <QueryErrorNotice error={error.message} onRetry={refresh} />
+        ) : loading ? (
+          <PageSkeleton page="miniature-detail" miniatureImage={previewImage} />
+        ) : (
+          <Box role="status">{t("thisMiniatureIsNoLongerAvailable")}</Box>
+        )}
+      </ProjectDrawerFrame>
+    );
+  const { schemes, projections, catalog, required, missing, requirementRows, issues, paintStates } = model;
   const saveMiniature = (patch: Partial<Miniature>) =>
     run(actions.update(miniature.id, { ...miniature, ...patch }));
   const setStage = (paintingStatus: PaintingStatus) => {
@@ -188,10 +200,14 @@ function ProjectContent({
   };
   const details = [miniature.manufacturer, miniature.faction, miniature.scale].filter(Boolean);
 
-  const content = (
-    <>
+  return (
+    <ProjectDrawerFrame title={title} onClose={onClose}>
       <ProjectHero miniature={miniature} paints={required} onOpenImage={() => setImageViewerOpen(true)} />
-      {scanOpen && <SwatchScan miniatureId={miniature.id} onClose={() => setScanOpen(false)} />}
+      {scanOpen && (
+        <Suspense fallback={null}>
+          <SwatchScan miniatureId={miniature.id} onClose={() => setScanOpen(false)} />
+        </Suspense>
+      )}
 
       <Box
         component="div"
@@ -363,19 +379,16 @@ function ProjectContent({
           onClose={() => setImageViewerOpen(false)}
         />
       )}
-      <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />
-      {openSchemeId && (
-        <ApolloProjectSchemeDialog
-          key={openSchemeId}
-          schemeId={openSchemeId}
-          onClose={() => setOpenSchemeId(null)}
-        />
-      )}
-    </>
-  );
-  return (
-    <ProjectDrawerFrame title={miniature.title} onClose={onClose}>
-      {content}
+      <Suspense fallback={null}>
+        {openPaintId && <PaintDetailsOverlay paintId={openPaintId} onClose={() => setOpenPaintId(null)} />}
+        {openSchemeId && (
+          <ApolloProjectSchemeDialog
+            key={openSchemeId}
+            schemeId={openSchemeId}
+            onClose={() => setOpenSchemeId(null)}
+          />
+        )}
+      </Suspense>
     </ProjectDrawerFrame>
   );
 }

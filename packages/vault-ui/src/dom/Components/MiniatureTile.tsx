@@ -4,7 +4,8 @@ import type { SxProps, Theme } from "@mui/material/styles";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-import { dialogPreloadHandlers } from "../dialog-preload";
+import { preloadDialog } from "../dialog-preload";
+import { useVaultGraphQL } from "../graphql/provider";
 import { Check } from "../icons";
 import type { Miniature, Paint } from "../types";
 import { thumbnailImageProps } from "../image-thumbnails";
@@ -29,6 +30,14 @@ export const MiniatureTile = memo(function MiniatureTile({
   sx?: SxProps<Theme>;
 } & ({ onClick: () => void; onOpen?: never } | { onOpen: (id: string) => void; onClick?: never })) {
   const { t } = useTranslation("components");
+  const scope = useVaultGraphQL();
+  const prefetch = () => {
+    preloadDialog("project");
+    if (scope)
+      void import("../graphql/miniature-detail-resource")
+        .then(({ loadMiniatureDetail }) => loadMiniatureDetail(scope, mini.id))
+        .catch(() => undefined);
+  };
   const previewUrl = mini.thumbnailUrl ?? mini.imageUrl;
   const ready = total > 0 && missing === 0,
     pct = total ? ((total - missing) / total) * 100 : 0;
@@ -59,7 +68,9 @@ export const MiniatureTile = memo(function MiniatureTile({
       ]}
     >
       <CardActionArea
-        {...dialogPreloadHandlers("project")}
+        onPointerEnter={prefetch}
+        onFocus={prefetch}
+        onPointerDown={prefetch}
         onClick={onOpen ? () => onOpen(mini.id) : onClick}
         sx={[
           {

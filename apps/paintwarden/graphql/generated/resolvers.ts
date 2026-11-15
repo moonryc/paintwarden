@@ -305,6 +305,7 @@ export type MiniatureSchemeEntry = {
   method?: Maybe<Scalars["String"]["output"]>;
   paint?: Maybe<Paint>;
   role?: Maybe<Scalars["String"]["output"]>;
+  schemeId: Scalars["ID"]["output"];
   sortOrder: Scalars["Int"]["output"];
   thumbnailUrl?: Maybe<Scalars["String"]["output"]>;
   tone?: Maybe<Scalars["String"]["output"]>;
@@ -355,6 +356,7 @@ export type MiniatureSwatch = {
 
 export type MiniatureView = {
   __typename?: "MiniatureView";
+  attachedSchemeEntries: MiniatureSchemeEntryConnection;
   miniature?: Maybe<Miniature>;
   missing: MiniatureMissingConnection;
   recipe: MiniatureRecipeConnection;
@@ -362,6 +364,11 @@ export type MiniatureView = {
   required: MiniatureRequiredConnection;
   revision: VaultRevision;
   schemes: MiniatureSchemeConnection;
+};
+
+export type MiniatureViewAttachedSchemeEntriesArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
 };
 
 export type MiniatureViewMissingArgs = {
@@ -2008,6 +2015,7 @@ export type MiniatureSchemeEntryResolvers<
   method?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   paint?: Resolver<Maybe<ResolversTypes["Paint"]>, ParentType, ContextType>;
   role?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  schemeId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
   sortOrder?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   thumbnailUrl?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
   tone?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
@@ -2072,6 +2080,12 @@ export type MiniatureViewResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["MiniatureView"] = ResolversParentTypes["MiniatureView"],
 > = {
+  attachedSchemeEntries?: Resolver<
+    ResolversTypes["MiniatureSchemeEntryConnection"],
+    ParentType,
+    ContextType,
+    RequireFields<MiniatureViewAttachedSchemeEntriesArgs, "first">
+  >;
   miniature?: Resolver<Maybe<ResolversTypes["Miniature"]>, ParentType, ContextType>;
   missing?: Resolver<
     ResolversTypes["MiniatureMissingConnection"],

@@ -4,6 +4,7 @@ query ProjectMiniatureDetails(
   $schemesAfter: String
   $missingAfter: String
   $requiredAfter: String
+  $entriesAfter: String
 ) {
   miniature(id: $id) {
     revision {
@@ -51,7 +52,39 @@ query ProjectMiniatureDetails(
           isSystem
           sourceName
           sourceLogoUrl
+          paintCount
+          availableCount
+          previewSwatches {
+            paintId
+            colorHex
+          }
+          previewSwatchesTruncated
+          imageUrl
+          thumbnailUrl
         }
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    attachedSchemeEntries(first: 40, after: $entriesAfter) {
+      nodes {
+        id
+        schemeId
+        kind
+        sortOrder
+        paint {
+          ...DetailPaint
+        }
+        label
+        tone
+        role
+        imageUrl
+        thumbnailUrl
+        imageType
+        method
       }
       totalCount
       pageInfo {

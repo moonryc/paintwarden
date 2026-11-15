@@ -2,12 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { makeFragmentData } from "./generated/fragment-masking";
 import { DetailPaintFragmentDoc, ProjectMiniatureDetailsDocument } from "./generated/graphql";
-import type { ReadTicket, Revision, VaultFamily } from "./invalidation";
-import { readMiniatureDetail, type MiniatureDetailView } from "./miniature-detail-loader";
+import type { ReadTicket, Revision } from "./invalidation";
+import type { MiniatureDetailView } from "./miniature-detail-loader";
+import {
+  invalidateMiniatureDetail,
+  loadMiniatureDetail,
+  peekMiniatureDetail,
+  MINIATURE_DETAIL_FAMILIES as FAMILIES,
+} from "./miniature-detail-resource";
 import { useVaultGraphQL } from "./provider";
 import { useRetainedQuery } from "./use-retained-query";
-
-const FAMILIES: readonly VaultFamily[] = ["MINIATURES", "SCHEMES", "PAINT", "SOURCES"];
 
 export function useMiniatureDetail(id: string) {
   const scope = useVaultGraphQL();
@@ -19,8 +23,14 @@ export function useMiniatureDetail(id: string) {
     data: MiniatureDetailView | null;
     loading: boolean;
     error: Error | null;
-  }>({ id, scope, data: null, loading: true, error: null });
-  const refresh = useCallback(() => setVersion((old) => old + 1), []);
+  }>(() => {
+    const data = scope ? peekMiniatureDetail(scope, id) : null;
+    return { id, scope, data, loading: !data, error: null };
+  });
+  const refresh = useCallback(() => {
+    if (scope) invalidateMiniatureDetail(scope, id);
+    setVersion((old) => old + 1);
+  }, [scope, id]);
   useEffect(
     () =>
       scope?.controller.listen(FAMILIES, () => {
@@ -38,14 +48,20 @@ export function useMiniatureDetail(id: string) {
     if (!scope) return;
     let active = true;
     const ticket = scope.controller.capture();
-    setResult((old) => ({
-      id,
-      scope,
-      data: old.id === id && old.scope === scope ? old.data : null,
-      loading: true,
-      error: null,
-    }));
-    void readMiniatureDetail(scope.client, id)
+    const cached = peekMiniatureDetail(scope, id);
+    if (!cached)
+      setResult((old) =>
+        old.id === id && old.scope === scope && old.loading && !old.error
+          ? old
+          : {
+              id,
+              scope,
+              data: old.id === id && old.scope === scope ? old.data : null,
+              loading: true,
+              error: null,
+            },
+      );
+    void loadMiniatureDetail(scope, id)
       .then((data) => {
         if (!active) return;
         if (!scope.controller.accepts(ticket, data.revision, FAMILIES)) {
@@ -82,7 +98,11 @@ export function useMiniatureDetail(id: string) {
             },
           },
         });
-        setResult({ id, scope, data, loading: false, error: null });
+        setResult((old) =>
+          old.id === id && old.scope === scope && old.data === data && !old.loading && !old.error
+            ? old
+            : { id, scope, data, loading: false, error: null },
+        );
       })
       .catch((error: unknown) => {
         if (active)
