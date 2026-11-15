@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Esta solicitud es demasiado grande",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "El archivo de copia de seguridad debe ocupar menos de 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "El archivo del plugin debe ocupar menos de 250 MB",
-  "INVALID_ORIGIN": "Origen no válido"
+  "INVALID_ORIGIN": "Origen no válido",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Ya hay una instalación de plugin en curso",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "No se encontró la tarea de instalación del plugin",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "El almacén cambió durante la instalación del plugin. Inténtalo de nuevo.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "No hay suficiente espacio en disco para instalar este complemento"
 }

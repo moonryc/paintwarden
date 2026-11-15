@@ -12,14 +12,14 @@ A catalog source (shown in the app as a plugin) adds paints, color schemes and m
 | `images/`      | If used  | The image files listed in `assets.json`.                    |
 | `logo.svg`     | No       | A standalone SVG document, up to 100 KB, shown as the logo. |
 
-Paintwarden reads the default branch. It downloads `catalog.json` and the images only when `version` in `source.json` changes.
+Paintwarden reads the default branch at a pinned commit. It downloads `catalog.json` only when `version` in `source.json` changes and reuses images whose asset hashes are unchanged. The optional logo may refresh without a version bump. Installation progress and atomic staging do not change this format: section counts are computed from the validated catalog, with no new required manifest fields. See [progress, cancellation and visibility](plugins.md#progress-cancellation-and-visibility).
 
 ## Versions and updates
 
 An installed plugin only moves forward:
 
-- **From GitHub.** The repository identifies the plugin. A higher `version` updates it; the same version changes nothing. If the repository's `version` drops below the installed one, Paintwarden keeps the installed version and shows an error in Settings → Plugins.
-- **From a .zip.** The same files can be uploaded as a .zip, at its root or inside one folder. The plugin's `name` identifies it, ignoring case, accents and punctuation, so `My Schemes` and `my-schemes` are the same plugin. A .zip with a higher `version` replaces the installed plugin, the same version changes nothing, and a lower version is refused. To go back to an older version, remove the plugin first. A plugin installed from a .zip is never checked online, and other plugins can't list it in `dependencies`.
+- **From GitHub.** The repository identifies the plugin. A higher `version` updates it; the same version keeps catalog data/images unchanged while allowing `logo.svg` to refresh. If the repository's `version` drops below the installed one, Paintwarden keeps the installed version and shows an error in Settings → Plugins.
+- **From a .zip.** The same files can be uploaded as a .zip, at its root or inside one folder. The plugin's `name` identifies it, ignoring case, accents and punctuation, so `My Schemes` and `my-schemes` are the same plugin. A .zip with a higher `version` replaces the installed plugin, the same version keeps catalog data/images unchanged while refreshing/removing `logo.svg`, and a lower version is refused. To go back to an older version, remove the plugin first. A plugin installed from a .zip is never checked online, and other plugins can't list it in `dependencies`.
 
 ## Validation rules
 

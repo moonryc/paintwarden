@@ -1,0 +1,69 @@
+{
+  "fixture": {
+    "paints": 3000,
+    "schemes": 300,
+    "templates": 500,
+    "images": 800,
+    "imageWidth": 1280,
+    "imageHeight": 960,
+    "zipBytes": 152747874,
+    "artwork": "Procedural textures only; no personal or manufacturer catalogs"
+  },
+  "runtime": {
+    "node": "v22.22.2",
+    "platform": "darwin",
+    "base": "f4d2f54"
+  },
+  "before": {
+    "readingMs": 18.397291999999993,
+    "checkingMs": 12.221666999999968,
+    "imagesMs": 15838.48525,
+    "preparingMs": null,
+    "committingMs": 571.9872500000001,
+    "totalMs": 16441.911624999997,
+    "note": "Before row preparation occurs within commit; reading includes DB initialization."
+  },
+  "after": [
+    {
+      "label": "initial install",
+      "stages": {
+        "reading": 13.436832999999979,
+        "checking": 12.399459000000036,
+        "images": 13128.277957999999,
+        "preparing": 8.914750000001732,
+        "committing": 331.4609169999985
+      },
+      "totalMs": 13494.489916999999,
+      "maximumEventLoopGapMs": 317.8443750000006,
+      "imageFiles": 3200
+    },
+    {
+      "label": "new version, unchanged image hashes",
+      "stages": {
+        "reading": 3.3728329999994457,
+        "checking": 8.347834000000148,
+        "images": 7.7005000000008295,
+        "preparing": 26.43266599999879,
+        "committing": 45.86908399999993
+      },
+      "totalMs": 91.72291699999914,
+      "maximumEventLoopGapMs": 46.3442500000001,
+      "imageFiles": 3200
+    },
+    {
+      "label": "same version logo refresh",
+      "stages": {
+        "reading": 1.0467920000010054,
+        "checking": 0.7347909999989497,
+        "images": 0.002125000000887667,
+        "preparing": 0.2771249999987049,
+        "committing": 0.37150000000110595
+      },
+      "totalMs": 2.4323330000006536,
+      "maximumEventLoopGapMs": 1.2301250000000437,
+      "imageFiles": 3200
+    }
+  ],
+  "stageNote": "Commit stage includes image promotion, SQLite transaction, reference-safe image GC, and staging disposal; no slow image conversion inside transaction. Observed wall-clock samples, not guaranteed latency.",
+  "methodology": "One wall-clock run per case in isolated temporary SQLite vaults, local ZIP bytes, warmed filesystem not controlled. Before included row preparation in committing; after preparation happens separately. Not a cold-disk or network benchmark."
+}

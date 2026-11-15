@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "此請求過大",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "備份檔案必須小於 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "外掛程式檔案必須小於 250 MB",
-  "INVALID_ORIGIN": "來源無效"
+  "INVALID_ORIGIN": "來源無效",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "已有外掛程式正在安裝",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "找不到外掛程式安裝工作",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "資料庫在外掛程式安裝期間發生了變更。請再試一次。",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "磁碟空間不足，無法安裝此外掛程式"
 }

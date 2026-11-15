@@ -22,6 +22,7 @@ import { VaultLoadError } from "./Components/VaultLoadError";
 import { dialogs } from "./dialog-preload";
 import { NavigationCountsProvider, useNavigationCounts } from "./graphql/navigation";
 import { usePaintCommands } from "./graphql/paint-actions";
+import { PluginInstallStatus } from "./graphql/plugin-install-hooks";
 import { VaultGraphQLProvider } from "./graphql/provider";
 import { LanguageProvider } from "./i18n";
 import { MenuIcon } from "./icons";
@@ -428,6 +429,11 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                     </Box>
                   </Box>
                 </Box>
+                {!pluginsOpen && (
+                  <Box sx={{ maxWidth: 640, mx: "auto", px: 2 }}>
+                    <PluginInstallStatus compact />
+                  </Box>
+                )}
               </Box>
               <Box
                 component="div"

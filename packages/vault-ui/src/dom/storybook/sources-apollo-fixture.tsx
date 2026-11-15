@@ -4,6 +4,8 @@ import { type ReactNode, useEffect, useState } from "react";
 import { createVaultCache } from "../graphql/cache";
 import { VaultInvalidationController } from "../graphql/invalidation";
 import { VaultGraphQLContext } from "../graphql/provider";
+import { PluginInstallProvider } from "../graphql/plugin-install-hooks";
+import { type PluginInstallJob } from "../graphql/plugin-install-observer";
 
 export type SourcesFixtureMode = "installed" | "empty" | "loading" | "error";
 const source = {
@@ -27,11 +29,15 @@ export function SourcesApolloFixture({
   mode = "installed",
   delay = 20,
   onOperation = () => {},
+  job = null,
+  startedJob,
 }: {
   children: ReactNode;
   mode?: SourcesFixtureMode;
   delay?: number;
   onOperation?: (name: string) => void;
+  job?: PluginInstallJob | null;
+  startedJob?: PluginInstallJob;
 }) {
   const [scope] = useState(() => {
     const controller = new VaultInvalidationController();
@@ -41,7 +47,7 @@ export function SourcesApolloFixture({
         (operation) =>
           new Observable((observer) => {
             onOperation(operation.operationName ?? "");
-            if (mode === "loading") return undefined;
+            if (mode === "loading" || operation.operationName === "PluginInstallProgress") return undefined;
             const timer = setTimeout(() => {
               if (mode === "error") {
                 observer.error(new Error("Could not load fixture plugins"));
@@ -49,6 +55,7 @@ export function SourcesApolloFixture({
               }
               const revision = { epoch: "sources-story", seq: "1" };
               const responses: Record<string, unknown> = {
+                LatestPluginInstallJob: { pluginInstallJob: job },
                 InstalledSources: { sources: { revision, sources: mode === "empty" ? [] : [source] } },
                 PluginVersions: {
                   sourceVersions: {
@@ -92,7 +99,33 @@ export function SourcesApolloFixture({
     const original = window.fetch;
     window.fetch = async (input, init) => {
       const url = new URL(input instanceof Request ? input.url : String(input), location.origin);
-      if (url.pathname === "/api/catalog-sources") return Response.json({ results: [], updated: true });
+      if (url.pathname === "/api/catalog-sources")
+        return Response.json({
+          job:
+            init?.method === "POST"
+              ? (startedJob ?? {
+                  id: "new-job",
+                  stage: "READING",
+                  done: 0,
+                  total: 0,
+                  percent: 0,
+                  cancellable: true,
+                  error: null,
+                  errorCode: null,
+                  errorParameters: [],
+                })
+              : {
+                  id: "background-job",
+                  stage: "SUCCEEDED",
+                  done: 1,
+                  total: 1,
+                  percent: 100,
+                  cancellable: false,
+                  error: null,
+                  errorCode: null,
+                  errorParameters: [],
+                },
+        });
       if (url.pathname === "/api/version") return Response.json({ version: "story-fixture" });
       throw new Error(`Unexpected source story request: ${url.pathname} (${init?.method ?? "GET"})`);
     };
@@ -106,5 +139,9 @@ export function SourcesApolloFixture({
     },
     [scope, originalFetch],
   );
-  return <VaultGraphQLContext.Provider value={scope}>{children}</VaultGraphQLContext.Provider>;
+  return (
+    <VaultGraphQLContext.Provider value={scope}>
+      <PluginInstallProvider client={scope.client}>{children}</PluginInstallProvider>
+    </VaultGraphQLContext.Provider>
+  );
 }

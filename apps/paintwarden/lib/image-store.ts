@@ -83,6 +83,19 @@ export async function imageExists(key: string) {
   );
 }
 
+// Cache reuse must not silently accept an image rewritten by a restore while staging.
+// Nanosecond metadata makes the final check cheap without reading/hash-decoding the photo.
+export async function imageFileIdentity(key: string) {
+  if (!isImageKey(key)) return null;
+  try {
+    const info = await stat(path.join(imageDirectory, key), { bigint: true });
+    return info.isFile() ? `${info.dev}:${info.ino}:${info.size}:${info.mtimeNs}:${info.ctimeNs}` : null;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+    throw error;
+  }
+}
+
 // Writes an image under a known key, as when restoring a backup. Returns false for an invalid key.
 export const writeImage = serializeImageMutation(async function writeImage(key: string, bytes: Uint8Array) {
   if (!isImageKey(key)) return false;

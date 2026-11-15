@@ -1,4 +1,13 @@
 import {
+  cancelPluginInstall,
+  currentPluginInstallJob,
+  PluginInstallBusyError,
+  pluginInstallFailure,
+  startPluginInstall,
+} from "../../../lib/catalog-install-jobs";
+import { spoolPluginUpload } from "../../../lib/catalog-install-upload";
+
+import {
   addCatalogSource,
   addUploadedCatalogSource,
   checkCatalogSource,
@@ -33,28 +42,42 @@ export async function POST(request: Request) {
   if (typeof body?.url !== "string")
     return Response.json({ error: "Enter a GitHub repository URL" }, { status: 400 });
   try {
-    return Response.json(await addCatalogSource(body.url));
+    const url = body.url;
+    return Response.json(
+      { job: startPluginInstall((context) => addCatalogSource(url, context)) },
+      { status: 202 },
+    );
   } catch (error) {
     return Response.json(
       { error: error instanceof Error ? error.message : "Could not add source" },
-      { status: 400 },
+      { status: error instanceof PluginInstallBusyError ? 409 : 400 },
     );
   }
 }
 
-export async function PUT(request: Request) {
+export function PUT(request: Request) {
   const id = new URL(request.url).searchParams.get("id");
-  if (id) {
-    try {
-      return Response.json(await checkCatalogSource(id));
-    } catch {
-      return Response.json({ error: "Catalog source not found" }, { status: 404 });
-    }
+  try {
+    const job = startPluginInstall((context) =>
+      id ? checkCatalogSource(id, context) : checkCatalogSources(context),
+    );
+    return Response.json({ job }, { status: 202 });
+  } catch (error) {
+    return Response.json(
+      { error: error instanceof Error ? error.message : "Could not update plugins" },
+      { status: error instanceof PluginInstallBusyError ? 409 : 400 },
+    );
   }
-  return Response.json({ results: await checkCatalogSources() });
 }
 
 export async function DELETE(request: Request) {
+  const jobId = new URL(request.url).searchParams.get("job");
+  if (jobId) {
+    const job = cancelPluginInstall(jobId);
+    return Response.json(job ? { job } : { error: "Plugin install job not found" }, {
+      status: job ? 200 : 404,
+    });
+  }
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return Response.json({ error: "Catalog source is required" }, { status: 400 });
   try {
@@ -66,15 +89,34 @@ export async function DELETE(request: Request) {
 }
 
 async function uploadSource(request: Request) {
-  // The API router has already limited the size of this body.
-  const bytes = new Uint8Array(await request.arrayBuffer());
-  if (!bytes.byteLength) return Response.json({ error: "Choose a plugin .zip file" }, { status: 400 });
+  let ready!: () => void;
+  let failed!: (error: unknown) => void;
+  const uploaded = new Promise<void>((resolve, reject) => {
+    ready = resolve;
+    failed = reject;
+  });
   try {
-    return Response.json(await addUploadedCatalogSource(bytes));
+    const job = startPluginInstall(async (context) => {
+      const spool = await spoolPluginUpload(request, context.signal!).catch((error: unknown) => {
+        failed(error);
+        throw error;
+      });
+      ready();
+      try {
+        return await addUploadedCatalogSource(spool.source, context);
+      } finally {
+        await spool.close().catch(() => {
+          process.stderr.write(JSON.stringify({ event: "plugin.upload.cleanup-failed" }) + "\n");
+        });
+      }
+    });
+    // Consume the incoming request before returning; the server closes its request signal
+    // with the response. The install itself is independent of that HTTP connection.
+    await uploaded;
+    return Response.json({ job: currentPluginInstallJob() ?? job }, { status: 202 });
   } catch (error) {
-    return Response.json(
-      { error: error instanceof Error ? error.message : "Could not install the plugin" },
-      { status: 400 },
-    );
+    return Response.json(pluginInstallFailure(error), {
+      status: error instanceof PluginInstallBusyError ? 409 : 400,
+    });
   }
 }

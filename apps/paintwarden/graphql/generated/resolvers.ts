@@ -695,6 +695,29 @@ export type PaintViewUsedByArgs = {
 
 export type PaintingStatus = "ASSEMBLED" | "COMPLETE" | "IN_PROGRESS" | "NOT_STARTED" | "PRIMED";
 
+export type PluginInstallErrorParameter = {
+  __typename?: "PluginInstallErrorParameter";
+  name: Scalars["String"]["output"];
+  value: Scalars["String"]["output"];
+};
+
+/** Latest in-memory install; survives client reloads, not server restarts. */
+export type PluginInstallJob = {
+  __typename?: "PluginInstallJob";
+  cancellable: Scalars["Boolean"]["output"];
+  done: Scalars["Int"]["output"];
+  error?: Maybe<Scalars["String"]["output"]>;
+  errorCode?: Maybe<Scalars["String"]["output"]>;
+  errorParameters: Array<PluginInstallErrorParameter>;
+  id: Scalars["String"]["output"];
+  percent: Scalars["Float"]["output"];
+  stage: PluginInstallStage;
+  total: Scalars["Int"]["output"];
+};
+
+export type PluginInstallStage =
+  "CANCELLED" | "CHECKING" | "COMMITTING" | "FAILED" | "IMAGES" | "PREPARING" | "READING" | "SUCCEEDED";
+
 export type PublicError = {
   __typename?: "PublicError";
   code: Scalars["String"]["output"];
@@ -715,6 +738,7 @@ export type Query = {
   paint: PaintView;
   paintOptions: PaintOptionsView;
   paintRanking: PaintRankingView;
+  pluginInstallJob?: Maybe<PluginInstallJob>;
   schemeColorIndex: SchemeColorIndexView;
   schemeOptions: MiniatureSchemeOptionsView;
   schemePaintOptions: PaintOptionsView;
@@ -1052,6 +1076,7 @@ export type StockLevel = "EMPTY" | "FULL" | "LOW";
 
 export type Subscription = {
   __typename?: "Subscription";
+  pluginInstallProgress?: Maybe<PluginInstallJob>;
   /** Resume family invalidations using the last received epoch/seq. */
   vaultChanges: VaultInvalidation;
 };
@@ -1480,6 +1505,9 @@ export type ResolversTypes = {
   PaintUsageConnection: ResolverTypeWrapper<PaintUsageConnection>;
   PaintView: ResolverTypeWrapper<PaintViewRead>;
   PaintingStatus: PaintingStatus;
+  PluginInstallErrorParameter: ResolverTypeWrapper<PluginInstallErrorParameter>;
+  PluginInstallJob: ResolverTypeWrapper<PluginInstallJob>;
+  PluginInstallStage: PluginInstallStage;
   PublicError: ResolverTypeWrapper<PublicError>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RankedPaint: ResolverTypeWrapper<RankedPaint>;
@@ -1607,6 +1635,8 @@ export type ResolversParentTypes = {
   PaintUsage: PaintUsage;
   PaintUsageConnection: PaintUsageConnection;
   PaintView: PaintViewRead;
+  PluginInstallErrorParameter: PluginInstallErrorParameter;
+  PluginInstallJob: PluginInstallJob;
   PublicError: PublicError;
   Query: Record<PropertyKey, never>;
   RankedPaint: RankedPaint;
@@ -2389,6 +2419,30 @@ export type PaintViewResolvers<
   >;
 };
 
+export type PluginInstallErrorParameterResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PluginInstallErrorParameter"] =
+    ResolversParentTypes["PluginInstallErrorParameter"],
+> = {
+  name?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  value?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type PluginInstallJobResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["PluginInstallJob"] = ResolversParentTypes["PluginInstallJob"],
+> = {
+  cancellable?: Resolver<ResolversTypes["Boolean"], ParentType, ContextType>;
+  done?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+  error?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  errorCode?: Resolver<Maybe<ResolversTypes["String"]>, ParentType, ContextType>;
+  errorParameters?: Resolver<Array<ResolversTypes["PluginInstallErrorParameter"]>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+  percent?: Resolver<ResolversTypes["Float"], ParentType, ContextType>;
+  stage?: Resolver<ResolversTypes["PluginInstallStage"], ParentType, ContextType>;
+  total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
 export type PublicErrorResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["PublicError"] = ResolversParentTypes["PublicError"],
@@ -2468,6 +2522,7 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryPaintRankingArgs, "first" | "id" | "ownedOnly">
   >;
+  pluginInstallJob?: Resolver<Maybe<ResolversTypes["PluginInstallJob"]>, ParentType, ContextType>;
   schemeColorIndex?: Resolver<
     ResolversTypes["SchemeColorIndexView"],
     ParentType,
@@ -2721,6 +2776,12 @@ export type SubscriptionResolvers<
   ContextType = GraphQLContext,
   ParentType extends ResolversParentTypes["Subscription"] = ResolversParentTypes["Subscription"],
 > = {
+  pluginInstallProgress?: SubscriptionResolver<
+    Maybe<ResolversTypes["PluginInstallJob"]>,
+    "pluginInstallProgress",
+    ParentType,
+    ContextType
+  >;
   vaultChanges?: SubscriptionResolver<
     ResolversTypes["VaultInvalidation"],
     "vaultChanges",
@@ -3062,6 +3123,8 @@ export type Resolvers<ContextType = GraphQLContext> = {
   PaintUsage?: PaintUsageResolvers<ContextType>;
   PaintUsageConnection?: PaintUsageConnectionResolvers<ContextType>;
   PaintView?: PaintViewResolvers<ContextType>;
+  PluginInstallErrorParameter?: PluginInstallErrorParameterResolvers<ContextType>;
+  PluginInstallJob?: PluginInstallJobResolvers<ContextType>;
   PublicError?: PublicErrorResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   RankedPaint?: RankedPaintResolvers<ContextType>;

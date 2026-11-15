@@ -1,0 +1,33 @@
+query LatestPluginInstallJob {
+  pluginInstallJob {
+    id
+    stage
+    done
+    total
+    percent
+    cancellable
+    error
+    errorCode
+    errorParameters {
+      name
+      value
+    }
+  }
+}
+
+subscription PluginInstallProgress {
+  pluginInstallProgress {
+    id
+    stage
+    done
+    total
+    percent
+    cancellable
+    error
+    errorCode
+    errorParameters {
+      name
+      value
+    }
+  }
+}

@@ -11,6 +11,8 @@ import express, { type Request as ExpressRequest, type Response as ExpressRespon
 
 import { migrationBackupPath } from "../db";
 import { CLIENT_ADDRESS_HEADER, clientAddress, pendingSetupCode, trustProxy } from "../lib/auth";
+import { sweepPluginUploads } from "../lib/catalog-install-upload";
+import { sweepCatalogImageStages } from "../lib/catalog-image-staging";
 import { clearBackupUploads } from "../lib/backup";
 import { compressJsonResponse } from "../lib/http-compression";
 import { reportStartupProgress } from "../lib/startup-progress";
@@ -105,6 +107,8 @@ async function listenServer() {
   const backup = migrationBackupPath();
   if (backup) Logger.log(`Saved a copy of the vault before updating it: ${backup}`);
   await clearBackupUploads();
+  await sweepPluginUploads();
+  await sweepCatalogImageStages();
   const port = Number(process.env.PORT || 3000);
   await app.listen(port, process.env.HOST || "0.0.0.0");
   const setupCode = pendingSetupCode();

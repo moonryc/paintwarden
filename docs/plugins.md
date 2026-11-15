@@ -56,9 +56,21 @@ The owner enters a public repository as a URL, `owner/name`, or `github:owner/na
 2. Installs each dependency first, following the same steps. It refuses a circular dependency, and a dependency older than its `minimumVersion`.
 3. Downloads `catalog.json`, `assets.json` and the images from that same commit, so the files always come from one revision.
 4. Validates everything. Any error stops the install and names the file, item and field. Each image is checked against its SHA-256 in `assets.json`.
-5. Writes the plugin and its dependencies into the vault in one database transaction.
+5. Prepares the complete row data in memory, then writes the plugin and its dependencies in one short synchronous database transaction with prepared, bounded batches. Its new original images and thumbnails are promoted before that transaction commits.
 
-If any step fails, the vault is unchanged and images downloaded for the failed install are deleted.
+### Progress, cancellation and visibility
+
+The non-blocking progress panel shows **Reading**, **Checking**, **Images**, **Preparing data** and **Committing**, with completed/total counts and a weighted overall progress bar. The Plugins page and global indicator follow the same server-side job over the authenticated GraphQL SSE connection. Reloading or navigating away reattaches to that job rather than restarting it; closing the panel does not cancel the install. Only one install/update job runs at a time; another request receives an “install is already running” error rather than silently queuing.
+
+Reading/checking, downloads, image hashing/thumbnail generation and row preparation run **outside** a database write transaction. Ordinary vault edits and image uploads can continue during those stages. Images are staged in a private `DATA_DIR/.plugin-staging/<job-uuid>/` directory outside the HTTP `images/` directory, on the same filesystem; neither pending catalog rows nor pending image URLs are published. This hidden work directory is excluded from logical ZIP backups, restore image cleanup, image garbage collection and HTTP/support exports. Keeping it under `DATA_DIR` supports mounted Docker volumes without cross-device copies. Uploaded ZIPs can be read from a disk-backed spool and inflate only requested entries, with compressed/expanded/entry limits checked before use.
+
+**Cancel** stops the cancellable stages and removes staged files after outstanding workers finish. Committing is deliberately not cancellable: promotion and the SQLite commit run synchronously without yielding, so readers see either the complete previous version or the complete new version. Change-log entries become visible with the commit, producing one complete invalidation window for connected clients. No write transaction is held while images decode.
+
+A failure or accepted cancellation leaves the previous plugin version, its rows and image bytes intact, including dependency changes prepared for that operation. **Update all** is also one atomic operation: a failure or cancellation does not leave some plugins updated. Cached images are checked again before commit, and a source changed or removed during preparation causes a retry error rather than resurrecting stale data. Edits to inventory, folder membership and dropped-item usage made while staging are respected at commit.
+
+Every new image has an immutable UUID key; unchanged asset hashes reuse existing images without decoding/downloading again. Four asset workers share the app-wide two-decoder thumbnail limit. Only the short promotion/commit/cleanup phase owns the image-mutation mutex. A failed promotion rolls the database back and removes only this operation's fresh files. Journals track owned originals and derivatives; startup sweeps abandoned staging and unreferenced crash-time promotions, preserving images referenced by a committed vault row. A restart does not resume an interrupted install: retry it after recovery. Invalid/unsafe recovery journals fail closed rather than deleting arbitrary files.
+
+If any step fails, the vault is unchanged and images staged for the failed install are deleted. Existing tolerance for unsupported historical image originals is unchanged; their thumbnails can remain unavailable, but checksum errors and filesystem write/promotion errors fail the install.
 
 The repository, in lowercase `owner/name` form, identifies the plugin. Other plugins name it in their `dependencies`. Inside the vault, each plugin also has its own UUID.
 

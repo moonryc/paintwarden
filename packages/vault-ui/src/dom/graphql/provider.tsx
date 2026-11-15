@@ -17,6 +17,7 @@ import { useVaultStore } from "../store/hooks";
 import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
 import { VaultChangesDocument, VaultInvalidationDocument } from "./generated/graphql";
 import { VaultInvalidationController, type VaultFamily } from "./invalidation";
+import { PluginInstallProvider } from "./plugin-install-hooks";
 
 export type VaultGraphQLScope = { client: ApolloClient; controller: VaultInvalidationController };
 export const VaultGraphQLContext = createContext<VaultGraphQLScope | null>(null);
@@ -198,7 +199,7 @@ function Scope({ children }: { children: ReactNode }) {
             {failure.message}
           </Alert>
         )}
-        {children}
+        <PluginInstallProvider client={scope.client}>{children}</PluginInstallProvider>
       </VaultGraphQLContext.Provider>
     </ApolloProvider>
   );

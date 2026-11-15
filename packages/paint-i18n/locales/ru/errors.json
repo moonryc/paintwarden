@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Этот запрос слишком большой",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Файл резервной копии должен быть меньше 16 ГБ",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Файл плагина должен быть меньше 250 МБ",
-  "INVALID_ORIGIN": "Некорректный origin"
+  "INVALID_ORIGIN": "Некорректный origin",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Установка плагина уже выполняется",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Задача установки плагина не найдена",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "Хранилище было изменено во время установки плагина. Повторите попытку.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Недостаточно места на диске для установки этого плагина"
 }

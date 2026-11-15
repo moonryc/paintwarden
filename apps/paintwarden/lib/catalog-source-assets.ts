@@ -5,7 +5,9 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { catalogSourceAssets, catalogSources } from "../db/schema";
 
-import { deleteImage, imageExists, imageResponse, saveImageBytes } from "./image-store";
+import type { CatalogImageStage } from "./catalog-image-staging";
+import { checkInstallCancelled, type InstallContext } from "./catalog-install-context";
+import { imageFileIdentity, imageResponse } from "./image-store";
 import type { Asset } from "./source-format";
 
 // A catalog source's images: downloading them on install, and serving them and the source's
@@ -32,49 +34,55 @@ export async function downloadAssets(
   read: SourceFileReader,
   records: Record<string, Asset>,
   needed: Set<string>,
+  stage: CatalogImageStage,
+  context: InstallContext = {},
+  completed: () => void = () => undefined,
 ) {
-  const db = getDb();
-  const previous = db.select().from(catalogSourceAssets).where(eq(catalogSourceAssets.sourceId, id)).all();
+  const previous = getDb()
+    .select()
+    .from(catalogSourceAssets)
+    .where(eq(catalogSourceAssets.sourceId, id))
+    .all();
   const old = new Map(previous.map((row) => [row.assetPath, row]));
   const result = new Map<string, { key: string; sha256: string }>();
-  const created: string[] = [];
+  const reused = new Map<string, string>();
   const pending = [...needed];
   let next = 0;
+  let failed = false;
   async function worker() {
-    while (next < pending.length) {
-      const filename = pending[next++];
-      const sha256 = records[filename].sha256.toLowerCase();
-      const cached = old.get(filename);
-      if (cached?.sha256 === sha256 && (await imageExists(cached.imageKey))) {
-        result.set(filename, { key: cached.imageKey, sha256 });
-        continue;
+    try {
+      while (!failed && next < pending.length) {
+        checkInstallCancelled(context);
+        const filename = pending[next++];
+        const sha256 = records[filename].sha256.toLowerCase();
+        const cached = old.get(filename);
+        const identity = cached?.sha256 === sha256 ? await imageFileIdentity(cached.imageKey) : null;
+        if (cached && identity) {
+          result.set(filename, { key: cached.imageKey, sha256 });
+          reused.set(cached.imageKey, identity);
+        } else {
+          const bytes = await read(filename, 30_000_000);
+          checkInstallCancelled(context);
+          if (createHash("sha256").update(bytes).digest("hex") !== sha256)
+            throw new Error(`Image checksum does not match: ${filename}`);
+          const extension = filename.split(".").at(-1)!.toLowerCase();
+          const key = await stage.stage(bytes, extension);
+          result.set(filename, { key, sha256 });
+        }
+        completed();
       }
-      const bytes = await read(filename, 30_000_000);
-      if (createHash("sha256").update(bytes).digest("hex") !== sha256)
-        throw new Error(`Image checksum does not match: ${filename}`);
-      const extension = filename.split(".").at(-1)?.toLowerCase();
-      const contentType =
-        extension === "png"
-          ? "image/png"
-          : extension === "webp"
-            ? "image/webp"
-            : extension === "gif"
-              ? "image/gif"
-              : extension === "avif"
-                ? "image/avif"
-                : "image/jpeg";
-      const key = await saveImageBytes(bytes, contentType);
-      created.push(key);
-      result.set(filename, { key, sha256 });
+    } catch (error) {
+      failed = true;
+      throw error;
     }
   }
-  const workers = await Promise.allSettled(Array.from({ length: 8 }, () => worker()));
-  const failed = workers.find((worker) => worker.status === "rejected");
-  if (failed?.status === "rejected") {
-    await Promise.all(created.map((key) => deleteImage(key)));
-    throw failed.reason;
-  }
-  return { result, created, previous };
+  // Join every worker before deleting staging: no decoder may publish after cleanup.
+  const workers = await Promise.allSettled(
+    Array.from({ length: Math.min(4, pending.length) }, () => worker()),
+  );
+  const failure = workers.find((worker) => worker.status === "rejected");
+  if (failure?.status === "rejected") throw failure.reason;
+  return { result, previous, reused };
 }
 
 export async function sourceImage(key: string, request?: Request) {

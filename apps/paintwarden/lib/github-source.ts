@@ -36,10 +36,10 @@ async function readCapped(response: Response, maxBytes: number) {
   return Buffer.concat(chunks);
 }
 
-export async function requestBytes(url: string, maxBytes: number) {
+export async function requestBytes(url: string, maxBytes: number, signal?: AbortSignal) {
   const response = await fetch(url, {
     headers: { "user-agent": "Paintwarden" },
-    signal: AbortSignal.timeout(60_000),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(60_000)]) : AbortSignal.timeout(60_000),
   });
   if (!response.ok) throw new Error(`Source request failed (${response.status})`);
   const bytes = await readCapped(response, maxBytes);
@@ -47,8 +47,8 @@ export async function requestBytes(url: string, maxBytes: number) {
   return bytes;
 }
 
-export async function requestJson(url: string, maxBytes: number): Promise<unknown> {
-  return JSON.parse((await requestBytes(url, maxBytes)).toString("utf8"));
+export async function requestJson(url: string, maxBytes: number, signal?: AbortSignal): Promise<unknown> {
+  return JSON.parse((await requestBytes(url, maxBytes, signal)).toString("utf8"));
 }
 
 export const rawUrl = (id: string, revision: string, filename: string) =>
@@ -68,11 +68,11 @@ export function validLogoSvg(bytes: Buffer) {
 
 // Returns the logo text, null when the repository has no usable logo.svg, or undefined
 // when the check itself failed so a previously stored logo is kept.
-export async function fetchSourceLogo(id: string, revision: string) {
+export async function fetchSourceLogo(id: string, revision: string, signal?: AbortSignal) {
   try {
     const response = await fetch(rawUrl(id, revision, "logo.svg"), {
       headers: { "user-agent": "Paintwarden" },
-      signal: AbortSignal.timeout(30_000),
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(30_000)]) : AbortSignal.timeout(30_000),
     });
     if (response.status === 404) return null;
     if (!response.ok) return undefined;
@@ -83,8 +83,8 @@ export async function fetchSourceLogo(id: string, revision: string) {
   }
 }
 
-export async function defaultBranch(id: string) {
-  const body = (await requestJson(`https://api.github.com/repos/${id}`, 100_000)) as {
+export async function defaultBranch(id: string, signal?: AbortSignal) {
+  const body = (await requestJson(`https://api.github.com/repos/${id}`, 100_000, signal)) as {
     default_branch?: unknown;
     private?: unknown;
   };
@@ -93,16 +93,18 @@ export async function defaultBranch(id: string) {
   return body.default_branch;
 }
 
-export async function sourceManifest(id: string, branch: string) {
+export async function sourceManifest(id: string, branch: string, signal?: AbortSignal) {
   const commit = (await requestJson(
     `https://api.github.com/repos/${id}/commits/${encodeURIComponent(branch)}`,
     100_000,
+    signal,
   )) as { sha?: unknown };
   if (typeof commit.sha !== "string" || !/^[a-f\d]{40}$/i.test(commit.sha))
     throw new Error("Invalid source revision response");
   const file = (await requestJson(
     `https://api.github.com/repos/${id}/contents/source.json?ref=${commit.sha}`,
     300_000,
+    signal,
   )) as { encoding?: unknown; content?: unknown };
   if (file.encoding !== "base64" || typeof file.content !== "string" || file.content.length > 200_000)
     throw new Error("Invalid source manifest response");

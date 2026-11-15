@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Esta solicitação é muito grande",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "O arquivo de backup precisa ter menos de 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "O arquivo de plugin precisa ter menos de 250 MB",
-  "INVALID_ORIGIN": "Origem inválida"
+  "INVALID_ORIGIN": "Origem inválida",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Uma instalação de plugin já está em andamento",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Tarefa de instalação do plugin não encontrada",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "O cofre foi alterado durante a instalação do plugin. Tente novamente.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Não há espaço em disco suficiente para instalar este plugin"
 }

@@ -57,6 +57,9 @@ export type Ownership = "OWNED" | "WISHLIST";
 
 export type PaintingStatus = "ASSEMBLED" | "COMPLETE" | "IN_PROGRESS" | "NOT_STARTED" | "PRIMED";
 
+export type PluginInstallStage =
+  "CANCELLED" | "CHECKING" | "COMMITTING" | "FAILED" | "IMAGES" | "PREPARING" | "READING" | "SUCCEEDED";
+
 export type SchemeEntryInput = {
   id?: string | number | null | undefined;
   imageType?: string | null | undefined;
@@ -847,6 +850,38 @@ export type PaintToolChoiceQuery = {
     revision: { epoch: string; seq: string };
     paint: { " $fragmentRefs"?: { DetailPaintFragment: DetailPaintFragment } } | null;
   };
+};
+
+export type LatestPluginInstallJobQueryVariables = Exact<{ [key: string]: never }>;
+
+export type LatestPluginInstallJobQuery = {
+  pluginInstallJob: {
+    id: string;
+    stage: PluginInstallStage;
+    done: number;
+    total: number;
+    percent: number;
+    cancellable: boolean;
+    error: string | null;
+    errorCode: string | null;
+    errorParameters: Array<{ name: string; value: string }>;
+  } | null;
+};
+
+export type PluginInstallProgressSubscriptionVariables = Exact<{ [key: string]: never }>;
+
+export type PluginInstallProgressSubscription = {
+  pluginInstallProgress: {
+    id: string;
+    stage: PluginInstallStage;
+    done: number;
+    total: number;
+    percent: number;
+    cancellable: boolean;
+    error: string | null;
+    errorCode: string | null;
+    errorParameters: Array<{ name: string; value: string }>;
+  } | null;
 };
 
 export type SchemesPageQueryVariables = Exact<{
@@ -6034,6 +6069,92 @@ export const PaintToolChoiceDocument = {
     },
   ],
 } as unknown as DocumentNode<PaintToolChoiceQuery, PaintToolChoiceQueryVariables>;
+export const LatestPluginInstallJobDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "query",
+      name: { kind: "Name", value: "LatestPluginInstallJob" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "pluginInstallJob" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "stage" } },
+                { kind: "Field", name: { kind: "Name", value: "done" } },
+                { kind: "Field", name: { kind: "Name", value: "total" } },
+                { kind: "Field", name: { kind: "Name", value: "percent" } },
+                { kind: "Field", name: { kind: "Name", value: "cancellable" } },
+                { kind: "Field", name: { kind: "Name", value: "error" } },
+                { kind: "Field", name: { kind: "Name", value: "errorCode" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "errorParameters" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "name" } },
+                      { kind: "Field", name: { kind: "Name", value: "value" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<LatestPluginInstallJobQuery, LatestPluginInstallJobQueryVariables>;
+export const PluginInstallProgressDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "subscription",
+      name: { kind: "Name", value: "PluginInstallProgress" },
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "pluginInstallProgress" },
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                { kind: "Field", name: { kind: "Name", value: "id" } },
+                { kind: "Field", name: { kind: "Name", value: "stage" } },
+                { kind: "Field", name: { kind: "Name", value: "done" } },
+                { kind: "Field", name: { kind: "Name", value: "total" } },
+                { kind: "Field", name: { kind: "Name", value: "percent" } },
+                { kind: "Field", name: { kind: "Name", value: "cancellable" } },
+                { kind: "Field", name: { kind: "Name", value: "error" } },
+                { kind: "Field", name: { kind: "Name", value: "errorCode" } },
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "errorParameters" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "name" } },
+                      { kind: "Field", name: { kind: "Name", value: "value" } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PluginInstallProgressSubscription, PluginInstallProgressSubscriptionVariables>;
 export const SchemesPageDocument = {
   kind: "Document",
   definitions: [

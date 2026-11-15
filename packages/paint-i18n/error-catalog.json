@@ -952,5 +952,25 @@
     "code": "INVALID_ORIGIN",
     "pattern": "^Invalid origin$",
     "parameters": []
+  },
+  {
+    "code": "PLUGIN_INSTALL_ALREADY_RUNNING",
+    "pattern": "^A plugin install is already running$",
+    "parameters": []
+  },
+  {
+    "code": "PLUGIN_INSTALL_JOB_NOT_FOUND",
+    "pattern": "^Plugin install job not found$",
+    "parameters": []
+  },
+  {
+    "code": "VAULT_CHANGED_DURING_PLUGIN_INSTALL",
+    "pattern": "^The vault changed during plugin installation\\. Please try again\\.$",
+    "parameters": []
+  },
+  {
+    "code": "PLUGIN_INSTALL_NOT_ENOUGH_SPACE",
+    "pattern": "^There is not enough disk space to install this plugin$",
+    "parameters": []
   }
 ]

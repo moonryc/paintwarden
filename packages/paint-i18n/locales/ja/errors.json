@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "このリクエストは大きすぎます",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "バックアップファイルは16 GB未満にしてください",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "プラグインファイルは250 MB未満にしてください",
-  "INVALID_ORIGIN": "オリジンが無効です"
+  "INVALID_ORIGIN": "オリジンが無効です",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "プラグインのインストールはすでに実行中です",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "プラグインのインストールジョブが見つかりません",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "プラグインのインストール中に保管庫が変更されました。もう一度お試しください。",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "このプラグインをインストールするためのディスク容量が不足しています"
 }

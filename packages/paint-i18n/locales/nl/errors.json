@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Dit verzoek is te groot",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Het back-upbestand moet kleiner zijn dan 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Het pluginbestand moet kleiner zijn dan 250 MB",
-  "INVALID_ORIGIN": "Ongeldige origin"
+  "INVALID_ORIGIN": "Ongeldige origin",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Er wordt al een plugin geïnstalleerd",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Installatietaak voor de plugin niet gevonden",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "De kluis is gewijzigd tijdens de installatie van de plugin. Probeer het opnieuw.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Er is onvoldoende schijfruimte om deze plugin te installeren"
 }

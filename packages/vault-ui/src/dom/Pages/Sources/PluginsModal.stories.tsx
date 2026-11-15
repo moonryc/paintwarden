@@ -1,6 +1,11 @@
+import { Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
+import { PluginInstallStatus } from "../../graphql/plugin-install-hooks";
+import type { PluginInstallJob } from "../../graphql/plugin-install-observer";
+import { waitForDialogEntered } from "../../storybook/dialog";
 import { SourcesApolloFixture, type SourcesFixtureMode } from "../../storybook/sources-apollo-fixture";
 
 import { PluginsModal } from "./PluginsModal";
@@ -10,15 +15,30 @@ function PluginsStory({
   delay,
   onClose,
   onOperation,
+  job,
 }: {
   mode: SourcesFixtureMode;
   delay?: number;
   onClose(): void;
   onOperation(name: string): void;
+  job?: PluginInstallJob;
 }) {
+  const [open, setOpen] = useState(true);
   return (
-    <SourcesApolloFixture mode={mode} delay={delay} onOperation={onOperation}>
-      <PluginsModal onClose={onClose} />
+    <SourcesApolloFixture mode={mode} delay={delay} onOperation={onOperation} job={job}>
+      {open ? (
+        <PluginsModal
+          onClose={() => {
+            onClose();
+            setOpen(false);
+          }}
+        />
+      ) : (
+        <>
+          <PluginInstallStatus compact />
+          <Button onClick={() => setOpen(true)}>Open Plugins</Button>
+        </>
+      )}
     </SourcesApolloFixture>
   );
 }
@@ -85,16 +105,8 @@ export const DeferredCreateChoices: Story = {
     const body = within(canvasElement.ownerDocument.body);
     await waitFor(() => expect(body.getByText("Example paint source")).toBeVisible());
     await expect(args.onOperation).not.toHaveBeenCalledWith("PluginShareable");
-    // The mount-time background update check refreshes the list once, temporarily
-    // disabling Create. Wait for its second versions read, not the brief enabled
-    // state before that refresh (a physical click there can be dropped).
-    await waitFor(
-      () =>
-        expect(
-          args.onOperation.mock.calls.filter(([name]) => name === "PluginVersions").length,
-        ).toBeGreaterThanOrEqual(2),
-      { timeout: 5000 },
-    );
+    // Background jobs do not refresh catalog windows until commit. Create uses
+    // an independent local query and stays available once the initial list loads.
     await waitFor(() => expect(body.getByRole("button", { name: "Create plugin" })).toBeEnabled());
     await userEvent.click(body.getByRole("button", { name: "Create plugin" }));
     await waitFor(() => expect(body.getByLabelText("Search items to include")).toBeVisible());
@@ -144,5 +156,66 @@ export const AddErrorsAreLocalized: Story = {
     } finally {
       window.fetch = original;
     }
+  },
+};
+
+export const StartsInBackground: Story = {
+  play: async ({ args, canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(body.getByText("Example paint source")).toBeVisible());
+    await userEvent.type(body.getByLabelText("GitHub repository"), "example/new-plugin");
+    await userEvent.click(body.getByRole("button", { name: "Add plugin" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
+    await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(body.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+    await expect(body.getByRole("button", { name: "Cancel installation" })).toBeEnabled();
+    await userEvent.click(body.getByRole("button", { name: "Open Plugins" }));
+    await waitForDialogEntered(await body.findByRole("dialog", { name: "Plugins" }));
+    await expect(body.getByText("An installation is already running.")).toBeVisible();
+    await expect(body.getByRole("button", { name: "Add plugin" })).toBeDisabled();
+  },
+};
+
+export const UploadStartsInBackground: Story = {
+  play: async ({ args, canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(body.getByText("Example paint source")).toBeVisible());
+    const fileInput = canvasElement.ownerDocument.querySelector<HTMLInputElement>('input[type="file"]');
+    if (!fileInput) throw new Error("Missing plugin ZIP input");
+    await userEvent.upload(fileInput, new File(["fixture"], "plugin.zip", { type: "application/zip" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalledTimes(1));
+    await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(body.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
+  },
+};
+
+export const ReloadedRunningJob: Story = {
+  args: {
+    job: {
+      id: "running-job",
+      stage: "IMAGES",
+      done: 120,
+      total: 450,
+      percent: 42,
+      cancellable: true,
+      error: null,
+      errorCode: null,
+      errorParameters: [],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitForDialogEntered(await body.findByRole("dialog", { name: "Plugins" }));
+    await waitFor(() =>
+      expect(body.getByRole("progressbar", { name: "Plugin installation" })).toHaveAttribute(
+        "aria-valuenow",
+        "42",
+      ),
+    );
+    await expect(body.getByText(/120 \/ 450/)).toBeVisible();
+    await expect(body.getByRole("button", { name: "Add plugin" })).toBeDisabled();
+    await userEvent.keyboard("{Escape}");
+    await expect(body.queryByRole("dialog")).not.toBeInTheDocument();
+    await expect(body.getByRole("progressbar", { name: "Plugin installation" })).toBeVisible();
   },
 };

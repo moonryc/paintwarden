@@ -16,6 +16,8 @@ import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../Components/EmptyState";
 import { Modal } from "../../Components/Modal";
 import { PageSkeleton } from "../../Components/PageSkeletons";
+import { PluginInstallStatus, usePluginInstall } from "../../graphql/plugin-install-hooks";
+import { isPluginInstallActive, type PluginInstallJob } from "../../graphql/plugin-install-observer";
 import { usePluginSources } from "../../graphql/sources-hooks";
 import { Extension, FileUp, Layers, RotateCw } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
@@ -55,6 +57,9 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const refresh = useVaultStore((s) => s.refresh);
   const sourceRead = usePluginSources();
+  const installation = usePluginInstall();
+  const latestJob = useRef(installation.job);
+  latestJob.current = installation.job;
   const initialLoading = useInitialPageLoading(sourceRead.loading, Boolean(sourceRead.error), false);
   const { sources } = sourceRead;
   const checkedSources = useRef(false);
@@ -75,7 +80,7 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   const [removal, setRemoval] = useState<SourceRemoval | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const busy = pending !== null || sourceRead.loading;
+  const busy = pending !== null || sourceRead.loading || isPluginInstallActive(installation.job);
 
   async function loadVersions() {
     setVersionsChecking(true);
@@ -116,12 +121,11 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     checkedSources.current = true;
     void (async () => {
       await loadVersions();
-      if (!mounted.current) return;
+      if (!mounted.current || isPluginInstallActive(latestJob.current)) return;
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
       if (!response.ok || !mounted.current) return;
-      // The write may change every data family; do not retain/parse its payload.
-      await refresh();
-      await loadSources();
+      const result = (await response.json()) as { job?: PluginInstallJob };
+      if (result.job) installation.acceptJob(result.job);
     })().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sourceRead.loading, sourceRead.error]);
@@ -136,12 +140,12 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         headers: { "content-type": "application/json", ...authHeaders() },
         body: JSON.stringify({ url: url.trim() }),
       });
-      const result = (await response.json()) as { error?: string; updated?: boolean };
+      const result = (await response.json()) as { error?: string; job?: PluginInstallJob };
       if (!response.ok) throw new PublicError(translateServerError(result));
       setUrl("");
-      await refresh();
-      await loadSources();
-      notify(result.updated ? t("sourcesPluginInstalled") : t("sourcesPluginIsAlreadyInstalledAndUpToDate"));
+      if (!result.job) throw new PublicError(t("sourcesCouldNotInstallPlugin"));
+      installation.acceptJob(result.job);
+      onClose();
     } catch (cause) {
       setAddError(message(cause, t("sourcesCouldNotInstallPlugin")));
     } finally {
@@ -161,18 +165,12 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
       });
       const result = (await response.json().catch(() => ({}))) as {
         error?: string;
-        name?: string;
-        updated?: boolean;
+        job?: PluginInstallJob;
       };
       if (!response.ok) throw new PublicError(translateServerError(result));
-      await refresh();
-      await loadSources();
-      const plugin = result.name ?? t("sourcesPlugin");
-      notify(
-        result.updated === false
-          ? t("sourcesAlreadyInstalledNamed", { name: plugin })
-          : t("sourcesInstalledNamed", { name: plugin }),
-      );
+      if (!result.job) throw new PublicError(t("sourcesCouldNotInstallPlugin"));
+      installation.acceptJob(result.job);
+      onClose();
     } catch (cause) {
       setError(message(cause, t("sourcesCouldNotInstallPlugin")));
     } finally {
@@ -189,11 +187,11 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
         method: "PUT",
         headers: authHeaders(),
       });
-      const result = (await response.json()) as { error?: string; updated?: boolean };
+      const result = (await response.json()) as { error?: string; job?: PluginInstallJob };
       if (!response.ok || result.error) throw new PublicError(translateServerError(result));
-      await refresh();
-      await loadSources();
-      notify(result.updated ? t("sourcesPluginUpdated") : t("sourcesPluginIsUpToDate"));
+      if (!result.job) throw new PublicError(t("sourcesCouldNotUpdatePlugin"));
+      installation.acceptJob(result.job);
+      onClose();
     } catch (cause) {
       setError(message(cause, t("sourcesCouldNotUpdatePlugin")));
       await loadSources().catch(() => undefined);
@@ -208,15 +206,11 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
     setError("");
     try {
       const response = await fetch("/api/catalog-sources", { method: "PUT", headers: authHeaders() });
-      if (!response.ok) throw new PublicError(t("sourcesCouldNotUpdatePlugins"));
-      const { results } = (await response.json()) as { results: { updated?: boolean; error?: string }[] };
-      await refresh();
-      await loadSources();
-      const updated = results.filter((result) => result.updated).length;
-      const failed = results.filter((result) => result.error).length;
-      if (failed) setError(t("sourcesUpdatesFailed", { count: failed }));
-      if (updated) notify(t("sourcesUpdatedCount", { count: updated }));
-      else if (!failed) notify(t("sourcesAllPluginsAreUpToDate"));
+      const result = (await response.json()) as { job?: PluginInstallJob; errorCode?: string };
+      if (!response.ok) throw new PublicError(translateServerError(result));
+      if (!result.job) throw new PublicError(t("sourcesCouldNotUpdatePlugins"));
+      installation.acceptJob(result.job);
+      onClose();
     } catch (cause) {
       setError(message(cause, t("sourcesCouldNotUpdatePlugins")));
     } finally {
@@ -289,11 +283,18 @@ export function PluginsModal({ onClose }: { onClose(): void }) {
   if (initialLoading)
     return (
       <Modal {...modalProps}>
+        <PluginInstallStatus />
         <PageSkeleton page="plugins" />
       </Modal>
     );
   return (
     <Modal {...modalProps}>
+      <PluginInstallStatus />
+      {isPluginInstallActive(installation.job) && (
+        <Alert severity="info" sx={{ my: 2 }}>
+          {t("sourcesJobRunning")}
+        </Alert>
+      )}
       <Box component="section" sx={{ mb: 3 }}>
         <Box component="h3" sx={sectionTitleSx}>
           {t("sourcesAddAPlugin")}

@@ -13,10 +13,14 @@ const { values } = parseArgs({
     executable: { type: "string" },
     artifacts: { type: "string" },
     help: { type: "boolean" },
+    "plugin-zip": { type: "string" },
+    "plugin-width": { type: "string", default: "1440" },
   },
 });
 if (values.help) {
-  console.log("Usage: node e2e/native-smoke.mjs [--executable <packaged binary>] [--artifacts <directory>]");
+  console.log(
+    "Usage: node e2e/native-smoke.mjs [--executable <packaged binary>] [--artifacts <directory>] [--plugin-zip <synthetic ZIP>] [--plugin-width 1440|390]",
+  );
   process.exit(0);
 }
 
@@ -260,6 +264,55 @@ try {
   assert.deepEqual(results.rendererErrors, [], "No renderer exceptions or crashes allowed");
   assert.equal(results.unexpectedExit, undefined, "No premature app exit allowed");
   record("Owner created through UI; persisted owner and main Workbench loaded without renderer errors");
+
+  if (values["plugin-zip"]) {
+    const { runPluginInstallFlow } = await import("./plugin-install-flow.mjs");
+    const { default: Database } = await import("better-sqlite3");
+    const width = Number(values["plugin-width"]);
+    assert.ok([1440, 390].includes(width));
+    results.plugin = { checks: [] };
+    async function inspectPlugin(cancelled) {
+      const database = new Database(path.join(results.profile, "paintwarden.sqlite"), { readonly: true });
+      try {
+        assert.equal(
+          database.prepare("SELECT count(*) AS n FROM catalog_source_items").get().n,
+          cancelled ? 0 : 3800,
+        );
+        assert.equal(
+          database.prepare("SELECT count(*) AS n FROM catalog_sources").get().n,
+          cancelled ? 0 : 1,
+        );
+      } finally {
+        database.close();
+      }
+      const images = await readdir(path.join(results.profile, "images")).catch((error) => {
+        if (error.code === "ENOENT") return [];
+        throw error;
+      });
+      assert.equal(
+        images.filter((name) => !name.includes(".thumb-v1-") && !name.startsWith(".")).length,
+        cancelled ? 0 : 800,
+      );
+      assert.deepEqual(await readdir(path.join(results.profile, ".plugin-staging")), []);
+      results.plugin[cancelled ? "cancelledDisk" : "completedDisk"] = {
+        sourceItems: cancelled ? 0 : 3800,
+        finalImages: cancelled ? 0 : 800,
+        totalImageFiles: images.length,
+      };
+    }
+    await runPluginInstallFlow({
+      page,
+      width,
+      artifacts: evidence,
+      zipPath: path.resolve(values["plugin-zip"]),
+      results: results.plugin,
+      verifyCancelled: () => inspectPlugin(true),
+      verifyComplete: () => inspectPlugin(false),
+    });
+    record(
+      "Packaged Mac plugin install: live progress, miniature edit, reload, cancel cleanup, atomic retry success",
+    );
+  }
 
   await application.context().tracing.stop({ path: path.join(evidence, "trace.zip") });
   tracing = false;

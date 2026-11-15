@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Diese Anfrage ist zu groß",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Die Sicherungsdatei muss kleiner als 16 GB sein",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Die Plugin-Datei muss kleiner als 250 MB sein",
-  "INVALID_ORIGIN": "Ungültiger Ursprung"
+  "INVALID_ORIGIN": "Ungültiger Ursprung",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Eine Plugin-Installation läuft bereits",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Auftrag zur Plugin-Installation nicht gefunden",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "Der Tresor wurde während der Plugin-Installation geändert. Bitte versuche es erneut.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Es ist nicht genügend Speicherplatz vorhanden, um dieses Plugin zu installieren"
 }

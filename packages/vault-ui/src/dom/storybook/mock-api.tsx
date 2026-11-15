@@ -181,6 +181,7 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
   };
   return ({ operationName, variables: vars = {} }: GraphQLRequest): Record<string, unknown> => {
     data = options.data?.() ?? data;
+    if (operationName === "LatestPluginInstallJob") return { pluginInstallJob: null };
     if (operationName === "VaultInvalidation")
       return {
         vaultInvalidation: {
@@ -393,6 +394,15 @@ function MockApi({
       const url = new URL(input instanceof Request ? input.url : String(input), window.location.origin);
       if (!url.pathname.startsWith("/api/")) return realFetch(input, init);
       const method = (init?.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
+      if (
+        url.pathname === "/api/graphql/stream" &&
+        typeof init?.body === "string" &&
+        init.body.includes('"operationName":"PluginInstallProgress"')
+      )
+        return new Response(
+          'event: next\ndata: {"data":{"pluginInstallProgress":null}}\n\nevent: complete\ndata: null\n\n',
+          { headers: { "content-type": "text/event-stream" } },
+        );
       if (url.pathname === "/api/graphql/stream")
         return new Response(
           'event: next\ndata: {"data":{"vaultChanges":{"epoch":"story","seq":"0","reset":false,"families":[]}}}\n\nevent: complete\ndata: null\n\n',

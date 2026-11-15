@@ -60,7 +60,9 @@ type ColorIndexView {
   pageInfo: PageInfo!
 }
 
-"""Flat memberships keep responses bounded even for a scheme with many paints."""
+"""
+Flat memberships keep responses bounded even for a scheme with many paints.
+"""
 type SchemeColorIndexEntry {
   schemeId: ID!
   schemeName: String!
@@ -73,6 +75,7 @@ type SchemeColorIndexView {
 }
 
 type Query {
+  pluginInstallJob: PluginInstallJob
   schemeColorIndex(first: Int! = 100, after: String): SchemeColorIndexView!
   colorIndex(first: Int! = 100, after: String): ColorIndexView!
   home(
@@ -249,6 +252,7 @@ type VaultRevision {
   seq: Sequence!
 }
 type Subscription {
+  pluginInstallProgress: PluginInstallJob
   """
   Resume family invalidations using the last received epoch/seq.
   """
@@ -1027,4 +1031,33 @@ type Query {
     first: Int! = 100
     after: String
   ): FolderBrowserPayload!
+}
+
+"""
+Latest in-memory install; survives client reloads, not server restarts.
+"""
+type PluginInstallJob {
+  id: String!
+  stage: PluginInstallStage!
+  done: Int!
+  total: Int!
+  percent: Float!
+  cancellable: Boolean!
+  error: String
+  errorCode: String
+  errorParameters: [PluginInstallErrorParameter!]!
+}
+type PluginInstallErrorParameter {
+  name: String!
+  value: String!
+}
+enum PluginInstallStage {
+  READING
+  CHECKING
+  IMAGES
+  PREPARING
+  COMMITTING
+  SUCCEEDED
+  FAILED
+  CANCELLED
 }

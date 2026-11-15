@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "요청이 너무 큽니다",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "백업 파일은 16 GB 미만이어야 합니다",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "플러그인 파일은 250 MB 미만이어야 합니다",
-  "INVALID_ORIGIN": "잘못된 원본 주소입니다"
+  "INVALID_ORIGIN": "잘못된 원본 주소입니다",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "플러그인 설치가 이미 진행 중입니다",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "플러그인 설치 작업을 찾을 수 없습니다",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "플러그인 설치 중에 보관함이 변경되었습니다. 다시 시도하세요.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "이 플러그인을 설치할 디스크 공간이 부족합니다"
 }

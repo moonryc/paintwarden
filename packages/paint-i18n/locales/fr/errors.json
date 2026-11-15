@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Cette requête est trop volumineuse",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Le fichier de sauvegarde doit faire moins de 16 Go",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Le fichier d’extension doit faire moins de 250 Mo",
-  "INVALID_ORIGIN": "Origine non valide"
+  "INVALID_ORIGIN": "Origine non valide",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Une installation d’extension est déjà en cours",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Tâche d’installation de l’extension introuvable",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "Le coffre a été modifié pendant l’installation de l’extension. Veuillez réessayer.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "L’espace disque est insuffisant pour installer ce plugin"
 }

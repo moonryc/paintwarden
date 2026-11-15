@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "请求过大",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "备份文件必须小于 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "插件文件必须小于 250 MB",
-  "INVALID_ORIGIN": "无效的源地址"
+  "INVALID_ORIGIN": "无效的源地址",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "已有插件正在安装",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "未找到插件安装任务",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "资料库在插件安装期间发生了更改。请重试。",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "磁盘空间不足，无法安装此插件"
 }

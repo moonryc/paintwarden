@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "Questa richiesta è troppo grande",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Il file di backup deve essere inferiore a 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Il file del plugin deve essere inferiore a 250 MB",
-  "INVALID_ORIGIN": "Origine non valida"
+  "INVALID_ORIGIN": "Origine non valida",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "È già in corso un’installazione di un plugin",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Attività di installazione del plugin non trovata",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "L’archivio è stato modificato durante l’installazione del plugin. Riprova.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Lo spazio su disco non è sufficiente per installare questo plugin"
 }

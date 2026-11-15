@@ -57,11 +57,29 @@ async function zipEntries(source: ZipSource, limits: typeof UPLOAD_LIMITS) {
 }
 
 // Files are unpacked one at a time, only when read.
-export async function readSourceZip(bytes: Uint8Array, limits = UPLOAD_LIMITS): Promise<UploadedSource> {
-  const source: ZipSource = {
-    size: bytes.byteLength,
-    read: async (offset, length) => bytes.subarray(offset, offset + length),
-  };
+export async function readSourceZip(
+  bytes: Uint8Array | ZipSource,
+  limits = UPLOAD_LIMITS,
+  signal?: AbortSignal,
+): Promise<UploadedSource> {
+  signal?.throwIfAborted();
+  const source: ZipSource =
+    bytes instanceof Uint8Array
+      ? {
+          size: bytes.byteLength,
+          read: async (offset, length) => {
+            signal?.throwIfAborted();
+            return bytes.subarray(offset, offset + length);
+          },
+        }
+      : {
+          size: bytes.size,
+          read: async (offset, length) => {
+            signal?.throwIfAborted();
+            return bytes.read(offset, length);
+          },
+        };
+  if (source.size > UPLOAD_MAX_BYTES) throw new Error("This plugin .zip is too large");
   const entries = await zipEntries(source, limits);
   const names = entries.map((entry) => entry.name);
   const prefix = names.includes("source.json") ? "" : singleFolder(names);
@@ -69,6 +87,7 @@ export async function readSourceZip(bytes: Uint8Array, limits = UPLOAD_LIMITS): 
   for (const entry of entries)
     if (entry.name.startsWith(prefix)) files.set(entry.name.slice(prefix.length), entry);
   const read: SourceFileReader = async (path, maxBytes) => {
+    signal?.throwIfAborted();
     const entry = files.get(path);
     if (!entry) throw new Error(`The plugin is missing ${path}`);
     if (entry.size > maxBytes) throw new Error(`${path} is too large`);

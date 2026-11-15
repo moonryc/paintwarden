@@ -302,14 +302,13 @@ void test("simultaneous source checks share in-flight work, but later checks are
       assert.equal(first, single);
       await entered;
       assert.equal(count("paint-source"), before + 1);
-      // Installs own the image-mutation lock through preparation and commit so a restore
-      // cannot delete cached assets between those phases. Other installs queue safely.
+      // A different install fails fast rather than silently queueing. The running check
+      // still shares its own promise with duplicate callers.
       const otherBefore = count("shrinking");
-      const other = checkCatalogSource(otherId);
+      const other = await checkCatalogSource(otherId);
       assert.equal(count("shrinking"), otherBefore);
+      assert.match("error" in other ? other.error : "", /install is already running/);
       release();
-      await other;
-      assert.equal(count("shrinking"), otherBefore + 1);
       const [result, results, duplicate] = await Promise.all([first, all, single]);
       assert.deepEqual(result, duplicate);
       assert.deepEqual(

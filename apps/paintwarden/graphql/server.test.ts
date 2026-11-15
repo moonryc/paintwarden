@@ -453,14 +453,18 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
 
     await t.test("bounded per-client concurrent SSE slots recover after cancellation", async () => {
       const responses: Response[] = [];
-      for (let i = 0; i < 4; i++)
-        responses.push(await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream"));
-      assert.ok(responses.every((response) => response.status === 200));
-      assert.equal(
-        (await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream")).status,
-        429,
-      );
-      await Promise.all(responses.map((response) => response.body!.cancel()));
+      try {
+        for (let i = 0; i < 8; i++)
+          responses.push(await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream"));
+        assert.ok(responses.every((response) => response.status === 200));
+        const excess = await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream");
+        responses.push(excess);
+        assert.equal(excess.status, 429);
+        const query = await post({ query: "{pluginInstallJob{id}}" });
+        assert.equal(query.status, 200, "Eight live SSE streams must not starve normal operations");
+      } finally {
+        await Promise.all(responses.map((response) => response.body?.cancel()));
+      }
       const again = await post(streamBody(), { accept: "text/event-stream" }, "/api/graphql/stream");
       assert.equal(again.status, 200);
       await again.body!.cancel();

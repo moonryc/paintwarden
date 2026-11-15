@@ -6,6 +6,7 @@ import { createSchema, createYoga, maskError } from "graphql-yoga";
 
 import { getSqlite } from "../db/index.ts";
 import { PaintStockError, setPaintStock } from "../lib/paint-stock.ts";
+import { currentPluginInstallJob } from "../lib/catalog-install-jobs";
 import { publicError } from "../lib/public-errors.ts";
 
 import { checkOperation, GRAPHQL_BODY_BYTES } from "./budgets.ts";
@@ -44,6 +45,7 @@ import { paintMutations } from "./paint-mutations.ts";
 import { readOwnedPaintOptions, readPaintRanking } from "./paint-tools.ts";
 import { acquireOperation } from "./rate-limit.ts";
 import { readSchemes, readSchemePaintOptions, schemeMutations } from "./schemes.ts";
+import { subscribePluginInstall } from "./install-jobs";
 import { Sequence } from "./sequence.ts";
 import { readSources, readSourceVersions, readSourceRemoval, readSourceShareable } from "./sources.ts";
 import { templateQueries, templateMutations, templateViewResolvers } from "./templates.ts";
@@ -57,6 +59,7 @@ import {
 const resolvers: Resolvers<GraphQLContext> = {
   Sequence,
   Query: {
+    pluginInstallJob: () => currentPluginInstallJob(),
     ...templateQueries,
     ...folderQueries,
     colorIndex: (_root, args) => readColorIndex(args),
@@ -155,6 +158,7 @@ const resolvers: Resolvers<GraphQLContext> = {
     },
   },
   Subscription: {
+    pluginInstallProgress: { subscribe: (_root, _args, context) => subscribePluginInstall(context.request) },
     vaultChanges: { subscribe: (_root, args, context) => subscribeChanges(context.request, args) },
   },
 };

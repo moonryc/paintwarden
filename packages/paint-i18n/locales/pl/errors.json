@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "To żądanie jest zbyt duże",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "Plik kopii zapasowej musi mieć mniej niż 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "Plik wtyczki musi mieć mniej niż 250 MB",
-  "INVALID_ORIGIN": "Nieprawidłowy adres źródłowy"
+  "INVALID_ORIGIN": "Nieprawidłowy adres źródłowy",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "Instalacja wtyczki już trwa",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Nie znaleziono zadania instalacji wtyczki",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "Skarbiec został zmieniony podczas instalacji wtyczki. Spróbuj ponownie.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "Brakuje miejsca na dysku, aby zainstalować tę wtyczkę"
 }

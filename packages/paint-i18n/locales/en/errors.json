@@ -175,5 +175,9 @@
   "THIS_REQUEST_IS_TOO_LARGE": "This request is too large",
   "THE_BACKUP_FILE_MUST_BE_UNDER_16_GB": "The backup file must be under 16 GB",
   "THE_PLUGIN_FILE_MUST_BE_UNDER_250_MB": "The plugin file must be under 250 MB",
-  "INVALID_ORIGIN": "Invalid origin"
+  "INVALID_ORIGIN": "Invalid origin",
+  "PLUGIN_INSTALL_ALREADY_RUNNING": "A plugin install is already running",
+  "PLUGIN_INSTALL_JOB_NOT_FOUND": "Plugin install job not found",
+  "VAULT_CHANGED_DURING_PLUGIN_INSTALL": "The vault changed during plugin installation. Please try again.",
+  "PLUGIN_INSTALL_NOT_ENOUGH_SPACE": "There is not enough disk space to install this plugin"
 }

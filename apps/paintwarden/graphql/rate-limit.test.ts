@@ -25,12 +25,12 @@ void test("client rate budget cannot be bypassed by rotating session headers", (
 
 void test("one session is limited across multiple client addresses", () => {
   const releases: (() => void)[] = [];
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 8; i++) {
     const release = acquireOperation(request(`concurrent-${i}`, "Bearer session-concurrent"), true);
     assert.ok(release);
     releases.push(release);
   }
-  assert.equal(acquireOperation(request("concurrent-5", "Bearer session-concurrent"), true), null);
+  assert.equal(acquireOperation(request("concurrent-9", "Bearer session-concurrent"), true), null);
   assert.equal(
     acquireOperation(
       new Request("http://127.0.0.1/api/graphql", {
@@ -47,4 +47,22 @@ void test("one session is limited across multiple client addresses", () => {
   const recovered = acquireOperation(request("concurrent-6", "Bearer session-concurrent"), true);
   assert.ok(recovered);
   recovered();
+});
+
+void test("long-lived streams cannot exhaust mutation/query concurrency and both budgets stay bounded", () => {
+  const req = request("independent-budgets", "independent-session");
+  const releaseStreams = Array.from({ length: 8 }, () => acquireOperation(req, true));
+  assert.ok(releaseStreams.every(Boolean));
+  assert.equal(acquireOperation(req, true), null);
+  const releaseOperations = Array.from({ length: 4 }, () => acquireOperation(req, false));
+  assert.ok(releaseOperations.every(Boolean));
+  assert.equal(acquireOperation(req, false), null);
+  releaseStreams.forEach((release) => release!());
+  const recoveredStream = acquireOperation(req, true);
+  assert.ok(recoveredStream);
+  releaseOperations.forEach((release) => release!());
+  const recoveredOperation = acquireOperation(req, false);
+  assert.ok(recoveredOperation);
+  recoveredStream();
+  recoveredOperation();
 });

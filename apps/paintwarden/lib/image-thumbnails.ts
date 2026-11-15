@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { rename, stat, unlink } from "node:fs/promises";
+import { rename, stat, unlink, writeFile } from "node:fs/promises";
 
 import sharp from "sharp";
 
@@ -77,6 +77,28 @@ export async function ensureThumbnail(original: string, width: ThumbnailWidth) {
     return await task;
   } finally {
     pending.delete(output);
+  }
+}
+
+// Isolated catalog stages are not reachable by readers or cleanup. Decode using the
+// same global bounds, but never acquire the vault publication lock. Keep historical
+// malformed originals exportable; filesystem write failures must still abort staging.
+export async function prepareStagedThumbnails(original: string, bytes: Uint8Array) {
+  for (const width of thumbnailWidths) {
+    let output: Buffer;
+    try {
+      output = await slot(() =>
+        sharp(bytes, { limitInputPixels: 40_000_000, sequentialRead: true })
+          .rotate()
+          .resize({ width, height: width * 4, fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 78, effort: 4 })
+          .toBuffer(),
+      );
+    } catch {
+      // Same unsupported-input / queue-saturation tolerance as prepareThumbnails.
+      return;
+    }
+    await writeFile(thumbnailPath(original, width), output, { flag: "wx" });
   }
 }
 
