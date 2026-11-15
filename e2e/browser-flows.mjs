@@ -21,6 +21,7 @@ const miniatureTile = (page, name) => page.getByText(name, { exact: true });
 
 async function authenticate(page, setup) {
   await page.goto("/");
+  await expect(page).toHaveTitle("Paintwarden");
   await page.getByRole("textbox", { name: "Username", exact: true }).fill(username);
   await page.locator(`input[autocomplete="${setup ? "new-password" : "current-password"}"]`).fill(password);
   await page.getByRole("button", { name: setup ? "Create account" : "Sign in", exact: true }).click();
@@ -238,6 +239,24 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   };
   const first = await newPage();
   await authenticate(first, true);
+  const manifest = await first.evaluate(async () => {
+    const link = document.querySelector('link[rel="manifest"]');
+    return (await fetch(link.href)).json();
+  });
+  assert.equal(manifest.name, "Paintwarden");
+  assert.equal(manifest.short_name, "Paintwarden");
+  await expect(first.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute(
+    "content",
+    "Paintwarden",
+  );
+  results.branding = { title: await first.title(), name: manifest.name, shortName: manifest.short_name };
+  for (const width of [1440, 390]) {
+    await first.setViewportSize({ width, height: 1000 });
+    await expect(first.getByRole("heading", { name: "Workbench", exact: true, level: 1 })).toBeVisible();
+    await first.screenshot({ path: path.join(artifacts, `paintwarden-brand-${width}.png`), fullPage: true });
+  }
+  await first.setViewportSize({ width: 1440, height: 1000 });
+  check("browser title, installed app name and Apple app title are Paintwarden");
   const second = await newPage();
   assert.equal((await second.context().cookies()).length, 0, "Second browser context starts unauthenticated");
   await authenticate(second, false);
