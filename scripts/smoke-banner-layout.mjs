@@ -2,6 +2,7 @@
 // Real Storybook fixtures, isolated loopback server, no backend/vault access.
 // Seed reviewed screenshots: node scripts/smoke-banner-layout.mjs EVIDENCE --update-baselines
 // Replay pixel + geometry regression: node scripts/smoke-banner-layout.mjs EVIDENCE
+// Cross-platform CI geometry gate: node scripts/smoke-banner-layout.mjs EVIDENCE --geometry-only
 // Baselines live in EVIDENCE/baselines (or --baseline-dir DIR), not the user's vault.
 import assert from "node:assert/strict";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -21,8 +22,10 @@ const baselineIndex = args.indexOf("--baseline-dir");
 const baselineDir =
   baselineIndex >= 0 ? path.resolve(args[baselineIndex + 1]) : path.join(evidence, "baselines");
 const update = args.includes("--update-baselines");
+const geometryOnly = args.includes("--geometry-only");
+assert.ok(!(update && geometryOnly), "Choose --geometry-only or --update-baselines, not both");
 await mkdir(evidence, { recursive: true });
-await mkdir(baselineDir, { recursive: true });
+if (!geometryOnly) await mkdir(baselineDir, { recursive: true });
 const port = await freePort();
 const owned = launchOwned(
   process.execPath,
@@ -43,6 +46,7 @@ const owned = launchOwned(
 const report = {
   scope: "Storybook Chromium renderer only; native hidden-inset simulated, not a packaged Electron pass",
   updateBaselines: update,
+  comparison: geometryOnly ? "geometry-only (no pixel comparison)" : "geometry and reviewed pixels",
   results: [],
 };
 let browser;
@@ -112,6 +116,18 @@ try {
           };
         });
         Object.assign(row, measurements);
+        const floatingNotice = story.endsWith("--toast") || story.endsWith("--update");
+        const expectedBanners = story.startsWith("app-vault--") ? 1 : 3;
+        assert.equal(
+          measurements.banners.filter((banner) => banner.kind === "banner").length,
+          expectedBanners,
+          "expected global banner missing",
+        );
+        assert.equal(
+          measurements.banners.filter((banner) => banner.kind === "snackbar").length,
+          floatingNotice ? 1 : 0,
+          "expected floating notice missing",
+        );
         assert.equal(measurements.overflow, false, "document overflows horizontally");
         assert.equal(measurements.main.x, width >= 1024 ? 264 : 0, "unexpected content/sidebar boundary");
         for (const banner of measurements.banners) {
@@ -147,7 +163,7 @@ try {
         });
         const baseline = path.join(baselineDir, filename);
         if (update) await writeFile(baseline, screenshot);
-        else {
+        else if (!geometryOnly) {
           const actual = PNG.sync.read(screenshot);
           const expected = PNG.sync.read(await readFile(baseline));
           assert.equal(actual.width, expected.width);
@@ -194,4 +210,6 @@ assert.equal(
   0,
   `${report.failures} banner layout/visual regression failures; see layout-report.json`,
 );
-console.log(`PASS: ${report.results.length} banner viewport/visual regressions`);
+console.log(
+  `PASS: ${report.results.length} banner ${geometryOnly ? "geometry regressions (pixels not compared)" : "viewport/visual regressions"}`,
+);
