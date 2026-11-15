@@ -15,13 +15,15 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Button, Card, FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
+import Colorize from "@mui/icons-material/Colorize";
+import { Button, ButtonBase, Chip, Card, FormControlLabel, MenuItem, Switch, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState, type ReactNode } from "react";
 
 import { Check, CircleDashed, Layers, Pencil, Plus } from "../icons";
 import { useVaultStore } from "../store/hooks";
 import type { Miniature, Paint, PaintStateSetter, RecipeStep, Requirement, SchemeOrderEntry } from "../types";
+import { imageUrl } from "../utils/image-cache";
 import { createClientId } from "../utils/client-id";
 import { noop, getSteps } from "../utils/constants";
 import { mergeRecipePaints } from "../utils/recipe-merge";
@@ -33,6 +35,7 @@ import { RecipeSchemeTileView } from "./RecipeSchemeTile";
 import { RecipeStepCardView } from "./RecipeStepCard";
 import { SchemeChipView } from "./SchemeChip";
 import { SchemeSwatchView } from "./SchemeSwatch";
+import { canSampleImage } from "./swatch-sampling";
 
 type Entry = Omit<Requirement, "miniatureId">;
 type Adding = { kind: "paint"; step: RecipeStep } | { kind: "step"; step: RecipeStep } | null;
@@ -75,6 +78,7 @@ export type RecipeSchemePickerProps = {
 };
 
 export type ProjectRecipeViewProps = ProjectRecipeProps & {
+  onScan?: () => void;
   // Only paints needed by this detail projection; the picker fetches its own search window.
   catalog: Paint[];
   explicitSteps: RecipeStep[];
@@ -102,6 +106,7 @@ export function ProjectRecipeView({
   setRecipeSteps,
   setAttached,
   renderSchemePicker,
+  onScan,
 }: ProjectRecipeViewProps) {
   const { t } = useTranslation("components");
   const notify = useVaultStore((s) => s.notify);
@@ -262,6 +267,8 @@ export function ProjectRecipeView({
     closeAdding();
   };
 
+  const canScan = Boolean(miniature.imageUrl && canSampleImage(miniature.imageUrl, location.href));
+
   const paintPanel = (step: RecipeStep) => (
     <Box
       className="anim-rise"
@@ -354,6 +361,63 @@ export function ProjectRecipeView({
           "& > :where(:not(:last-child))": { mb: 1.5 },
         }}
       >
+        {editMode && onScan && miniature.imageUrl && (
+          <ButtonBase
+            onClick={onScan}
+            disabled={!canScan}
+            sx={{
+              display: "flex",
+              width: "100%",
+              textAlign: "left",
+              gap: 1.5,
+              p: 1.25,
+              border: "1px solid var(--line)",
+              borderRadius: 2,
+              bgcolor: "var(--surface-raised)",
+              color: "var(--ink)",
+              "&:hover": { borderColor: "var(--brand)" },
+              "&.Mui-focusVisible": { outline: "2px solid var(--brand)", outlineOffset: 2 },
+            }}
+          >
+            <Box
+              component="img"
+              src={imageUrl(miniature.imageUrl)}
+              alt=""
+              sx={{ width: 52, height: 52, flexShrink: 0, objectFit: "cover", borderRadius: 1 }}
+            />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 0.75,
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                {t("scanTitle")}
+                <Chip
+                  component="span"
+                  label={t("scanBeta")}
+                  size="small"
+                  sx={{
+                    height: 19,
+                    fontSize: 10,
+                    bgcolor: "var(--sunken)",
+                    color: "var(--ink-soft)",
+                    "& .MuiChip-label": { px: 0.75 },
+                  }}
+                />
+              </Box>
+              <Box sx={{ fontSize: 12, color: "var(--ink-soft)", mt: 0.5 }}>
+                {canScan ? t("scanFindPaints") : t("scanExternal")}
+              </Box>
+            </Box>
+            <Colorize sx={{ fontSize: 20, flexShrink: 0, color: "var(--ink-soft)", mr: 0.5 }} />
+          </ButtonBase>
+        )}
+
         {(schemes.length > 0 || editMode) && (
           <RecipeSubheader id="recipe-schemes-heading" label={t("colorSchemes")} />
         )}

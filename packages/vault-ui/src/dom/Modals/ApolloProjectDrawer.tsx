@@ -1,5 +1,4 @@
 import { useFragment } from "@apollo/client/react";
-import Colorize from "@mui/icons-material/Colorize";
 import { Alert, Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -248,16 +247,6 @@ function ProjectContent({
             )}
           </Box>
           <Box component="div" sx={{ display: "flex", flexWrap: "wrap", gap: 1, ml: "auto" }}>
-            {miniature.imageUrl && (
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Colorize sx={{ fontSize: 15 }} />}
-                onClick={() => setScanOpen(true)}
-              >
-                {t("scanTitle")}
-              </Button>
-            )}
             <Button
               variant="outlined"
               size="small"
@@ -317,6 +306,7 @@ function ProjectContent({
         <Box inert={pending > 0 || loading || Boolean(error)} aria-busy={pending > 0 || loading}>
           <ProjectRecipeView
             miniature={miniature}
+            onScan={() => setScanOpen(true)}
             required={required}
             requirementRows={requirementRows}
             catalog={catalog}

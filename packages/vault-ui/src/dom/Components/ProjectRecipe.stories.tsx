@@ -183,3 +183,64 @@ export const KeyboardReorder: Story = {
     );
   },
 };
+
+const scanPhoto = new URL("../../../../../apps/paintwarden-web/public/icon-512.png", import.meta.url).href;
+
+export const ScanPhotoInEditMode: Story = {
+  args: { miniature: { ...knight, imageUrl: scanPhoto }, onScan: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Edit recipe" }));
+    const scan = canvas.getByRole("button", { name: /Swatch Scan.*Beta/ });
+    await expect(scan).toBeEnabled();
+    await expect(within(scan).getByText("Beta")).toBeVisible();
+    await expect(scan).toHaveAccessibleName("Swatch Scan Beta Find paints from your miniature’s photo");
+    // The row follows the recipe heading, before schemes and paint steps, even in an empty recipe.
+    const recipeHeading = canvas.getByRole("heading", { name: "Paint recipe" });
+    const schemesHeading = canvas.getByRole("heading", { name: "Color schemes" });
+    const paintsHeading = canvas.getByRole("heading", { name: "Paint steps" });
+    await expect(
+      Boolean(recipeHeading.compareDocumentPosition(scan) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    await expect(
+      Boolean(scan.compareDocumentPosition(paintsHeading) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    await expect(
+      Boolean(scan.compareDocumentPosition(schemesHeading) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true);
+    scan.focus();
+    await userEvent.keyboard("[Enter]");
+    await expect(args.onScan).toHaveBeenCalledTimes(1);
+    await userEvent.click(canvas.getByRole("button", { name: "Done" }));
+    await expect(canvas.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+  },
+};
+
+export const ScanEmptyRecipe: Story = {
+  ...ScanPhotoInEditMode,
+  args: { ...ScanPhotoInEditMode.args, required: [], requirementRows: [], explicitSteps: [], schemes: [] },
+};
+
+export const ScanWithoutPhoto: Story = {
+  args: { miniature: { ...knight, imageUrl: null }, onScan: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Edit recipe" }));
+    await expect(canvas.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await expect(args.onScan).not.toHaveBeenCalled();
+  },
+};
+
+export const ScanExternalPhoto: Story = {
+  args: { miniature: { ...knight, imageUrl: "https://example.com/miniature.jpg" }, onScan: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole("button", { name: "Edit recipe" }));
+    const scan = canvas.getByRole("button", { name: /Swatch Scan.*Beta/ });
+    await expect(scan).toBeDisabled();
+    await expect(scan).toHaveAccessibleName(/Upload a photo to the vault to use Swatch Scan/);
+    await expect(args.onScan).not.toHaveBeenCalled();
+  },
+};

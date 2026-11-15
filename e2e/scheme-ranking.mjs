@@ -17,7 +17,27 @@ async function graphql(page, query, variables = {}) {
 export async function checkSchemeRanking({ page, miniatureId, title, artifacts, results }) {
   await expect(page.getByText(`Added ${title}`, { exact: true })).toBeHidden();
   await page.getByText(title, { exact: true }).click();
-  await page.getByRole("button", { name: "Swatch Scan", exact: true }).click();
+  const scanEntry = page.getByRole("button", { name: /Swatch Scan.*Beta/ });
+  await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  await page.getByRole("button", { name: "Edit recipe", exact: true }).click();
+  await expect(scanEntry).toBeVisible();
+  assert.equal(
+    await scanEntry.evaluate((entry) => {
+      const recipe = entry.closest("section");
+      const heading = recipe.querySelector("#paint-recipe-heading");
+      const schemes = recipe.querySelector("#recipe-schemes-heading");
+      const paints = recipe.querySelector("#recipe-paints-heading");
+      return (
+        Boolean(heading.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        Boolean(entry.compareDocumentPosition(schemes) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        Boolean(schemes.compareDocumentPosition(paints) & Node.DOCUMENT_POSITION_FOLLOWING)
+      );
+    }),
+    true,
+    "scan row follows Paint recipe heading, before Color schemes and Paint steps",
+  );
+  await expect(scanEntry).toContainText("Find paints from your miniature’s photo");
+  await scanEntry.click();
   const dialog = page.getByRole("dialog", { name: "Swatch Scan", exact: true });
   const photo = dialog.getByRole("img", { name: title, exact: true });
   await expect(dialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
@@ -192,4 +212,14 @@ export async function checkSchemeRanking({ page, miniatureId, title, artifacts, 
   results.schemeRanking = { samples, blueId, redId, existingId, bestSchemeExcludesNearestLibraryPaint: true };
   results.checks.push("PASS attach ranked scheme preserves existing attachment and already-attached state");
   await dialog.getByRole("button", { name: "Close", exact: true }).click();
+  // The responsive drawer host can remount ProjectRecipe and leave recipe edit mode.
+  const editRecipe = page.getByRole("button", { name: "Edit recipe", exact: true });
+  if (await editRecipe.isVisible()) {
+    await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+    await editRecipe.click();
+  }
+  await expect(scanEntry).toBeVisible();
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  results.checks.push("PASS Swatch Scan Beta entry appears only while editing the photo miniature recipe");
 }

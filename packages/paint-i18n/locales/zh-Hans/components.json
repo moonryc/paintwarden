@@ -428,6 +428,8 @@
   "licenseRead": "阅读许可证",
   "licenseSummary": "源代码可用。个人及其他非商业用途免费。商业使用需要获得许可。",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "测试版",
+  "scanFindPaints": "根据微缩模型照片查找颜料",
   "scanLoadFailed": "颜色库已更改或无法加载。请重试。",
   "scanExternal": "这张照片位于库外，无法取色。请将照片上传到库中以使用 Swatch Scan。",
   "scanSampleFailed": "无法从这张照片取色。请尝试重新上传。",

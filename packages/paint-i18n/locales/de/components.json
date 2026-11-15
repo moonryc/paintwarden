@@ -449,6 +449,8 @@
   "licenseRead": "Lizenz lesen",
   "licenseSummary": "Quellcode verfügbar. Für persönliche und andere nichtkommerzielle Nutzung kostenlos. Kommerzielle Nutzung erfordert eine Genehmigung.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Beta",
+  "scanFindPaints": "Finde Farben anhand eines Fotos deiner Miniatur",
   "scanLoadFailed": "Die Farbbibliothek wurde geändert oder konnte nicht geladen werden. Bitte erneut versuchen.",
   "scanExternal": "Dieses Foto liegt außerhalb des Tresors und kann nicht abgetastet werden. Lade ein Foto in den Tresor, um Swatch Scan zu nutzen.",
   "scanSampleFailed": "Dieses Foto konnte nicht abgetastet werden. Lade es erneut in den Tresor.",

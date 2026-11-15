@@ -449,6 +449,8 @@
   "licenseRead": "Read license",
   "licenseSummary": "Source-available. Free for personal and other non-commercial use. Commercial use requires permission.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Beta",
+  "scanFindPaints": "Find paints from your miniature’s photo",
   "scanLoadFailed": "The color library changed or could not load. Please try again.",
   "scanExternal": "This photo is hosted outside the vault and cannot be sampled. Upload a photo to the vault to use Swatch Scan.",
   "scanSampleFailed": "This photo could not be sampled. Try uploading it to the vault again.",

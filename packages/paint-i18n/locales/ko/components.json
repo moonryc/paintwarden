@@ -428,6 +428,8 @@
   "licenseRead": "라이선스 읽기",
   "licenseSummary": "소스 코드 공개. 개인 및 기타 비상업적 용도로 무료로 사용할 수 있습니다. 상업적 사용에는 허가가 필요합니다.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "베타",
+  "scanFindPaints": "미니어처 사진에서 도료 찾기",
   "scanLoadFailed": "색상 라이브러리가 변경되었거나 불러오지 못했습니다. 다시 시도하세요.",
   "scanExternal": "이 사진은 보관함 외부에 있어 색을 추출할 수 없습니다. Swatch Scan을 사용하려면 보관함에 사진을 업로드하세요.",
   "scanSampleFailed": "이 사진에서 색을 추출하지 못했습니다. 다시 업로드해 보세요.",

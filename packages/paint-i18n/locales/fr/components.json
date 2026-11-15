@@ -470,6 +470,8 @@
   "licenseRead": "Lire la licence",
   "licenseSummary": "Code source disponible. Gratuit pour un usage personnel et tout autre usage non commercial. Un usage commercial nécessite une autorisation.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Bêta",
+  "scanFindPaints": "Trouvez des peintures à partir d’une photo de votre figurine",
   "scanLoadFailed": "La bibliothèque de couleurs a changé ou ne peut pas se charger. Réessayez.",
   "scanExternal": "Cette photo est hébergée hors du coffre et ne peut pas être échantillonnée. Importez une photo dans le coffre pour utiliser Swatch Scan.",
   "scanSampleFailed": "Impossible d’échantillonner cette photo. Essayez de l’importer à nouveau.",

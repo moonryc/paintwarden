@@ -222,7 +222,7 @@ export const CompleteProjection: Story = {
     await expect(screen.getByRole("button", { name: "Close project" })).toBeVisible();
   },
 };
-// Swatch Scan sits with the other project actions and only appears when there is a photo to sample.
+// Swatch Scan belongs to recipe editing, never the read-only miniature actions.
 export const PhotoActions: Story = {
   render: (args) => (
     <ProjectConnection withPhoto>
@@ -231,10 +231,16 @@ export const PhotoActions: Story = {
   ),
   play: async ({ canvasElement }) => {
     const screen = within(canvasElement.ownerDocument.body);
-    const scan = await screen.findByRole("button", { name: "Swatch Scan" });
-    const edit = screen.getByRole("button", { name: "Edit" });
-    await expect(scan.getBoundingClientRect().top).toBeCloseTo(edit.getBoundingClientRect().top, 0);
-    await userEvent.click(scan);
+    await screen.findByRole("button", { name: "Edit recipe" });
+    await expect(screen.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Edit recipe" }));
+    const scan = await screen.findByRole("button", { name: /Swatch Scan.*Beta/ });
+    await expect(within(scan).getByText("Beta")).toBeVisible();
+    await expect(scan).toHaveAccessibleName("Swatch Scan Beta Find paints from your miniature’s photo");
+    await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    await expect(screen.queryByRole("button", { name: /Swatch Scan/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Edit recipe" }));
+    await userEvent.click(await screen.findByRole("button", { name: /Swatch Scan.*Beta/ }));
     await expect(await screen.findByRole("dialog", { name: "Swatch Scan" })).toBeInTheDocument();
   },
 };

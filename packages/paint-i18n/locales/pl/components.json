@@ -491,6 +491,8 @@
   "licenseRead": "Przeczytaj licencję",
   "licenseSummary": "Kod źródłowy jest dostępny. Bezpłatne do użytku osobistego i innych celów niekomercyjnych. Użytek komercyjny wymaga zgody.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Beta",
+  "scanFindPaints": "Znajdź farby na podstawie zdjęcia swojej figurki",
   "scanLoadFailed": "Biblioteka kolorów zmieniła się lub nie została wczytana. Spróbuj ponownie.",
   "scanExternal": "To zdjęcie jest poza skarbcem i nie można pobrać z niego koloru. Prześlij zdjęcie do skarbca, aby użyć Swatch Scan.",
   "scanSampleFailed": "Nie można pobrać koloru z tego zdjęcia. Spróbuj przesłać je ponownie.",

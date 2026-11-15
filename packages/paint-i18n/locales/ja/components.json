@@ -428,6 +428,8 @@
   "licenseRead": "ライセンスを読む",
   "licenseSummary": "ソースコード公開。個人利用およびその他の非商用利用は無料です。商用利用には許可が必要です。",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "ベータ版",
+  "scanFindPaints": "ミニチュアの写真から塗料を探す",
   "scanLoadFailed": "色ライブラリが変更されたか、読み込めませんでした。再試行してください。",
   "scanExternal": "この写真は保管庫の外にあるため色を採取できません。Swatch Scanを使うには写真を保管庫にアップロードしてください。",
   "scanSampleFailed": "この写真から色を採取できませんでした。もう一度アップロードしてください。",

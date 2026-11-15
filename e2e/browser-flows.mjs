@@ -16,7 +16,8 @@ const childFolder = "Synthetic nested folder";
 const photoMiniature = "Synthetic photo scout";
 const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const openFolder = (page, name) => page.getByTitle(`Open ${name}`, { exact: true });
-const actions = (page, name) => page.getByRole("button", { name: `Actions for ${name}`, exact: true });
+// Read-only folder grids intentionally hide action menus; observe the miniature itself.
+const miniatureTile = (page, name) => page.getByText(name, { exact: true });
 
 async function authenticate(page, setup) {
   await page.goto("/");
@@ -72,7 +73,7 @@ async function createMiniature(page, name, photo) {
   await dialog.waitFor({ state: "hidden" });
   // Creation opens the saved miniature drawer; await it before dismissing, not a sleep.
   await page.getByRole("button", { name: "Close project", exact: true }).click();
-  await actions(page, name).waitFor();
+  await miniatureTile(page, name).waitFor();
   assert.ok(body.data.createMiniature.miniatureId, "Creation returned a miniature id");
   return body.data.createMiniature;
 }
@@ -202,7 +203,7 @@ async function streamState(page) {
 }
 
 async function assertLiveUpdate(page, before, payload, name) {
-  await actions(page, name).waitFor();
+  await miniatureTile(page, name).waitFor();
   await page.waitForFunction(
     ({ count, revision }) =>
       window.__browserE2E.events.slice(count).some((event) => {
@@ -318,7 +319,7 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   const edit = first.getByRole("dialog", { name: "Edit miniature", exact: true });
   await edit.getByRole("button", { name: "Delete miniature", exact: true }).click();
   await edit.getByRole("button", { name: "Tap again to delete miniature", exact: true }).click();
-  await expect(actions(first, photoMiniature)).toHaveCount(0);
+  await expect(miniatureTile(first, photoMiniature)).toHaveCount(0);
   await createFolder(first, "Post-backup extra folder");
   const extraPhoto = await sharp({ create: { width: 800, height: 600, channels: 3, background: "#b74a31" } })
     .png()
@@ -354,8 +355,8 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
 
   await workbench(first);
   await enterNestedFolder(first);
-  await actions(first, photoMiniature).waitFor();
-  await expect(actions(first, "Post-backup extra miniature")).toHaveCount(0);
+  await miniatureTile(first, photoMiniature).waitFor();
+  await expect(miniatureTile(first, "Post-backup extra miniature")).toHaveCount(0);
   await expect(openFolder(first, "Post-backup extra folder")).toHaveCount(0);
   await verifyThumbnail(first, created.miniatureId, results.thumbnail.originalHash);
   await first.screenshot({ path: path.join(artifacts, "success.png"), animations: "disabled" });
@@ -365,6 +366,23 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
 export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
   const first = await newPage();
   await authenticate(first, true);
+  const noPhotoTitle = "Synthetic model without a photo";
+  await createMiniature(first, noPhotoTitle);
+  await expect(first.getByText(`Added ${noPhotoTitle}`, { exact: true })).toBeHidden();
+  await first.getByText(noPhotoTitle, { exact: true }).click();
+  for (const width of [1440, 390]) {
+    await first.setViewportSize({ width, height: 1050 });
+    await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+    await first.getByRole("button", { name: "Edit recipe", exact: true }).click();
+    await expect(first.getByRole("button", { name: "Done", exact: true })).toBeVisible();
+    await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+    await first.getByRole("button", { name: "Done", exact: true }).click();
+  }
+  await first.getByRole("button", { name: "Close project", exact: true }).click();
+  results.checks.push(
+    "PASS no-photo miniature has no Swatch Scan entry in view or recipe edit mode at desktop and phone widths",
+  );
+  await first.setViewportSize({ width: 1440, height: 1050 });
   const scanTitle = "Synthetic scan model";
   const scanPhoto = await sharp({ create: { width: 1024, height: 768, channels: 3, background: "#427ea8" } })
     .composite([
@@ -383,6 +401,40 @@ export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
     mimeType: "image/png",
     buffer: scanPhoto,
   });
+  // Exercise the relocated entry independently before the real sampling/ranking flow.
+  await expect(first.getByText(`Added ${scanTitle}`, { exact: true })).toBeHidden();
+  await first.getByText(scanTitle, { exact: true }).click();
+  const scanEntry = first.getByRole("button", { name: /Swatch Scan.*Beta/ });
+  await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  await first.getByRole("button", { name: "Edit recipe", exact: true }).click();
+  await expect(scanEntry).toBeEnabled();
+  await expect(scanEntry).toHaveText(/Swatch Scan.*Beta.*Find paints from your miniature/);
+  assert.equal(
+    await scanEntry.evaluate((entry) => {
+      const recipe = entry.closest("section");
+      const heading = recipe.querySelector("#paint-recipe-heading");
+      const schemes = recipe.querySelector("#recipe-schemes-heading");
+      const paints = recipe.querySelector("#recipe-paints-heading");
+      return (
+        Boolean(heading.compareDocumentPosition(entry) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        Boolean(entry.compareDocumentPosition(schemes) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+        Boolean(schemes.compareDocumentPosition(paints) & Node.DOCUMENT_POSITION_FOLLOWING)
+      );
+    }),
+    true,
+    "scan row follows Paint recipe heading, before Color schemes and Paint steps",
+  );
+  await scanEntry.click();
+  const scanDialog = first.getByRole("dialog", { name: "Swatch Scan", exact: true });
+  await expect(scanDialog.getByRole("button", { name: "Sample at crosshair" })).toBeEnabled();
+  await scanDialog.getByRole("button", { name: "Close", exact: true }).click();
+  await expect(scanEntry).toBeVisible();
+  await first.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(first.getByRole("button", { name: /Swatch Scan/ })).toHaveCount(0);
+  await first.getByRole("button", { name: "Close project", exact: true }).click();
+  results.checks.push(
+    "PASS uploaded-photo Swatch Scan Beta entry opens the canvas from recipe edit mode and hides on Done",
+  );
   await checkSchemeRanking({
     page: first,
     miniatureId: scanModel.miniatureId,

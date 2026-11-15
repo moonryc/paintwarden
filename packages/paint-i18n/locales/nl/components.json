@@ -449,6 +449,8 @@
   "licenseRead": "Licentie lezen",
   "licenseSummary": "Broncode beschikbaar. Gratis voor persoonlijk en ander niet-commercieel gebruik. Commercieel gebruik vereist toestemming.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Bèta",
+  "scanFindPaints": "Vind verf aan de hand van een foto van je miniatuur",
   "scanLoadFailed": "De kleurenbibliotheek is gewijzigd of kon niet laden. Probeer het opnieuw.",
   "scanExternal": "Deze foto staat buiten de kluis en kan niet worden bemonsterd. Upload een foto naar de kluis om Swatch Scan te gebruiken.",
   "scanSampleFailed": "Deze foto kon niet worden bemonsterd. Upload de foto opnieuw.",

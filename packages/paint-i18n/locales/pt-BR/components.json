@@ -470,6 +470,8 @@
   "licenseRead": "Ler licença",
   "licenseSummary": "Código-fonte disponível. Gratuito para uso pessoal e outros usos não comerciais. O uso comercial requer permissão.",
   "scanTitle": "Swatch Scan",
+  "scanBeta": "Beta",
+  "scanFindPaints": "Encontre tintas a partir de uma foto da sua miniatura",
   "scanLoadFailed": "A biblioteca de cores mudou ou não pôde ser carregada. Tente novamente.",
   "scanExternal": "Esta foto está fora do cofre e não pode ser amostrada. Envie uma foto ao cofre para usar Swatch Scan.",
   "scanSampleFailed": "Não foi possível amostrar esta foto. Tente enviá-la novamente.",
