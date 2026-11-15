@@ -308,7 +308,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, [shelfItems.length, hasQuery, hasShelf]);
+  }, [shelfItems.length, hasQuery, hasShelf, view]);
   const shelfColumns =
     shelfViewport.width >= 1100 ? 5 : shelfViewport.width >= 840 ? 4 : shelfViewport.width >= 600 ? 3 : 2;
   const shelfGap = shelfViewport.width >= 600 ? 16 : 12;
@@ -369,7 +369,9 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
     setPendingShelfFocus({ index, origin });
   };
   return (
+    // Only the visible route surface changes identity; its folder/query hooks stay mounted.
     <Box
+      key={view}
       component="div"
       sx={{
         minWidth: 0,

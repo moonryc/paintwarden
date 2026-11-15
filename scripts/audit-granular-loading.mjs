@@ -109,7 +109,14 @@ function observe() {
         value: entry.value,
         recentInput: entry.hadRecentInput,
         at: entry.startTime,
+        fromStart: entry.startTime - window.__layoutAudit.start,
+        fromShell:
+          window.__layoutAudit.shellAt === null ? null : entry.startTime - window.__layoutAudit.shellAt,
         sources: entry.sources?.map((s) => s.node?.outerHTML?.slice(0, 220)),
+        rects: entry.sources?.map((s) => ({
+          previous: s.previousRect.toJSON(),
+          current: s.currentRect.toJSON(),
+        })),
       });
   }).observe({ type: "layout-shift", buffered: true });
   function frame() {
