@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "Handleiding voor bètatesters (Engels)",
   "website.privacyNetworkLink": "Privacy en netwerkactiviteit (Engels)",
   "website.securityReportLink": "Een beveiligingslek melden (Engels)",
-  "download.betaScope": "Bèta 1.0.0-beta.1 voor vrienden en familie: lees de handleiding voor installatiewaarschuwingen, back-ups en handmatige Mac-updates. Gebruik alleen pakketten die op de releasepagina worden aangeboden en zijn goedgekeurd. Windows is optioneel."
+  "download.betaScope": "Bèta 1.0.0-beta.1 voor vrienden en familie: lees de handleiding voor installatiewaarschuwingen, back-ups en handmatige Mac-updates. Gebruik alleen pakketten die op de releasepagina worden aangeboden en zijn goedgekeurd. Windows is optioneel.",
+  "download.comingSoon": "Downloads zijn binnenkort beschikbaar: Paintwarden is in een besloten bèta"
 }

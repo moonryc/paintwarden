@@ -19,7 +19,15 @@ import { useEffect, useState } from "react";
 
 import { Wordmark } from "./components/primitives";
 import { siteT as t, useSiteLanguage, languages } from "./i18n";
-import { betaTesterGuide, koFi, privacyNetwork, releases, repository, securityReport } from "./links";
+import {
+  betaTesterGuide,
+  koFi,
+  privacyNetwork,
+  releases,
+  releasesAvailable,
+  repository,
+  securityReport,
+} from "./links";
 import { DocsPage } from "./pages/DocsPage";
 import { DownloadPage } from "./pages/DownloadPage";
 import { FaqPage } from "./pages/FaqPage";
@@ -272,7 +280,11 @@ function Footer() {
           </Typography>
           <Box component="ul" sx={{ listStyle: "none", m: 0, p: 0, display: "grid", gap: 1.25 }}>
             <li>
-              <Box component="a" href={`${repository}/blob/main/LICENSE`} sx={footerLink}>
+              <Box
+                component="a"
+                href={releasesAvailable ? `${repository}/blob/main/LICENSE` : "/LICENSE"}
+                sx={footerLink}
+              >
                 {t("website.license")}
               </Box>
             </li>
@@ -281,27 +293,32 @@ function Footer() {
                 {t("website.openSourceLicenses")}
               </Box>
             </li>
-            {[
-              [betaTesterGuide, t("website.betaTesterGuide")],
-              [privacyNetwork, t("website.privacyNetworkLink")],
-              [securityReport, t("website.securityReportLink")],
-            ].map(([href, label]) => (
-              <li key={href}>
-                <Box component="a" href={href} target="_blank" rel="noopener noreferrer" sx={footerLink}>
-                  {label}
-                </Box>
-              </li>
-            ))}
-            <li>
-              <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
-                <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}
-              </Box>
-            </li>
-            <li>
-              <Box component="a" href={releases} target="_blank" rel="noreferrer" sx={footerLink}>
-                <OpenInNewIcon sx={{ fontSize: 17 }} /> {t("website.releases")}
-              </Box>
-            </li>
+            {releasesAvailable &&
+              [
+                [betaTesterGuide, t("website.betaTesterGuide")],
+                [privacyNetwork, t("website.privacyNetworkLink")],
+                [securityReport, t("website.securityReportLink")],
+              ].map(([href, label]) => (
+                <li key={href}>
+                  <Box component="a" href={href} target="_blank" rel="noopener noreferrer" sx={footerLink}>
+                    {label}
+                  </Box>
+                </li>
+              ))}
+            {releasesAvailable && (
+              <>
+                <li>
+                  <Box component="a" href={repository} target="_blank" rel="noreferrer" sx={footerLink}>
+                    <GitHub sx={{ fontSize: 17 }} /> {t("website.sourceCode")}
+                  </Box>
+                </li>
+                <li>
+                  <Box component="a" href={releases} target="_blank" rel="noreferrer" sx={footerLink}>
+                    <OpenInNewIcon sx={{ fontSize: 17 }} /> {t("website.releases")}
+                  </Box>
+                </li>
+              </>
+            )}
             <li>
               <Box component="a" href={koFi} target="_blank" rel="noopener noreferrer" sx={footerLink}>
                 <CoffeeOutlined sx={{ fontSize: 17 }} /> {t("website.supportOnKoFi")}

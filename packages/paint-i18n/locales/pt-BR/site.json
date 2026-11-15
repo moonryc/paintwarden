@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "Guia para testar a beta (inglês)",
   "website.privacyNetworkLink": "Privacidade e atividade de rede (inglês)",
   "website.securityReportLink": "Relatar uma vulnerabilidade (inglês)",
-  "download.betaScope": "Beta 1.0.0-beta.1 para amigos e familiares: leia o guia para avisos de instalação, backups e atualizações manuais no Mac. Use apenas os pacotes oferecidos e validados na página da versão. Windows é opcional."
+  "download.betaScope": "Beta 1.0.0-beta.1 para amigos e familiares: leia o guia para avisos de instalação, backups e atualizações manuais no Mac. Use apenas os pacotes oferecidos e validados na página da versão. Windows é opcional.",
+  "download.comingSoon": "Downloads disponíveis em breve: Paintwarden está em beta privado"
 }

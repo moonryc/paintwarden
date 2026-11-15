@@ -13,7 +13,7 @@ import type { ComponentType, ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Screenshot, Surface, serif } from "../components/primitives";
 import { siteT as t } from "../i18n";
-import { repository } from "../links";
+import { releasesAvailable, repository } from "../links";
 
 const steps = () => [
   {
@@ -72,7 +72,11 @@ const sections = (): Section[] => [
         <p>{t("docs.installedCatalogsStayAvailableOfflinePluginsFromGitHubCanBe")}</p>
         <p>
           {strong(t("docs.createPlugin"))} {t("docs.packagesYourOwnPaintsSchemesAndTemplatesAsAReady")}{" "}
-          <a href={`${repository}/blob/main/docs/source-format.md`} target="_blank" rel="noreferrer">
+          <a
+            href={releasesAvailable ? `${repository}/blob/main/docs/source-format.md` : undefined}
+            target="_blank"
+            rel="noreferrer"
+          >
             {t("docs.sourceFormatGuide")}
           </a>{" "}
           {t("docs.describesEveryFile")}
@@ -200,7 +204,11 @@ const sections = (): Section[] => [
         </p>
         <p>
           {strong(t("docs.restoreFromABackup"))} {t("docs.showsWhatTheFileContainsThenEitherMergesItInto")}{" "}
-          <a href={`${repository}#storage-and-backups`} target="_blank" rel="noreferrer">
+          <a
+            href={releasesAvailable ? `${repository}#storage-and-backups` : undefined}
+            target="_blank"
+            rel="noreferrer"
+          >
             {t("docs.repositoryGuide")}
           </a>{" "}
           {t("docs.alsoCoversCopyingTheDockerVolume")}

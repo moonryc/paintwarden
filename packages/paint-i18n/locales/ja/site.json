@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "ベータテスター向けガイド（英語）",
   "website.privacyNetworkLink": "プライバシーとネットワーク通信（英語）",
   "website.securityReportLink": "脆弱性を報告（英語）",
-  "download.betaScope": "友人・家族向けのベータ 1.0.0-beta.1 です。インストール時の警告、バックアップ、Mac の手動更新についてガイドをお読みください。リリースページで提供され、受け入れ確認済みのパッケージのみを使用してください。Windows 版は任意です。"
+  "download.betaScope": "友人・家族向けのベータ 1.0.0-beta.1 です。インストール時の警告、バックアップ、Mac の手動更新についてガイドをお読みください。リリースページで提供され、受け入れ確認済みのパッケージのみを使用してください。Windows 版は任意です。",
+  "download.comingSoon": "ダウンロードは近日公開予定です：Paintwarden は現在プライベートベータ版です"
 }

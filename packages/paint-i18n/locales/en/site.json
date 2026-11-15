@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "Beta tester guide (English)",
   "website.privacyNetworkLink": "Privacy and network activity (English)",
   "website.securityReportLink": "Report a security vulnerability (English)",
-  "download.betaScope": "Friends-and-family beta 1.0.0-beta.1: read the tester guide for installation warnings, backups and manual Mac upgrades. Use only packages offered and accepted on the release page. Windows is optional."
+  "download.betaScope": "Friends-and-family beta 1.0.0-beta.1: read the tester guide for installation warnings, backups and manual Mac upgrades. Use only packages offered and accepted on the release page. Windows is optional.",
+  "download.comingSoon": "Downloads coming soon: Paintwarden is in a private beta"
 }

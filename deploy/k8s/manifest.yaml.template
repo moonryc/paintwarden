@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: websites
+  name: paintwarden-site
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: paintwarden-site
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: paintwarden-site
+        app.kubernetes.io/part-of: public-websites
+    spec:
+      serviceAccountName: website-runtime
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: paintwarden-site
+          image: __IMAGE__
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: runtime-tmp
+              mountPath: /tmp
+      volumes:
+        - name: runtime-tmp
+          emptyDir:
+            sizeLimit: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: websites
+  name: paintwarden-site
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: paintwarden-site
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: paintwarden-site-https-redirect
+  namespace: websites
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: paintwarden-site-canonical-host
+  namespace: websites
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+spec:
+  redirectRegex:
+    regex: '^https://www\.paintwarden\.com/(.*)'
+    replacement: 'https://paintwarden.com/${1}'
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paintwarden-site-http
+  namespace: websites
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: websites-paintwarden-site-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: paintwarden.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: paintwarden-site
+                port:
+                  name: http
+    - host: www.paintwarden.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: paintwarden-site
+                port:
+                  name: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paintwarden-site
+  namespace: websites
+  labels:
+    app.kubernetes.io/name: paintwarden-site
+    app.kubernetes.io/part-of: public-websites
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.middlewares: websites-paintwarden-site-canonical-host@kubernetescrd
+    traefik.ingress.kubernetes.io/router.priority: "10"
+    # No certresolver until both DNS names point here. Run enable-tls.sh once ready.
+    __CERTRESOLVER_ANNOTATION__
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - paintwarden.com
+        - www.paintwarden.com
+  rules:
+    - host: paintwarden.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: paintwarden-site
+                port:
+                  name: http
+    - host: www.paintwarden.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: paintwarden-site
+                port:
+                  name: http

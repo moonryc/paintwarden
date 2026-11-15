@@ -21,7 +21,7 @@ import { useState, type ReactNode } from "react";
 
 import { CtaBand, IconTile, PageIntro, Surface, serif } from "../components/primitives";
 import { siteT as t } from "../i18n";
-import { betaTesterGuide, releases, repository } from "../links";
+import { betaTesterGuide, releases, releasesAvailable, repository } from "../links";
 
 type Choice = "desktop" | "server";
 
@@ -345,6 +345,20 @@ function ServerPanel() {
 
 export function DownloadPage() {
   const [choice, setChoice] = useState<Choice>("desktop");
+  if (!releasesAvailable) {
+    return (
+      <Container maxWidth="lg">
+        <PageIntro
+          eyebrow={t("website.download")}
+          title={t("download.getPaintwarden")}
+          description={t("download.comingSoon")}
+        />
+        <Button href="/docs/" variant="outlined" endIcon={<ArrowForwardIcon />}>
+          {t("download.readHowToUseIt")}
+        </Button>
+      </Container>
+    );
+  }
   return (
     <Container maxWidth="lg">
       <PageIntro

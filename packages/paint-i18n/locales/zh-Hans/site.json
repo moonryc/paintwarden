@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "Beta 测试指南（英文）",
   "website.privacyNetworkLink": "隐私与网络活动（英文）",
   "website.securityReportLink": "报告安全漏洞（英文）",
-  "download.betaScope": "亲友测试版 1.0.0-beta.1：请阅读指南，了解安装警告、备份和 Mac 手动升级。仅使用发布页面提供且已通过验收的软件包。Windows 版为可选项。"
+  "download.betaScope": "亲友测试版 1.0.0-beta.1：请阅读指南，了解安装警告、备份和 Mac 手动升级。仅使用发布页面提供且已通过验收的软件包。Windows 版为可选项。",
+  "download.comingSoon": "即将开放下载：Paintwarden 目前处于封闭测试阶段"
 }

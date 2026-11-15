@@ -274,5 +274,6 @@
   "website.betaTesterGuide": "베타 테스터 가이드(영어)",
   "website.privacyNetworkLink": "개인정보 및 네트워크 활동(영어)",
   "website.securityReportLink": "보안 취약점 신고(영어)",
-  "download.betaScope": "친구와 가족을 위한 베타 1.0.0-beta.1입니다. 설치 경고, 백업, Mac 수동 업데이트는 가이드를 읽어 주세요. 릴리스 페이지에서 제공하고 승인한 패키지만 사용하세요. Windows는 선택 사항입니다."
+  "download.betaScope": "친구와 가족을 위한 베타 1.0.0-beta.1입니다. 설치 경고, 백업, Mac 수동 업데이트는 가이드를 읽어 주세요. 릴리스 페이지에서 제공하고 승인한 패키지만 사용하세요. Windows는 선택 사항입니다.",
+  "download.comingSoon": "다운로드가 곧 제공됩니다: Paintwarden은 현재 비공개 베타 버전입니다"
 }
