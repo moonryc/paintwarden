@@ -279,11 +279,17 @@ test("locked Windows builder receives the selected certificate and password, nev
   }
 });
 
-test("locked Mac builder resolves explicit ad-hoc identity with discovery disabled", async () => {
+test("locked Mac builder resolves explicit ad-hoc identity with an empty keychain", async () => {
   require("app-builder-lib");
   const { MacTargetHelper } = require("app-builder-lib/out/mac/MacTargetHelper");
+  const signer = require("app-builder-lib/out/codeSign/macCodeSign");
+  const previousCache = signer.findIdentityRawResult;
   const previous = process.env.CSC_IDENTITY_AUTO_DISCOVERY;
   try {
+    // An explicit qualifier (including "-") queries builder's identity cache even
+    // with discovery disabled. Seed the real cache, not identity-selection logic,
+    // so Linux/Windows tests never invoke the macOS-only security executable.
+    signer.findIdentityRawResult = Promise.resolve([]);
     process.env.CSC_IDENTITY_AUTO_DISCOVERY = "false";
     const helper = new MacTargetHelper({ forceCodeSigning: false });
     const identity = await helper.findSigningIdentity(false, false, "-", undefined, {
@@ -292,6 +298,7 @@ test("locked Mac builder resolves explicit ad-hoc identity with discovery disabl
     assert.equal(identity.name, "-");
     assert.equal(identity.hash, undefined);
   } finally {
+    signer.findIdentityRawResult = previousCache;
     if (previous === undefined) delete process.env.CSC_IDENTITY_AUTO_DISCOVERY;
     else process.env.CSC_IDENTITY_AUTO_DISCOVERY = previous;
   }
