@@ -97,7 +97,7 @@ export const ApolloPagingReachesFinalPaint: Story = {
     const loaded = () => Number(list().getAttribute("data-loaded-count"));
     try {
       await canvas.findByRole("list", { name: "Paint library" });
-      await expect(loaded()).toBe(48);
+      await waitFor(() => expect(loaded()).toBe(48));
       while (loaded() < catalog.length) {
         const before = loaded();
         window.scrollTo(0, document.body.scrollHeight);
@@ -124,9 +124,9 @@ export const ApolloKeyboardCrossesPageBoundary: Story = {
     const canvas = within(canvasElement);
     try {
       const list = await canvas.findByRole("list", { name: "Paint library" });
-      await expect(list).toHaveAttribute("data-loaded-count", "48");
+      await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
       window.scrollTo(0, document.body.scrollHeight);
-      const last = await waitFor(() => {
+      const last = await waitFor(async () => {
         const row = list.querySelector<HTMLElement>('[data-paint-index="47"]');
         if (!row) throw new Error("Last row of the first page is not rendered");
         return row;
@@ -160,8 +160,9 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
     const canvas = within(canvasElement);
     try {
       const list = await canvas.findByRole("list", { name: "Paint library" });
+      await waitFor(() => expect(list).toHaveAttribute("data-loaded-count", "48"));
       window.scrollTo(0, document.body.scrollHeight);
-      const last = await waitFor(() => {
+      const last = await waitFor(async () => {
         const row = list.querySelector<HTMLElement>('[data-paint-index="47"]');
         if (!row) throw new Error("Last row of the first page is not rendered");
         return row;
@@ -203,24 +204,24 @@ function libraryAtWidth(width: number): Story {
       const canvas = within(canvasElement);
       const list = await canvas.findByRole("list", { name: "Paint library" });
       const loaded = () => Number(list.getAttribute("data-loaded-count"));
-      const noOverflow = () => {
-        expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
-        expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth);
+      const noOverflow = async () => {
+        await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+        await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth);
       };
       try {
-        noOverflow();
+        await noOverflow();
         while (loaded() < longCatalog.length) {
           const before = loaded();
           window.scrollTo(0, document.documentElement.scrollHeight);
           await waitFor(() => expect(loaded()).toBeGreaterThan(before));
         }
         // Loading the last page precedes the virtualizer's height commit.
-        await waitFor(() => {
+        await waitFor(async () => {
           window.scrollTo(0, document.documentElement.scrollHeight);
-          expect(canvas.getByText(longCatalog.at(-1)!.name)).toBeVisible();
+          await expect(canvas.getByText(longCatalog.at(-1)!.name)).toBeVisible();
         });
-        expect(list.querySelectorAll("[data-paint-index]").length).toBeLessThan(longCatalog.length);
-        noOverflow();
+        await expect(list.querySelectorAll("[data-paint-index]").length).toBeLessThan(longCatalog.length);
+        await noOverflow();
       } finally {
         window.scrollTo(0, 0);
       }
@@ -232,6 +233,9 @@ export const LongNamesDesktop: Story = libraryAtWidth(1440);
 export const LongNamesLaptop: Story = libraryAtWidth(1024);
 export const LongNamesTablet: Story = libraryAtWidth(768);
 export const LongNamesPhone: Story = libraryAtWidth(390);
+export const LongNamesNarrowPhone: Story = libraryAtWidth(320);
+export const LongNamesSmallPhone: Story = libraryAtWidth(360);
+export const LongNamesWideDesktop: Story = libraryAtWidth(1280);
 
 export const ApolloLoading: Story = {
   render: (args) => (
@@ -241,15 +245,27 @@ export const ApolloLoading: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "paints");
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(canvas.queryByRole("list", { name: "Paint library" })).not.toBeInTheDocument();
-    await expect(await canvas.findByRole("list", { name: "Paint library" })).toBeInTheDocument();
-    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    const title = canvas.getByRole("heading", { level: 2 });
     const search = canvas.getByRole("textbox", { name: "Search brand, range, or paint…" });
+    const add = canvas.getByRole("button", { name: "Add paint" });
+    const plugin = canvas.getByRole("combobox", { name: "Plugin" });
+    const shell = [title, search, add, plugin];
+    const bounds = shell.map((element) => element.getBoundingClientRect());
+    const list = canvas.getByRole("list", { name: "Paint library" });
+    await expect(list).toHaveAttribute("aria-busy", "true");
+    await expect(plugin).toHaveAttribute("aria-disabled", "true");
+    await expect(canvasElement.querySelectorAll("[data-skeleton]")).toHaveLength(1);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await waitFor(() => expect(list).toHaveAttribute("aria-busy", "false"));
+    await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    for (const [index, element] of shell.entries()) {
+      const next = element.getBoundingClientRect();
+      await expect(next.top).toBeCloseTo(bounds[index].top, 0);
+      await expect(next.left).toBeCloseTo(bounds[index].left, 0);
+      await expect(next.width).toBeCloseTo(bounds[index].width, 0);
+      await expect(next.height).toBeCloseTo(bounds[index].height, 0);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await userEvent.type(search, "Fixture paint 359");
     // Query changes keep the toolbar mounted instead of returning to initial skeletons.
     await expect(search).toHaveFocus();

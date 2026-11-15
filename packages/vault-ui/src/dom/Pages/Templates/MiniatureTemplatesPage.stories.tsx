@@ -126,23 +126,30 @@ export const Loading: Story = {
   parameters: { queryDelay: 750 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "templates");
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(canvas.queryByPlaceholderText("Search templates…")).not.toBeInTheDocument();
+    const title = canvas.getByRole("heading", { level: 2 });
+    const search = canvas.getByRole("textbox", { name: "Search templates…" });
+    const shell = [title, search];
+    const bounds = shell.map((element) => element.getBoundingClientRect());
+    const skeleton = canvasElement.querySelector('[data-skeleton="templates"]');
+    await expect(skeleton).toBeInTheDocument();
+    await expect(skeleton?.closest("[aria-busy]")).toHaveAttribute("aria-busy", "true");
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await expect(await canvas.findByText("180 templates")).toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    for (const [index, element] of shell.entries()) {
+      const next = element.getBoundingClientRect();
+      await expect(next.top).toBeCloseTo(bounds[index].top, 0);
+      await expect(next.left).toBeCloseTo(bounds[index].left, 0);
+      await expect(next.width).toBeCloseTo(bounds[index].width, 0);
+      await expect(next.height).toBeCloseTo(bounds[index].height, 0);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     const card = await canvas.findByRole("button", { name: /Knight 000/ });
-    // Initial loading unmounts the grid; it still must measure its first mounted width.
     await expect(card.getBoundingClientRect().width).toBeGreaterThan(100);
     const grid = card.closest(".MuiCard-root")!.parentElement!.parentElement!;
-    await waitFor(async () => {
-      await expect(grid.getBoundingClientRect().height).toBeGreaterThan(
-        card.getBoundingClientRect().height * 2,
-      );
-    });
+    await waitFor(() =>
+      expect(grid.getBoundingClientRect().height).toBeGreaterThan(card.getBoundingClientRect().height * 2),
+    );
   },
 };
 

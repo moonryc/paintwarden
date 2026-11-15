@@ -1,4 +1,4 @@
-import { Button, MenuItem, TextField } from "@mui/material";
+import { Button, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,6 @@ import { FolderNameDialog } from "../../Components/FolderNameDialog";
 import { FolderPicker } from "../../Components/FolderPicker";
 import type { FolderView } from "../../Components/FolderTile";
 import { PageHeader } from "../../Components/PageHeader";
-import { PageSkeleton } from "../../Components/PageSkeletons";
 import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { SelectionBar } from "../../Components/SelectionBar";
 import { useFolderBrowser } from "../../graphql/folder-hooks";
@@ -30,7 +29,7 @@ import { TemplateEditorDialog } from "./TemplateEditorDialog";
 const CARD_BORDER = 1;
 
 export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
-  const { t, i18n } = useTranslation("pages");
+  const { t, i18n } = useTranslation(["pages", "components"]);
   const actions = useTemplateActions();
   const notify = useVaultStore((s) => s.notify);
   const [search, setSearch] = useState("");
@@ -86,8 +85,6 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [selected, setSelected] = useState<MiniatureTemplate | null>(null);
   // The template whose Delete was clicked once; a second click deletes it.
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  // The add tile leads the grid, so the grid shows even with no templates (as on Home).
-  const hasGrid = !initialLoading;
   const [adding, setAdding] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ gridTop: 0, gridWidth: 0, scrollY: 0, viewportHeight: 900 });
@@ -133,7 +130,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       window.removeEventListener("resize", schedule);
       observer.disconnect();
     };
-  }, [hasGrid]);
+  }, []);
   const { gridWidth } = viewport;
   const columns = gridWidth >= 1100 ? 5 : gridWidth >= 840 ? 4 : gridWidth >= 600 ? 3 : 2;
   const gap = gridWidth >= 600 ? 16 : 12;
@@ -142,11 +139,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const matching = searching ? mixedSearch.templates : (catalog?.templates ?? []);
   const folders = searching ? mixedSearch.folders : browser.visibleFolders;
   // The add tile leads the grid (not while searching), then folders, then templates.
-  const gridItems: (MiniatureTemplate | FolderView | null)[] = [
-    ...(searching ? [] : [null]),
-    ...folders,
-    ...matching,
-  ];
+  const gridItems: (MiniatureTemplate | FolderView | null | "loading")[] = initialLoading
+    ? [null, ...Array.from({ length: 9 }, () => "loading" as const)]
+    : [...(searching ? [] : [null]), ...folders, ...matching];
   const gridWindow = schemeGridWindow({
     itemCount: gridItems.length,
     columns,
@@ -185,9 +180,8 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       /* actions report the error */
     }
   };
-  if (initialLoading) return <PageSkeleton page="templates" />;
   return (
-    <>
+    <Box sx={{ minWidth: 0 }}>
       <PageHeader
         eyebrow={t("templatesLibrary")}
         title={t("templatesPageTitle")}
@@ -202,32 +196,38 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         placeholder={t("templatesSearchPlaceholder")}
       >
         <Box sx={filterGridSx}>
-          {!!catalogQuery.sourceCounts.length && (
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label={t("templatesPlugin")}
-              value={plugin}
-              onChange={(event) => setPlugin(event.target.value)}
-            >
-              <MenuItem value="ALL">{t("templatesAllPlugins")}</MenuItem>
-              {catalogQuery.sourceCounts
-                .filter((facet) => facet.key)
-                .map((facet) => (
-                  <MenuItem key={facet.key} value={facet.key}>
-                    {facet.label}
-                  </MenuItem>
-                ))}
-              <MenuItem value="NONE">{t("templatesNoPlugin")}</MenuItem>
-            </TextField>
-          )}
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label={t("templatesPlugin")}
+            value={plugin}
+            disabled={initialLoading}
+            slotProps={{
+              select: { renderValue: initialLoading ? () => t("components:loading") : undefined },
+            }}
+            onChange={(event) => setPlugin(event.target.value)}
+          >
+            <MenuItem value="ALL">{t("templatesAllPlugins")}</MenuItem>
+            {catalogQuery.sourceCounts
+              .filter((facet) => facet.key)
+              .map((facet) => (
+                <MenuItem key={facet.key} value={facet.key}>
+                  {facet.label}
+                </MenuItem>
+              ))}
+            <MenuItem value="NONE">{t("templatesNoPlugin")}</MenuItem>
+          </TextField>
           <TextField
             select
             fullWidth
             size="small"
             label={t("templatesCategory")}
             value={category}
+            disabled={initialLoading}
+            slotProps={{
+              select: { renderValue: initialLoading ? () => t("components:loading") : undefined },
+            }}
             onChange={(event) => {
               setCategory(event.target.value);
             }}
@@ -257,77 +257,92 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           if (!next) setSelectedIds([]);
         }}
       >
-        {(renderFolder) =>
-          hasGrid && (
-            <>
-              <Box
-                component="p"
-                sx={{
-                  m: 0,
-                  mb: 1.5,
-                  fontSize: "0.875rem",
-                  lineHeight: 10 / 7,
-                  color: "var(--ink-faint)",
-                }}
-              >
-                {searching
+        {(renderFolder) => (
+          <>
+            <Box
+              component="p"
+              sx={{
+                m: 0,
+                mb: 1.5,
+                fontSize: "0.875rem",
+                lineHeight: 10 / 7,
+                color: "var(--ink-faint)",
+              }}
+            >
+              {initialLoading
+                ? t("components:loading")
+                : searching
                   ? t("folders.resultsCount", { count: totalCount })
                   : t("templatesTotalCount", {
                       count: totalCount,
                       formattedCount: new Intl.NumberFormat(i18n.language).format(totalCount),
                     })}
+            </Box>
+            <Box
+              ref={gridRef}
+              aria-busy={loading}
+              aria-label={t("templatesPageTitle")}
+              data-skeleton={initialLoading ? "templates" : undefined}
+              sx={{ position: "relative", minWidth: 0 }}
+              style={{ height: gridWindow.totalHeight }}
+            >
+              <Box
+                sx={{
+                  position: "absolute",
+                  insetInline: 0,
+                  display: "grid",
+                  gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                  gap: `${gap}px`,
+                }}
+                style={{ top: gridWindow.topOffset }}
+              >
+                {gridItems.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) =>
+                  template === "loading" ? (
+                    <Skeleton
+                      key={`loading:${offset}`}
+                      aria-hidden="true"
+                      variant="rounded"
+                      animation={false}
+                      sx={{ height: rowHeight, minWidth: 0 }}
+                    />
+                  ) : template && "recursiveCount" in template ? (
+                    <Box
+                      key={`folder:${template.id}`}
+                      data-folder-index={gridWindow.startIndex + offset}
+                      sx={{ minWidth: 0 }}
+                    >
+                      {renderFolder(template, { width: "100%", height: "100%" })}
+                    </Box>
+                  ) : template ? (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      index={gridWindow.startIndex + offset}
+                      checked={selectedIds.includes(template.id)}
+                      onSelect={selectMode ? () => toggleSelected(template.id) : undefined}
+                      onOpen={() => (selectMode ? toggleSelected(template.id) : setSelected(template))}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Tab") return;
+                        const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
+                        if (next < 0 || next >= gridItems.length) return;
+                        if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
+                        event.preventDefault();
+                        focusTemplateAt(next);
+                      }}
+                    />
+                  ) : (
+                    <AddMiniatureTile
+                      key="add"
+                      title={t("templatesNewTemplate")}
+                      onClick={() => setAdding(true)}
+                      sx={{ width: "100%", height: "100%" }}
+                    />
+                  ),
+                )}
               </Box>
-              <Box ref={gridRef} sx={{ position: "relative" }} style={{ height: gridWindow.totalHeight }}>
-                <Box
-                  sx={{
-                    position: "absolute",
-                    insetInline: 0,
-                    display: "grid",
-                    gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-                    gap: `${gap}px`,
-                  }}
-                  style={{ top: gridWindow.topOffset }}
-                >
-                  {gridItems.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) =>
-                    template && "recursiveCount" in template ? (
-                      <Box
-                        key={`folder:${template.id}`}
-                        data-folder-index={gridWindow.startIndex + offset}
-                        sx={{ minWidth: 0 }}
-                      >
-                        {renderFolder(template, { width: "100%", height: "100%" })}
-                      </Box>
-                    ) : template ? (
-                      <TemplateCard
-                        key={template.id}
-                        template={template}
-                        index={gridWindow.startIndex + offset}
-                        checked={selectedIds.includes(template.id)}
-                        onSelect={selectMode ? () => toggleSelected(template.id) : undefined}
-                        onOpen={() => (selectMode ? toggleSelected(template.id) : setSelected(template))}
-                        onKeyDown={(event) => {
-                          if (event.key !== "Tab") return;
-                          const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
-                          if (next < 0 || next >= gridItems.length) return;
-                          if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
-                          event.preventDefault();
-                          focusTemplateAt(next);
-                        }}
-                      />
-                    ) : (
-                      <AddMiniatureTile
-                        key="add"
-                        title={t("templatesNewTemplate")}
-                        onClick={() => setAdding(true)}
-                        sx={{ width: "100%", height: "100%" }}
-                      />
-                    ),
-                  )}
-                </Box>
-              </Box>
-            </>
-          )
-        }
+            </Box>
+          </>
+        )}
       </FolderBrowser>
       <SelectionBar
         count={selectedIds.length}
@@ -340,7 +355,6 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
             {t("templatesLoadMoreTemplates")}
           </Button>
         )}
-        {loading && <Box role="status">{t("templatesLoadingTemplates")}</Box>}
       </Box>
       {selected && (
         <TemplateDetailsDialog
@@ -409,6 +423,6 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           onClose={() => setEditing(undefined)}
         />
       )}
-    </>
+    </Box>
   );
 }

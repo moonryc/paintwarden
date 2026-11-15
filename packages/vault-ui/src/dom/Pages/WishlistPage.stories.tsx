@@ -1,4 +1,4 @@
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
@@ -123,7 +123,7 @@ export const ProjectFilterAndPurchaseRetention: Story = {
     await expect(canvas.getByRole("button", { name: "Share list" })).toBeDisabled();
     await userEvent.click(canvas.getByRole("button", { name: `Increase ${finalPaint.name} quantity` }));
     await expect(canvas.getByRole("textbox", { name: `${finalPaint.name} quantity` })).toHaveValue("2");
-    await userEvent.click(canvas.getByRole("button", { name: `View all 1 project for ${finalPaint.name}` }));
+    await userEvent.click(canvas.getByRole("button", { name: "Used in 1 project" }));
     const dialog = await within(document.body).findByRole("dialog", {
       name: `Projects using ${finalPaint.name}`,
     });
@@ -136,7 +136,7 @@ export const AssociatedProjects: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     window.scrollTo(0, 0);
-    const button = await canvas.findByRole("button", { name: `View all 1 project for ${catalog[0].name}` });
+    const button = await canvas.findByRole("button", { name: "Used in 1 project" });
     await userEvent.click(button);
     const dialog = await within(document.body).findByRole("dialog", {
       name: `Projects using ${catalog[0].name}`,
@@ -300,15 +300,82 @@ export const Loading: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "wishlist");
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(canvas.queryByRole("combobox", { name: "Miniature" })).not.toBeInTheDocument();
+    const title = canvas.getByRole("heading", { level: 2 });
+    const search = canvas.getByRole("combobox", { name: "Miniature" });
+    const shell = [title, search];
+    const bounds = shell.map((element) => element.getBoundingClientRect());
+    const skeleton = canvasElement.querySelector('[data-skeleton="wishlist"]');
+    await expect(skeleton).toBeInTheDocument();
+    await expect(skeleton?.closest("[aria-busy]")).toHaveAttribute("aria-busy", "true");
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await expect(
       await canvas.findByRole("button", { name: `Mark ${paints.gold.name} as bought` }),
-    ).toBeVisible();
+    ).toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    for (const [index, element] of shell.entries()) {
+      const next = element.getBoundingClientRect();
+      await expect(next.top).toBeCloseTo(bounds[index].top, 0);
+      await expect(next.left).toBeCloseTo(bounds[index].left, 0);
+      await expect(next.width).toBeCloseTo(bounds[index].width, 0);
+      await expect(next.height).toBeCloseTo(bounds[index].height, 0);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+const overflowPaints = Array.from({ length: 18 }, (_, index) => ({
+  ...paints.gold,
+  id: `overflow-wishlist-${index}`,
+  name: `Paint ${index} ${"LongUnbrokenColorName".repeat(10)}`,
+  brand: `${index % 2 ? "A" : "B"} ${"LongUnbrokenBrandName".repeat(10)}`,
+  range: "LongUnbrokenRangeName".repeat(10),
+}));
+const overflowMissing = { ...overflowPaints[0], id: "overflow-missing" };
+const overflowProject = { ...miniatures.knight, title: "LongUnbrokenProjectName".repeat(15) };
+const overflowVault: State = {
+  ...largeVault,
+  catalog: [...overflowPaints, overflowMissing],
+  miniatures: [overflowProject],
+  paintStates: Object.fromEntries(overflowPaints.map((paint) => [paint.id, "WISHLIST"])),
+  paintRecords: Object.fromEntries(
+    overflowPaints.map((paint) => [paint.id, { state: "WISHLIST", stockLevel: "FULL", quantity: 0 }]),
+  ),
+  requirements: [...overflowPaints, overflowMissing].map((paint, index) => ({
+    ...requirements.black,
+    id: `overflow-requirement-${index}`,
+    miniatureId: overflowProject.id,
+    paintId: paint.id,
+  })),
+};
+
+// Regression: groups, paint/range names, expanded project issues and project titles
+// must shrink inside the page rather than widening the desktop document.
+export const LongNamesGroupedIssuesAndProjectsNoOverflow: Story = {
+  parameters: { vault: overflowVault },
+  render: (args) => (
+    <Box data-overflow-shelf sx={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
+      <WishlistPage {...args} />
+    </Box>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const shelf = canvasElement.querySelector<HTMLElement>("[data-overflow-shelf]")!;
+    window.scrollTo(0, 0);
+    await canvas.findByRole("button", { name: `Mark ${overflowPaints[0].name} as bought` });
+    await userEvent.click(canvas.getByRole("button", { expanded: false }));
+    await canvas.findByRole("button", { name: `Add ${overflowMissing.name} to wishlist` });
+    for (const width of [320, 360, 390, 768, 1024, 1280, 1440]) {
+      shelf.style.width = `${width}px`;
+      await waitFor(async () => {
+        await expect(shelf.scrollWidth).toBeLessThanOrEqual(shelf.clientWidth + 1);
+        await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+      });
+    }
+    await userEvent.click(canvas.getAllByRole("button", { name: "Used in 1 project" })[0]);
+    const dialog = await within(document.body).findByRole("dialog");
+    await within(dialog).findByText(overflowProject.title);
+    await expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth + 1);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await userEvent.keyboard("{Escape}");
   },
 };

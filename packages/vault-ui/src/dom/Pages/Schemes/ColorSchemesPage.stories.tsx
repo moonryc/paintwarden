@@ -45,6 +45,7 @@ const scheme = (index: number, seq: number) => ({
   previewSwatches: [{ paintId: "target-a", colorHex: "#884422" }],
   previewSwatchesTruncated: false,
   imageUrl: null,
+  thumbnailUrl: null,
   gradient: "linear-gradient(135deg, #884422 0%, #aabbcc 100%)",
   paintNames: "Copper base · Bronze highlight",
   previewMoreCount: 0,
@@ -246,13 +247,23 @@ export const Loading: Story = {
   parameters: { queryDelay: 750 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByRole("status")).toHaveAttribute("aria-live", "polite");
-    const skeletons = canvasElement.querySelectorAll("[data-skeleton]");
-    await expect(skeletons).toHaveLength(1);
-    await expect(skeletons[0]).toHaveAttribute("data-skeleton", "schemes");
-    await expect(skeletons[0]).toHaveAttribute("aria-busy", "true");
-    await expect(canvas.queryByPlaceholderText("Search schemes…")).not.toBeInTheDocument();
-    await expect(await canvas.findByRole("button", { name: /Bronze armor 00/ })).toBeVisible();
+    const title = canvas.getByRole("heading", { level: 2 });
+    const search = canvas.getByRole("textbox", { name: "Search schemes…" });
+    const shell = [title, search];
+    const bounds = shell.map((element) => element.getBoundingClientRect());
+    const skeleton = canvasElement.querySelector('[data-skeleton="schemes"]');
+    await expect(skeleton).toBeInTheDocument();
+    await expect(skeleton?.closest("[aria-busy]")).toHaveAttribute("aria-busy", "true");
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+    await expect(await canvas.findByRole("button", { name: /Bronze armor 00/ })).toBeInTheDocument();
     await expect(canvasElement.querySelector("[data-skeleton]")).not.toBeInTheDocument();
+    for (const [index, element] of shell.entries()) {
+      const next = element.getBoundingClientRect();
+      await expect(next.top).toBeCloseTo(bounds[index].top, 0);
+      await expect(next.left).toBeCloseTo(bounds[index].left, 0);
+      await expect(next.width).toBeCloseTo(bounds[index].width, 0);
+      await expect(next.height).toBeCloseTo(bounds[index].height, 0);
+    }
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };

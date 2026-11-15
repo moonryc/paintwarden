@@ -1,4 +1,4 @@
-import { Button, MenuItem, TextField } from "@mui/material";
+import { Button, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isColorCategory } from "@paintwarden/core/color-categories";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { EmptyState } from "../../Components/EmptyState";
 import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
-import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
 import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { StableAutocomplete } from "../../Components/StableAutocomplete";
@@ -50,8 +49,16 @@ const readinessOptions = [
   ["MISSING", "schemesMissing"],
 ] as const;
 
+const schemeGridSx = {
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr)",
+  gap: 1.5,
+  [up.sm]: { gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 2 },
+  [up.xl]: { gridTemplateColumns: "repeat(3, minmax(0, 1fr))" },
+} as const;
+
 export function ColorSchemesPage() {
-  const { t, i18n } = useTranslation("pages");
+  const { t, i18n } = useTranslation(["pages", "components"]);
   const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language);
   const [editing, setEditing] = useState<string | null | undefined>(undefined);
   const [search, setSearch] = useState(""),
@@ -176,9 +183,8 @@ export function ColorSchemesPage() {
   useEffect(() => {
     if (hasNextPage && !loading && !error && gridWindow.endIndex >= schemes.length - columns * 3) loadMore();
   }, [hasNextPage, loading, error, loadMore, gridWindow.endIndex, schemes.length, columns]);
-  if (initialLoading) return <PageSkeleton page="schemes" />;
   return (
-    <Box sx={{ "& .MuiFormLabel-root.Mui-focused": { color: "var(--ink)" } }}>
+    <Box sx={{ minWidth: 0, "& .MuiFormLabel-root.Mui-focused": { color: "var(--ink)" } }}>
       <PageHeader
         eyebrow={t("schemesEyebrow")}
         title={t("schemesTitle")}
@@ -194,226 +200,230 @@ export function ColorSchemesPage() {
           </Button>
         }
       />
-      {globalCount > 0 ||
-      result.loading ||
-      Boolean(result.error) ||
-      Boolean(q) ||
-      categoryFilter !== "ALL" ||
-      sourceFilter !== "ALL" ||
-      selectedPaints.length > 0 ? (
-        <>
-          <FilterToolbar
-            search={search}
-            setSearch={setSearch}
-            placeholder={t("schemesSearch")}
-            singleLineFilters
+      <FilterToolbar
+        search={search}
+        setSearch={setSearch}
+        placeholder={t("schemesSearch")}
+        singleLineFilters
+        disabled={initialLoading}
+      >
+        <Box component="div" sx={filterGridSx}>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label={t("schemesPlugin")}
+            value={sourceFilter}
+            disabled={initialLoading}
+            slotProps={{
+              select: { renderValue: initialLoading ? () => t("components:loading") : undefined },
+            }}
+            onChange={(event) => setSourceFilter(event.target.value)}
           >
-            <Box component="div" sx={filterGridSx}>
-              {sourceOptions.length > 0 && (
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  label={t("schemesPlugin")}
-                  value={sourceFilter}
-                  onChange={(event) => setSourceFilter(event.target.value)}
-                >
-                  <MenuItem value="ALL">{t("schemesAllPlugins")}</MenuItem>
-                  {sourceOptions.map((source) => (
-                    <MenuItem key={source.key} value={source.key}>
-                      {source.label}
-                    </MenuItem>
-                  ))}
-                  <MenuItem value="NONE">{t("schemesNoPlugin")}</MenuItem>
-                </TextField>
-              )}
+            <MenuItem value="ALL">{t("schemesAllPlugins")}</MenuItem>
+            {sourceOptions.map((source) => (
+              <MenuItem key={source.key} value={source.key}>
+                {source.label}
+              </MenuItem>
+            ))}
+            <MenuItem value="NONE">{t("schemesNoPlugin")}</MenuItem>
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label={t("schemesColorCategory")}
+            value={categoryFilter}
+            disabled={initialLoading}
+            slotProps={{
+              select: { renderValue: initialLoading ? () => t("components:loading") : undefined },
+            }}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <MenuItem value="ALL">{t("schemesAllCount", { count: number.format(globalCount) })}</MenuItem>
+            {usedCategories.map((category) => (
+              <MenuItem key={category.key} value={category.key || "UNCATEGORIZED"}>
+                {t("schemesFilterCount", {
+                  label: isColorCategory(category.key)
+                    ? t(categoryKeys[category.key])
+                    : category.key === ""
+                      ? t("schemesUncategorized")
+                      : category.label,
+                  count: number.format(category.count),
+                })}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label={t("schemesStatus")}
+            value={readiness}
+            disabled={initialLoading}
+            slotProps={{
+              select: { renderValue: initialLoading ? () => t("components:loading") : undefined },
+            }}
+            onChange={(e) => setReadiness(e.target.value as Readiness)}
+          >
+            {readinessOptions.map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {t("schemesFilterCount", {
+                  label: t(label),
+                  count: number.format(readinessCount(value)),
+                })}
+              </MenuItem>
+            ))}
+          </TextField>
+          <StableAutocomplete<Paint, true, false, false>
+            multiple
+            disabled={initialLoading}
+            fullWidth
+            size="small"
+            limitTags={2}
+            filterSelectedOptions
+            options={paintMatches}
+            loading={paintOptions.loading}
+            noOptionsText={paintOptions.error ? t("schemesPaintsLoadError") : t("schemesNoPaintMatches")}
+            inputValue={paintQuery}
+            onInputChange={(_, value) => setPaintQuery(value)}
+            value={selectedPaints}
+            onChange={(_, paints) => setSelectedPaints(paints)}
+            getOptionLabel={(paint) => paint.name}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            filterOptions={(options) => options}
+            renderInput={(params) => (
               <TextField
-                select
-                fullWidth
-                size="small"
-                label={t("schemesColorCategory")}
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-              >
-                <MenuItem value="ALL">{t("schemesAllCount", { count: number.format(globalCount) })}</MenuItem>
-                {usedCategories.map((category) => (
-                  <MenuItem key={category.key} value={category.key || "UNCATEGORIZED"}>
-                    {t("schemesFilterCount", {
-                      label: isColorCategory(category.key)
-                        ? t(categoryKeys[category.key])
-                        : category.key === ""
-                          ? t("schemesUncategorized")
-                          : category.label,
-                      count: number.format(category.count),
-                    })}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label={t("schemesStatus")}
-                value={readiness}
-                onChange={(e) => setReadiness(e.target.value as Readiness)}
-              >
-                {readinessOptions.map(([value, label]) => (
-                  <MenuItem key={value} value={value}>
-                    {t("schemesFilterCount", {
-                      label: t(label),
-                      count: number.format(readinessCount(value)),
-                    })}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <StableAutocomplete<Paint, true, false, false>
-                multiple
-                fullWidth
-                size="small"
-                limitTags={2}
-                filterSelectedOptions
-                options={paintMatches}
-                loading={paintOptions.loading}
-                noOptionsText={paintOptions.error ? t("schemesPaintsLoadError") : t("schemesNoPaintMatches")}
-                inputValue={paintQuery}
-                onInputChange={(_, value) => setPaintQuery(value)}
-                value={selectedPaints}
-                onChange={(_, paints) => setSelectedPaints(paints)}
-                getOptionLabel={(paint) => paint.name}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                filterOptions={(options) => options}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("schemesUsesPaints")}
-                    placeholder={t("schemesSearchPaints")}
-                    error={Boolean(paintOptions.error)}
-                    helperText={paintOptions.error?.message}
-                  />
-                )}
-                renderOption={(props, paint) => {
-                  const { key, ...optionProps } = props;
-                  return (
-                    <Box component="li" key={key} {...optionProps} sx={{ display: "flex", gap: 1.5 }}>
-                      <PaintBottle paint={paint} size="sm" />
-                      <Box component="span" sx={{ minWidth: 0 }}>
-                        <Box component="span" sx={{ display: "block", fontWeight: 700 }}>
-                          {paint.name}
-                        </Box>
-                        <Box
-                          component="span"
-                          sx={{ display: "block", color: "text.secondary", fontSize: 12 }}
-                        >
-                          {paint.brand} · {paint.range}
-                        </Box>
-                      </Box>
-                    </Box>
-                  );
-                }}
-                sx={{
-                  minWidth: 0,
-                  gridColumn: { sm: "1 / -1" },
-                  [up.xl]: { gridColumn: "auto" },
-                }}
+                {...params}
+                label={t("schemesUsesPaints")}
+                placeholder={initialLoading ? t("components:loading") : t("schemesSearchPaints")}
+                error={Boolean(paintOptions.error)}
+                helperText={paintOptions.error?.message}
               />
-            </Box>
-          </FilterToolbar>
-          {result.error && <QueryErrorNotice error={result.error.message} onRetry={result.refetch} />}
-          {result.loading && schemes.length === 0 && (
-            <Box role="status" sx={{ mb: 2 }}>
-              {t("schemesLoading")}
-            </Box>
-          )}
-          {schemes.length ? (
-            <Box
-              component="div"
-              ref={gridRef}
-              sx={{
-                position: "relative",
-              }}
-              style={{ height: gridWindow.totalHeight }}
-            >
+            )}
+            renderOption={(props, paint) => {
+              const { key, ...optionProps } = props;
+              return (
+                <Box component="li" key={key} {...optionProps} sx={{ display: "flex", gap: 1.5 }}>
+                  <PaintBottle paint={paint} size="sm" />
+                  <Box component="span" sx={{ minWidth: 0 }}>
+                    <Box component="span" sx={{ display: "block", fontWeight: 700 }}>
+                      {paint.name}
+                    </Box>
+                    <Box component="span" sx={{ display: "block", color: "text.secondary", fontSize: 12 }}>
+                      {paint.brand} · {paint.range}
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            }}
+            sx={{
+              minWidth: 0,
+              gridColumn: { sm: "1 / -1" },
+              [up.xl]: { gridColumn: "auto" },
+            }}
+          />
+        </Box>
+      </FilterToolbar>
+      <Box component="section" aria-label={t("schemesTitle")} aria-busy={result.loading} sx={{ minWidth: 0 }}>
+        {initialLoading ? (
+          <Box data-skeleton="schemes" aria-hidden="true" sx={schemeGridSx}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} variant="rounded" animation={false} height={288} />
+            ))}
+          </Box>
+        ) : globalCount > 0 ||
+          result.loading ||
+          Boolean(result.error) ||
+          Boolean(q) ||
+          categoryFilter !== "ALL" ||
+          sourceFilter !== "ALL" ||
+          selectedPaints.length > 0 ? (
+          <>
+            {result.error && <QueryErrorNotice error={result.error.message} onRetry={result.refetch} />}
+            {schemes.length ? (
               <Box
                 component="div"
+                ref={gridRef}
                 sx={{
-                  position: "absolute",
-                  insetInline: 0,
-                  display: "grid",
-                  gap: 1.5,
-                  [up.sm]: {
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                    gap: 2,
-                  },
-                  [up.xl]: {
-                    gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  },
+                  position: "relative",
                 }}
-                style={{ top: gridWindow.topOffset }}
+                style={{ height: gridWindow.totalHeight }}
               >
-                {schemes.slice(gridWindow.startIndex, gridWindow.endIndex).map((scheme, visibleIndex) => {
-                  const index = gridWindow.startIndex + visibleIndex;
-                  return (
-                    <SchemeCard
-                      key={scheme.id}
-                      scheme={schemeSummaryModel(scheme)}
-                      summary={{
-                        gradient: scheme.gradient,
-                        previewUrl: scheme.imageUrl,
-                        uses: scheme.usageCount,
-                        paintNames: scheme.paintNames,
-                        previewMoreCount: scheme.previewMoreCount,
-                      }}
-                      index={index}
-                      available={scheme.availableCount}
-                      total={scheme.paintCount}
-                      onOpen={setEditing}
-                      onKeyDown={handleSchemeKeyDown}
-                    />
-                  );
-                })}
+                <Box
+                  component="div"
+                  sx={{
+                    position: "absolute",
+                    insetInline: 0,
+                    ...schemeGridSx,
+                  }}
+                  style={{ top: gridWindow.topOffset }}
+                >
+                  {schemes.slice(gridWindow.startIndex, gridWindow.endIndex).map((scheme, visibleIndex) => {
+                    const index = gridWindow.startIndex + visibleIndex;
+                    return (
+                      <SchemeCard
+                        key={scheme.id}
+                        scheme={schemeSummaryModel(scheme)}
+                        summary={{
+                          gradient: scheme.gradient,
+                          previewUrl: scheme.imageUrl,
+                          uses: scheme.usageCount,
+                          paintNames: scheme.paintNames,
+                          previewMoreCount: scheme.previewMoreCount,
+                        }}
+                        index={index}
+                        available={scheme.availableCount}
+                        total={scheme.paintCount}
+                        onOpen={setEditing}
+                        onKeyDown={handleSchemeKeyDown}
+                      />
+                    );
+                  })}
+                </Box>
               </Box>
-            </Box>
-          ) : !result.loading && !result.error ? (
-            <EmptyState
-              icon={<SearchX size={27} />}
-              title={t("schemesNoMatches")}
-              body={
-                readiness === "READY" && !q && categoryFilter === "ALL"
-                  ? t("schemesNoReady")
-                  : t("schemesTryFilters")
-              }
-              action={
-                <Button variant="outlined" onClick={clearFilters}>
-                  {t("schemesClearFilters")}
+            ) : !result.loading && !result.error ? (
+              <EmptyState
+                icon={<SearchX size={27} />}
+                title={t("schemesNoMatches")}
+                body={
+                  readiness === "READY" && !q && categoryFilter === "ALL"
+                    ? t("schemesNoReady")
+                    : t("schemesTryFilters")
+                }
+                action={
+                  <Button variant="outlined" onClick={clearFilters}>
+                    {t("schemesClearFilters")}
+                  </Button>
+                }
+              />
+            ) : null}
+            {result.hasNextPage && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <Button onClick={result.loadMore} disabled={result.loading}>
+                  {t("schemesLoadMore")}
                 </Button>
-              }
-            />
-          ) : null}
-          {result.hasNextPage && (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <Button onClick={result.loadMore} disabled={result.loading}>
-                {t("schemesLoadMore")}
+              </Box>
+            )}
+          </>
+        ) : (
+          <EmptyState
+            icon={<Layers size={27} />}
+            title={t("schemesEmptyTitle")}
+            body={t("schemesEmptyBody")}
+            action={
+              <Button
+                variant="contained"
+                {...dialogPreloadHandlers("schemes")}
+                onClick={() => setEditing(null)}
+                startIcon={<Plus size={16} />}
+              >
+                {t("schemesCreateFirst")}
               </Button>
-            </Box>
-          )}
-        </>
-      ) : (
-        <EmptyState
-          icon={<Layers size={27} />}
-          title={t("schemesEmptyTitle")}
-          body={t("schemesEmptyBody")}
-          action={
-            <Button
-              variant="contained"
-              {...dialogPreloadHandlers("schemes")}
-              onClick={() => setEditing(null)}
-              startIcon={<Plus size={16} />}
-            >
-              {t("schemesCreateFirst")}
-            </Button>
-          }
-        />
-      )}
+            }
+          />
+        )}
+      </Box>
       {editing !== undefined && (
         <ColorSchemesDialog initialId={editing} onClose={() => setEditing(undefined)} />
       )}
