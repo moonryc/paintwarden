@@ -22,6 +22,7 @@ import {
 } from "./miniature-list-loader";
 import { miniatureTileProjection, type MiniatureTileProjection } from "./miniature-list-model";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 export type MiniatureListFilters = {
   workbench: boolean;
@@ -235,8 +236,7 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
         void run();
       },
     };
-    // Query changes hide the previous result immediately; edits keep the current rows and
-    // list geometry in place until every loaded page has been successfully replaced.
+    // Keep the accepted window until its complete replacement passes revision guards.
     setState((previous) => ({ ...previous, loading: true, refreshing: false, error: "" }));
     const unsubscribe = controller.listen([variables.workbench ? "HOME" : "MINIATURES"], () => {
       if (
@@ -267,19 +267,19 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
   }, [scope, variables, key, fixture]);
   const loadMore = useCallback(() => commands.current.more(), []);
   const retry = useCallback(() => commands.current.refresh(), []);
+  const retained = useRetainedQuery(
+    state.scope === scope ? state.data : null,
+    !state.error && (state.loading || state.refreshing || state.dataKey !== key),
+    scope,
+  );
   const view = useMemo(() => {
     if (fixture) return fixture(stableFilters);
-    if (!state.data || state.scope !== scope) return emptyMiniatureView;
-    // Keep the last accepted window visible until the next search settles.
-    return miniatureListView(state.data);
-  }, [fixture, stableFilters, state.data, state.scope, scope]);
+    return retained.data ? miniatureListView(retained.data) : emptyMiniatureView;
+  }, [fixture, stableFilters, retained.data]);
   return {
     ...view,
-    loading: fixture
-      ? false
-      : state.loading ||
-        (!state.error && Boolean(state.data) && (state.dataKey !== key || state.scope !== scope)),
-    refreshing: fixture ? false : state.refreshing,
+    loading: fixture ? false : retained.loading,
+    refreshing: fixture ? false : retained.refreshing,
     error: fixture ? "" : state.error,
     loadMore,
     retry,

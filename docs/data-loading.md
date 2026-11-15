@@ -71,3 +71,26 @@ by `DeferredDialog`, independently of these detail-query skeletons.
 
 Adjacent Storybook stories cover each layout, real delayed Apollo reads, route
 startup, focus retention and template-grid measurement after a skeleton unmounts.
+
+### Background reads never replace accepted content
+
+`graphql/use-retained-query.ts` is the shared presentation boundary for pages,
+folders, detail drawers, plugins and paint tools. `loading` means a pending read
+with **no accepted envelope yet**, including an accepted empty result. Later
+invalidations, retries, pagination and variable changes retain the last complete
+projection in the same vault/access scope. `refreshing`/`pending` track background
+work without adding a banner, spinner or skeleton. Save/validation guards must
+use `pending` (or the template hooks' `isStale`), not initial-only `loading`.
+Errors remain recoverable alongside the previously accepted view. A different
+vault/access scope must never inherit retained content.
+
+Mutation envelopes and SSE both dirty the relevant family revision watermarks;
+ordinary invalidation does not evict cache roots. Readers still fetch `no-cache`
+and publish only complete, revision-accepted windows. Raw stock has precise
+optimistic/committed fragment updates; recipe, scheme, readiness and aggregate
+counts use targeted family refreshes rather than guessing server-derived values
+from partial catalogs. Other clients receive the same refreshes over SSE.
+
+`npm run e2e:browser` includes an isolated no-refetch regression, with delayed
+real reads, wishlist/stock/recipe/scheme interactions, DOM/skeleton observers and
+an injected HTTP 429 followed by recovery. It records before/pending/after frames.

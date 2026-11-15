@@ -15,6 +15,7 @@ import {
 } from "./library-loader";
 import { libraryPaintProjection, type LibraryPaintProjection } from "./library-model";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 export const ALL_LIBRARY_SOURCES = "\u0000all";
 export const NO_LIBRARY_SOURCE = "\u0000none";
@@ -190,8 +191,7 @@ export function useLibraryPaints(filters: LibraryFilters): LibraryResult {
         void run();
       },
     };
-    // Query changes hide the previous result immediately; edits keep the current rows and
-    // list geometry in place until every loaded page has been successfully replaced.
+    // Keep the accepted window until its complete replacement passes revision guards.
     setState((previous) => ({ ...previous, loading: true, refreshing: false, error: "" }));
     const unsubscribe = controller.listen(["LIBRARY"], () => {
       if (
@@ -220,19 +220,19 @@ export function useLibraryPaints(filters: LibraryFilters): LibraryResult {
   }, [scope, variables, key, fixture]);
   const loadMore = useCallback(() => commands.current.more(), []);
   const retry = useCallback(() => commands.current.refresh(), []);
+  const retained = useRetainedQuery(
+    state.scope === scope ? state.data : null,
+    !state.error && (state.loading || state.refreshing || state.dataKey !== key),
+    scope,
+  );
   const view = useMemo(() => {
     if (fixture) return fixture(stableFilters);
-    if (!state.data || state.scope !== scope) return emptyView;
-    // Keep the last accepted window visible until the next search settles.
-    return libraryView(state.data);
-  }, [fixture, stableFilters, state.data, state.scope, scope]);
+    return retained.data ? libraryView(retained.data) : emptyView;
+  }, [fixture, stableFilters, retained.data]);
   return {
     ...view,
-    loading: fixture
-      ? false
-      : state.loading ||
-        (!state.error && Boolean(state.data) && (state.dataKey !== key || state.scope !== scope)),
-    refreshing: fixture ? false : state.refreshing,
+    loading: fixture ? false : retained.loading,
+    refreshing: fixture ? false : retained.refreshing,
     error: fixture ? "" : state.error,
     loadMore,
     retry,

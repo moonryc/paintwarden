@@ -19,6 +19,7 @@ import {
 import { isStaleLibraryCursor } from "./library-loader";
 import { libraryPaintProjection } from "./library-model";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 import { readWishlistWindow, WISHLIST_PAGE_SIZE } from "./wishlist-loader";
 
 export type WishlistProjection = {
@@ -253,18 +254,19 @@ export function useWishlist(miniatureId: string | null) {
     },
     [scope, fixture],
   );
+  const retained = useRetainedQuery(
+    state.scope === scope ? state.data : null,
+    !state.error && (state.loading || state.refreshing || state.key !== miniatureId),
+    scope,
+  );
   const view = useMemo(() => {
     if (fixture) return fixture.view(miniatureId);
-    if (!state.data || state.scope !== scope) return emptyWishlistView;
-    const accepted = wishlistView(state.data);
-    return state.key === miniatureId
-      ? accepted
-      : { ...accepted, rows: [], totalCount: 0, hasNextPage: false };
-  }, [fixture, miniatureId, state.data, state.key, state.scope, scope]);
+    return retained.data ? wishlistView(retained.data) : emptyWishlistView;
+  }, [fixture, miniatureId, retained.data]);
   return {
     ...view,
-    loading: fixture ? false : state.loading,
-    refreshing: fixture ? false : state.refreshing,
+    loading: fixture ? false : retained.loading,
+    refreshing: fixture ? false : retained.refreshing,
     error: fixture ? "" : state.error,
     loadMore: useCallback(() => commands.current.more(false), []),
     loadMoreMissing: useCallback(() => commands.current.more(true), []),

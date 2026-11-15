@@ -37,7 +37,8 @@ cursors reset the client scope. Source bookkeeping has its own invalidation key.
 
 Each mounted hook reads bounded pages privately with `no-cache`, validates the
 invalidation ticket/generation/revision, then publishes a complete loaded window
-atomically. Inactive roots are evicted. Late responses, retired epochs and mixed
+atomically. Invalidations mark projections dirty without evicting accepted roots;
+only a vault reset clears the cache. Late responses, retired epochs and mixed
 page revisions cannot overwrite fresher records. Edits refetch loaded pages,
 retain scroll and use stable ID tie-breaks. Only raw stock is optimistic; readiness
 and counts are server-authoritative. Last save wins. Mutation receipts never

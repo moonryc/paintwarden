@@ -19,6 +19,7 @@ import {
 } from "../graphql/generated/graphql";
 import type { CommandTicket, ReadTicket, Revision, VaultFamily } from "../graphql/invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "../graphql/provider";
+import { useRetainedQuery } from "../graphql/use-retained-query";
 import {
   readTemplateRecipe,
   readTemplateSourceMiniature,
@@ -148,9 +149,9 @@ function useTemplateWindow<T>(
   const matches = state.key === key && state.scope === scope;
   const pending = enabled && (!matches || state.loading);
   const data = useSearchResults(enabled && matches ? state.data : null, retainSearch && pending, scope);
+  const retained = useRetainedQuery(data, pending, enabled ? scope : null, retainSearch ? undefined : key);
   return {
-    data,
-    loading: enabled && (!matches || state.loading),
+    ...retained,
     error: matches ? state.error : null,
     refetch: useCallback(() => commands.current.refetch(), []),
     loadMore: useCallback(() => commands.current.more(), []),
@@ -239,7 +240,7 @@ export function useTemplateCatalog(enabled = true, filters: TemplateVariables = 
     categories: facets.current.categoryCounts.map((facet) => facet.key),
     categoryCounts: facets.current.categoryCounts,
     sourceCounts: facets.current.sourceCounts,
-    isStale: result.loading,
+    isStale: result.pending,
   };
 }
 
@@ -293,7 +294,7 @@ export function useTemplateRecipe(id: string | null) {
         : undefined,
     [result.data],
   );
-  return { ...result, data, isStale: result.loading };
+  return { ...result, data, isStale: result.pending };
 }
 
 export function useTemplateSourceMiniature(id: string | null) {
@@ -335,7 +336,7 @@ export function useTemplateSourceMiniature(id: string | null) {
         : undefined,
     [result.data],
   );
-  return { ...result, data, isStale: result.loading };
+  return { ...result, data, isStale: result.pending };
 }
 
 export function createTemplateActions(scope: VaultGraphQLScope) {

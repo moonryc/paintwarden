@@ -19,7 +19,7 @@ import { useVaultStore } from "../store/hooks";
 
 import { createVaultGraphQLClient, isVaultRateLimited, type VaultGraphQLError } from "./client";
 import { VaultChangesDocument, VaultInvalidationDocument } from "./generated/graphql";
-import { VaultInvalidationController, type VaultFamily } from "./invalidation";
+import { VaultInvalidationController } from "./invalidation";
 import { PluginInstallProvider } from "./plugin-install-hooks";
 
 export type VaultGraphQLScope = { client: ApolloClient; controller: VaultInvalidationController };
@@ -43,24 +43,6 @@ export function VaultGraphQLStatus() {
   );
 }
 
-const fields: Record<VaultFamily, readonly string[]> = {
-  LIBRARY: ["library", "vaultNavigation"],
-  PAINT: ["paint", "paintRanking", "ownedPaintOptions"],
-  OPTIONS: ["paintOptions", "ownedPaintOptions"],
-  HOME: ["home", "folderBrowser", "folderSearch"],
-  MINIATURES: ["miniatures", "miniature", "folderBrowser", "folderSearch"],
-  WISHLIST: [
-    "wishlist",
-    "wishlistModelOptions",
-    "wishlistRelatedProjects",
-    "wishlistExport",
-    "vaultNavigation",
-  ],
-  SCHEMES: ["schemes", "schemeOptions", "schemePaintOptions", "miniatureScheme"],
-  TEMPLATES: ["templates", "templateRecipe", "folderBrowser", "folderSearch"],
-  SOURCES: ["sources", "sourceVersions", "sourceRemoval", "sourceShareable"],
-};
-
 function Scope({ children }: { children: ReactNode }) {
   const auth = useVaultStore((store) => store.auth);
   const token = useVaultStore((store) => store.token);
@@ -78,18 +60,11 @@ function Scope({ children }: { children: ReactNode }) {
         if (error.accessDenied) setFailure(error);
       },
     });
-    const controller = new VaultInvalidationController((families, reset) => {
+    const controller = new VaultInvalidationController((_families, reset) => {
+      // Ordinary invalidations mark revisions dirty, not absent. All readers use
+      // no-cache and publish only accepted complete windows; evicting roots here
+      // needlessly tears down cache consumers before their replacement arrives.
       if (reset) transport.client.cache.restore({});
-      else {
-        transport.client.cache.batch({
-          update(cache) {
-            for (const family of families)
-              for (const fieldName of fields[family]) cache.evict({ id: "ROOT_QUERY", fieldName });
-          },
-        });
-        // Mounted atomic windows retain their entities until replacement; do not
-        // collect their optimistic inventory while the root is being refreshed.
-      }
     });
     return { ...transport, controller };
   });

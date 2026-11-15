@@ -15,6 +15,7 @@ import {
 import { readFolderTree } from "./folder-loader";
 import type { VaultFamily } from "./invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 export type FolderBrowserState = {
   folderId: string | null;
@@ -26,6 +27,7 @@ export type FolderBrowserState = {
   ancestors: FolderView[];
   currentFolder: FolderView | null;
   loading: boolean;
+  refreshing?: boolean;
   error: string;
   refresh(): void;
   create(name: string): Promise<void>;
@@ -123,10 +125,12 @@ export function useFolderBrowser(
     };
   }, [scope, kind]);
   const matches = state.scope === scope && state.kind === kind;
-  const folders = useMemo(
-    () => (matches ? (state.data?.folderBrowser.folders ?? []) : []),
-    [matches, state.data],
+  const retained = useRetainedQuery(
+    state.scope === scope ? state.data : null,
+    Boolean(scope) && (!matches || state.loading),
+    scope,
   );
+  const folders = useMemo(() => retained.data?.folderBrowser.folders ?? [], [retained.data]);
   const ancestors = useMemo(() => folderAncestors(folders, folderId), [folders, folderId]);
   const currentFolder = ancestors.at(-1) ?? null;
   // A remote delete or move must not leave the page stranded in an invisible folder.
@@ -164,7 +168,8 @@ export function useFolderBrowser(
     visibleFolders,
     ancestors,
     currentFolder,
-    loading: Boolean(scope) && (!matches || state.loading),
+    loading: retained.loading,
+    refreshing: retained.refreshing,
     error: matches ? state.error : "",
     refresh: useCallback(() => refreshRef.current(), []),
     setFlat: (value) => {

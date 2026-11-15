@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CatalogSource, SourceVersion } from "../Pages/Sources/sources.utils";
 
 import { useVaultGraphQL } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 import {
   readInstalledSources,
   readPluginRemoval,
@@ -17,6 +18,7 @@ export function usePluginSources() {
   const [state, setState] = useState<{
     scope: typeof scope;
     sources: CatalogSource[];
+    loaded?: boolean;
     loading: boolean;
     error: string;
   }>({ scope, sources: [], loading: true, error: "" });
@@ -38,7 +40,7 @@ export function usePluginSources() {
           minimumVersion: dependency.minimumVersion ?? undefined,
         })),
       }));
-      setState({ scope, sources, loading: false, error: "" });
+      setState({ scope, sources, loaded: true, loading: false, error: "" });
     } catch (cause) {
       if (serial.current !== request) return;
       const error = cause instanceof Error ? cause.message : i18n.t("shell:couldNotLoadPlugins");
@@ -70,9 +72,15 @@ export function usePluginSources() {
     }),
     [reload, requireScope],
   );
+  const retained = useRetainedQuery(
+    state.scope === scope && state.loaded ? state.sources : null,
+    state.scope !== scope || state.loading,
+    scope,
+  );
   return {
-    sources: state.scope === scope ? state.sources : [],
-    loading: state.scope !== scope || state.loading,
+    sources: retained.data ?? [],
+    loading: retained.loading,
+    refreshing: retained.refreshing,
     error: state.scope === scope ? state.error : "",
     ...commands,
   };

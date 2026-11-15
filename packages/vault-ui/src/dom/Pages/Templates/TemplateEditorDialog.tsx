@@ -122,16 +122,16 @@ function TemplateEditorFields({
   const source = useTemplateSourceMiniature(sourceMiniatureId || null);
   const populatedSource = useRef("");
   useEffect(() => {
-    if (!sourceMiniatureId || !source.data || source.isStale || populatedSource.current === sourceMiniatureId)
+    if (!sourceMiniatureId || !source.data || source.isStale || source.error || populatedSource.current === sourceMiniatureId)
       return;
     const miniature = source.data.miniature;
-    if (!miniature) return;
+    if (!miniature || miniature.id !== sourceMiniatureId) return;
     populatedSource.current = sourceMiniatureId;
     setName(miniature.title);
     setManufacturer(miniature.manufacturer);
     setFaction(miniature.faction);
     setImageUrl(miniature.imageUrl?.startsWith("http") ? miniature.imageUrl : "");
-  }, [sourceMiniatureId, source.data, source.isStale]);
+  }, [sourceMiniatureId, source.data, source.isStale, source.error]);
   const [selectedSchemes, setSelectedSchemes] = useState<SchemeChoice[]>(() =>
     (recipe?.schemeIds ?? []).map(
       (id) => recipe?.schemeOptions.find((scheme) => scheme.id === id) ?? { id, name: id },

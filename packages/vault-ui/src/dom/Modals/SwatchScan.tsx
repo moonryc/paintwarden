@@ -83,7 +83,7 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
     : [];
   const schemePins = useMemo(() => (allPins ? pins : pin ? [pin] : []), [allPins, pins, pin]);
   const miniature = detail.data?.miniature;
-  const ready = !colors.loading && !colors.error && !detail.loading && !detail.error;
+  const ready = !colors.pending && !colors.error && !detail.pending && !detail.error;
   const removePin = (id: number) => {
     const rest = pins.filter((row) => row.id !== id);
     setPins(rest);

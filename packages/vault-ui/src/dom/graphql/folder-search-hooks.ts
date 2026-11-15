@@ -20,6 +20,7 @@ import {
 import type { VaultFamily } from "./invalidation";
 import { miniatureTileProjection, type MiniatureTileProjection } from "./miniature-list-model";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 export function useFolderSearch(filters: FolderSearchVariables) {
   const scope = useVaultGraphQL();
@@ -96,8 +97,10 @@ export function useFolderSearch(filters: FolderSearchVariables) {
     };
   }, [enabled, scope, key, variables]);
   const matching = enabled && state.scope === scope && state.key === key;
-  const pending = enabled && (!matching || state.loading);
-  const data = useSearchResults(matching ? (state.data ?? null) : null, pending, scope);
+  const pending = enabled && Boolean(scope) && (!matching || state.loading);
+  const searchData = useSearchResults(matching ? (state.data ?? null) : null, pending, scope);
+  const retained = useRetainedQuery(searchData, pending, enabled ? scope : null);
+  const data = retained.data;
   const result = useMemo(() => {
     const folders: FolderView[] = [];
     const miniatures: MiniatureTileProjection[] = [];
@@ -120,8 +123,9 @@ export function useFolderSearch(filters: FolderSearchVariables) {
   }, [data]);
   return {
     ...result,
-    loading: enabled && Boolean(scope) && (!matching || (state.loading && !data)),
-    refreshing: Boolean(data) && pending,
+    loading: retained.loading,
+    refreshing: retained.refreshing,
+    pending: retained.pending,
     error: matching ? state.error : "",
     totalCount: data?.folderSearch.results.totalCount ?? 0,
     hasNextPage: data?.folderSearch.results.pageInfo.hasNextPage ?? false,

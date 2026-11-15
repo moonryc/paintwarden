@@ -567,11 +567,6 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   {listError}
                 </Alert>
               )}
-              {(loading || refreshing) && (
-                <Box role="status" sx={{ py: 1, color: "var(--ink-faint)" }}>
-                  {loading ? t("homeLoadingMiniatures") : t("homeUpdatingMiniatures")}
-                </Box>
-              )}
               {hasShelf ? (
                 <Box
                   component="div"

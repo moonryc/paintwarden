@@ -5,6 +5,7 @@ import { DetailPaintFragmentDoc, ProjectMiniatureDetailsDocument } from "./gener
 import type { ReadTicket, Revision, VaultFamily } from "./invalidation";
 import { readMiniatureDetail, type MiniatureDetailView } from "./miniature-detail-loader";
 import { useVaultGraphQL } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 const FAMILIES: readonly VaultFamily[] = ["MINIATURES", "SCHEMES", "PAINT", "SOURCES"];
 
@@ -95,9 +96,14 @@ export function useMiniatureDetail(id: string) {
       active = false;
     };
   }, [scope, id, version, refresh]);
+  const retained = useRetainedQuery(
+    result.id === id && result.scope === scope ? result.data : null,
+    result.id !== id || result.scope !== scope || result.loading,
+    scope,
+    id,
+  );
   return {
-    data: result.id === id && result.scope === scope ? result.data : null,
-    loading: result.id !== id || result.scope !== scope || result.loading,
+    ...retained,
     error: result.id === id && result.scope === scope ? result.error : null,
     refresh,
   };

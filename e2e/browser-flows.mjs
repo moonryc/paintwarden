@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { checkScanAggregateFixture } from "./scan-aggregate.mjs";
 import { checkSchemeRanking } from "./scheme-ranking.mjs";
 import { checkAutocompleteSearch } from "./autocomplete-search.mjs";
+import { checkNoRefetchLoading } from "./no-refetch-loading.mjs";
 
 const expect = playwrightExpect.configure({ timeout: 12_000 });
 const username = "browser-fixture-owner";
@@ -451,6 +452,14 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   await verifyThumbnail(first, created.miniatureId, results.thumbnail.originalHash);
   await first.screenshot({ path: path.join(artifacts, "success.png"), animations: "disabled" });
   check("restored nested folder navigation, miniature rows and regenerated thumbnail remain usable");
+}
+
+export async function runNoRefetchLoadingFlows({ newPage, artifacts, results }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  const title = "Synthetic steady project";
+  const created = await createMiniature(page, title);
+  await checkNoRefetchLoading({ page, miniatureId: created.miniatureId, title, artifacts, results });
 }
 
 export async function runSchemeRankingFlows({ newPage, artifacts, results }) {

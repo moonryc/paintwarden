@@ -49,7 +49,12 @@ export function usePaintConversion(ids: string[], choiceIds: string[]) {
   const retained = previous.current;
   const data =
     result.data ?? (retained?.scope === scope && retained.originals === originals ? retained.data : null);
-  return { ...result, data };
+  return {
+    ...result,
+    data,
+    loading: result.pending && data == null,
+    refreshing: result.pending && data != null,
+  };
 }
 export function useOwnedPaintOptions(search: string) {
   search = normalizeSearch(search);

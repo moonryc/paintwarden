@@ -19,6 +19,7 @@ import {
   type SchemeOptionsVariables,
 } from "./miniature-scheme-loader";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 export { readMiniatureScheme } from "./miniature-scheme-loader";
 export type { MiniatureSchemeRead, SchemeOptionsRead } from "./miniature-scheme-loader";
@@ -132,9 +133,9 @@ export function useSchemeWindow<T extends { revision: Revision }>(
   const matches = state.key === key && state.scope === scope;
   const pending = !matches || state.loading;
   const data = useSearchResults(matches ? state.data : null, retainSearch && pending, scope);
+  const retained = useRetainedQuery(data, pending, scope, retainSearch ? undefined : key);
   return {
-    data,
-    loading: !matches || state.loading,
+    ...retained,
     error: matches ? state.error : null,
     refetch: useCallback(() => commands.current.refetch(), []),
     loadMore: useCallback(() => commands.current.loadMore(), []),

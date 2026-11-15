@@ -18,7 +18,6 @@ import { listResetSx } from "../utils/element-resets";
 import { buzz } from "../utils/misc";
 import { schemeGridWindow } from "../utils/scheme-grid-window";
 import { libraryInventoryFilter } from "../utils/semantic-contract";
-import { visuallyHiddenSx } from "../utils/visually-hidden";
 
 import { useInitialPageLoading } from "./useInitialPageLoading";
 
@@ -246,11 +245,6 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           {library.error}
         </Alert>
       )}
-      {loading && (
-        <Box role="status" sx={{ py: 3 }}>
-          {t("libraryLoadingPaints")}
-        </Box>
-      )}
       {list.length ? (
         <Card
           component="ul"
@@ -337,9 +331,6 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
           </Button>
         </Box>
       )}
-      <Box role="status" sx={visuallyHiddenSx}>
-        {refreshing ? t("libraryUpdatingPaints") : ""}
-      </Box>
       {library.catalogCount > 0 && (
         <Box
           component="p"

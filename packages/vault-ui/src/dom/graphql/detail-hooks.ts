@@ -12,6 +12,7 @@ import {
 } from "./generated/graphql";
 import type { ReadTicket, Revision, VaultFamily } from "./invalidation";
 import { useVaultGraphQL } from "./provider";
+import { useRetainedQuery } from "./use-retained-query";
 
 const DETAIL_FAMILIES: readonly VaultFamily[] = ["PAINT", "MINIATURES", "SOURCES"];
 const OPTION_FAMILIES: readonly VaultFamily[] = ["OPTIONS", "PAINT", "SOURCES"];
@@ -114,9 +115,14 @@ export function usePaintDetail(id: string) {
       current = false;
     };
   }, [graphql, id, window, version, refresh]);
+  const retained = useRetainedQuery(
+    result.id === id && result.scope === graphql ? result.data : null,
+    result.id !== id || result.scope !== graphql || result.loading,
+    graphql,
+    id,
+  );
   return {
-    data: result.id === id && result.scope === graphql ? result.data : null,
-    loading: result.id !== id || result.scope !== graphql || result.loading,
+    ...retained,
     error: result.id === id && result.scope === graphql ? result.error : null,
     refresh,
     loadMoreSubstitutions: () => setWindow((old) => ({ ...old, substitutions: old.substitutions + 1 })),

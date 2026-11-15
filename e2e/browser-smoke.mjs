@@ -1,5 +1,6 @@
 // Production browser gate. First: npm ci && npx playwright install --with-deps chromium && npm run build
 // Then: node e2e/browser-smoke.mjs (optional E2E_ARTIFACTS_DIR, absolute or relative to cwd).
+// Additional isolated gates: --scheme-ranking and --no-refetch-loading.
 // Requires Node >=22.13. Never connects to an existing server or uses a personal vault/catalog.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -15,12 +16,14 @@ import {
   runBrowserFlows,
   runSchemeRankingFlows,
   runScanAggregateFlows,
+  runNoRefetchLoadingFlows,
 } from "./browser-flows.mjs";
 
 const repo = fileURLToPath(new URL("../", import.meta.url));
 const aggregate = process.argv.includes("--scan-aggregate");
 const schemeRanking = process.argv.includes("--scheme-ranking");
 const autocompleteSearch = process.argv.includes("--autocomplete-search");
+const noRefetchLoading = process.argv.includes("--no-refetch-loading");
 const artifactsRoot = process.env.E2E_ARTIFACTS_DIR
   ? path.resolve(process.env.E2E_ARTIFACTS_DIR)
   : await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-artifacts-"));
@@ -30,7 +33,9 @@ const artifacts = aggregate
     ? path.join(artifactsRoot, "scheme-ranking")
     : autocompleteSearch
       ? path.join(artifactsRoot, "autocomplete-search")
-      : artifactsRoot;
+      : noRefetchLoading
+        ? path.join(artifactsRoot, "no-refetch-loading")
+        : artifactsRoot;
 await mkdir(artifacts, { recursive: true });
 const dataDir = await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-data-"));
 const results = {
@@ -219,6 +224,13 @@ try {
     page.on("response", (response) => {
       if (!new URL(response.url()).pathname.startsWith("/api/")) return;
       if (response.url().includes("/graphql/stream")) return;
+      // The no-refetch regression deliberately rejects loaded-page background reads.
+      if (
+        noRefetchLoading &&
+        response.status() === 429 &&
+        response.headers()["x-paintwarden-e2e-expected"] === "background-rate-limit"
+      )
+        return;
       const task = (async () => {
         if (response.status() >= 400)
           results.errors.push(`HTTP ${response.status()} ${new URL(response.url()).pathname}`);
@@ -237,9 +249,11 @@ try {
       ? runScanAggregateFlows
       : autocompleteSearch
         ? runAutocompleteFlows
-        : schemeRanking
-          ? runSchemeRankingFlows
-          : runBrowserFlows)({
+        : noRefetchLoading
+          ? runNoRefetchLoadingFlows
+          : schemeRanking
+            ? runSchemeRankingFlows
+            : runBrowserFlows)({
       newPage,
       artifacts,
       results,

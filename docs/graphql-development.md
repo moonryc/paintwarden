@@ -45,7 +45,7 @@ npm run storybook:test
    invalidation ticket, verify scope/revision/family watermarks, then commit the
    complete loaded window. Stable cursor cache policies alone do not prevent late
    or mixed-generation results. Do not manufacture a partial `State`.
-6. Register family eviction/invalidation and operation cost/page-size validation.
+6. Register family revision invalidation and operation cost/page-size validation.
    Cover cascades/source restore, inactive roots, refresh of all loaded pages,
    dirty responses, cursor restart and auth/server disposal. Only physical stock
    may be optimistic; derived counts/readiness are server-authoritative.

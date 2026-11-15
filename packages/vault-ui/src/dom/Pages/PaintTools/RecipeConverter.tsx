@@ -83,9 +83,9 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
     !conversion.data ||
     (detail.data.revision.epoch === conversion.data.revision.epoch &&
       detail.data.revision.seq === conversion.data.revision.seq);
-  const loading = detail.loading || conversion.loading || !revisionsMatch;
-  const { loading: detailLoading, refetch: refreshDetail } = detail;
-  const { loading: conversionLoading, refetch: refreshConversion } = conversion;
+  const loading = detail.pending || conversion.pending || !revisionsMatch;
+  const { pending: detailLoading, refetch: refreshDetail } = detail;
+  const { pending: conversionLoading, refetch: refreshConversion } = conversion;
   useEffect(() => {
     if (!revisionsMatch && !detailLoading && !conversionLoading) {
       refreshDetail();
@@ -168,7 +168,7 @@ export function RecipeConverter({ onOpenPaint }: { onOpenPaint(id: string): void
       {!scheme && (
         <Box sx={{ mt: 3, color: "text.secondary", fontSize: 13 }}>{t("toolsOriginalUnchanged")}</Box>
       )}
-      {scheme && loading && (
+      {scheme && (detail.loading || conversion.loading) && (
         <Box role="status" sx={{ mt: 2 }}>
           {t("toolsLoadingConversions")}
         </Box>

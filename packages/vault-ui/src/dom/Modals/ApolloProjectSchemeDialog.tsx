@@ -55,7 +55,7 @@ function ProjectSchemeContent({ schemeId, toggleOwned, markOwnedOnly = true, onC
         entries={entries}
         paints={paints}
         refreshError={result.error}
-        refreshing={result.loading}
+        refreshing={result.pending}
         onRefresh={result.refetch}
         onClose={onClose}
       />

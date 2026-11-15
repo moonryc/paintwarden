@@ -1,6 +1,6 @@
 import { StableAutocomplete } from "../Components/StableAutocomplete";
 import { useFragment } from "@apollo/client/react";
-import { Alert, Button, CircularProgress, TextField } from "@mui/material";
+import { Alert, Button, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -256,12 +256,6 @@ export function WishlistPage({ onBrowsePaints }: { onBrowsePaints?: () => void }
         <Alert severity="error" action={<Button onClick={list.retry}>{t("wishlistRetryWishlist")}</Button>}>
           {list.error}
         </Alert>
-      )}
-      {(list.loading || list.refreshing) && (
-        <Box role="status" sx={{ display: "flex", alignItems: "center", gap: 1, my: 2 }}>
-          <CircularProgress size={18} />
-          {list.loading ? t("wishlistLoadingWishlist") : t("wishlistUpdatingWishlist")}
-        </Box>
       )}
       {groups.length ? (
         <WishlistPaintList
