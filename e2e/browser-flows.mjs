@@ -6,6 +6,8 @@ import { unzipSync } from "fflate";
 import { expect as playwrightExpect } from "playwright/test";
 import sharp from "sharp";
 
+import { checkSchemeRanking } from "./scheme-ranking.mjs";
+
 const expect = playwrightExpect.configure({ timeout: 12_000 });
 const username = "browser-fixture-owner";
 const password = "Synthetic-browser-only-password-42";
@@ -358,4 +360,34 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   await verifyThumbnail(first, created.miniatureId, results.thumbnail.originalHash);
   await first.screenshot({ path: path.join(artifacts, "success.png"), animations: "disabled" });
   check("restored nested folder navigation, miniature rows and regenerated thumbnail remain usable");
+}
+
+export async function runSchemeRankingFlows({ newPage, artifacts, results }) {
+  const first = await newPage();
+  await authenticate(first, true);
+  const scanTitle = "Synthetic scan model";
+  const scanPhoto = await sharp({ create: { width: 1024, height: 768, channels: 3, background: "#427ea8" } })
+    .composite([
+      {
+        input: await sharp({ create: { width: 512, height: 768, channels: 3, background: "#b74a31" } })
+          .png()
+          .toBuffer(),
+        left: 512,
+        top: 0,
+      },
+    ])
+    .png()
+    .toBuffer();
+  const scanModel = await createMiniature(first, scanTitle, {
+    name: "scan.png",
+    mimeType: "image/png",
+    buffer: scanPhoto,
+  });
+  await checkSchemeRanking({
+    page: first,
+    miniatureId: scanModel.miniatureId,
+    title: scanTitle,
+    artifacts,
+    results,
+  });
 }

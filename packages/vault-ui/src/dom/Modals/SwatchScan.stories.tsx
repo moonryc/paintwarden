@@ -31,6 +31,21 @@ const paints = [
   { id: "black", name: "Library black", brand: "Example", hex: "#000000", owned: false, available: false },
   { id: "red", name: "Owned red", brand: "Example", hex: "#AA3322", owned: true, available: true },
 ];
+// The sampled spot’s nearest library paint is deliberately absent from the best scheme.
+const schemePaint = { ...paints[0], id: "scheme-blue", name: "Scheme blue", hex: "#2266AB" };
+const colorSchemes = [
+  {
+    id: "matched",
+    name: "Matched scheme",
+    paints: [schemePaint, { ...paints[1], id: "scheme-ivory", name: "Scheme ivory", hex: "#FEFEFE" }],
+  },
+  { id: "attached", name: "Existing scheme", paints: [paints[2]] },
+  ...Array.from({ length: 11 }, (_, i) => ({
+    id: `alternative-${i}`,
+    name: `Alternative scheme ${String(i + 1).padStart(2, "0")}`,
+    paints: [paints[3]],
+  })),
+];
 const detailPaint = (paint = paints[0]) => ({
   __typename: "Paint",
   ...paint,
@@ -86,6 +101,7 @@ function Connection({
   fail = false,
   empty = false,
   longNames = false,
+  schemeFail = false,
 }: {
   children: ReactNode;
   external?: boolean;
@@ -93,12 +109,14 @@ function Connection({
   fail?: boolean;
   empty?: boolean;
   longNames?: boolean;
+  schemeFail?: boolean;
 }) {
   const [savedRecipe, setSavedRecipe] = useState<RecipeVariables | null>(null);
   const [savedSchemes, setSavedSchemes] = useState<SchemesVariables | null>(null);
   const [scope] = useState(() => {
     let seq = 1;
     let failed = false;
+    let schemeFailed = false;
     let recipe = initialRecipe;
     let recipeSteps = ["BASECOAT", "DETAIL"];
     let schemeIds = ["attached"];
@@ -128,6 +146,29 @@ function Connection({
                               ? `${paint.name} — An exceptionally long miniature color name repeated for a narrow screen`
                               : paint.name,
                           })),
+                      pageInfo,
+                    },
+                  },
+                });
+              } else if (operation.operationName === "SchemeColorToolIndex") {
+                if (schemeFail && !schemeFailed) {
+                  schemeFailed = true;
+                  observer.error(new Error("Scheme connection interrupted"));
+                  return;
+                }
+                observer.next({
+                  data: {
+                    schemeColorIndex: {
+                      revision,
+                      nodes: empty
+                        ? []
+                        : colorSchemes.flatMap((scheme) =>
+                            scheme.paints.map((paint) => ({
+                              schemeId: scheme.id,
+                              schemeName: scheme.name,
+                              paint,
+                            })),
+                          ),
                       pageInfo,
                     },
                   },
@@ -293,6 +334,7 @@ const meta = {
         fail={Boolean(context.parameters.fail)}
         empty={Boolean(context.parameters.empty)}
         longNames={Boolean(context.parameters.longNames)}
+        schemeFail={Boolean(context.parameters.schemeFail)}
       >
         <Story />
       </Connection>
@@ -381,13 +423,17 @@ export const AttachSchemePreservesExisting: Story = {
   play: async ({ canvasElement }) => {
     const screen = await sample(canvasElement);
     await userEvent.click(screen.getByRole("button", { name: "By scheme" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Attach scheme" }));
+    const list = await screen.findByRole("list", { name: "Closest scheme matches" });
+    const matched = within(list).getByText("Matched scheme").closest("li")!;
+    await userEvent.click(within(matched).getByRole("button", { name: "Attach scheme" }));
     const saved = JSON.parse(
       (await screen.findByTestId("saved-schemes")).textContent ?? "{}",
     ) as SchemesVariables;
     await expect(saved.id).toBe("mini");
     await expect(saved.schemeIds).toEqual(["attached", "matched"]);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Attach scheme" })).toBeDisabled());
+    await waitFor(() =>
+      expect(within(matched).getByRole("button", { name: "Attach scheme" })).toBeDisabled(),
+    );
   },
 };
 export const Loading: Story = {
@@ -467,4 +513,45 @@ export const LongPaintNameNarrow: Story = {
   parameters: { longNames: true },
   decorators: narrow,
   play: ({ canvasElement }) => narrowLayout(canvasElement),
+};
+
+export const SchemeRankingAndPaging: Story = {
+  play: async ({ canvasElement }) => {
+    const screen = await sample(canvasElement);
+    await userEvent.click(screen.getByRole("button", { name: "By scheme" }));
+    const list = await screen.findByRole("list", { name: "Closest scheme matches" });
+    await waitFor(() => expect(within(list).getAllByRole("listitem")).toHaveLength(10));
+    const first = within(list).getAllByRole("listitem")[0];
+    await expect(within(first).getByRole("heading", { name: "Matched scheme" })).toBeInTheDocument();
+    await expect(within(first).getByText("Scheme ivory")).toBeInTheDocument();
+    await expect(within(first).getByText(/ΔE/)).toBeInTheDocument();
+    await expect(screen.queryByText("Closest paint")).not.toBeInTheDocument();
+    await expect(within(list).queryByText("Library blue")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "More schemes" }));
+    await expect(within(list).getAllByRole("listitem")).toHaveLength(13);
+    await expect(screen.queryByRole("button", { name: "More schemes" })).not.toBeInTheDocument();
+    const existing = within(list).getByText("Existing scheme").closest("li")!;
+    await expect(within(existing).getByRole("button", { name: "Attach scheme" })).toBeDisabled();
+  },
+};
+export const NoColoredSchemes: Story = {
+  parameters: { empty: true },
+  play: async ({ canvasElement }) => {
+    const screen = await sample(canvasElement);
+    await userEvent.click(screen.getByRole("button", { name: "By scheme" }));
+    await expect(
+      await screen.findByText("No schemes with usable paint colors are available."),
+    ).toBeInTheDocument();
+    await expect(screen.queryByText("No paints with a usable color are available.")).not.toBeInTheDocument();
+  },
+};
+export const SchemeReadFailureRetry: Story = {
+  parameters: { schemeFail: true },
+  play: async ({ canvasElement }) => {
+    const screen = await sample(canvasElement);
+    await userEvent.click(screen.getByRole("button", { name: "By scheme" }));
+    await expect(await screen.findByText("Scheme connection interrupted")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Retry" }));
+    await expect(await screen.findByText("Matched scheme")).toBeInTheDocument();
+  },
 };

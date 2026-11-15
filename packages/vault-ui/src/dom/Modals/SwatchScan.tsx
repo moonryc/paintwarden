@@ -14,17 +14,21 @@ import {
   ToggleButtonGroup,
   Typography,
 } from "@mui/material";
-import { buildColorIndex, nearestPaints } from "@paintwarden/core/color-matching";
+import {
+  buildColorIndex,
+  buildSchemeColorIndex,
+  nearestPaints,
+  rankSchemeColorIndex,
+} from "@paintwarden/core/color-matching";
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Modal } from "../Components/Modal";
 import { SwatchScanCanvas, type ScanPin } from "../Components/SwatchScanCanvas";
-import { useColorIndex } from "../graphql/color-tools-hooks";
+import { useColorIndex, useSchemeColorIndex } from "../graphql/color-tools-hooks";
 import { useMiniatureActions } from "../graphql/miniature-actions";
 import { useMiniatureDetail } from "../graphql/miniature-detail-hooks";
 import type { MiniatureDetailView } from "../graphql/miniature-detail-loader";
-import { useSchemes } from "../graphql/schemes-hooks";
 import type { RecipeStep } from "../types";
 import { getSteps } from "../utils/constants";
 
@@ -237,7 +241,9 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
                 </Typography>
               </Stack>
             )}
-            {pin && !colors.loading && !matches.length && <Alert severity="info">{t("scanNoMatch")}</Alert>}
+            {pin && mode === "paint" && !colors.loading && !matches.length && (
+              <Alert severity="info">{t("scanNoMatch")}</Alert>
+            )}
             {pin && mode === "paint" && matches[0] && (
               <Stack
                 component="ul"
@@ -273,23 +279,12 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
                 )}
               </Stack>
             )}
-            {pin && mode === "scheme" && matches[0] && (
-              <Box sx={card}>
-                <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.5 }}>
-                  {t("scanClosestPaint")}
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>
-                  <SwatchScanMatch sample={pin.hex} match={matches[0]} size={52} />
-                </Box>
-              </Box>
-            )}
-            {pin && mode === "scheme" && matches[0] && (
+            {pin && mode === "scheme" && (
               <ScanSchemes
-                key={matches[0].paint.id}
-                paintId={matches[0].paint.id}
+                hex={pin.hex}
                 miniatureId={miniatureId}
                 detail={detail.data}
-                disabled={!ready}
+                disabled={detail.loading || Boolean(detail.error)}
               />
             )}
           </Stack>
@@ -308,28 +303,30 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
 }
 
 function ScanSchemes({
-  paintId,
+  hex,
   miniatureId,
   detail,
   disabled,
 }: {
-  paintId: string;
+  hex: string;
   miniatureId: string;
   detail: MiniatureDetailView | null;
   disabled: boolean;
 }) {
   const { t } = useTranslation("components");
-  const schemes = useSchemes({
-    search: "",
-    category: null,
-    sourceId: null,
-    noSource: false,
-    readiness: null,
-    usesPaintIds: [paintId],
-  });
+  const schemes = useSchemeColorIndex();
+  const index = useMemo(() => buildSchemeColorIndex(schemes.schemes), [schemes.schemes]);
+  const matches = useMemo(() => rankSchemeColorIndex(index, hex), [index, hex]);
+  const [visible, setVisible] = useState(10);
   const actions = useMiniatureActions();
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const [previousHex, setPreviousHex] = useState(hex);
+  if (previousHex !== hex) {
+    setPreviousHex(hex);
+    setVisible(10);
+    setSaved(null);
+  }
   const attached = (schemeId: string) =>
     Boolean(detail?.schemes.nodes.some((row) => row.scheme.id === schemeId));
   const attach = async (schemeId: string) => {
@@ -349,46 +346,66 @@ function ScanSchemes({
   return (
     <Stack spacing={1}>
       <Typography component="h3" variant="subtitle1">
-        {t("scanSchemeHint")}
+        {t("scanSchemeMatches")}
       </Typography>
-      {schemes.loading && !schemes.items.length && <Skeleton aria-hidden animation={false} height={90} />}
+      {schemes.loading && !schemes.schemes.length && <Skeleton aria-hidden animation={false} height={90} />}
       {schemes.error && (
         <Alert severity="error" action={<Button onClick={schemes.refetch}>{t("retry")}</Button>}>
           {schemes.error.message}
         </Alert>
       )}
-      {!schemes.loading && !schemes.error && !schemes.items.length && (
+      {!schemes.loading && !schemes.error && !matches.length && (
         <Alert severity="info">{t("scanNoSchemes")}</Alert>
       )}
-      {schemes.items.map((scheme) => (
-        <Stack
-          key={scheme.id}
-          direction="row"
-          sx={{
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 1,
-            p: 1,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-          }}
-        >
-          <Typography sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{scheme.name}</Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={attached(scheme.id) ? <Check /> : undefined}
-            disabled={disabled || pending || attached(scheme.id)}
-            onClick={() => void attach(scheme.id)}
-            sx={{ flexShrink: 0 }}
+      <Stack
+        component="ul"
+        spacing={1.5}
+        aria-label={t("scanSchemeMatches")}
+        sx={{ p: 0, m: 0, listStyle: "none" }}
+      >
+        {matches.slice(0, visible).map(({ scheme, paint, deltaE }) => (
+          <Stack
+            component="li"
+            key={scheme.id}
+            spacing={1.5}
+            sx={{ p: 1.5, border: "1px solid", borderColor: "divider", borderRadius: 2, minWidth: 0 }}
           >
-            {t("scanAttach")}
-          </Button>
-        </Stack>
-      ))}
-      {schemes.hasNextPage && (
-        <Button disabled={schemes.loading} onClick={schemes.loadMore}>
+            <Typography component="h4" variant="subtitle1" sx={{ overflowWrap: "anywhere" }}>
+              {scheme.name}
+            </Typography>
+            <Box aria-hidden sx={{ display: "flex", height: 20, borderRadius: 1, overflow: "hidden" }}>
+              {scheme.paints.map((entry, i) => (
+                <Box
+                  key={`${entry.id}:${i}`}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    bgcolor: entry.hex,
+                    ...(entry.id === paint.id && { border: "2px solid", borderColor: "primary.main" }),
+                  }}
+                />
+              ))}
+            </Box>
+            <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
+              <SwatchScanMatch sample={hex} match={{ paint, deltaE }} size={52} />
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={attached(scheme.id) ? <Check /> : undefined}
+                disabled={
+                  disabled || schemes.loading || Boolean(schemes.error) || pending || attached(scheme.id)
+                }
+                onClick={() => void attach(scheme.id)}
+                sx={{ flexShrink: 0 }}
+              >
+                {t("scanAttach")}
+              </Button>
+            </Stack>
+          </Stack>
+        ))}
+      </Stack>
+      {visible < matches.length && (
+        <Button disabled={schemes.loading} onClick={() => setVisible((count) => count + 10)}>
           {t("scanMoreSchemes")}
         </Button>
       )}

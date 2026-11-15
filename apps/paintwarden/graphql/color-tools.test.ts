@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test, { after, beforeEach } from "node:test";
 
-import { GraphQLError } from "graphql";
+import { GraphQLError, Kind, visit, print } from "graphql";
 
 const directory = mkdtempSync(path.join(tmpdir(), "paintwarden-color-index-"));
 const originalDataDir = process.env.DATA_DIR;
@@ -12,7 +12,7 @@ const originalDatabasePath = process.env.DATABASE_PATH;
 process.env.DATA_DIR = directory;
 delete process.env.DATABASE_PATH;
 const { getSqlite } = await import("../db/index.ts");
-const { readColorIndex } = await import("./color-tools.ts");
+const { readColorIndex, readSchemeColorIndex } = await import("./color-tools.ts");
 const sqlite = getSqlite();
 let serial = 0;
 const nextId = () => `00000000-0000-4000-8000-${String(++serial).padStart(12, "0")}`;
@@ -234,4 +234,164 @@ void test("production GraphQL color index resolver remains wired alongside folde
   assert.deepEqual(body.data?.colorIndex.nodes, [
     { id, name: "Color integration", owned: true, available: true },
   ]);
+});
+
+function scheme(name: string, paints: string[]) {
+  const id = nextId();
+  sqlite.prepare("INSERT INTO color_schemes(id,name,created_at,updated_at) VALUES(?,?,1,1)").run(id, name);
+  for (const [order, paintId] of paints.entries()) {
+    sqlite
+      .prepare("INSERT INTO color_scheme_paints(scheme_id,paint_id,sort_order,updated_at) VALUES(?,?,?,1)")
+      .run(id, paintId, order);
+  }
+  return id;
+}
+
+void test("scheme index preserves authored color order and repetitions, with independent availability, not substituted colors", () => {
+  const valid = paint("Valid", "#aabbcc");
+  const missing = paint("Missing", null);
+  // Legacy/corrupt colors are filtered defensively even though current writes validate hex.
+  sqlite.pragma("ignore_check_constraints = ON");
+  let broken: string;
+  try {
+    broken = paint("Broken", "not-a-color");
+  } finally {
+    sqlite.pragma("ignore_check_constraints = OFF");
+  }
+  const ingredient = paint("Ingredient", "#ff0000");
+  inventory(ingredient);
+  substitute(valid, [ingredient]);
+  const second = paint("Second color", "#123456");
+  const id = scheme("Mixed", [valid, missing, second, broken, valid]);
+  scheme("Empty", []);
+  scheme("Invalid", [missing, broken]);
+  const result = readSchemeColorIndex({ first: 100 });
+  assert.equal(result.nodes.length, 3);
+  assert.deepEqual(
+    result.nodes.map((row) => row.paint.id),
+    [valid, second, valid],
+  );
+  assert.equal(result.nodes[0].schemeId, id);
+  assert.equal(result.nodes[0].schemeName, "Mixed");
+  assert.deepEqual(result.nodes[0].paint, {
+    id: valid,
+    name: "Valid",
+    brand: "Fixture",
+    hex: "#aabbcc",
+    owned: false,
+    available: true,
+  });
+  assert.equal(result.pageInfo.hasNextPage, false);
+});
+
+void test("scheme index bounds memberships even within one large scheme and reuses one generation projection", (context) => {
+  const ids = Array.from({ length: 205 }, (_, i) => paint(`Paint ${i}`));
+  const large = scheme("Large", ids);
+  for (let i = 0; i < 40; i++) scheme(`Small ${i}`, [ids[0]]);
+  const queries: string[] = [];
+  const prepare = sqlite.prepare.bind(sqlite);
+  context.mock.method(sqlite, "prepare", (sql: string) => {
+    queries.push(sql);
+    return prepare(sql);
+  });
+  const first = readSchemeColorIndex({ first: 100 });
+  const second = readSchemeColorIndex({ first: 100, after: first.pageInfo.endCursor });
+  const third = readSchemeColorIndex({ first: 100, after: second.pageInfo.endCursor });
+  assert.deepEqual([first.nodes.length, second.nodes.length, third.nodes.length], [100, 100, 45]);
+  assert.ok(first.nodes.every((row) => row.schemeId === large));
+  const all = [...first.nodes, ...second.nodes, ...third.nodes];
+  assert.equal(new Set(all.map((row) => `${row.schemeId}/${row.paint.id}`)).size, 245);
+  assert.equal(third.pageInfo.hasNextPage, false);
+  assert.equal(
+    queries.filter((sql) => sql.includes("FROM color_schemes s JOIN color_scheme_paints")).length,
+    1,
+  );
+  assert.equal(queries.filter((sql) => sql.includes("FROM paint_catalog p")).length, 1);
+  assert.deepEqual(readSchemeColorIndex({ first: 100, after: third.pageInfo.endCursor }).nodes, []);
+  assert.throws(() => readSchemeColorIndex({ first: 101 }), code("BAD_USER_INPUT"));
+  assert.throws(() => readSchemeColorIndex({ first: 1, after: "bad" }), code("BAD_USER_INPUT"));
+  assert.throws(
+    () => readSchemeColorIndex({ first: 1, after: readColorIndex({ first: 1 }).pageInfo.endCursor }),
+    code("BAD_USER_INPUT"),
+  );
+});
+
+void test("scheme membership, name, color, physical stock and active mix edits invalidate old cursors", () => {
+  const firstPaint = paint("First");
+  const secondPaint = paint("Second");
+  const id = scheme("Scheme", [firstPaint, secondPaint]);
+  const edits = [
+    () => inventory(firstPaint),
+    () => substitute(secondPaint, [firstPaint]),
+    () => sqlite.prepare("UPDATE color_schemes SET name='Changed' WHERE id=?").run(id),
+    () => sqlite.prepare("UPDATE paint_catalog SET color_hex='#123456' WHERE id=?").run(firstPaint),
+    () =>
+      sqlite.prepare("DELETE FROM color_scheme_paints WHERE scheme_id=? AND paint_id=?").run(id, secondPaint),
+  ];
+  for (const edit of edits) {
+    const before = readSchemeColorIndex({ first: 1 });
+    edit();
+    assert.throws(
+      () => readSchemeColorIndex({ first: 1, after: before.pageInfo.endCursor }),
+      code("STALE_CURSOR"),
+    );
+  }
+  const after = readSchemeColorIndex({ first: 100 });
+  assert.equal(after.nodes.length, 1);
+  assert.equal(after.nodes[0].schemeName, "Changed");
+  assert.equal(after.nodes[0].paint.hex, "#123456");
+  assert.equal(after.nodes[0].paint.owned, true);
+});
+
+void test("scheme color projections made in rolled-back transactions do not poison committed cache", () => {
+  const paintId = paint("Committed");
+  const id = scheme("Committed scheme", [paintId]);
+  const before = readSchemeColorIndex({ first: 100 });
+  assert.throws(
+    () =>
+      sqlite.transaction(() => {
+        inventory(paintId);
+        sqlite.prepare("UPDATE color_schemes SET name='Rolled back' WHERE id=?").run(id);
+        const inside = readSchemeColorIndex({ first: 100 });
+        assert.equal(inside.nodes[0].schemeName, "Rolled back");
+        assert.equal(inside.nodes[0].paint.owned, true);
+        throw new Error("rollback fixture");
+      })(),
+    /rollback fixture/,
+  );
+  assert.deepEqual(readSchemeColorIndex({ first: 100 }), before);
+});
+
+void test("production typed scheme color query including Apollo typenames passes budget and resolves", async () => {
+  const paintId = paint("Integration");
+  const id = scheme("Integration scheme", [paintId]);
+  const { SchemeColorToolIndexDocument } =
+    await import("../../../packages/vault-ui/src/dom/graphql/generated/graphql.ts");
+  const document = visit(SchemeColorToolIndexDocument, {
+    SelectionSet(node) {
+      return {
+        ...node,
+        selections: [
+          ...node.selections,
+          { kind: Kind.FIELD, name: { kind: Kind.NAME, value: "__typename" } },
+        ],
+      };
+    },
+  });
+  const { graphqlResponse } = await import("./server.ts");
+  const response = await graphqlResponse(
+    new Request("http://localhost/api/graphql", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: print(document), variables: { after: null } }),
+    }),
+    false,
+  );
+  const body = (await response.json()) as {
+    errors?: unknown[];
+    data?: { schemeColorIndex: { nodes: { schemeId: string; schemeName: string; paint: { id: string } }[] } };
+  };
+  assert.equal(body.errors, undefined);
+  assert.equal(body.data?.schemeColorIndex.nodes[0].schemeId, id);
+  assert.equal(body.data?.schemeColorIndex.nodes[0].paint.id, paintId);
 });

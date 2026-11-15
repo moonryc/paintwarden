@@ -10,12 +10,14 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { runBrowserFlows } from "./browser-flows.mjs";
+import { runBrowserFlows, runSchemeRankingFlows } from "./browser-flows.mjs";
 
 const repo = fileURLToPath(new URL("../", import.meta.url));
-const artifacts = process.env.E2E_ARTIFACTS_DIR
+const schemeRanking = process.argv.includes("--scheme-ranking");
+const artifactsRoot = process.env.E2E_ARTIFACTS_DIR
   ? path.resolve(process.env.E2E_ARTIFACTS_DIR)
   : await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-artifacts-"));
+const artifacts = schemeRanking ? path.join(artifactsRoot, "scheme-ranking") : artifactsRoot;
 await mkdir(artifacts, { recursive: true });
 const dataDir = await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-data-"));
 const results = {
@@ -218,7 +220,7 @@ try {
     return page;
   }
   await Promise.race([
-    runBrowserFlows({ newPage, artifacts, results }),
+    (schemeRanking ? runSchemeRankingFlows : runBrowserFlows)({ newPage, artifacts, results }),
     new Promise((_, reject) => {
       overallTimer = setTimeout(() => reject(Error("Browser flows exceeded 240s")), 240_000);
     }),

@@ -715,6 +715,7 @@ export type Query = {
   paint: PaintView;
   paintOptions: PaintOptionsView;
   paintRanking: PaintRankingView;
+  schemeColorIndex: SchemeColorIndexView;
   schemeOptions: MiniatureSchemeOptionsView;
   schemePaintOptions: PaintOptionsView;
   schemes: SchemesView;
@@ -822,6 +823,11 @@ export type QueryPaintRankingArgs = {
   ownedOnly?: Scalars["Boolean"]["input"];
 };
 
+export type QuerySchemeColorIndexArgs = {
+  after?: InputMaybe<Scalars["String"]["input"]>;
+  first?: Scalars["Int"]["input"];
+};
+
 export type QuerySchemeOptionsArgs = {
   after?: InputMaybe<Scalars["String"]["input"]>;
   category?: InputMaybe<Scalars["String"]["input"]>;
@@ -911,6 +917,21 @@ export type Readiness = {
   __typename?: "Readiness";
   missing: Scalars["Int"]["output"];
   total: Scalars["Int"]["output"];
+};
+
+/** Flat memberships keep responses bounded even for a scheme with many paints. */
+export type SchemeColorIndexEntry = {
+  __typename?: "SchemeColorIndexEntry";
+  paint: ColorIndexPaint;
+  schemeId: Scalars["ID"]["output"];
+  schemeName: Scalars["String"]["output"];
+};
+
+export type SchemeColorIndexView = {
+  __typename?: "SchemeColorIndexView";
+  nodes: Array<SchemeColorIndexEntry>;
+  pageInfo: PageInfo;
+  revision: VaultRevision;
 };
 
 export type SchemeEntryInput = {
@@ -1463,6 +1484,8 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   RankedPaint: ResolverTypeWrapper<RankedPaint>;
   Readiness: ResolverTypeWrapper<Readiness>;
+  SchemeColorIndexEntry: ResolverTypeWrapper<SchemeColorIndexEntry>;
+  SchemeColorIndexView: ResolverTypeWrapper<SchemeColorIndexView>;
   SchemeEntryInput: SchemeEntryInput;
   SchemeFacets: ResolverTypeWrapper<SchemeFacets>;
   SchemeInput: SchemeInput;
@@ -1588,6 +1611,8 @@ export type ResolversParentTypes = {
   Query: Record<PropertyKey, never>;
   RankedPaint: RankedPaint;
   Readiness: Readiness;
+  SchemeColorIndexEntry: SchemeColorIndexEntry;
+  SchemeColorIndexView: SchemeColorIndexView;
   SchemeEntryInput: SchemeEntryInput;
   SchemeFacets: SchemeFacets;
   SchemeInput: SchemeInput;
@@ -2443,6 +2468,12 @@ export type QueryResolvers<
     ContextType,
     RequireFields<QueryPaintRankingArgs, "first" | "id" | "ownedOnly">
   >;
+  schemeColorIndex?: Resolver<
+    ResolversTypes["SchemeColorIndexView"],
+    ParentType,
+    ContextType,
+    RequireFields<QuerySchemeColorIndexArgs, "first">
+  >;
   schemeOptions?: Resolver<
     ResolversTypes["MiniatureSchemeOptionsView"],
     ParentType,
@@ -2537,6 +2568,26 @@ export type ReadinessResolvers<
 > = {
   missing?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
   total?: Resolver<ResolversTypes["Int"], ParentType, ContextType>;
+};
+
+export type SchemeColorIndexEntryResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SchemeColorIndexEntry"] =
+    ResolversParentTypes["SchemeColorIndexEntry"],
+> = {
+  paint?: Resolver<ResolversTypes["ColorIndexPaint"], ParentType, ContextType>;
+  schemeId?: Resolver<ResolversTypes["ID"], ParentType, ContextType>;
+  schemeName?: Resolver<ResolversTypes["String"], ParentType, ContextType>;
+};
+
+export type SchemeColorIndexViewResolvers<
+  ContextType = GraphQLContext,
+  ParentType extends ResolversParentTypes["SchemeColorIndexView"] =
+    ResolversParentTypes["SchemeColorIndexView"],
+> = {
+  nodes?: Resolver<Array<ResolversTypes["SchemeColorIndexEntry"]>, ParentType, ContextType>;
+  pageInfo?: Resolver<ResolversTypes["PageInfo"], ParentType, ContextType>;
+  revision?: Resolver<ResolversTypes["VaultRevision"], ParentType, ContextType>;
 };
 
 export type SchemeFacetsResolvers<
@@ -3015,6 +3066,8 @@ export type Resolvers<ContextType = GraphQLContext> = {
   Query?: QueryResolvers<ContextType>;
   RankedPaint?: RankedPaintResolvers<ContextType>;
   Readiness?: ReadinessResolvers<ContextType>;
+  SchemeColorIndexEntry?: SchemeColorIndexEntryResolvers<ContextType>;
+  SchemeColorIndexView?: SchemeColorIndexViewResolvers<ContextType>;
   SchemeFacets?: SchemeFacetsResolvers<ContextType>;
   SchemeMutationPayload?: SchemeMutationPayloadResolvers<ContextType>;
   SchemesView?: SchemesViewResolvers<ContextType>;

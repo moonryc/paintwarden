@@ -42,7 +42,7 @@
     "notices:generate": "node scripts/generate-notices.mjs",
     "notices:check": "node scripts/generate-notices.mjs --check",
     "notices:artifact": "node scripts/check-notice-artifact.mjs",
-    "e2e:browser": "node e2e/browser-smoke.mjs",
+    "e2e:browser": "node e2e/browser-smoke.mjs && node e2e/browser-smoke.mjs --scheme-ranking",
     "e2e:native": "node e2e/native-smoke.mjs"
   },
   "devDependencies": {

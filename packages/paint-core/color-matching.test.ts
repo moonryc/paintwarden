@@ -3,6 +3,9 @@ import test from "node:test";
 
 import {
   buildColorIndex,
+  buildSchemeColorIndex,
+  rankSchemes,
+  rankSchemeColorIndex,
   deltaE2000,
   derivePaintRoles,
   hexToLab,
@@ -361,4 +364,73 @@ test("matchCloseness buckets advisory ΔE values with inclusive boundaries", () 
   assert.equal(matchCloseness(10.5), "distant");
   assert.equal(matchCloseness(Number.NaN), "distant");
   assert.equal(matchCloseness(-1), "distant");
+});
+
+void test("schemes rank by minimum valid authored paint distance, not average or stock flags", () => {
+  const paint = (id: string, hex: string | null) => ({ id, hex, name: id, owned: false, available: false });
+  const exact = paint("exact", " #F00 ");
+  const schemes = [
+    { id: "near", name: "A near scheme", paints: [paint("near", "#ee1111")] },
+    { id: "exact", name: "Z exact scheme", paints: [paint("far", "#00f"), exact] },
+    { id: "empty", name: "Empty", paints: [] },
+    { id: "invalid", name: "Invalid", paints: [paint("null", null), paint("bad", "invalid")] },
+  ];
+  const result = rankSchemes(schemes, "#ff0000");
+  assert.deepEqual(
+    result.map(({ scheme }) => scheme.id),
+    ["exact", "near"],
+  );
+  assert.equal(result[0].scheme, schemes[1]);
+  assert.equal(result[0].paint, exact);
+  assert.equal(result[0].deltaE, 0);
+  near(result[1].deltaE, deltaE2000(hexToLab("#f00"), hexToLab("#ee1111")), 1e-12);
+  assert.deepEqual(rankSchemes([], "#123"), []);
+  assert.throws(() => rankSchemes(schemes, "invalid"), RangeError);
+  assert.throws(() => rankSchemes([], "invalid"), RangeError);
+});
+
+void test("scheme ties sort by name then ID and representative paint ties by ID regardless of input order", () => {
+  const paints = [
+    { id: "z", hex: "#abc" },
+    { id: "a", hex: "#aabbcc" },
+  ];
+  const schemes = [
+    { id: "z", name: "Same", paints },
+    { id: "b", name: "Alpha", paints },
+    { id: "a", name: "Same", paints: [...paints].reverse() },
+  ];
+  const expected = rankSchemes(schemes, "#123");
+  assert.deepEqual(
+    expected.map(({ scheme }) => scheme.id),
+    ["b", "a", "z"],
+  );
+  assert.ok(expected.every(({ paint }) => paint.id === "a"));
+  assert.deepEqual(rankSchemes([...schemes].reverse(), "#123"), expected);
+  assert.deepEqual(rankSchemeColorIndex(buildSchemeColorIndex(schemes), "#123"), expected);
+  assert.ok(expected.every(({ deltaE }) => deltaE > NO_CLOSE_MATCH_DELTA_E));
+});
+
+void test("precomputed scheme colors are snapshots and agree with exhaustive scoring for shared paints", () => {
+  const paints = Array.from({ length: 100 }, (_, i) => ({
+    id: String(i),
+    hex: `#${((i * 7919) % 0x1000000).toString(16).padStart(6, "0")}`,
+  }));
+  const schemes = Array.from({ length: 200 }, (_, i) => ({
+    id: String(i),
+    name: `Scheme ${i}`,
+    paints: Array.from({ length: 15 }, (_, j) => paints[(i + j) % paints.length]),
+  }));
+  const target = hexToLab("#7c4a95");
+  const expected = schemes
+    .map((scheme) => ({
+      scheme,
+      ...scheme.paints
+        .map((paint) => ({ paint, deltaE: deltaE2000(target, hexToLab(paint.hex)) }))
+        .sort((a, b) => a.deltaE - b.deltaE || (a.paint.id < b.paint.id ? -1 : 1))[0],
+    }))
+    .sort((a, b) => a.deltaE - b.deltaE || (a.scheme.name < b.scheme.name ? -1 : 1));
+  const index = buildSchemeColorIndex(schemes);
+  assert.deepEqual(rankSchemeColorIndex(index, "#7c4a95"), expected);
+  paints[0].hex = "#ffffff";
+  assert.deepEqual(rankSchemeColorIndex(index, "#7c4a95"), expected);
 });

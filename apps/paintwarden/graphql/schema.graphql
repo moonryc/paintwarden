@@ -60,7 +60,20 @@ type ColorIndexView {
   pageInfo: PageInfo!
 }
 
+"""Flat memberships keep responses bounded even for a scheme with many paints."""
+type SchemeColorIndexEntry {
+  schemeId: ID!
+  schemeName: String!
+  paint: ColorIndexPaint!
+}
+type SchemeColorIndexView {
+  revision: VaultRevision!
+  nodes: [SchemeColorIndexEntry!]!
+  pageInfo: PageInfo!
+}
+
 type Query {
+  schemeColorIndex(first: Int! = 100, after: String): SchemeColorIndexView!
   colorIndex(first: Int! = 100, after: String): ColorIndexView!
   home(
     first: Int! = 48

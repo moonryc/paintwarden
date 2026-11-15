@@ -272,6 +272,82 @@ export function nearestPaints<T extends IndexedPaint>(
   return result;
 }
 
+export type SchemeColorSource = {
+  id: string;
+  name: string;
+  paints: readonly { id: string; hex?: string | null }[];
+};
+export type SchemeColorMatch<S extends SchemeColorSource> = {
+  scheme: S;
+  paint: S["paints"][number];
+  deltaE: number;
+};
+/** Immutable color snapshot; rebuild when scheme membership or paint colors change. */
+export type SchemeColorIndex<S extends SchemeColorSource> = readonly {
+  scheme: S;
+  paints: readonly { paint: S["paints"][number]; lab: Lab }[];
+}[];
+
+export function buildSchemeColorIndex<S extends SchemeColorSource>(
+  schemes: readonly S[],
+): SchemeColorIndex<S> {
+  const labs = new Map<string, Lab>();
+  return schemes.flatMap((scheme) => {
+    const paints = scheme.paints.flatMap((paint) => {
+      const hex = normalizeColorHex(paint.hex);
+      if (!hex) return [];
+      let lab = labs.get(hex);
+      if (!lab) {
+        lab = hexToLab(hex);
+        labs.set(hex, lab);
+      }
+      return [{ paint, lab }];
+    });
+    return paints.length ? [{ scheme, paints }] : [];
+  });
+}
+
+const compareColorText = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+/** Score each scheme by its closest authored paint, never by an average or substitution.
+ * Equal paint distances break by paint ID; schemes sort by distance, name, then ID.
+ * Text order is lexicographic and locale-independent. No distance cutoff is applied.
+ */
+export function rankSchemeColorIndex<S extends SchemeColorSource>(
+  index: SchemeColorIndex<S>,
+  hex: string,
+): SchemeColorMatch<S>[] {
+  const target = hexToLab(hex);
+  const result: SchemeColorMatch<S>[] = [];
+  // A shared paint/color only needs one distance calculation per target.
+  const distances = new Map<Lab, number>();
+  for (const { scheme, paints } of index) {
+    let best: SchemeColorMatch<S> | undefined;
+    for (const { paint, lab } of paints) {
+      let deltaE = distances.get(lab);
+      if (deltaE === undefined) {
+        deltaE = deltaE2000(target, lab);
+        distances.set(lab, deltaE);
+      }
+      if (!best || deltaE < best.deltaE || (deltaE === best.deltaE && paint.id < best.paint.id))
+        best = { scheme, paint, deltaE };
+    }
+    if (best) result.push(best);
+  }
+  return result.sort(
+    (a, b) =>
+      a.deltaE - b.deltaE ||
+      compareColorText(a.scheme.name, b.scheme.name) ||
+      compareColorText(a.scheme.id, b.scheme.id),
+  );
+}
+
+export function rankSchemes<S extends SchemeColorSource>(
+  schemes: readonly S[],
+  hex: string,
+): SchemeColorMatch<S>[] {
+  return rankSchemeColorIndex(buildSchemeColorIndex(schemes), hex);
+}
+
 function inGamut(rgb: Rgb): boolean {
   return [rgb.r, rgb.g, rgb.b].every((value) => value >= -1e-7 && value <= 1 + 1e-7);
 }

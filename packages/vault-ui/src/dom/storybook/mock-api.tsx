@@ -1,5 +1,6 @@
 // A stand-in for the Paintwarden server, so the whole app can render in Storybook with the
 // sample vault. Reads return fixture data; writes succeed without changing anything.
+import { normalizeColorHex } from "@paintwarden/core/color-hex";
 import { createFuzzyIndex, searchFuzzyIndex } from "@paintwarden/core/fuzzy-search";
 import {
   defaultSubstitution,
@@ -92,6 +93,36 @@ function respond(url: URL, method: string): unknown {
 type GraphQLRequest = { operationName?: string; variables?: Record<string, unknown> };
 
 type MockGraphQLOptions = { data?: () => State; revision?: () => number };
+
+function schemeColorIndexNodes(data: State) {
+  const byId = new Map(data.catalog.map((paint) => [paint.id, paint]));
+  const schemes = [...data.colorSchemes].sort((a, b) =>
+    a.name < b.name ? -1 : a.name > b.name ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+  );
+  return schemes.flatMap((scheme) =>
+    [...new Set(data.colorSchemePaints.filter((row) => row.schemeId === scheme.id).map((row) => row.paintId))]
+      .sort()
+      .flatMap((id) => {
+        const paint = byId.get(id);
+        return paint && normalizeColorHex(paint.colorHex)
+          ? [
+              {
+                schemeId: scheme.id,
+                schemeName: scheme.name,
+                paint: {
+                  id: paint.id,
+                  name: paint.name,
+                  brand: paint.brand,
+                  hex: paint.colorHex ?? null,
+                  owned: owns(data.paintRecords[paint.id]),
+                  available: isPaintAvailable(data, data.paintRecords, paint.id),
+                },
+              },
+            ]
+          : [];
+      }),
+  );
+}
 
 function createGraphQLResponder(options: MockGraphQLOptions) {
   let data = structuredClone(vault);
@@ -189,6 +220,19 @@ function createGraphQLResponder(options: MockGraphQLOptions) {
           templates: [],
         },
       };
+    if (operationName === "SchemeColorToolIndex") {
+      const all = schemeColorIndexNodes(data);
+      const start = Number(vars.after ?? 0);
+      const nodes = all.slice(start, start + 100);
+      const end = start + nodes.length;
+      return {
+        schemeColorIndex: {
+          revision: revision(),
+          nodes,
+          pageInfo: { hasNextPage: end < all.length, endCursor: nodes.length ? String(end) : null },
+        },
+      };
+    }
     if (operationName === "ColorToolIndex") {
       const start = Number(vars.after ?? 0);
       const rows = data.catalog.slice(start, start + 100);

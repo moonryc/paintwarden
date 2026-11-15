@@ -11,7 +11,7 @@ import { publicError } from "../lib/public-errors.ts";
 import { checkOperation, GRAPHQL_BODY_BYTES } from "./budgets.ts";
 import { invalidationSince, subscribeChanges, type Family } from "./changes.ts";
 import type { GraphQLContext } from "./context.ts";
-import { readColorIndex } from "./color-tools.ts";
+import { readColorIndex, readSchemeColorIndex } from "./color-tools.ts";
 import { folderMutations, folderQueries } from "./folders.ts";
 import type { Resolvers } from "./generated/resolvers.ts";
 import {
@@ -60,6 +60,7 @@ const resolvers: Resolvers<GraphQLContext> = {
     ...templateQueries,
     ...folderQueries,
     colorIndex: (_root, args) => readColorIndex(args),
+    schemeColorIndex: (_root, args) => readSchemeColorIndex(args),
     home: (_root, args, context) => {
       const view = readHome(args);
       if (context.metrics) context.metrics.rows += view.miniatures.nodes.length;

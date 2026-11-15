@@ -18,3 +18,28 @@ query ColorToolIndex($after: String) {
     }
   }
 }
+
+query SchemeColorToolIndex($after: String) {
+  schemeColorIndex(first: 100, after: $after) {
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      schemeId
+      schemeName
+      paint {
+        id
+        name
+        brand
+        hex
+        owned
+        available
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
