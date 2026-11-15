@@ -35,7 +35,15 @@ const PluginInstallContext = createContext<InstallState>({
 });
 export const usePluginInstall = () => useContext(PluginInstallContext);
 
-export function PluginInstallProvider({ client, children }: { client: ApolloClient; children: ReactNode }) {
+export function PluginInstallProvider({
+  client,
+  children,
+  enabled = true,
+}: {
+  client: ApolloClient;
+  children: ReactNode;
+  enabled?: boolean;
+}) {
   const authHeaders = useVaultStore((s) => s.authHeaders);
   const notify = useVaultStore((s) => s.notify);
   const [job, setJob] = useState<PluginInstallJob | null>(null);
@@ -46,6 +54,7 @@ export function PluginInstallProvider({ client, children }: { client: ApolloClie
   const watched = useRef(new Set<string>());
   const announced = useRef(new Set<string>());
   const observer = useRef<ReturnType<typeof observePluginInstall> | null>(null);
+  const needsReconnect = useRef(false);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
@@ -66,6 +75,7 @@ export function PluginInstallProvider({ client, children }: { client: ApolloClie
         isPluginInstallActive(next)
       )
         return;
+      needsReconnect.current = false;
       setDisconnected(false);
       if (latest.current?.id !== next?.id) setCancelling(false);
       if (isPluginInstallActive(next) && next) watched.current.add(next.id);
@@ -90,13 +100,21 @@ export function PluginInstallProvider({ client, children }: { client: ApolloClie
   );
 
   useEffect(() => {
+    if (!enabled) return;
     let retry: ReturnType<typeof setTimeout> | undefined;
     const recover = () => {
+      needsReconnect.current = true;
       setDisconnected(true);
       retry ??= setTimeout(() => setAttempt((value) => value + 1), 5_000);
     };
     observer.current = observePluginInstall(client, receive, recover);
-    const reconnect = () => setAttempt((value) => value + 1);
+    const reconnect = () => {
+      // File choosers/downloads and ordinary tab focus must not restart a healthy
+      // stream (and consume operation-rate budgets for a redundant query).
+      if (!needsReconnect.current) return;
+      needsReconnect.current = false;
+      setAttempt((value) => value + 1);
+    };
     window.addEventListener("online", reconnect);
     window.addEventListener("focus", reconnect);
     return () => {
@@ -106,7 +124,7 @@ export function PluginInstallProvider({ client, children }: { client: ApolloClie
       window.removeEventListener("online", reconnect);
       window.removeEventListener("focus", reconnect);
     };
-  }, [client, receive, attempt]);
+  }, [client, receive, attempt, enabled]);
 
   const acceptJob = useCallback(
     (next: PluginInstallJob) => {

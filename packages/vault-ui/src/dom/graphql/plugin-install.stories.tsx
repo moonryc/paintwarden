@@ -140,9 +140,11 @@ function StatusPanels({ details }: { details: boolean }) {
 function InstallStory({
   onReady,
   details = false,
+  enabled = true,
 }: {
   onReady: (fixture: Fixture) => void;
   details?: boolean;
+  enabled?: boolean;
 }) {
   // Read the global decorator's store, including its existing notify/refresh spies.
   const store = useContext(VaultStoreContext)!;
@@ -187,7 +189,7 @@ function InstallStory({
         {mounted ? "Unmount provider" : "Reload provider"}
       </Button>
       {mounted && (
-        <PluginInstallProvider client={transport.client}>
+        <PluginInstallProvider client={transport.client} enabled={enabled}>
           <StatusPanels details={details} />
         </PluginInstallProvider>
       )}
@@ -380,6 +382,33 @@ export const CancellationShowsPendingCleanup: Story = {
     await expect(fixture.notify).not.toHaveBeenCalled();
     fixture.emit(terminal("CANCELLED"));
     await waitFor(() => expect(fixture.notify).toHaveBeenCalledWith("Plugin installation cancelled"));
+    await expect(canvas.queryByRole("progressbar")).not.toBeInTheDocument();
+  },
+};
+
+export const HealthyFocusKeepsOneStream: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const fixture = await ready(args);
+    await waitFor(() => expect(fixture.operation).toHaveBeenCalledTimes(2));
+    for (let i = 0; i < 12; i++) window.dispatchEvent(new Event("focus"));
+    window.dispatchEvent(new Event("online"));
+    await userEvent.type(canvas.getByRole("textbox", { name: "Project notes" }), "Still editing");
+    await expect(fixture.operation).toHaveBeenCalledTimes(2);
+    await expect(fixture.detached).not.toHaveBeenCalled();
+  },
+};
+
+export const UnavailableVaultDoesNotRequestProgress: Story = {
+  args: { enabled: false },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const fixture = await ready(args);
+    await userEvent.type(
+      canvas.getByRole("textbox", { name: "Project notes" }),
+      "No authorized session yet",
+    );
+    await expect(fixture.operation).not.toHaveBeenCalled();
     await expect(canvas.queryByRole("progressbar")).not.toBeInTheDocument();
   },
 };

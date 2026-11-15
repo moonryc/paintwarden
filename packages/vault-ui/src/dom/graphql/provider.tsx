@@ -42,6 +42,7 @@ const fields: Record<VaultFamily, readonly string[]> = {
 };
 
 function Scope({ children }: { children: ReactNode }) {
+  const auth = useVaultStore((store) => store.auth);
   const authHeaders = useVaultStore((store) => store.authHeaders);
   const checkServer = useVaultStore((store) => store.checkServer);
   const refreshGeneration = useVaultStore((store) => store.refreshGeneration);
@@ -199,7 +200,12 @@ function Scope({ children }: { children: ReactNode }) {
             {failure.message}
           </Alert>
         )}
-        <PluginInstallProvider client={scope.client}>{children}</PluginInstallProvider>
+        <PluginInstallProvider
+          client={scope.client}
+          enabled={Boolean(auth && !auth.setupRequired && (!auth.requireSignIn || auth.authenticated))}
+        >
+          {children}
+        </PluginInstallProvider>
       </VaultGraphQLContext.Provider>
     </ApolloProvider>
   );
