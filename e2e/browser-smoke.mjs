@@ -219,9 +219,15 @@ try {
     context.setDefaultNavigationTimeout(25_000);
     await context.addInitScript(observeStream);
     const page = await context.newPage();
+    let documentGeneration = 0;
+    const requestGenerations = new WeakMap();
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame()) documentGeneration++;
+    });
     pages.push(page);
     page.on("pageerror", (error) => results.errors.push(error.message));
     page.on("request", (request) => {
+      requestGenerations.set(request, documentGeneration);
       if (["/api/state", "/api/changes"].includes(new URL(request.url()).pathname))
         results.errors.push("Removed snapshot/polling API was requested");
     });
@@ -235,6 +241,7 @@ try {
         response.headers()["x-paintwarden-e2e-expected"] === "background-rate-limit"
       )
         return;
+      const responseGeneration = requestGenerations.get(response.request()) ?? documentGeneration;
       const task = (async () => {
         if (response.status() >= 400)
           results.errors.push(`HTTP ${response.status()} ${new URL(response.url()).pathname}`);
@@ -242,7 +249,26 @@ try {
           const body = await response.json();
           if (body.errors?.length) results.errors.push(JSON.stringify(body.errors));
         }
-      })().catch((error) => results.errors.push(`Response diagnostic: ${error.message}`));
+      })().catch((error) => {
+        // Chromium discards an old document's response bodies on real navigation.
+        // The smoke deliberately reloads pages; that diagnostic race is not an API
+        // failure. Still fail HTTP/GraphQL/JSON errors and errors in the live document.
+        if (
+          responseGeneration !== documentGeneration &&
+          /Protocol error \(Network\.getResponseBody\): No data found for resource with given identifier/.test(
+            error.message,
+          )
+        )
+          return;
+        console.error("Response diagnostic context:", {
+          responseGeneration,
+          documentGeneration,
+          url: response.url(),
+          worker: response.fromServiceWorker(),
+          failure: response.request().failure(),
+        });
+        results.errors.push(`Response diagnostic: ${error.message}`);
+      });
       pendingResponses.add(task);
       void task.finally(() => pendingResponses.delete(task));
     });
