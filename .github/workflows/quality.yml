@@ -133,3 +133,31 @@ jobs:
           name: production-browser-smoke
           retention-days: 7
           path: outputs/browser-smoke
+
+  loading-overlays:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        locales:
+          - en,de,es,fr,it,ja,ko
+          - nl,pl,pt-BR,ru,zh-Hans,zh-Hant,en-XA
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Loading overlay geometry in every width and locale
+        run: node scripts/audit-granular-overlays.mjs outputs/loading-overlays
+        env:
+          AUDIT_LANGUAGES: ${{ matrix.locales }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: loading-overlays-${{ strategy.job-index }}
+          retention-days: 7
+          path: outputs/loading-overlays

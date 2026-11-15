@@ -251,6 +251,14 @@ export const VirtualKeyboardSelection: Story = {
 
 export const Loading: Story = {
   render: (args) => <SchemePickerDialogView {...args} schemes={[]} loading />,
+  play: async () => {
+    const dialog = await within(document.body).findByRole("dialog", { name: "Color schemes" });
+    const field = within(dialog).getByRole("combobox", { name: "Filter schemes" });
+    await expect(field).toHaveAttribute("aria-disabled", "true");
+    await expect(field).toHaveTextContent("Loading…");
+    await expect(within(dialog).getAllByRole("status")).toHaveLength(1);
+    await expect(dialog.scrollWidth).toBeLessThanOrEqual(dialog.clientWidth);
+  },
 };
 export const RetryReadFailure: Story = {
   render: (args) => (

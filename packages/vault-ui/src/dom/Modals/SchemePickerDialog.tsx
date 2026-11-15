@@ -5,6 +5,8 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { colorCategoryLabel } from "../Components/component-labels";
+import { visuallyHiddenSx } from "../utils/visually-hidden";
+import { useInitialPageLoading } from "../Pages/useInitialPageLoading";
 import { Modal } from "../Components/Modal";
 import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SchemeChipView } from "../Components/SchemeChip";
@@ -67,6 +69,7 @@ export function SchemePickerDialogView({
   onLoadMore?(): void;
 }) {
   const { t } = useTranslation("components");
+  const initialLoading = useInitialPageLoading(loading, Boolean(error), false);
   const [selected, setSelected] = useState<string[]>([]);
   const [localSearch, setSearch] = useState("");
   const search = remoteSearch ?? localSearch;
@@ -192,6 +195,7 @@ export function SchemePickerDialogView({
       subtitle={t("pickSchemesToAddToThisMiniatureNothingChanges")}
       onClose={onClose}
       fillBody
+      loading={initialLoading}
       footer={
         <>
           <Box
@@ -247,6 +251,8 @@ export function SchemePickerDialogView({
         fullWidth
         size="small"
         label={t("filterSchemes")}
+        disabled={initialLoading}
+        slotProps={{ select: { renderValue: initialLoading ? () => t("loading") : undefined } }}
         value={filter}
         onChange={(event) => {
           setFilter(event.target.value as SchemePickerFilter);
@@ -408,13 +414,11 @@ export function SchemePickerDialogView({
         )}
       </Box>
 
-      <Box
-        role="status"
-        aria-live="polite"
-        sx={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clipPath: "inset(50%)" }}
-      >
-        {!loading ? t("searchResultCount", { count: matches.length }) : ""}
-      </Box>
+      {!initialLoading && (
+        <Box role="status" aria-live="polite" sx={visuallyHiddenSx}>
+          {t("searchResultCount", { count: matches.length })}
+        </Box>
+      )}
       {picked.length > 0 && (
         <Box sx={{ flexShrink: 0, mt: 1.5 }}>
           <Box sx={{ mb: 0.75, fontSize: 12, fontWeight: 650, color: "var(--ink-faint)" }}>{t("toAdd")}</Box>

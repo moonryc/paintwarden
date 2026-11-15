@@ -27,6 +27,7 @@ export function ModalHeader({
   return (
     <Box
       component="div"
+      data-modal-header
       sx={[
         {
           boxSizing: "border-box",
