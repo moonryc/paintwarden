@@ -158,7 +158,7 @@ function ProjectContent({
         {error ? (
           <QueryErrorNotice error={error.message} onRetry={refresh} />
         ) : loading ? (
-          <Box role="status" aria-label={t("loadingProject")}>
+          <Box role="group" aria-label={t("loadingProject")}>
             <PageSkeleton page="miniature-detail" miniatureImage={previewImage} />
           </Box>
         ) : (
