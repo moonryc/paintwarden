@@ -92,7 +92,11 @@ function respond(url: URL, method: string): unknown {
 
 type GraphQLRequest = { operationName?: string; variables?: Record<string, unknown> };
 
-type MockGraphQLOptions = { data?: () => State; revision?: () => number };
+type MockGraphQLOptions = {
+  data?: () => State;
+  revision?: () => number;
+  query?: (operationName: string) => Response | undefined;
+};
 
 function schemeColorIndexNodes(data: State) {
   const byId = new Map(data.catalog.map((paint) => [paint.id, paint]));
@@ -415,7 +419,8 @@ function MockApi({
             : input instanceof Request
               ? await input.clone().text()
               : "{}";
-        return Response.json({ data: graphql(JSON.parse(body) as GraphQLRequest) });
+        const request = JSON.parse(body) as GraphQLRequest;
+        return options.query?.(request.operationName ?? "") ?? Response.json({ data: graphql(request) });
       }
       const override = method === "GET" ? await overrides[url.pathname]?.() : undefined;
       return Promise.resolve(override ?? Response.json(respond(url, method)));

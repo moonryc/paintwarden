@@ -1,9 +1,10 @@
-import { Alert, Button, Snackbar, Stack, Typography } from "@mui/material";
+import { Alert, Button, Stack, Typography } from "@mui/material";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useDesktopUpdate } from "../utils/desktop-update";
 
+import { ContentSnackbar } from "./ContentSnackbar";
 import { Modal } from "./Modal";
 
 function ReleaseNotes({ notes }: { notes?: string }) {
@@ -102,11 +103,7 @@ export function UpdatePrompt() {
       />
     );
   return (
-    <Snackbar
-      open={ready}
-      anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      sx={{ bottom: { xs: "calc(5.5rem + env(safe-area-inset-bottom))", lg: 24 } }}
-    >
+    <ContentSnackbar open={ready}>
       <Alert
         severity="info"
         variant="filled"
@@ -147,6 +144,6 @@ export function UpdatePrompt() {
         {t("updateReady", { version: state?.version })}
         <ReleaseNotes notes={state?.releaseNotes} />
       </Alert>
-    </Snackbar>
+    </ContentSnackbar>
   );
 }

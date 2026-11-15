@@ -261,3 +261,25 @@ export const RemoteReleaseNotes: Story = {
     await expect(dialog.getByText("Preview: safer backups and folders.")).toBeVisible();
   },
 };
+
+// Missing release metadata is an About/check-update status, never a shell-wide
+// vault error. No action must suggest that the user's data failed to load.
+export const MissingReleaseMetadataStaysQuiet: Story = {
+  decorators: [
+    desktopBridge({
+      status: "error",
+      currentVersion: "1.0.0",
+      version: null,
+      progress: null,
+      error: "404 Not Found: latest-mac.yml",
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await waitFor(() => expect(window.paintwardenDesktop).toBeDefined());
+    await expect(body.queryByRole("alert")).not.toBeInTheDocument();
+    await expect(body.queryByRole("status")).not.toBeInTheDocument();
+    await expect(body.queryByRole("button", { name: "Restart" })).not.toBeInTheDocument();
+    await expect(canvasElement).not.toHaveTextContent("404");
+  },
+};

@@ -1,9 +1,10 @@
 import type { ApolloClient } from "@apollo/client";
-import { Alert, Box } from "@mui/material";
+import { Box } from "@mui/material";
 import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { AppBanner } from "../Components/AppBanner";
 import { PluginInstallProgress } from "../Components/PluginInstallProgress";
 import { useVaultStore } from "../store/hooks";
 
@@ -25,6 +26,7 @@ type InstallState = {
   disconnected: boolean;
   acceptJob: (job: PluginInstallJob) => void;
   cancel: () => void;
+  retry: () => void;
 };
 const PluginInstallContext = createContext<InstallState>({
   job: null,
@@ -32,6 +34,7 @@ const PluginInstallContext = createContext<InstallState>({
   disconnected: false,
   acceptJob() {},
   cancel() {},
+  retry() {},
 });
 export const usePluginInstall = () => useContext(PluginInstallContext);
 
@@ -166,7 +169,16 @@ export function PluginInstallProvider({
   }, [acceptJob, authHeaders, cancelling, notify]);
 
   return (
-    <PluginInstallContext.Provider value={{ job, cancelling, disconnected, acceptJob, cancel }}>
+    <PluginInstallContext.Provider
+      value={{
+        job,
+        cancelling,
+        disconnected,
+        acceptJob,
+        cancel,
+        retry: () => setAttempt((value) => value + 1),
+      }}
+    >
       {children}
     </PluginInstallContext.Provider>
   );
@@ -174,7 +186,7 @@ export function PluginInstallProvider({
 
 export function PluginInstallStatus({ compact = false }: { compact?: boolean }) {
   const { t } = useTranslation("pages");
-  const { job, cancelling, disconnected, cancel } = usePluginInstall();
+  const { job, cancelling, disconnected, cancel, retry } = usePluginInstall();
   // Both surfaces represent live work only. Terminal snapshots are retained by
   // the provider solely for deduplication; results belong in transient toasts.
   if (!job || !isPluginInstallActive(job)) return null;
@@ -187,9 +199,7 @@ export function PluginInstallStatus({ compact = false }: { compact?: boolean }) 
         onCancel={cancel}
       />
       {disconnected && isPluginInstallActive(job) && (
-        <Alert severity="warning" role="status">
-          {t("sourcesJobReconnecting")}
-        </Alert>
+        <AppBanner onRetry={retry}>{t("sourcesJobReconnecting")}</AppBanner>
       )}
     </Box>
   );

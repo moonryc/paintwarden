@@ -1,9 +1,9 @@
 import { i18n } from "@paintwarden/i18n/runtime";
 import type { ApolloClient } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
-import { Alert } from "@mui/material";
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -12,9 +12,10 @@ import {
   type ReactNode,
 } from "react";
 
+import { AppBanner } from "../Components/AppBanner";
 import { useVaultStore } from "../store/hooks";
 
-import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
+import { createVaultGraphQLClient, isVaultRateLimited, type VaultGraphQLError } from "./client";
 import { VaultChangesDocument, VaultInvalidationDocument } from "./generated/graphql";
 import { VaultInvalidationController, type VaultFamily } from "./invalidation";
 import { PluginInstallProvider } from "./plugin-install-hooks";
@@ -22,6 +23,23 @@ import { PluginInstallProvider } from "./plugin-install-hooks";
 export type VaultGraphQLScope = { client: ApolloClient; controller: VaultInvalidationController };
 export const VaultGraphQLContext = createContext<VaultGraphQLScope | null>(null);
 export const useVaultGraphQL = () => useContext(VaultGraphQLContext);
+
+const VaultConnectionContext = createContext<{ failure: VaultGraphQLError | null; retry: () => void } | null>(
+  null,
+);
+
+// Providers own transport state; the shell owns placement. Never render a notice
+// before the shell, where the fixed navigation/titlebar can cover it.
+export function VaultGraphQLStatus() {
+  const connection = useContext(VaultConnectionContext);
+  if (!connection?.failure) return null;
+  const { failure, retry } = connection;
+  return (
+    <AppBanner key={failure.message} severity={failure.accessDenied ? "error" : "warning"} onRetry={retry}>
+      {failure.accessDenied ? i18n.t("shell:vaultAccessExpiredSignInAgain") : failure.message}
+    </AppBanner>
+  );
+}
 
 const fields: Record<VaultFamily, readonly string[]> = {
   LIBRARY: ["library", "vaultNavigation"],
@@ -131,6 +149,9 @@ function Scope({ children }: { children: ReactNode }) {
         if (current && data) scope.controller.event(data.vaultInvalidation);
       })
       .catch((error: unknown) => {
+        // A throttled catch-up is not a broken connection. The retained SSE
+        // stream and next focus/30s check still own eventual reconciliation.
+        if (isVaultRateLimited(error)) return;
         if (current)
           setFailure({
             message: error instanceof Error ? error.message : i18n.t("shell:couldNotRefreshLiveUpdates"),
@@ -142,9 +163,13 @@ function Scope({ children }: { children: ReactNode }) {
     };
   }, [scope, refreshGeneration]);
   const checking = useRef<Promise<void> | null>(null);
-  useEffect(() => {
-    const check = () => {
+  const check = useCallback(
+    (userInitiated = false) => {
       if (document.visibilityState !== "visible" || checking.current) return;
+      // A connected SSE stream already delivers durable cursor catch-up. Auth
+      // polling remains in useServerChecks; duplicate focus/poll queries only
+      // compete with the user's searches and edits for the same request budget.
+      if (!userInitiated && connected.current) return;
       checking.current = (async () => {
         await checkServer();
         const cursor = scope.controller.getCursor();
@@ -159,6 +184,10 @@ function Scope({ children }: { children: ReactNode }) {
         setFailure((previous) => (previous?.accessDenied ? previous : null));
       })()
         .catch((error: unknown) => {
+          // Foreground search bursts can temporarily exhaust the shared budget.
+          // Only an explicit Retry should surface that response globally; keep
+          // polling at the normal bounded interval, without a hot retry loop.
+          if (!userInitiated && isVaultRateLimited(error)) return;
           setFailure((previous) =>
             previous?.accessDenied
               ? previous
@@ -171,18 +200,22 @@ function Scope({ children }: { children: ReactNode }) {
         .finally(() => {
           checking.current = null;
         });
-    };
-    const timer = setInterval(check, 30_000);
-    window.addEventListener("focus", check);
-    window.addEventListener("online", check);
-    document.addEventListener("visibilitychange", check);
+    },
+    [scope, checkServer],
+  );
+  useEffect(() => {
+    const backgroundCheck = () => check();
+    const timer = setInterval(backgroundCheck, 30_000);
+    window.addEventListener("focus", backgroundCheck);
+    window.addEventListener("online", backgroundCheck);
+    document.addEventListener("visibilitychange", backgroundCheck);
     return () => {
       clearInterval(timer);
-      window.removeEventListener("focus", check);
-      window.removeEventListener("online", check);
-      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("focus", backgroundCheck);
+      window.removeEventListener("online", backgroundCheck);
+      document.removeEventListener("visibilitychange", backgroundCheck);
     };
-  }, [scope, checkServer]);
+  }, [check]);
   useEffect(
     () => () => {
       scope.controller.dispose();
@@ -190,22 +223,17 @@ function Scope({ children }: { children: ReactNode }) {
     },
     [scope],
   );
-  if (failure?.accessDenied)
-    return <Alert severity="error">{i18n.t("shell:vaultAccessExpiredSignInAgain")}</Alert>;
   return (
     <ApolloProvider client={scope.client}>
       <VaultGraphQLContext.Provider value={scope}>
-        {failure && (
-          <Alert severity="warning" role="status">
-            {failure.message}
-          </Alert>
-        )}
-        <PluginInstallProvider
-          client={scope.client}
-          enabled={Boolean(auth && !auth.setupRequired && (!auth.requireSignIn || auth.authenticated))}
-        >
-          {children}
-        </PluginInstallProvider>
+        <VaultConnectionContext.Provider value={{ failure, retry: () => check(true) }}>
+          <PluginInstallProvider
+            client={scope.client}
+            enabled={Boolean(auth && !auth.setupRequired && (!auth.requireSignIn || auth.authenticated))}
+          >
+            {children}
+          </PluginInstallProvider>
+        </VaultConnectionContext.Provider>
       </VaultGraphQLContext.Provider>
     </ApolloProvider>
   );

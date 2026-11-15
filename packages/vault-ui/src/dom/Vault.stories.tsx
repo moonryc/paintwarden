@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
 import { miniatures, paints, vault } from "./storybook/fixtures";
 import { mockApi } from "./storybook/mock-api";
@@ -256,5 +256,29 @@ export const LoginLandmark: Story = {
       await within(main).findByRole("heading", { level: 1, name: "Sign in to Paintwarden" }),
     ).toBeInTheDocument();
     await expect(within(main).getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+  },
+};
+
+// Exercise real provider/outlet wiring via a failed reconciliation, not a
+// warning injected by the decorator. Loaded screen queries still succeed.
+const unavailableReconciliation = fn((name: string) =>
+  name === "VaultInvalidation" ? serverError() : undefined,
+);
+
+export const LiveUpdatesDisconnected: Story = {
+  decorators: [mockApi({}, { query: unavailableReconciliation })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const main = await canvas.findByRole("main");
+    await canvas.findByRole("heading", { level: 2, name: /Workbench/ });
+    window.dispatchEvent(new Event("focus"));
+    await waitFor(() => expect(unavailableReconciliation).toHaveBeenCalledWith("VaultInvalidation"));
+    const notice = (
+      await within(main).findByText("The request could not be completed. Please try again.")
+    ).closest("[data-app-banner]") as HTMLElement;
+    await expect(within(notice).getByRole("button", { name: "Retry" })).toBeVisible();
+    await userEvent.click(within(notice).getByRole("button", { name: "Close" }));
+    await expect(notice).not.toBeInTheDocument();
+    await waitFor(() => expect(canvas.getByRole("heading", { level: 2, name: /Workbench/ })).toBeVisible());
   },
 };
