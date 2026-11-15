@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Dodaj do skarbca",
-  "layoutMoreAddOptions": "Więcej opcji dodawania",
   "layoutMiniature": "Figurka",
-  "layoutAddPaint": "Dodaj farbę",
-  "layoutAddScheme": "Dodaj schemat kolorystyczny",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Studio malowania figurek",
   "layoutSupport": "Wesprzyj na Ko-fi",
@@ -261,8 +257,6 @@
   "templatesSearchPlaceholder": "Szukaj szablonów…",
   "templatesPlugin": "Wtyczka",
   "templatesCategory": "Kategoria",
-  "templatesEmptyTitle": "Nie ma jeszcze szablonów",
-  "templatesEmptyBody": "Zainstaluj wtyczkę z szablonami figurek w sekcji Dane i ustawienia → Wtyczki lub wybierz Nowy szablon, aby zapisać własny zestaw do wielokrotnego użytku.",
   "templatesAllPlugins": "Wszystkie wtyczki",
   "templatesNoPlugin": "Spoza wtyczek",
   "templatesAllCategories": "Wszystkie kategorie",
@@ -631,7 +625,6 @@
   "complementarySubtle": "Subtelna",
   "complementaryStrong": "Mocna",
   "complementaryTarget": "Kolor docelowy {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Posiadane alternatywy",
   "complementaryNoClose": "Brak zbliżonej posiadanej farby dla tej roli. Najbliższe propozycje pokazano poniżej.",
   "complementaryNoOwned": "Brak posiadanych farb z prawidłowym kolorem dla tej roli.",
@@ -645,7 +638,6 @@
   "complementaryChoose": "Wybierz farbę, aby wygenerować pozostałe trzy role.",
   "complementarySelected": "Wybrane dopasowanie",
   "complementaryInputMissing": "Tej farby nie ma już w bibliotece. Wybierz inną.",
-  "complementaryOwned": "Posiadane",
   "complementaryDistanceHint": "ΔE mierzy różnicę kolorów: im niższa wartość, tym bardziej zbliżone kolory.",
   "folders": {
     "open": "Otwórz {{name}}",
@@ -686,11 +678,13 @@
     "itemCount_few": "{{count}} elementy",
     "itemCount_many": "{{count}} elementów",
     "itemCount_other": "{{count}} elementu",
-    "moveSelected": "Przenieś zaznaczone",
     "selectItem": "Wybierz {{name}}",
     "resultsCount_one": "{{count}} wynik",
     "resultsCount_few": "{{count}} wyniki",
     "resultsCount_many": "{{count}} wyników",
     "resultsCount_other": "{{count}} wyniku"
-  }
+  },
+  "complementaryPalette": "Twoja paleta",
+  "complementaryYourPaint": "Twoja farba",
+  "complementaryNoPick": "Brak pasującej posiadanej farby"
 }

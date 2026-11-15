@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 
 import { miniatures, paints, vault } from "../storybook/fixtures";
 import { MiniatureApolloFixture } from "../storybook/miniature-apollo-fixture";
@@ -12,7 +12,7 @@ import { Home } from "./Home";
 const meta = {
   title: "Pages/Home",
   component: Home,
-  args: { view: "dashboard", onAdd: fn() },
+  args: { view: "dashboard" },
   decorators: [
     (Story) => (
       <MiniatureFixtureProvider>
@@ -303,7 +303,9 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
   },
 };
 
-// Empty collections retain one Add entry point, with the same choice dialog as populated shelves.
+// Deliberately use the asynchronous Apollo path: the shelf is absent during loading,
+// but its item count is one (the add tile) both before and after the empty response.
+// The tile is the single Add entry point; its dialog switches between a miniature and a folder.
 const emptyShelf: Story = {
   parameters: { vault: emptyState },
   render: (args) => (
@@ -311,15 +313,36 @@ const emptyShelf: Story = {
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement, args }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const add = await canvas.findByRole("button", { name: /^Add$/ });
-    await expect(canvas.queryByRole("list", { name: "Miniature shelf" })).not.toBeInTheDocument();
+    const shelf = await canvas.findByRole("list", { name: "Miniature shelf" });
+    const add = canvas.getByRole("button", { name: /Add miniature/ });
+    await waitFor(() => {
+      const width = shelf.clientWidth;
+      const columns = width >= 1100 ? 5 : width >= 840 ? 4 : width >= 600 ? 3 : 2;
+      const gap = width >= 600 ? 16 : 12;
+      const tileWidth = (width - (columns - 1) * gap) / columns;
+      expect(add.getBoundingClientRect().width).toBeCloseTo(tileWidth, 0);
+      expect(add.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
+      expect(shelf.getBoundingClientRect().height).toBeCloseTo(tileWidth * 1.25 + 4, 0);
+    });
+    await expect(shelf).toHaveAttribute("data-loaded-count", "0");
+    await expect(canvas.queryByRole("button", { name: /^Add$/ })).not.toBeInTheDocument();
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
     await userEvent.click(add);
-    const dialog = await within(document.body).findByRole("dialog", { name: "Add" });
-    await userEvent.click(within(dialog).getByRole("button", { name: "Miniature" }));
-    await expect(args.onAdd).toHaveBeenCalledWith(null);
+    const body = within(document.body);
+    // Wait for the lazily loaded form to replace its loading skeleton.
+    await body.findByRole("textbox", { name: /Name/ });
+    const miniature = within(body.getByRole("dialog", { name: "Add a miniature" }));
+    const choice = within(miniature.getByRole("group", { name: "What would you like to add?" }));
+    await expect(choice.getByRole("button", { name: "Miniature" })).toHaveAttribute("aria-pressed", "true");
+    await userEvent.click(choice.getByRole("button", { name: "Folder" }));
+    const folder = within(await body.findByRole("dialog", { name: "Create folder" }));
+    await expect(folder.getByRole("button", { name: "Folder" })).toHaveAttribute("aria-pressed", "true");
+    await expect(folder.getByRole("button", { name: "Folder" })).toHaveFocus();
+    await expect(body.queryByRole("dialog", { name: "Add a miniature" })).not.toBeInTheDocument();
+    await userEvent.click(folder.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
   },
 };
 

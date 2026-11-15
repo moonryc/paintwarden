@@ -11,6 +11,7 @@ const meta = {
   title: "App/Vault",
   render: () => <Vault />,
   decorators: [mockApi()],
+  parameters: { fullBleed: true },
 } satisfies Meta;
 
 export default meta;
@@ -89,13 +90,9 @@ export const AddMiniature: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await openPage(canvas, "Miniatures");
-    await userEvent.click(await canvas.findByRole("button", { name: /^Add$/ }));
-    const chooser = within(await within(document.body).findByRole("dialog", { name: "Add" }));
-    await expect(chooser.getByRole("button", { name: "Folder" })).toBeInTheDocument();
-    await userEvent.click(chooser.getByRole("button", { name: "Miniature" }));
-    await expect(
-      await within(document.body).findByRole("dialog", { name: /miniature/i }),
-    ).toBeInTheDocument();
+    await userEvent.click(await canvas.findByRole("button", { name: /Add miniature/ }));
+    const dialog = within(await within(document.body).findByRole("dialog", { name: /miniature/i }));
+    await expect(dialog.getByRole("group", { name: "What would you like to add?" })).toBeInTheDocument();
   },
 };
 

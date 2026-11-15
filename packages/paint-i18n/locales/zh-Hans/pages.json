@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "添加到资料库",
-  "layoutMoreAddOptions": "更多添加选项",
   "layoutMiniature": "微缩模型",
-  "layoutAddPaint": "添加涂料",
-  "layoutAddScheme": "添加配色方案",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "微缩模型工作室",
   "layoutSupport": "在 Ko-fi 上支持我们",
@@ -240,8 +236,6 @@
   "templatesSearchPlaceholder": "搜索模板…",
   "templatesPlugin": "插件",
   "templatesCategory": "分类",
-  "templatesEmptyTitle": "暂无模板",
-  "templatesEmptyBody": "在“数据与设置 → 插件”中安装含微缩模型模板的插件，或使用“新建模板”保存自己的可复用配置。",
   "templatesAllPlugins": "所有插件",
   "templatesNoPlugin": "非插件内容",
   "templatesAllCategories": "所有分类",
@@ -547,7 +541,6 @@
   "complementarySubtle": "柔和",
   "complementaryStrong": "强烈",
   "complementaryTarget": "目标色 {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "已拥有的替代颜料",
   "complementaryNoClose": "没有与此角色接近的已拥有颜料。下方显示最接近的建议。",
   "complementaryNoOwned": "没有颜色有效且可用于此角色的已拥有颜料。",
@@ -561,7 +554,6 @@
   "complementaryChoose": "选择一款颜料以生成其他三个角色的颜色。",
   "complementarySelected": "已选匹配项",
   "complementaryInputMissing": "此颜料已不在库中。请选择其他颜料。",
-  "complementaryOwned": "已拥有",
   "complementaryDistanceHint": "ΔE 衡量颜色差异：数值越低，颜色越接近。",
   "folders": {
     "open": "打开{{name}}",
@@ -599,8 +591,10 @@
     "clearSelection": "清除选择",
     "retry": "重试",
     "itemCount_other": "{{count}} 项",
-    "moveSelected": "移动所选项目",
     "selectItem": "选择{{name}}",
     "resultsCount_other": "{{count}} 个结果"
-  }
+  },
+  "complementaryPalette": "你的调色板",
+  "complementaryYourPaint": "你的颜料",
+  "complementaryNoPick": "没有匹配的已拥有颜料"
 }

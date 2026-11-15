@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Zum Tresor hinzufügen",
-  "layoutMoreAddOptions": "Weitere Optionen zum Hinzufügen",
   "layoutMiniature": "Miniatur",
-  "layoutAddPaint": "Farbe hinzufügen",
-  "layoutAddScheme": "Farbschema hinzufügen",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Miniaturenstudio",
   "layoutSupport": "Auf Ko-fi unterstützen",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Vorlagen suchen…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Kategorie",
-  "templatesEmptyTitle": "Noch keine Vorlagen",
-  "templatesEmptyBody": "Installiere unter Daten & Einstellungen → Plugins ein Plugin mit Miniaturenvorlagen oder speichere über „Neue Vorlage“ eine eigene wiederverwendbare Zusammenstellung.",
   "templatesAllPlugins": "Alle Plugins",
   "templatesNoPlugin": "Nicht aus einem Plugin",
   "templatesAllCategories": "Alle Kategorien",
@@ -575,7 +569,6 @@
   "complementarySubtle": "Dezent",
   "complementaryStrong": "Stark",
   "complementaryTarget": "Ziel {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternativen im Bestand",
   "complementaryNoClose": "Kein ähnlicher Farbtreffer im Bestand für diese Rolle. Die nächsten Vorschläge werden unten angezeigt.",
   "complementaryNoOwned": "Für diese Rolle sind keine Farben mit gültigem Farbwert im Bestand verfügbar.",
@@ -589,7 +582,6 @@
   "complementaryChoose": "Wähle eine Farbe, um die anderen drei Rollen zu erzeugen.",
   "complementarySelected": "Ausgewählter Treffer",
   "complementaryInputMissing": "Diese Farbe ist nicht mehr in der Bibliothek. Wähle eine andere Farbe.",
-  "complementaryOwned": "Im Bestand",
   "complementaryDistanceHint": "ΔE misst den Farbunterschied: Je niedriger der Wert, desto ähnlicher die Farben.",
   "folders": {
     "open": "{{name}} öffnen",
@@ -628,9 +620,11 @@
     "retry": "Erneut versuchen",
     "itemCount_one": "{{count}} Element",
     "itemCount_other": "{{count}} Elemente",
-    "moveSelected": "Auswahl verschieben",
     "selectItem": "{{name}} auswählen",
     "resultsCount_one": "{{count}} Ergebnis",
     "resultsCount_other": "{{count}} Ergebnisse"
-  }
+  },
+  "complementaryPalette": "Deine Palette",
+  "complementaryYourPaint": "Deine Farbe",
+  "complementaryNoPick": "Keine passende eigene Farbe"
 }

@@ -20,7 +20,6 @@ import { linkResetSx } from "../utils/element-resets";
 import { buzz } from "../utils/misc";
 import { truncateSx } from "../utils/truncate";
 
-import { AddMenuButton } from "./AddMenuButton";
 import { BrandMark } from "./BrandMark";
 import { NAV_SECTIONS } from "./nav-items";
 import { UserAvatar } from "./UserAvatar";
@@ -30,9 +29,6 @@ export function NavPanel({
   go,
   counts,
   displayName,
-  onAddMiniature,
-  onAddPaint,
-  onAddScheme,
   onAccount,
   onClose,
 }: {
@@ -40,18 +36,11 @@ export function NavPanel({
   go(t: Tab): void;
   counts: Partial<Record<Tab, number>>;
   displayName: string;
-  onAddMiniature(): void;
-  onAddPaint(): void;
-  onAddScheme(): void;
   onAccount(): void;
   onClose?(): void;
 }) {
   const { t } = useTranslation("pages");
   const then = (fn: () => void) => () => {
-    onClose?.();
-    fn();
-  };
-  const chooseAddAction = (fn: () => void) => {
     onClose?.();
     fn();
   };
@@ -139,13 +128,6 @@ export function NavPanel({
           </IconButton>
         )}
       </Box>
-      {tab !== "dashboard" && tab !== "miniatures" && tab !== "templates" && (
-        <AddMenuButton
-          onAddMiniature={then(onAddMiniature)}
-          onAddPaint={() => chooseAddAction(onAddPaint)}
-          onAddScheme={() => chooseAddAction(onAddScheme)}
-        />
-      )}
       <Box
         component="nav"
         aria-label={t("layoutPrimary")}

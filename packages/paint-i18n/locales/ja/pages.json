@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "保管庫に追加",
-  "layoutMoreAddOptions": "その他の追加方法",
   "layoutMiniature": "ミニチュア",
-  "layoutAddPaint": "塗料を追加",
-  "layoutAddScheme": "カラースキームを追加",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "ミニチュアスタジオ",
   "layoutSupport": "Ko-fiで支援",
@@ -240,8 +236,6 @@
   "templatesSearchPlaceholder": "テンプレートを検索…",
   "templatesPlugin": "プラグイン",
   "templatesCategory": "カテゴリー",
-  "templatesEmptyTitle": "テンプレートはまだありません",
-  "templatesEmptyBody": "「データと設定 → プラグイン」からミニチュアテンプレートを含むプラグインをインストールするか、「新しいテンプレート」で自作の設定を保存してください。",
   "templatesAllPlugins": "すべてのプラグイン",
   "templatesNoPlugin": "プラグイン以外",
   "templatesAllCategories": "すべてのカテゴリー",
@@ -547,7 +541,6 @@
   "complementarySubtle": "控えめ",
   "complementaryStrong": "強め",
   "complementaryTarget": "目標色 {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "所有している代替候補",
   "complementaryNoClose": "この役割に近い所有塗料はありません。最も近い候補を以下に表示します。",
   "complementaryNoOwned": "この役割に使える有効な色の所有塗料がありません。",
@@ -561,7 +554,6 @@
   "complementaryChoose": "塗料を選ぶと、残りの3つの役割の色を生成します。",
   "complementarySelected": "選択中の候補",
   "complementaryInputMissing": "この塗料はライブラリにありません。別の塗料を選んでください。",
-  "complementaryOwned": "所有済み",
   "complementaryDistanceHint": "ΔE は色の差を表します。値が小さいほど近い色です。",
   "folders": {
     "open": "{{name}}を開く",
@@ -599,8 +591,10 @@
     "clearSelection": "選択を解除",
     "retry": "再試行",
     "itemCount_other": "{{count}}件",
-    "moveSelected": "選択した項目を移動",
     "selectItem": "{{name}}を選択",
     "resultsCount_other": "{{count}}件の結果"
-  }
+  },
+  "complementaryPalette": "パレット",
+  "complementaryYourPaint": "選んだペイント",
+  "complementaryNoPick": "所持品に一致なし"
 }

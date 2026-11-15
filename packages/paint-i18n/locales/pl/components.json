@@ -24,7 +24,6 @@
   "loading": "Ładowanie…",
   "openingDialog": "Otwieranie: {{title}}…",
   "addMiniature": "Dodaj figurkę",
-  "ownedOrWishlist": "Posiadane lub na liście życzeń",
   "colorHex": "Kod szesnastkowy koloru",
   "eG445566": "np. #445566",
   "plugin": "Wtyczka",
@@ -516,7 +515,6 @@
   "scanSampled": "Pobrany kolor: {{hex}}",
   "scanMatches": "Najbliższe farby",
   "scanAlternatives": "Alternatywy",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "Posiadana",
   "scanAvailable": "Dostępna przez zamiennik",
   "scanNotOwned": "Nieposiadana",
@@ -530,5 +528,13 @@
   "scanAssignHint": "Wybierz istniejący krok lub dodaj nowy i wybierz etap.",
   "scanRecipeStep": "Krok receptury",
   "scanNewStep": "Nowy krok",
-  "scanStage": "Etap"
+  "scanStage": "Etap",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "Prawie dokładnie",
+  "matchQualityClose": "Bardzo blisko",
+  "matchQualitySimilar": "Podobnie",
+  "matchQualityDistant": "Przybliżone dopasowanie",
+  "scanControlsHelp": "Pomoc dotycząca sterowania",
+  "scanBestMatch": "Najlepsze dopasowanie",
+  "scanClosestPaint": "Najbliższa farba"
 }

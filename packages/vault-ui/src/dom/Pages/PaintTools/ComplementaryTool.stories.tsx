@@ -9,8 +9,8 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { createVaultCache } from "../../graphql/cache";
 import { VaultInvalidationController } from "../../graphql/invalidation";
 import { VaultGraphQLContext } from "../../graphql/provider";
-import { i18n } from "../../i18n";
 import type { SchemeInput } from "../../graphql/scheme-actions";
+import { i18n } from "../../i18n";
 
 import { ComplementaryTool } from "./ComplementaryTool";
 
@@ -255,8 +255,11 @@ export const RoleReversalAndLiveStrength: Story = {
     await selectInput(canvasElement);
     for (const role of ["highlight", "shadow", "complement", "base"] as const) {
       const name = role[0].toUpperCase() + role.slice(1);
-      await userEvent.click(canvas.getByRole("combobox", { name: "Input role" }));
-      await userEvent.click(await within(canvasElement.ownerDocument.body).findByRole("option", { name }));
+      const roleButton = within(canvas.getByRole("group", { name: "Input role" })).getByRole("button", {
+        name,
+      });
+      await userEvent.click(roleButton);
+      await expect(roleButton).toHaveAttribute("aria-pressed", "true");
       const derived = derivePaintRoles(baseHex, role, 50);
       for (const other of ["base", "complement", "highlight", "shadow"] as const) {
         if (other === role) {

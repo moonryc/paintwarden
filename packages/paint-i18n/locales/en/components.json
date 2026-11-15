@@ -24,7 +24,6 @@
   "loading": "Loading…",
   "openingDialog": "Opening {{title}}…",
   "addMiniature": "Add miniature",
-  "ownedOrWishlist": "Owned or wishlist",
   "colorHex": "Color hex",
   "eG445566": "e.g. #445566",
   "plugin": "Plugin",
@@ -474,7 +473,6 @@
   "scanSampled": "Sampled color: {{hex}}",
   "scanMatches": "Closest paint matches",
   "scanAlternatives": "Alternatives",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "Owned",
   "scanAvailable": "Available via substitution",
   "scanNotOwned": "Not owned",
@@ -488,5 +486,13 @@
   "scanAssignHint": "Choose an existing step, or add a step and choose its stage.",
   "scanRecipeStep": "Recipe step",
   "scanNewStep": "New step",
-  "scanStage": "Stage"
+  "scanStage": "Stage",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "Near-exact",
+  "matchQualityClose": "Very close",
+  "matchQualitySimilar": "Similar",
+  "matchQualityDistant": "Loose match",
+  "scanControlsHelp": "Controls help",
+  "scanBestMatch": "Best match",
+  "scanClosestPaint": "Closest paint"
 }

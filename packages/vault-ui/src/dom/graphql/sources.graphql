@@ -1,33 +1,92 @@
 query InstalledSources {
   sources {
-    revision { epoch seq }
+    revision {
+      epoch
+      seq
+    }
     sources {
-      id repository url name version license attribution lastError lastErrorInfo { code parameters { name value } } logoUrl
-      dependencies { repository minimumVersion }
-      counts { paints schemes templates }
+      id
+      repository
+      url
+      name
+      version
+      license
+      attribution
+      lastError
+      lastErrorInfo {
+        code
+        parameters {
+          name
+          value
+        }
+      }
+      logoUrl
+      dependencies {
+        repository
+        minimumVersion
+      }
+      counts {
+        paints
+        schemes
+        templates
+      }
     }
   }
 }
 query PluginVersions {
   sourceVersions {
-    revision { epoch seq }
-    versions { id availableVersion updateAvailable error }
+    revision {
+      epoch
+      seq
+    }
+    versions {
+      id
+      availableVersion
+      updateAvailable
+      error
+    }
   }
 }
 query PluginRemoval($id: ID!) {
   sourceRemoval(id: $id) {
-    revision { epoch seq }
-    source { id name version }
-    removes { paints schemes templates }
-    blockers { label count }
+    revision {
+      epoch
+      seq
+    }
+    source {
+      id
+      name
+      version
+    }
+    removes {
+      paints
+      schemes
+      templates
+    }
+    blockers {
+      label
+      count
+    }
     canRemove
   }
 }
 query PluginShareable {
   sourceShareable {
-    revision { epoch seq }
-    paints { id name }
-    schemes { id name }
-    templates { id name }
+    revision {
+      epoch
+      seq
+    }
+    paints {
+      id
+      name
+    }
+    schemes {
+      id
+      name
+    }
+    templates {
+      id
+      name
+    }
   }
 }

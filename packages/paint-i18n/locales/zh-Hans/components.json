@@ -24,7 +24,6 @@
   "loading": "正在加载…",
   "openingDialog": "正在打开{{title}}…",
   "addMiniature": "添加微缩模型",
-  "ownedOrWishlist": "已拥有或愿望清单",
   "colorHex": "十六进制色值",
   "eG445566": "例如 #445566",
   "plugin": "插件",
@@ -453,7 +452,6 @@
   "scanSampled": "取样颜色：{{hex}}",
   "scanMatches": "最接近的涂料",
   "scanAlternatives": "备选涂料",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "已拥有",
   "scanAvailable": "可通过替代使用",
   "scanNotOwned": "未拥有",
@@ -467,5 +465,13 @@
   "scanAssignHint": "选择现有步骤，或添加新步骤并选择工序。",
   "scanRecipeStep": "配方步骤",
   "scanNewStep": "新步骤",
-  "scanStage": "工序"
+  "scanStage": "工序",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "几乎一致",
+  "matchQualityClose": "非常接近",
+  "matchQualitySimilar": "相近",
+  "matchQualityDistant": "大致匹配",
+  "scanControlsHelp": "操作帮助",
+  "scanBestMatch": "最佳匹配",
+  "scanClosestPaint": "最接近的颜料"
 }

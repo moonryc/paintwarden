@@ -151,7 +151,7 @@ export const BulkSelection: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("checkbox", { name: "Select Knight 000" }));
     await userEvent.click(canvas.getByRole("checkbox", { name: "Select Knight 001" }));
-    await userEvent.click(canvas.getByRole("button", { name: /Move selected/ }));
+    await userEvent.click(canvas.getByRole("button", { name: "Move to folder" }));
     const dialog = within(await within(document.body).findByRole("dialog"));
     await expect(dialog.getByRole("button", { name: /Cancel/ })).toBeInTheDocument();
     await userEvent.click(dialog.getByRole("button", { name: /Cancel/ }));

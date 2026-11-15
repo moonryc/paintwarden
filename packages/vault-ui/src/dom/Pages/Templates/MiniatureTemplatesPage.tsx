@@ -3,15 +3,17 @@ import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { EmptyState } from "../../Components/EmptyState";
-import { FilterToolbar } from "../../Components/FilterToolbar";
+import { AddChoiceDialog } from "../../Components/AddChoiceDialog";
+import { AddMiniatureTile } from "../../Components/AddMiniatureTile";
+import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { FolderBrowser } from "../../Components/FolderBrowser";
+import { FolderNameDialog } from "../../Components/FolderNameDialog";
 import { FolderPicker } from "../../Components/FolderPicker";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
+import { SelectionBar } from "../../Components/SelectionBar";
 import { useFolderBrowser } from "../../graphql/folder-hooks";
 import { useFolderSearch } from "../../graphql/folder-search-hooks";
-import { TemplateCopy } from "../../icons";
 import { useVaultStore } from "../../store/hooks";
 import { useTemplateActions, useTemplateCatalog } from "../../store/template-hooks";
 import type { MiniatureTemplate } from "../../types";
@@ -80,9 +82,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [selected, setSelected] = useState<MiniatureTemplate | null>(null);
   // The template whose Delete was clicked once; a second click deletes it.
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const hasGrid =
-    !initialLoading &&
-    !(catalog && catalog.totalCount === 0 && !search && category === "ALL" && plugin === "ALL");
+  // The add tile leads the grid, so the grid shows even with no templates (as on Home).
+  const hasGrid = !initialLoading;
+  const [adding, setAdding] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ gridTop: 0, gridWidth: 0, scrollY: 0, viewportHeight: 900 });
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
@@ -134,8 +136,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const columnWidth = Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
   const rowHeight = Math.max(1, ((columnWidth - 2 * CARD_BORDER) * 5) / 4 + 2 * CARD_BORDER);
   const matching = searching ? mixedSearch.templates : (catalog?.templates ?? []);
+  const gridItems: (MiniatureTemplate | null)[] = searching ? matching : [null, ...matching];
   const gridWindow = schemeGridWindow({
-    itemCount: matching.length,
+    itemCount: gridItems.length,
     columns,
     rowHeight,
     rowGap: gap,
@@ -192,14 +195,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
         }}
         placeholder={t("templatesSearchPlaceholder")}
       >
-        <Box
-          sx={{
-            display: "grid",
-            gap: 1,
-            "& .MuiInputLabel-root.Mui-focused": { color: "var(--ink-soft)" },
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
-          }}
-        >
+        <Box sx={filterGridSx}>
           {!!catalogQuery.sourceCounts.length && (
             <TextField
               select
@@ -249,23 +245,8 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           },
         }}
         kind="template"
-        onAddItem={() => setEditing(null)}
       />
-      {selectedIds.length > 0 && (
-        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-          <Button onClick={() => setMovingIds(selectedIds)}>
-            {t("folders.moveSelected", { count: selectedIds.length })}
-          </Button>
-          <Button onClick={() => setSelectedIds([])}>{t("folders.clearSelection")}</Button>
-        </Box>
-      )}
-      {!hasGrid ? (
-        <EmptyState
-          icon={<TemplateCopy size={26} />}
-          title={t("templatesEmptyTitle")}
-          body={t("templatesEmptyBody")}
-        />
-      ) : (
+      {hasGrid && (
         <>
           <Box
             component="p"
@@ -295,34 +276,49 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
               }}
               style={{ top: gridWindow.topOffset }}
             >
-              {matching.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  index={gridWindow.startIndex + offset}
-                  checked={selectedIds.includes(template.id)}
-                  onSelect={() =>
-                    setSelectedIds((ids) =>
-                      ids.includes(template.id)
-                        ? ids.filter((id) => id !== template.id)
-                        : [...ids, template.id],
-                    )
-                  }
-                  onOpen={() => setSelected(template)}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Tab") return;
-                    const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
-                    if (next < 0 || next >= matching.length) return;
-                    if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
-                    event.preventDefault();
-                    focusTemplateAt(next);
-                  }}
-                />
-              ))}
+              {gridItems.slice(gridWindow.startIndex, gridWindow.endIndex).map((template, offset) =>
+                template ? (
+                  <TemplateCard
+                    key={template.id}
+                    template={template}
+                    index={gridWindow.startIndex + offset}
+                    checked={selectedIds.includes(template.id)}
+                    selecting={selectedIds.length > 0}
+                    onSelect={() =>
+                      setSelectedIds((ids) =>
+                        ids.includes(template.id)
+                          ? ids.filter((id) => id !== template.id)
+                          : [...ids, template.id],
+                      )
+                    }
+                    onOpen={() => setSelected(template)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Tab") return;
+                      const next = gridWindow.startIndex + offset + (event.shiftKey ? -1 : 1);
+                      if (next < 0 || next >= gridItems.length) return;
+                      if (next >= gridWindow.startIndex && next < gridWindow.endIndex) return;
+                      event.preventDefault();
+                      focusTemplateAt(next);
+                    }}
+                  />
+                ) : (
+                  <AddMiniatureTile
+                    key="add"
+                    title={t("templatesNewTemplate")}
+                    onClick={() => setAdding(true)}
+                    sx={{ width: "100%", height: "100%" }}
+                  />
+                ),
+              )}
             </Box>
           </Box>
         </>
       )}
+      <SelectionBar
+        count={selectedIds.length}
+        onMove={() => setMovingIds(selectedIds)}
+        onClear={() => setSelectedIds([])}
+      />
       <Box ref={loadMoreRef} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         {hasNextPage && (
           <Button onClick={loadMore} disabled={loading}>
@@ -362,6 +358,29 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
             setSelectedIds([]);
           }}
           onClose={() => setMovingIds(null)}
+        />
+      )}
+      {adding && (
+        <AddChoiceDialog
+          itemLabel={t("folders.template")}
+          item={
+            <TemplateEditorDialog
+              template={null}
+              folderId={browser.flat ? null : browser.folderId}
+              onSaved={async () => {
+                setAdding(false);
+                notify(t("templatesCreated"));
+              }}
+              onClose={() => setAdding(false)}
+            />
+          }
+          folder={
+            <FolderNameDialog
+              title={t("folders.createFolder")}
+              onSave={(name) => browser.create(name)}
+              onClose={() => setAdding(false)}
+            />
+          }
         />
       )}
       {editing !== undefined && (

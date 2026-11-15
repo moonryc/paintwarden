@@ -4,7 +4,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../Components/EmptyState";
-import { FilterToolbar } from "../Components/FilterToolbar";
+import { FilterToolbar, filterGridSx } from "../Components/FilterToolbar";
 import { LibraryPaintRow } from "../Components/LibraryPaintRow";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
@@ -170,20 +170,10 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
         search={search}
         setSearch={setSearch}
         placeholder={t("librarySearchPlaceholder")}
-        // Three filters need the full row until the window is wide enough to sit beside the search.
+        // With a source filter, the three filters take a larger share of the row beside the search.
         singleLineFilters={plugins.length > 0}
       >
-        <Box
-          component="div"
-          sx={{
-            display: "grid",
-            minWidth: 0,
-            gap: 1,
-            // Size filters by their actual container, not the window: long
-            // translated selections must also fit narrow embedded/library views.
-            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
-          }}
-        >
+        <Box component="div" sx={filterGridSx}>
           {plugins.length > 0 && (
             <TextField
               select

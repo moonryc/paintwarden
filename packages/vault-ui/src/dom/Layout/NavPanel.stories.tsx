@@ -12,9 +12,6 @@ const meta = {
     go: fn(),
     counts: {},
     displayName: "Sample owner",
-    onAddMiniature: fn(),
-    onAddPaint: fn(),
-    onAddScheme: fn(),
     onAccount: fn(),
   },
   decorators: [
@@ -28,17 +25,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+// Adding happens on each page (add tiles, Add paint, New scheme), so the sidebar has no add button.
 const noQuickAdd: Story["play"] = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   await expect(canvas.queryByRole("group", { name: "Add to vault" })).not.toBeInTheDocument();
   await expect(canvas.queryByRole("button", { name: "Miniature" })).not.toBeInTheDocument();
 };
-export const WorkbenchUsesPageAdd: Story = { play: noQuickAdd };
-export const MiniaturesUsesPageAdd: Story = { args: { tab: "miniatures" }, play: noQuickAdd };
-export const TemplatesUsesPageAdd: Story = { args: { tab: "templates" }, play: noQuickAdd };
-export const OtherPagesKeepQuickAdd: Story = {
-  args: { tab: "paints" },
-  play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getByRole("button", { name: "Miniature" })).toBeInTheDocument();
-  },
-};
+export const Workbench: Story = { play: noQuickAdd };
+export const Paints: Story = { args: { tab: "paints" }, play: noQuickAdd };

@@ -20,7 +20,6 @@ import { PasswordField } from "./Components/PasswordField";
 import { UpdatePrompt } from "./Components/UpdatePrompt";
 import { VaultLoadError } from "./Components/VaultLoadError";
 import { dialogs } from "./dialog-preload";
-import { useMiniatureActions } from "./graphql/miniature-actions";
 import { NavigationCountsProvider, useNavigationCounts } from "./graphql/navigation";
 import { usePaintCommands } from "./graphql/paint-actions";
 import { VaultGraphQLProvider } from "./graphql/provider";
@@ -28,6 +27,7 @@ import { LanguageProvider } from "./i18n";
 import { MenuIcon } from "./icons";
 import { NAV } from "./Layout/nav-items";
 import { NavPanel } from "./Layout/NavPanel";
+import { CreateMiniatureDialog } from "./Modals/CreateMiniatureDialog";
 import { FALLBACK_OWNER_NAME } from "./Layout/UserAvatar";
 import { Home } from "./Pages/Home";
 import { useVaultStore } from "./store/hooks";
@@ -41,8 +41,6 @@ import { PublicError, publicErrorMessage } from "./utils/public-error";
 import { truncateSx } from "./utils/truncate";
 
 // Keep the workbench eager; screens stay lazy and dialogs share idle/intent preloads.
-const ColorSchemesDialog = dialogs.schemes.Component;
-const MiniatureForm = dialogs.miniature.Component;
 const PaintForm = dialogs.paint.Component;
 const ProjectDrawer = dialogs.project.Component;
 const PaintLibrary = lazy(() =>
@@ -93,10 +91,8 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
     [setupCode, setSetupCode] = useState(""),
     [authBusy, setAuthBusy] = useState(false);
   const [showMiniForm, setShowMiniForm] = useState(false),
-    [initialFolderId, setInitialFolderId] = useState<string | null>(null),
     [initialTemplateId, setInitialTemplateId] = useState<string | null>(null),
-    [showPaintForm, setShowPaintForm] = useState(false),
-    [showSchemeForm, setShowSchemeForm] = useState(false);
+    [showPaintForm, setShowPaintForm] = useState(false);
   const tab = useVaultStore((s) => s.tab);
   const go = useVaultStore((s) => s.go);
   const selectedId = useVaultStore((s) => s.selectedId);
@@ -142,19 +138,12 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
   }
 
   const toast = toasts.at(-1);
-  const addMini = (folderId: string | null = null) => {
-    setInitialFolderId(folderId);
-    setInitialTemplateId(null);
-    setShowMiniForm(true);
-  };
+
   const [navOpen, setNavOpen] = useState(false);
   const navProps = {
     tab,
     go,
     displayName,
-    onAddMiniature: () => addMini(),
-    onAddPaint: () => setShowPaintForm(true),
-    onAddScheme: () => setShowSchemeForm(true),
     onAccount: () => go("settings"),
   };
 
@@ -500,11 +489,10 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                   >
                     <Suspense fallback={<PageSkeleton page={tab === "dashboard" ? "home" : tab} />}>
                       {tab === "dashboard" || tab === "miniatures" ? (
-                        <Home view={tab} onAdd={addMini} />
+                        <Home view={tab} />
                       ) : tab === "templates" ? (
                         <MiniatureTemplatesPage
                           onUse={(id) => {
-                            setInitialFolderId(null);
                             setInitialTemplateId(id);
                             setShowMiniForm(true);
                           }}
@@ -543,7 +531,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
           </Box>
           {showMiniForm && (
             <CreateMiniatureDialog
-              initialFolderId={initialFolderId}
+              initialFolderId={null}
               initialTemplateId={initialTemplateId}
               onClose={() => setShowMiniForm(false)}
             />
@@ -552,15 +540,6 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
           {pluginsOpen && (
             <DeferredDialog kind="plugins" title={i18n.t("shell:plugins")} onClose={closePlugins}>
               <PluginsModal onClose={closePlugins} />
-            </DeferredDialog>
-          )}
-          {showSchemeForm && (
-            <DeferredDialog
-              kind="schemes"
-              title={i18n.t("components:colorSchemes")}
-              onClose={() => setShowSchemeForm(false)}
-            >
-              <ColorSchemesDialog initialId={null} onClose={() => setShowSchemeForm(false)} />
             </DeferredDialog>
           )}
           {selectedId && (
@@ -628,34 +607,6 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
 function VaultNavPanel(props: Omit<ComponentProps<typeof NavPanel>, "counts">) {
   const counts = useNavigationCounts();
   return <NavPanel {...props} counts={counts} />;
-}
-
-function CreateMiniatureDialog({
-  initialFolderId,
-  initialTemplateId,
-  onClose,
-}: {
-  initialFolderId: string | null;
-  initialTemplateId: string | null;
-  onClose(): void;
-}) {
-  const actions = useMiniatureActions();
-  const openMini = useVaultStore((store) => store.openMini);
-  const notify = useVaultStore((store) => store.notify);
-  return (
-    <DeferredDialog kind="miniature" title={i18n.t("components:addAMiniature")} onClose={onClose}>
-      <MiniatureForm
-        initialTemplateId={initialTemplateId}
-        onClose={onClose}
-        onSubmit={async (values) => {
-          const id = await actions.create({ ...values, folderId: initialFolderId });
-          onClose();
-          notify(i18n.t("shell:added", { value1: values.title }));
-          openMini(id);
-        }}
-      />
-    </DeferredDialog>
-  );
 }
 
 function CreatePaintDialog({ onClose }: { onClose(): void }) {

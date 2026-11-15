@@ -248,8 +248,6 @@ export function SettingsScreen({
         )}
       </SettingsSection>
 
-      <HelpAbout />
-
       <LanguagePicker />
 
       <SettingsSection title={t("settingsCatalog")}>
@@ -395,6 +393,8 @@ export function SettingsScreen({
           }}
         />
       </SettingsSection>
+
+      <HelpAbout />
       {pendingBackup && (
         <RestoreBackupDialog
           pending={pendingBackup}

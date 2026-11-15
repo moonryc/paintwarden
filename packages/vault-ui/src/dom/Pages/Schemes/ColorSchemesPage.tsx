@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type Keyboar
 import { useTranslation } from "react-i18next";
 
 import { EmptyState } from "../../Components/EmptyState";
-import { FilterToolbar } from "../../Components/FilterToolbar";
+import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { PageHeader } from "../../Components/PageHeader";
 import { PageSkeleton } from "../../Components/PageSkeletons";
 import { PaintBottle } from "../../Components/PaintBottle";
@@ -216,15 +216,7 @@ export function ColorSchemesPage() {
             placeholder={t("schemesSearch")}
             singleLineFilters
           >
-            <Box
-              component="div"
-              sx={{
-                display: "grid",
-                minWidth: 0,
-                gap: 1,
-                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 16rem), 1fr))",
-              }}
-            >
+            <Box component="div" sx={filterGridSx}>
               {sourceOptions.length > 0 && (
                 <TextField
                   select

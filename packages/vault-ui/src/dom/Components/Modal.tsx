@@ -1,9 +1,16 @@
 import { Dialog, useMediaQuery } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
-import { useId, type ReactNode } from "react";
+import { createContext, useContext, useId, type ReactNode } from "react";
 
 import { ModalHeader } from "./ModalHeader";
+
+/**
+ * Lets a wrapper place a control above the body of the form Modal it renders, such as
+ * AddChoiceDialog's Miniature/Folder switch. `instant` skips the open transition when the wrapper
+ * swaps one form for another, so the switch reads as one dialog changing content.
+ */
+export const ModalLeadContext = createContext<{ lead: ReactNode; instant: boolean } | null>(null);
 
 // The body keeps room for a first-row outlined field's floating label (about 9px above the
 // field), so the header never covers it.
@@ -53,6 +60,18 @@ export function Modal({
   const phone = useMediaQuery((theme: Theme) => theme.breakpoints.down("sm"), { noSsr: true });
   // Names the dialog after its visible title.
   const titleId = useId();
+  const slot = useContext(ModalLeadContext);
+  // Nested modals opened from this one's content do not repeat the lead.
+  const content = (
+    <ModalLeadContext.Provider value={null}>
+      {slot && <Box sx={{ mb: 2.5 }}>{slot.lead}</Box>}
+      {children}
+    </ModalLeadContext.Provider>
+  );
+  const footerContent = footer && (
+    <ModalLeadContext.Provider value={null}>{footer}</ModalLeadContext.Provider>
+  );
+  const transitionDuration = slot?.instant ? 0 : undefined;
   const head = (sx: SxProps<Theme>) => (
     <ModalHeader
       id={titleId}
@@ -68,6 +87,8 @@ export function Modal({
       <Dialog
         open
         fullScreen
+        transitionDuration={transitionDuration}
+        disableAutoFocus={slot?.instant}
         // Phone forms ignore backdrop taps, but retain keyboard dismissal.
         onClose={(_event, reason) => {
           if (reason === "escapeKeyDown") onClose();
@@ -96,11 +117,11 @@ export function Modal({
             pb: footer ? 2.5 : "calc(1.5rem + env(safe-area-inset-bottom))",
           }}
         >
-          {children}
+          {content}
         </Box>
         {footer && (
           <Box sx={{ ...footerLayout, px: 2.5, pb: "calc(1rem + env(safe-area-inset-bottom))" }}>
-            {footer}
+            {footerContent}
           </Box>
         )}
       </Dialog>
@@ -111,6 +132,8 @@ export function Modal({
       onClose={onClose}
       fullWidth
       maxWidth="sm"
+      transitionDuration={transitionDuration}
+      disableAutoFocus={slot?.instant}
       aria-labelledby={titleId}
       slotProps={{
         paper: { sx: { boxSizing: "border-box", bgcolor: "var(--surface)", ...paperLayout } },
@@ -126,9 +149,11 @@ export function Modal({
           pb: footer ? 2.5 : { xs: 3, md: 3.5 },
         }}
       >
-        {children}
+        {content}
       </Box>
-      {footer && <Box sx={{ ...footerLayout, px: { xs: 3, md: 3.5 }, pb: { xs: 2.5, md: 3 } }}>{footer}</Box>}
+      {footer && (
+        <Box sx={{ ...footerLayout, px: { xs: 3, md: 3.5 }, pb: { xs: 2.5, md: 3 } }}>{footerContent}</Box>
+      )}
     </Dialog>
   );
 }

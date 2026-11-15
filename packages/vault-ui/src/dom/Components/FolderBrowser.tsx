@@ -1,3 +1,5 @@
+import FolderOutlined from "@mui/icons-material/FolderOutlined";
+import ViewModule from "@mui/icons-material/ViewModuleOutlined";
 import {
   Alert,
   Box,
@@ -7,7 +9,6 @@ import {
   RadioGroup,
   Skeleton,
   Stack,
-  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -18,25 +19,22 @@ import { useTranslation } from "react-i18next";
 import type { FolderBrowserState } from "../graphql/folder-hooks";
 
 import { FolderBreadcrumbs } from "./FolderBreadcrumbs";
+import { FolderNameDialog } from "./FolderNameDialog";
 import { FolderPicker } from "./FolderPicker";
 import { FolderTile, type FolderView } from "./FolderTile";
 import { Modal } from "./Modal";
 
-type Dialog =
-  { type: "add" } | { type: "create" } | { type: "rename" | "delete" | "move"; folder: FolderView };
+type Dialog = { type: "rename" | "delete" | "move"; folder: FolderView };
 
 export function FolderBrowser({
   browser,
   kind,
-  onAddItem,
 }: {
   browser: FolderBrowserState;
   kind: "project" | "template";
-  onAddItem(): void;
 }) {
   const { t } = useTranslation("pages");
   const [dialog, setDialog] = useState<Dialog | null>(null);
-  const [name, setName] = useState("");
   const [deleteMode, setDeleteMode] = useState<"DELETE_CONTENTS" | "MOVE_UP">("MOVE_UP");
   const [pending, setPending] = useState(false);
   const [operationError, setOperationError] = useState(false);
@@ -63,7 +61,6 @@ export function FolderBrowser({
   const folderAction = (type: "rename" | "delete" | "move", id: string) => {
     const folder = browser.folders.find((entry) => entry.id === id);
     if (!folder) return;
-    setName(folder.name);
     setDeleteMode("MOVE_UP");
     open({ type, folder });
   };
@@ -87,23 +84,21 @@ export function FolderBrowser({
       <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}>
         <ToggleButtonGroup
           exclusive
+          size="small"
           value={browser.flat ? "flat" : "folders"}
           onChange={(_event, value: string | null) => {
             if (value) browser.setFlat(value === "flat");
           }}
         >
-          <ToggleButton value="folders">{t("folders.showFolders")}</ToggleButton>
-          <ToggleButton value="flat">{t("folders.showFlat")}</ToggleButton>
+          <ToggleButton value="folders" sx={{ gap: 0.75 }}>
+            <FolderOutlined fontSize="small" aria-hidden />
+            {t("folders.showFolders")}
+          </ToggleButton>
+          <ToggleButton value="flat" sx={{ gap: 0.75 }}>
+            <ViewModule fontSize="small" aria-hidden />
+            {t("folders.showFlat")}
+          </ToggleButton>
         </ToggleButtonGroup>
-        <Box sx={{ flex: 1 }} />
-        <Button
-          variant="contained"
-          aria-haspopup="dialog"
-          disabled={pending}
-          onClick={() => open({ type: "add" })}
-        >
-          {t("folders.add")}
-        </Button>
       </Stack>
       {!browser.flat && (
         <FolderBreadcrumbs kind={kind} ancestors={browser.ancestors} onNavigate={browser.navigate} />
@@ -162,76 +157,13 @@ export function FolderBrowser({
               ))}
         </Box>
       )}
-      {dialog?.type === "add" && (
-        <Modal title={t("folders.add")} subtitle={t("folders.addChoice")} onClose={close}>
-          <Stack spacing={2}>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setDialog(null);
-                onAddItem();
-              }}
-            >
-              {t(kind === "project" ? "folders.miniature" : "folders.template")}
-            </Button>
-            <Button
-              variant="outlined"
-              onClick={() => {
-                setName("");
-                open({ type: "create" });
-              }}
-            >
-              {t("folders.folder")}
-            </Button>
-          </Stack>
-        </Modal>
-      )}
-      {(dialog?.type === "create" || dialog?.type === "rename") && (
-        <Modal
-          title={t(dialog.type === "create" ? "folders.createFolder" : "folders.rename")}
-          subtitle=""
-          onClose={close}
-          footer={
-            <>
-              <Button onClick={close} disabled={pending}>
-                {t("folders.cancel")}
-              </Button>
-              <Button
-                type="submit"
-                form="folder-name-form"
-                variant="contained"
-                disabled={pending || !name.trim()}
-              >
-                {t("folders.save")}
-              </Button>
-            </>
-          }
-        >
-          <Stack
-            component="form"
-            id="folder-name-form"
-            spacing={2}
-            aria-busy={pending}
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!name.trim()) return;
-              void run(() =>
-                dialog.type === "create"
-                  ? browser.create(name.trim())
-                  : browser.rename(dialog.folder.id, name.trim()),
-              );
-            }}
-          >
-            {operationError && error}
-            <TextField
-              fullWidth
-              label={t("folders.name")}
-              value={name}
-              disabled={pending}
-              onChange={(event) => setName(event.target.value)}
-            />
-          </Stack>
-        </Modal>
+      {dialog?.type === "rename" && (
+        <FolderNameDialog
+          title={t("folders.rename")}
+          initialName={dialog.folder.name}
+          onSave={(name) => browser.rename(dialog.folder.id, name)}
+          onClose={() => setDialog(null)}
+        />
       )}
       {dialog?.type === "delete" && (
         <Modal

@@ -1,8 +1,10 @@
+import Check from "@mui/icons-material/Check";
+import Close from "@mui/icons-material/Close";
+import Colorize from "@mui/icons-material/Colorize";
 import {
   Alert,
   Box,
   Button,
-  Chip,
   Dialog,
   MenuItem,
   Skeleton,
@@ -26,9 +28,13 @@ import { useSchemes } from "../graphql/schemes-hooks";
 import type { RecipeStep } from "../types";
 import { getSteps } from "../utils/constants";
 
-export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onClose(): void }) {
-  const { t, i18n } = useTranslation("components");
-  const number = new Intl.NumberFormat(i18n.resolvedLanguage ?? i18n.language, { maximumFractionDigits: 2 });
+import { SwatchScanMatch } from "./SwatchScanMatch";
+import { SwatchScanPins } from "./SwatchScanPins";
+
+const wide = "@container (min-width: 880px)";
+
+export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onClose: () => void }) {
+  const { t } = useTranslation("components");
   const detail = useMiniatureDetail(miniatureId);
   const colors = useColorIndex();
   const index = useMemo(() => buildColorIndex(colors.paints), [colors.paints]);
@@ -49,6 +55,23 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
   const matches = pin ? nearestPaints(index, pin.hex, { limit: 5 }) : [];
   const miniature = detail.data?.miniature;
   const ready = !colors.loading && !colors.error && !detail.loading && !detail.error;
+  const removePin = (id: number) => {
+    const rest = pins.filter((row) => row.id !== id);
+    setPins(rest);
+    if (selected === id) setSelected(rest.at(-1)?.id ?? null);
+  };
+  const assignButton = (paintId: string, primary: boolean) => (
+    <Button
+      variant={primary ? "contained" : "outlined"}
+      size={primary ? "medium" : "small"}
+      disabled={!ready}
+      onClick={() => setAssignPaint(paintId)}
+      sx={{ flexShrink: 0 }}
+    >
+      {t("scanAssign")}
+    </Button>
+  );
+  const card = { border: "1px solid", borderColor: "divider", borderRadius: 2, p: 1.5 } as const;
   return (
     <Dialog
       open
@@ -58,199 +81,228 @@ export function SwatchScan({ miniatureId, onClose }: { miniatureId: string; onCl
       slotProps={{ paper: { sx: { bgcolor: "var(--surface)" } } }}
     >
       <Stack
-        spacing={2}
-        aria-busy={colors.loading || detail.loading}
-        sx={{ p: { xs: 2, md: 3 }, width: "100%", maxWidth: 1200, mx: "auto", boxSizing: "border-box" }}
+        component="header"
+        direction="row"
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+          alignItems: "center",
+          gap: 2,
+          px: { xs: 2, md: 3 },
+          py: 1.5,
+          bgcolor: "var(--surface)",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
       >
-        <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 2 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography id="swatch-scan-title" variant="h5" component="h2">
             {t("scanTitle")}
           </Typography>
-          <Button onClick={onClose}>{t("close")}</Button>
-        </Stack>
-        <Typography variant="body2" color="text.secondary">
-          {t("scanDisclaimer")}
-        </Typography>
-        {detail.error && (
-          <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
-            {detail.error.message}
-          </Alert>
-        )}
-        {colors.error && (
-          <Alert severity="error" action={<Button onClick={colors.refetch}>{t("retry")}</Button>}>
-            {colors.error.message}
-          </Alert>
-        )}
-        {!miniature && detail.loading && (
-          <Skeleton aria-hidden animation={false} variant="rectangular" height="45vh" />
-        )}
-        {miniature?.imageUrl && (
-          <SwatchScanCanvas
-            src={miniature.imageUrl}
-            alt={miniature.title}
-            pins={pins}
-            selected={selected}
-            onSelect={setSelected}
-            onSample={(point, hex) => {
-              const id = ++serial.current;
-              setPins((old) => [...old, { ...point, hex, id }]);
-              setSelected(id);
-            }}
-          />
-        )}
-        {!detail.loading && !miniature?.imageUrl && <Alert severity="info">{t("scanNoImage")}</Alert>}
-        <Stack
-          direction="row"
-          sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 1 }}
-        >
-          <ToggleButtonGroup
-            exclusive
-            value={mode}
-            onChange={(_, value: "paint" | "scheme" | null) => value && setMode(value)}
-            aria-label={t("scanMode")}
-          >
-            <ToggleButton value="paint">{t("scanByPaint")}</ToggleButton>
-            <ToggleButton value="scheme">{t("scanByScheme")}</ToggleButton>
-          </ToggleButtonGroup>
-          <Button
-            disabled={!pins.length}
-            onClick={() => {
-              setPins([]);
-              setSelected(null);
-            }}
-          >
-            {t("scanClear")}
-          </Button>
-        </Stack>
-        <Box
-          component="ol"
-          aria-label={t("scanPins")}
-          sx={{ display: "flex", flexWrap: "wrap", gap: 1, listStyle: "none", p: 0, m: 0 }}
-        >
-          {pins.map((item, i) => {
-            const match = nearestPaints(index, item.hex, { limit: 1 })[0];
-            return (
-              <Box component="li" key={item.id} sx={{ minWidth: 0, maxWidth: "100%" }}>
-                <Button
-                  sx={{ whiteSpace: "normal", textAlign: "left", overflowWrap: "anywhere", maxWidth: "100%" }}
-                  variant={item.id === selected ? "contained" : "outlined"}
-                  aria-pressed={item.id === selected}
-                  onClick={() => setSelected(item.id)}
-                >
-                  {t("scanPinMatch", {
-                    number: i + 1,
-                    hex: item.hex,
-                    name: match?.paint.name ?? t("scanNoMatch"),
-                  })}
-                </Button>
-              </Box>
-            );
-          })}
+          {miniature && (
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {miniature.title}
+            </Typography>
+          )}
         </Box>
-        {colors.loading && !colors.paints.length && (
-          <Stack role="status" aria-label={t("scanLoading")} spacing={1}>
-            <Skeleton aria-hidden animation={false} height={70} />
-            <Skeleton aria-hidden animation={false} height={70} />
-            <Skeleton aria-hidden animation={false} height={70} />
-          </Stack>
-        )}
-        {!pin && <Typography color="text.secondary">{t("scanTapHint")}</Typography>}
-        {pin && (
-          <Box aria-live="polite" aria-atomic="true">
-            <Typography component="h3" variant="subtitle1">
-              {t("scanSampled", { hex: pin.hex })}
-            </Typography>
-          </Box>
-        )}
-        {pin && !colors.loading && !matches.length && <Alert severity="info">{t("scanNoMatch")}</Alert>}
-        {pin && mode === "paint" && (
-          <Stack
-            component="ul"
-            spacing={1}
-            aria-label={t("scanMatches")}
-            sx={{ p: 0, m: 0, listStyle: "none" }}
-          >
-            {matches.map(({ paint, deltaE }, i) => (
-              <Box
-                component="li"
-                key={paint.id}
-                sx={{ border: "1px solid", borderColor: "divider", borderRadius: 1, p: 1.5 }}
-              >
-                {i === 1 && (
-                  <Typography component="h3" variant="subtitle2">
-                    {t("scanAlternatives")}
-                  </Typography>
-                )}
-                <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
-                  <Box
-                    aria-hidden
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: paint.hex,
-                      borderRadius: 1,
-                      border: "1px solid",
-                      borderColor: "divider",
-                    }}
-                  />
-                  <Box sx={{ flex: "1 1 180px" }}>
-                    <Typography sx={{ fontWeight: 700 }}>{paint.name}</Typography>
-                    <Typography variant="body2">
-                      {paint.brand} · {paint.hex} · {t("scanDelta", { value: number.format(deltaE) })}
-                    </Typography>
-                  </Box>
-                  <Chip
-                    size="small"
-                    label={
-                      (paint.owned
-                        ? t("scanOwned")
-                        : paint.available
-                          ? t("scanAvailable")
-                          : t("scanNotOwned")) +
-                      (paint.owned && !paint.available ? ` · ${t("paintUnavailable")}` : "")
-                    }
-                  />
-                  <Button disabled={!ready} onClick={() => setAssignPaint(paint.id)}>
-                    {t("scanAssign")}
-                  </Button>
-                </Stack>
-              </Box>
-            ))}
-          </Stack>
-        )}
-        {pin && mode === "scheme" && matches[0] && (
-          <Stack direction="row" sx={{ alignItems: "center", gap: 1 }}>
-            <Box aria-hidden sx={{ width: 36, height: 36, bgcolor: matches[0].paint.hex, borderRadius: 1 }} />
-            <Typography>
-              {matches[0].paint.name} · {matches[0].paint.brand} · {matches[0].paint.hex} ·{" "}
-              {t("scanDelta", { value: number.format(matches[0].deltaE) })} ·{" "}
-              {matches[0].paint.owned
-                ? t("scanOwned")
-                : matches[0].paint.available
-                  ? t("scanAvailable")
-                  : t("scanNotOwned")}
-              {matches[0].paint.owned && !matches[0].paint.available && ` · ${t("paintUnavailable")}`}
-            </Typography>
-          </Stack>
-        )}
-        {pin && mode === "scheme" && matches[0] && (
-          <ScanSchemes
-            key={matches[0].paint.id}
-            paintId={matches[0].paint.id}
-            miniatureId={miniatureId}
-            detail={detail.data}
-            disabled={!ready}
-          />
-        )}
-        {assignPaint && detail.data && (
-          <ScanAssignPaint
-            data={detail.data}
-            paintId={assignPaint}
-            disabled={!ready}
-            onClose={() => setAssignPaint(null)}
-          />
-        )}
+        <Button onClick={onClose} startIcon={<Close />}>
+          {t("close")}
+        </Button>
       </Stack>
+      <Box sx={{ containerType: "inline-size", width: "100%" }}>
+        <Box
+          aria-busy={colors.loading || detail.loading}
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr)",
+            gap: 3,
+            p: { xs: 2, md: 3 },
+            maxWidth: 1400,
+            mx: "auto",
+            boxSizing: "border-box",
+            [wide]: { gridTemplateColumns: "minmax(0, 3fr) minmax(320px, 2fr)", alignItems: "start" },
+          }}
+        >
+          <Stack spacing={1.5} sx={{ minWidth: 0, [wide]: { position: "sticky", top: 96 } }}>
+            {detail.error && (
+              <Alert severity="error" action={<Button onClick={detail.refresh}>{t("retry")}</Button>}>
+                {detail.error.message}
+              </Alert>
+            )}
+            {colors.error && (
+              <Alert severity="error" action={<Button onClick={colors.refetch}>{t("retry")}</Button>}>
+                {colors.error.message}
+              </Alert>
+            )}
+            {!miniature && detail.loading && (
+              <Skeleton aria-hidden animation={false} variant="rectangular" height="45vh" />
+            )}
+            {miniature?.imageUrl && (
+              <SwatchScanCanvas
+                src={miniature.imageUrl}
+                alt={miniature.title}
+                pins={pins}
+                selected={selected}
+                onSelect={setSelected}
+                onSample={(point, hex) => {
+                  const id = ++serial.current;
+                  setPins((old) => [...old, { ...point, hex, id }]);
+                  setSelected(id);
+                }}
+              />
+            )}
+            {!detail.loading && !miniature?.imageUrl && <Alert severity="info">{t("scanNoImage")}</Alert>}
+            <Typography variant="caption" color="text.secondary">
+              {t("scanDisclaimer")}
+            </Typography>
+          </Stack>
+          <Stack spacing={2} sx={{ minWidth: 0 }}>
+            <ToggleButtonGroup
+              exclusive
+              fullWidth
+              value={mode}
+              onChange={(_, value: "paint" | "scheme" | null) => value && setMode(value)}
+              aria-label={t("scanMode")}
+            >
+              <ToggleButton value="paint">{t("scanByPaint")}</ToggleButton>
+              <ToggleButton value="scheme">{t("scanByScheme")}</ToggleButton>
+            </ToggleButtonGroup>
+            <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+              <Typography component="h3" variant="subtitle2" color="text.secondary">
+                {t("scanPins")}
+              </Typography>
+              <Button
+                size="small"
+                disabled={!pins.length}
+                onClick={() => {
+                  setPins([]);
+                  setSelected(null);
+                }}
+              >
+                {t("scanClear")}
+              </Button>
+            </Stack>
+            <SwatchScanPins
+              pins={pins}
+              selected={selected}
+              nameFor={(hex) => nearestPaints(index, hex, { limit: 1 })[0]?.paint.name ?? t("scanNoMatch")}
+              onSelect={setSelected}
+              onRemove={removePin}
+            />
+            {colors.loading && !colors.paints.length && (
+              <Stack role="status" aria-label={t("scanLoading")} spacing={1}>
+                <Skeleton aria-hidden animation={false} height={70} />
+                <Skeleton aria-hidden animation={false} height={70} />
+                <Skeleton aria-hidden animation={false} height={70} />
+              </Stack>
+            )}
+            {!pin && (
+              <Stack
+                sx={{
+                  alignItems: "center",
+                  textAlign: "center",
+                  gap: 1,
+                  p: 3,
+                  border: "1px dashed",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  color: "text.secondary",
+                }}
+              >
+                <Colorize aria-hidden />
+                <Typography>{t("scanTapHint")}</Typography>
+              </Stack>
+            )}
+            {pin && (
+              <Stack
+                direction="row"
+                aria-live="polite"
+                aria-atomic="true"
+                sx={{ alignItems: "center", gap: 1 }}
+              >
+                <Box
+                  aria-hidden
+                  sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: "50%",
+                    bgcolor: pin.hex,
+                    border: "1px solid",
+                    borderColor: "divider",
+                  }}
+                />
+                <Typography component="h3" variant="subtitle1">
+                  {t("scanSampled", { hex: pin.hex })}
+                </Typography>
+              </Stack>
+            )}
+            {pin && !colors.loading && !matches.length && <Alert severity="info">{t("scanNoMatch")}</Alert>}
+            {pin && mode === "paint" && matches[0] && (
+              <Stack
+                component="ul"
+                spacing={1.5}
+                aria-label={t("scanMatches")}
+                sx={{ p: 0, m: 0, listStyle: "none" }}
+              >
+                <Box component="li" sx={{ ...card, borderColor: "primary.main", borderWidth: 2 }}>
+                  <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                    {t("scanBestMatch")}
+                  </Typography>
+                  <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5, mt: 0.5 }}>
+                    <SwatchScanMatch sample={pin.hex} match={matches[0]} size={64} />
+                    {assignButton(matches[0].paint.id, true)}
+                  </Stack>
+                </Box>
+                {matches.length > 1 && (
+                  <Box component="li">
+                    <Typography component="h3" variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                      {t("scanAlternatives")}
+                    </Typography>
+                    <Stack component="ul" spacing={1} sx={{ p: 0, m: 0, listStyle: "none" }}>
+                      {matches.slice(1).map((match) => (
+                        <Box component="li" key={match.paint.id} sx={card}>
+                          <Stack direction="row" sx={{ alignItems: "center", flexWrap: "wrap", gap: 1.5 }}>
+                            <SwatchScanMatch sample={pin.hex} match={match} size={44} />
+                            {assignButton(match.paint.id, false)}
+                          </Stack>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+              </Stack>
+            )}
+            {pin && mode === "scheme" && matches[0] && (
+              <Box sx={card}>
+                <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+                  {t("scanClosestPaint")}
+                </Typography>
+                <Box sx={{ mt: 0.5 }}>
+                  <SwatchScanMatch sample={pin.hex} match={matches[0]} size={52} />
+                </Box>
+              </Box>
+            )}
+            {pin && mode === "scheme" && matches[0] && (
+              <ScanSchemes
+                key={matches[0].paint.id}
+                paintId={matches[0].paint.id}
+                miniatureId={miniatureId}
+                detail={detail.data}
+                disabled={!ready}
+              />
+            )}
+          </Stack>
+        </Box>
+      </Box>
+      {assignPaint && detail.data && (
+        <ScanAssignPaint
+          data={detail.data}
+          paintId={assignPaint}
+          disabled={!ready}
+          onClose={() => setAssignPaint(null)}
+        />
+      )}
     </Dialog>
   );
 }
@@ -278,6 +330,8 @@ function ScanSchemes({
   const actions = useMiniatureActions();
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState<string | null>(null);
+  const attached = (schemeId: string) =>
+    Boolean(detail?.schemes.nodes.some((row) => row.scheme.id === schemeId));
   const attach = async (schemeId: string) => {
     if (!detail || disabled) return;
     setPending(true);
@@ -310,7 +364,6 @@ function ScanSchemes({
         <Stack
           key={scheme.id}
           direction="row"
-
           sx={{
             alignItems: "center",
             justifyContent: "space-between",
@@ -318,13 +371,17 @@ function ScanSchemes({
             p: 1,
             border: "1px solid",
             borderColor: "divider",
-            borderRadius: 1,
+            borderRadius: 2,
           }}
         >
-          <Typography>{scheme.name}</Typography>
+          <Typography sx={{ minWidth: 0, overflowWrap: "anywhere" }}>{scheme.name}</Typography>
           <Button
-            disabled={disabled || pending || detail?.schemes.nodes.some((row) => row.scheme.id === scheme.id)}
+            variant="outlined"
+            size="small"
+            startIcon={attached(scheme.id) ? <Check /> : undefined}
+            disabled={disabled || pending || attached(scheme.id)}
             onClick={() => void attach(scheme.id)}
+            sx={{ flexShrink: 0 }}
           >
             {t("scanAttach")}
           </Button>

@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Добавить в хранилище",
-  "layoutMoreAddOptions": "Другие варианты добавления",
   "layoutMiniature": "Миниатюра",
-  "layoutAddPaint": "Добавить краску",
-  "layoutAddScheme": "Добавить схему",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Студия миниатюр",
   "layoutSupport": "Поддержать на Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Поиск шаблонов…",
   "templatesPlugin": "Плагин",
   "templatesCategory": "Категория",
-  "templatesEmptyTitle": "Шаблонов пока нет",
-  "templatesEmptyBody": "Установите плагин с шаблонами миниатюр в разделе «Данные и настройки → Плагины» или нажмите «Новый шаблон», чтобы сохранить собственную заготовку.",
   "templatesAllPlugins": "Все плагины",
   "templatesNoPlugin": "Не из плагина",
   "templatesAllCategories": "Все категории",
@@ -631,7 +625,6 @@
   "complementarySubtle": "Слабая",
   "complementaryStrong": "Сильная",
   "complementaryTarget": "Целевой цвет {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Альтернативы из коллекции",
   "complementaryNoClose": "В коллекции нет близкого соответствия для этой роли. Ниже показаны ближайшие варианты.",
   "complementaryNoOwned": "Для этой роли нет красок из коллекции с корректным цветом.",
@@ -645,7 +638,6 @@
   "complementaryChoose": "Выберите краску, чтобы подобрать остальные три роли.",
   "complementarySelected": "Выбранное соответствие",
   "complementaryInputMissing": "Этой краски больше нет в библиотеке. Выберите другую.",
-  "complementaryOwned": "В коллекции",
   "complementaryDistanceHint": "ΔE измеряет различие цветов: чем меньше значение, тем ближе цвета.",
   "folders": {
     "open": "Открыть {{name}}",
@@ -686,11 +678,13 @@
     "itemCount_few": "{{count}} элемента",
     "itemCount_many": "{{count}} элементов",
     "itemCount_other": "{{count}} элемента",
-    "moveSelected": "Переместить выбранное",
     "selectItem": "Выбрать {{name}}",
     "resultsCount_one": "{{count}} результат",
     "resultsCount_few": "{{count}} результата",
     "resultsCount_many": "{{count}} результатов",
     "resultsCount_other": "{{count}} результата"
-  }
+  },
+  "complementaryPalette": "Ваша палитра",
+  "complementaryYourPaint": "Ваша краска",
+  "complementaryNoPick": "Нет подходящей краски из коллекции"
 }

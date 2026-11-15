@@ -24,7 +24,6 @@
   "loading": "Laden…",
   "openingDialog": "{{title}} openen…",
   "addMiniature": "Miniatuur toevoegen",
-  "ownedOrWishlist": "In bezit of op verlanglijst",
   "colorHex": "Hexkleurcode",
   "eG445566": "bijv. #445566",
   "plugin": "Plugin",
@@ -474,7 +473,6 @@
   "scanSampled": "Bemonsterde kleur: {{hex}}",
   "scanMatches": "Dichtstbijzijnde verfkleuren",
   "scanAlternatives": "Alternatieven",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "In bezit",
   "scanAvailable": "Beschikbaar via vervanging",
   "scanNotOwned": "Niet in bezit",
@@ -488,5 +486,13 @@
   "scanAssignHint": "Kies een bestaande stap, of voeg een stap toe en kies de fase.",
   "scanRecipeStep": "Receptstap",
   "scanNewStep": "Nieuwe stap",
-  "scanStage": "Fase"
+  "scanStage": "Fase",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "Vrijwel exact",
+  "matchQualityClose": "Zeer dichtbij",
+  "matchQualitySimilar": "Vergelijkbaar",
+  "matchQualityDistant": "Globale overeenkomst",
+  "scanControlsHelp": "Hulp bij bediening",
+  "scanBestMatch": "Beste overeenkomst",
+  "scanClosestPaint": "Dichtstbijzijnde verf"
 }

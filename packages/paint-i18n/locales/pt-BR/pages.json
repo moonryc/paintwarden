@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Adicionar ao cofre",
-  "layoutMoreAddOptions": "Mais opções de adição",
   "layoutMiniature": "Miniatura",
-  "layoutAddPaint": "Adicionar tinta",
-  "layoutAddScheme": "Adicionar esquema de cores",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Estúdio de miniaturas",
   "layoutSupport": "Apoiar no Ko-fi",
@@ -254,8 +250,6 @@
   "templatesSearchPlaceholder": "Buscar predefinições…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Categoria",
-  "templatesEmptyTitle": "Nenhuma predefinição ainda",
-  "templatesEmptyBody": "Instale um plugin com predefinições de miniatura em Dados e configurações → Plugins ou use Nova predefinição para salvar sua própria configuração reutilizável.",
   "templatesAllPlugins": "Todos os plugins",
   "templatesNoPlugin": "Não vem de um plugin",
   "templatesAllCategories": "Todas as categorias",
@@ -603,7 +597,6 @@
   "complementarySubtle": "Sutil",
   "complementaryStrong": "Forte",
   "complementaryTarget": "Alvo {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternativas que você possui",
   "complementaryNoClose": "Nenhuma tinta que você possui é próxima o suficiente para esta função. As sugestões mais próximas aparecem abaixo.",
   "complementaryNoOwned": "Nenhuma tinta que você possui com uma cor válida está disponível para esta função.",
@@ -617,7 +610,6 @@
   "complementaryChoose": "Escolha uma tinta para gerar as outras três funções.",
   "complementarySelected": "Correspondência selecionada",
   "complementaryInputMissing": "Esta tinta não está mais na biblioteca. Escolha outra.",
-  "complementaryOwned": "Em posse",
   "complementaryDistanceHint": "ΔE mede a diferença de cor: quanto menor o valor, mais próximas são as cores.",
   "folders": {
     "open": "Abrir {{name}}",
@@ -657,10 +649,12 @@
     "itemCount_one": "{{count}} item",
     "itemCount_many": "{{count}} itens",
     "itemCount_other": "{{count}} itens",
-    "moveSelected": "Mover seleção",
     "selectItem": "Selecionar {{name}}",
     "resultsCount_one": "{{count}} resultado",
     "resultsCount_many": "{{count}} resultados",
     "resultsCount_other": "{{count}} resultados"
-  }
+  },
+  "complementaryPalette": "Sua paleta",
+  "complementaryYourPaint": "Sua tinta",
+  "complementaryNoPick": "Nenhuma tinta sua corresponde"
 }

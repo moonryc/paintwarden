@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Añadir al almacén",
-  "layoutMoreAddOptions": "Más opciones para añadir",
   "layoutMiniature": "Miniatura",
-  "layoutAddPaint": "Añadir pintura",
-  "layoutAddScheme": "Añadir esquema",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Estudio de miniaturas",
   "layoutSupport": "Apóyame en Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Buscar plantillas…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Categoría",
-  "templatesEmptyTitle": "Aún no hay plantillas",
-  "templatesEmptyBody": "Instala un plugin con plantillas de miniaturas desde Datos y ajustes → Plugins, o usa Nueva plantilla para guardar una configuración reutilizable propia.",
   "templatesAllPlugins": "Todos los plugins",
   "templatesNoPlugin": "No procede de un plugin",
   "templatesAllCategories": "Todas las categorías",
@@ -603,7 +597,6 @@
   "complementarySubtle": "Sutil",
   "complementaryStrong": "Intensa",
   "complementaryTarget": "Objetivo {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternativas que tienes",
   "complementaryNoClose": "No hay una pintura propia cercana para esta función. Las sugerencias más próximas se muestran abajo.",
   "complementaryNoOwned": "No hay pinturas propias con un color válido disponibles para esta función.",
@@ -617,7 +610,6 @@
   "complementaryChoose": "Elige una pintura para generar las otras tres funciones.",
   "complementarySelected": "Coincidencia seleccionada",
   "complementaryInputMissing": "Esta pintura ya no está en la biblioteca. Elige otra.",
-  "complementaryOwned": "En propiedad",
   "complementaryDistanceHint": "ΔE mide la diferencia de color: cuanto menor es el valor, más se parecen los colores.",
   "folders": {
     "open": "Abrir {{name}}",
@@ -657,10 +649,12 @@
     "itemCount_one": "{{count}} elemento",
     "itemCount_many": "{{count}} elementos",
     "itemCount_other": "{{count}} elementos",
-    "moveSelected": "Mover selección",
     "selectItem": "Seleccionar {{name}}",
     "resultsCount_one": "{{count}} resultado",
     "resultsCount_many": "{{count}} resultados",
     "resultsCount_other": "{{count}} resultados"
-  }
+  },
+  "complementaryPalette": "Tu paleta",
+  "complementaryYourPaint": "Tu pintura",
+  "complementaryNoPick": "Ninguna pintura propia coincide"
 }

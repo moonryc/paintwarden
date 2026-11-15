@@ -10,6 +10,15 @@ export type PaintRole = "base" | "complement" | "highlight" | "shadow";
 
 /** Advisory UI threshold, not a guarantee about physical paint or a search cutoff. */
 export const NO_CLOSE_MATCH_DELTA_E = 10;
+export type MatchCloseness = "exact" | "close" | "similar" | "distant";
+/** Advisory buckets for showing CIEDE2000 distance in words; boundaries are inclusive. */
+export function matchCloseness(deltaE: number): MatchCloseness {
+  if (!Number.isFinite(deltaE) || deltaE < 0) return "distant";
+  if (deltaE <= 2) return "exact";
+  if (deltaE <= 5) return "close";
+  if (deltaE <= NO_CLOSE_MATCH_DELTA_E) return "similar";
+  return "distant";
+}
 const D65 = { x: 0.95047, y: 1, z: 1.08883 };
 const EPSILON = 216 / 24389;
 const KAPPA = 24389 / 27;

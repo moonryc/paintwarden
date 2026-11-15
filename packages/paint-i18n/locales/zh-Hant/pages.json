@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "新增至資料庫",
-  "layoutMoreAddOptions": "更多新增選項",
   "layoutMiniature": "微縮模型",
-  "layoutAddPaint": "新增塗料",
-  "layoutAddScheme": "新增配色方案",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "微縮模型工作室",
   "layoutSupport": "在 Ko-fi 上支持",
@@ -240,8 +236,6 @@
   "templatesSearchPlaceholder": "搜尋範本…",
   "templatesPlugin": "外掛程式",
   "templatesCategory": "分類",
-  "templatesEmptyTitle": "尚無範本",
-  "templatesEmptyBody": "從「資料與設定 → 外掛程式」安裝含有微縮模型範本的外掛程式，或使用「新增範本」儲存自己可重複使用的配置。",
   "templatesAllPlugins": "所有外掛程式",
   "templatesNoPlugin": "非來自外掛程式",
   "templatesAllCategories": "所有分類",
@@ -547,7 +541,6 @@
   "complementarySubtle": "柔和",
   "complementaryStrong": "強烈",
   "complementaryTarget": "目標色 {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "已擁有的替代顏料",
   "complementaryNoClose": "沒有與此角色接近的已擁有顏料。下方顯示最接近的建議。",
   "complementaryNoOwned": "沒有顏色有效且可用於此角色的已擁有顏料。",
@@ -561,7 +554,6 @@
   "complementaryChoose": "選擇一款顏料以產生其他三個角色的顏色。",
   "complementarySelected": "已選配對項目",
   "complementaryInputMissing": "此顏料已不在收藏庫中。請選擇其他顏料。",
-  "complementaryOwned": "已擁有",
   "complementaryDistanceHint": "ΔE 衡量顏色差異：數值越低，顏色越接近。",
   "folders": {
     "open": "開啟{{name}}",
@@ -599,8 +591,10 @@
     "clearSelection": "清除選取",
     "retry": "重試",
     "itemCount_other": "{{count}} 項",
-    "moveSelected": "移動所選項目",
     "selectItem": "選取{{name}}",
     "resultsCount_other": "{{count}} 個結果"
-  }
+  },
+  "complementaryPalette": "你的調色盤",
+  "complementaryYourPaint": "你的顏料",
+  "complementaryNoPick": "沒有符合的已擁有顏料"
 }

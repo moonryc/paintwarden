@@ -24,7 +24,6 @@
   "loading": "載入中…",
   "openingDialog": "正在開啟「{{title}}」…",
   "addMiniature": "新增微縮模型",
-  "ownedOrWishlist": "已擁有或願望清單",
   "colorHex": "十六進位色碼",
   "eG445566": "例如 #445566",
   "plugin": "外掛程式",
@@ -453,7 +452,6 @@
   "scanSampled": "取樣色彩：{{hex}}",
   "scanMatches": "最接近的塗料",
   "scanAlternatives": "備選塗料",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "已擁有",
   "scanAvailable": "可透過替代使用",
   "scanNotOwned": "未擁有",
@@ -467,5 +465,13 @@
   "scanAssignHint": "選擇現有步驟，或新增步驟並選擇工序。",
   "scanRecipeStep": "配方步驟",
   "scanNewStep": "新步驟",
-  "scanStage": "工序"
+  "scanStage": "工序",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "幾乎一致",
+  "matchQualityClose": "非常接近",
+  "matchQualitySimilar": "相近",
+  "matchQualityDistant": "大致符合",
+  "scanControlsHelp": "操作說明",
+  "scanBestMatch": "最佳符合",
+  "scanClosestPaint": "最接近的顏料"
 }

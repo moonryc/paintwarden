@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Ajouter au coffre",
-  "layoutMoreAddOptions": "Autres options d’ajout",
   "layoutMiniature": "Figurine",
-  "layoutAddPaint": "Ajouter une peinture",
-  "layoutAddScheme": "Ajouter un schéma de couleurs",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Atelier de figurines",
   "layoutSupport": "Soutenir sur Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Rechercher des modèles…",
   "templatesPlugin": "Extension",
   "templatesCategory": "Catégorie",
-  "templatesEmptyTitle": "Aucun modèle",
-  "templatesEmptyBody": "Installez une extension contenant des modèles de figurines depuis Données et paramètres → Extensions, ou utilisez Nouveau modèle pour enregistrer votre propre configuration réutilisable.",
   "templatesAllPlugins": "Toutes les extensions",
   "templatesNoPlugin": "Sans extension d’origine",
   "templatesAllCategories": "Toutes les catégories",
@@ -603,7 +597,6 @@
   "complementarySubtle": "Subtile",
   "complementaryStrong": "Forte",
   "complementaryTarget": "Cible {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternatives possédées",
   "complementaryNoClose": "Aucune peinture possédée ne correspond étroitement à ce rôle. Les suggestions les plus proches sont affichées ci-dessous.",
   "complementaryNoOwned": "Aucune peinture possédée avec une couleur valide n’est disponible pour ce rôle.",
@@ -617,7 +610,6 @@
   "complementaryChoose": "Choisissez une peinture pour générer les trois autres rôles.",
   "complementarySelected": "Correspondance sélectionnée",
   "complementaryInputMissing": "Cette peinture n’est plus dans la bibliothèque. Choisissez-en une autre.",
-  "complementaryOwned": "Possédée",
   "complementaryDistanceHint": "ΔE mesure la différence de couleur : plus la valeur est faible, plus les couleurs sont proches.",
   "folders": {
     "open": "Ouvrir {{name}}",
@@ -657,10 +649,12 @@
     "itemCount_one": "{{count}} élément",
     "itemCount_many": "{{count}} éléments",
     "itemCount_other": "{{count}} éléments",
-    "moveSelected": "Déplacer la sélection",
     "selectItem": "Sélectionner {{name}}",
     "resultsCount_one": "{{count}} résultat",
     "resultsCount_many": "{{count}} résultats",
     "resultsCount_other": "{{count}} résultats"
-  }
+  },
+  "complementaryPalette": "Ta palette",
+  "complementaryYourPaint": "Ta peinture",
+  "complementaryNoPick": "Aucune peinture possédée ne correspond"
 }

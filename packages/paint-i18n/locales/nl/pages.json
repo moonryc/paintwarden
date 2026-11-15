@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Aan kluis toevoegen",
-  "layoutMoreAddOptions": "Meer toevoegopties",
   "layoutMiniature": "Miniatuur",
-  "layoutAddPaint": "Verf toevoegen",
-  "layoutAddScheme": "Kleurenschema toevoegen",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Miniaturenstudio",
   "layoutSupport": "Steun via Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Zoek sjablonen…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Categorie",
-  "templatesEmptyTitle": "Nog geen sjablonen",
-  "templatesEmptyBody": "Installeer een plugin met miniatuursjablonen via Gegevens en instellingen → Plugins, of sla je eigen herbruikbare opzet op met Nieuw sjabloon.",
   "templatesAllPlugins": "Alle plugins",
   "templatesNoPlugin": "Niet uit een plugin",
   "templatesAllCategories": "Alle categorieën",
@@ -575,7 +569,6 @@
   "complementarySubtle": "Subtiel",
   "complementaryStrong": "Sterk",
   "complementaryTarget": "Doelkleur {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternatieven in bezit",
   "complementaryNoClose": "Geen sterk overeenkomende verf in bezit voor deze rol. De dichtstbijzijnde suggesties staan hieronder.",
   "complementaryNoOwned": "Er zijn geen verven in bezit met een geldige kleur beschikbaar voor deze rol.",
@@ -589,7 +582,6 @@
   "complementaryChoose": "Kies een verf om de andere drie rollen te genereren.",
   "complementarySelected": "Geselecteerde overeenkomst",
   "complementaryInputMissing": "Deze verf staat niet meer in de bibliotheek. Kies een andere verf.",
-  "complementaryOwned": "In bezit",
   "complementaryDistanceHint": "ΔE meet het kleurverschil: hoe lager de waarde, hoe dichter de kleuren bij elkaar liggen.",
   "folders": {
     "open": "{{name}} openen",
@@ -628,9 +620,11 @@
     "retry": "Opnieuw proberen",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",
-    "moveSelected": "Selectie verplaatsen",
     "selectItem": "{{name}} selecteren",
     "resultsCount_one": "{{count}} resultaat",
     "resultsCount_other": "{{count}} resultaten"
-  }
+  },
+  "complementaryPalette": "Jouw palet",
+  "complementaryYourPaint": "Jouw verf",
+  "complementaryNoPick": "Geen eigen verf komt overeen"
 }

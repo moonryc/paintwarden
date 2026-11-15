@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 
 import { column } from "../storybook/decorators";
 
@@ -15,4 +15,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ args, canvasElement }) => {
+    const tile = within(canvasElement).getByRole("button", { name: "Add miniature" });
+    await expect(tile).toHaveAttribute("aria-haspopup", "dialog");
+    await userEvent.click(tile);
+    await expect(args.onClick).toHaveBeenCalledOnce();
+  },
+};
+
+export const NamedForTemplates: Story = {
+  args: { title: "New template" },
+  play: async ({ canvasElement }) => {
+    await expect(within(canvasElement).getByRole("button", { name: "New template" })).toBeVisible();
+  },
+};

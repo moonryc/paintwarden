@@ -6,11 +6,25 @@ import { useTranslation } from "react-i18next";
 import { dialogPreloadHandlers } from "../dialog-preload";
 import { Plus } from "../icons";
 
-export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProps<Theme> }) {
+/**
+ * Dashed "Add miniature" tile. It shows only a plus; `title` names it for assistive technology.
+ */
+export function AddMiniatureTile({
+  onClick,
+  title,
+  sx,
+}: {
+  onClick: () => void;
+  /** Accessible name; defaults to "Add miniature". */
+  title?: string;
+  sx?: SxProps<Theme>;
+}) {
   const { t } = useTranslation("components");
   return (
     <ButtonBase
       {...dialogPreloadHandlers("miniature")}
+      aria-label={title ?? t("addMiniature")}
+      aria-haspopup="dialog"
       onClick={onClick}
       sx={[
         {
@@ -38,54 +52,23 @@ export function AddMiniatureTile({ onClick, sx }: { onClick(): void; sx?: SxProp
       <Box
         component="span"
         sx={{
-          boxSizing: "border-box",
-          px: 1.5,
-          textAlign: "center",
+          display: "grid",
+          height: "2.75rem",
+          width: "2.75rem",
+          placeItems: "center",
+          borderRadius: "calc(infinity * 1px)",
+          bgcolor: "var(--sunken)",
+          transition:
+            "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
+          ".MuiButtonBase-root:hover &": {
+            "@media (hover: hover)": {
+              bgcolor: "var(--brand)",
+              color: "var(--brand-fg)",
+            },
+          },
         }}
       >
-        <Box
-          component="span"
-          sx={{
-            marginInline: "auto",
-            mb: 1,
-            display: "grid",
-            height: "2.75rem",
-            width: "2.75rem",
-            placeItems: "center",
-            borderRadius: "calc(infinity * 1px)",
-            bgcolor: "var(--sunken)",
-            transition:
-              "background-color 150ms cubic-bezier(0.4, 0, 0.2, 1), color 150ms cubic-bezier(0.4, 0, 0.2, 1)",
-            ".MuiButtonBase-root:hover &": {
-              "@media (hover: hover)": {
-                bgcolor: "var(--brand)",
-                color: "var(--brand-fg)",
-              },
-            },
-          }}
-        >
-          <Plus size={20} />
-        </Box>
-        <Box
-          component="b"
-          sx={{
-            display: "block",
-            fontSize: "0.875rem",
-            lineHeight: 10 / 7,
-            color: "var(--ink)",
-          }}
-        >
-          {t("addMiniature")}
-        </Box>
-        <Box
-          component="span"
-          sx={{
-            fontSize: "0.75rem",
-            lineHeight: 4 / 3,
-          }}
-        >
-          {t("ownedOrWishlist")}
-        </Box>
+        <Plus size={20} />
       </Box>
     </ButtonBase>
   );

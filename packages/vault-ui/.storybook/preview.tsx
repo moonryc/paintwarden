@@ -52,7 +52,15 @@ const preview: Preview = {
     withVaultStore,
     (Story, context) => (
       <LanguageProvider language={String(context.parameters.locale || context.globals.locale || "en")}>
-        <Box sx={{ minHeight: "100%", p: 3, bgcolor: "var(--canvas)", color: "var(--ink)" }}>
+        {/* Whole-app stories set `fullBleed` so the shell reaches the window edges, as in the app. */}
+        <Box
+          sx={{
+            minHeight: "100%",
+            p: context.parameters.fullBleed ? 0 : 3,
+            bgcolor: "var(--canvas)",
+            color: "var(--ink)",
+          }}
+        >
           <Story />
         </Box>
       </LanguageProvider>

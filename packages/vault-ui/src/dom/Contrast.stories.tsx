@@ -22,9 +22,6 @@ function ContrastStates() {
           go={setTab}
           counts={{ wishlist: 15 }}
           displayName="Sample owner"
-          onAddMiniature={fn()}
-          onAddPaint={fn()}
-          onAddScheme={fn()}
           onAccount={fn()}
         />
       </Box>

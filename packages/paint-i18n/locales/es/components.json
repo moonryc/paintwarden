@@ -24,7 +24,6 @@
   "loading": "Cargando…",
   "openingDialog": "Abriendo {{title}}…",
   "addMiniature": "Añadir miniatura",
-  "ownedOrWishlist": "En propiedad o en la lista de deseos",
   "colorHex": "Color hexadecimal",
   "eG445566": "p. ej., #445566",
   "plugin": "Plugin",
@@ -495,7 +494,6 @@
   "scanSampled": "Color muestreado: {{hex}}",
   "scanMatches": "Pinturas más cercanas",
   "scanAlternatives": "Alternativas",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "En propiedad",
   "scanAvailable": "Disponible por sustitución",
   "scanNotOwned": "No poseída",
@@ -509,5 +507,13 @@
   "scanAssignHint": "Elige un paso existente o añade uno y selecciona su etapa.",
   "scanRecipeStep": "Paso de receta",
   "scanNewStep": "Nuevo paso",
-  "scanStage": "Etapa"
+  "scanStage": "Etapa",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "Casi exacto",
+  "matchQualityClose": "Muy cercano",
+  "matchQualitySimilar": "Similar",
+  "matchQualityDistant": "Coincidencia aproximada",
+  "scanControlsHelp": "Ayuda de controles",
+  "scanBestMatch": "Mejor coincidencia",
+  "scanClosestPaint": "Pintura más cercana"
 }

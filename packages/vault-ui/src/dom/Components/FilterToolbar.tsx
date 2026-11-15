@@ -4,7 +4,19 @@ import Box from "@mui/material/Box";
 import type { ReactNode } from "react";
 
 import { Search, X } from "../icons";
-import { breakpoints, up } from "../theme-tokens";
+import { up } from "../theme-tokens";
+
+/**
+ * Layout for a toolbar's group of select filters: stacked on phones, one row of equal columns
+ * from tablet width up, so filters are either all stacked or all side by side.
+ */
+export const filterGridSx = {
+  display: "grid",
+  minWidth: 0,
+  gap: 1,
+  gridTemplateColumns: "minmax(0, 1fr)",
+  [up.md]: { gridTemplateColumns: "none", gridAutoFlow: "column", gridAutoColumns: "minmax(0, 1fr)" },
+} as const;
 
 export function FilterToolbar({
   search,
@@ -38,23 +50,15 @@ export function FilterToolbar({
           p: 1,
           [up.md]: {
             mb: 2.5,
-          },
-          [up.lg]: {
-            top: "4.5rem",
             flexDirection: "row",
             alignItems: "center",
             gap: 1.5,
           },
+          [up.lg]: {
+            top: "4.5rem",
+          },
           boxShadow: "0 1px 2px rgb(var(--shadow-color) / 6%), 0 1px 1px rgb(var(--shadow-color) / 4%)",
         },
-        singleLineFilters
-          ? {
-              [`${up.lg} and (max-width: ${breakpoints.xl - 0.05}px)`]: {
-                flexDirection: "column",
-                alignItems: "stretch",
-              },
-            }
-          : {},
       ]}
     >
       <TextField
@@ -72,19 +76,10 @@ export function FilterToolbar({
         size="small"
         sx={
           singleLineFilters
-            ? {
-                minWidth: 0,
-                maxWidth: "none",
-                [up.xl]: { width: "26%", flex: "0 0 26%" },
-              }
+            ? { minWidth: 0, [up.md]: { flex: "2 1 0" } }
             : wideSearch
-              ? { minWidth: 0, [up.lg]: { width: "auto", flex: "1 1 0" } }
-              : {
-                  boxSizing: "border-box",
-                  [up.lg]: {
-                    maxWidth: "24rem !important",
-                  },
-                }
+              ? { minWidth: 0, [up.md]: { width: "auto", flex: "1 1 0" } }
+              : { minWidth: 0, [up.md]: { flex: "1 1 0" } }
         }
         slotProps={{
           htmlInput: { "aria-label": placeholder, title: placeholder },
@@ -117,17 +112,10 @@ export function FilterToolbar({
         component="div"
         sx={
           singleLineFilters
-            ? { minWidth: 0, width: "100%", [up.xl]: { width: "auto", flex: "1 1 0" } }
+            ? { minWidth: 0, width: "100%", [up.md]: { width: "auto", flex: "3 1 0" } }
             : wideSearch
-              ? {
-                  minWidth: 0,
-                  width: "100%",
-                  [up.lg]: { width: 224, flex: "0 0 224px" },
-                }
-              : {
-                  minWidth: 0,
-                  flex: "1",
-                }
+              ? { minWidth: 0, width: "100%", [up.md]: { width: 224, flex: "0 0 224px" } }
+              : { minWidth: 0, width: "100%", [up.md]: { width: "auto", flex: "1 1 0" } }
         }
       >
         {children}

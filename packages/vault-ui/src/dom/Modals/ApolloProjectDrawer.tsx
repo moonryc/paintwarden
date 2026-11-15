@@ -1,4 +1,5 @@
 import { useFragment } from "@apollo/client/react";
+import Colorize from "@mui/icons-material/Colorize";
 import { Alert, Button, Chip } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useState } from "react";
@@ -192,11 +193,6 @@ function ProjectContent({
   const content = (
     <>
       <ProjectHero miniature={miniature} paints={required} onOpenImage={() => setImageViewerOpen(true)} />
-      {miniature.imageUrl && (
-        <Button sx={{ mt: 1 }} onClick={() => setScanOpen(true)}>
-          {t("scanTitle")}
-        </Button>
-      )}
       {scanOpen && <SwatchScan miniatureId={miniature.id} onClose={() => setScanOpen(false)} />}
 
       <Box
@@ -217,8 +213,8 @@ function ProjectContent({
             {error.message}
           </Alert>
         )}
-        <Box component="div" sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-          <Box component="div" sx={{ minWidth: 0, flex: 1 }}>
+        <Box component="div" sx={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 1.5 }}>
+          <Box component="div" sx={{ minWidth: "min(100%, 12rem)", flex: 1 }}>
             {details.length > 0 && (
               <Box component="div" sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 1 }}>
                 {details.map((value) => (
@@ -251,7 +247,17 @@ function ProjectContent({
               </Button>
             )}
           </Box>
-          <Box component="div" sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
+          <Box component="div" sx={{ display: "flex", flexWrap: "wrap", gap: 1, ml: "auto" }}>
+            {miniature.imageUrl && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Colorize sx={{ fontSize: 15 }} />}
+                onClick={() => setScanOpen(true)}
+              >
+                {t("scanTitle")}
+              </Button>
+            )}
             <Button
               variant="outlined"
               size="small"

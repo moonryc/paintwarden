@@ -51,11 +51,20 @@ const connection = <T,>(nodes: T[]) => ({
 });
 
 type Mode = "default" | "empty" | "broken" | "loading" | "retry";
-function ProjectConnection({ children, mode = "default" }: { children: ReactNode; mode?: Mode }) {
+const photo = new URL("../../../../../apps/paintwarden-web/public/icon-512.png", import.meta.url).href;
+function ProjectConnection({
+  children,
+  mode = "default",
+  withPhoto = false,
+}: {
+  children: ReactNode;
+  mode?: Mode;
+  withPhoto?: boolean;
+}) {
   const [scope] = useState(() => {
     let seq = 1;
     let failed = false;
-    let miniature = { ...project };
+    let miniature = { ...project, imageUrl: withPhoto ? photo : null };
     let steps = ["BASECOAT"];
     let paints =
       mode === "empty" ? [] : mode === "broken" ? [paint("broken", true), paint("blue")] : [paint("blue")];
@@ -211,6 +220,22 @@ export const CompleteProjection: Story = {
     await expect(await screen.findByRole("heading", { name: project.title })).toBeVisible();
     await expect(screen.getByText(project.notes)).toBeVisible();
     await expect(screen.getByRole("button", { name: "Close project" })).toBeVisible();
+  },
+};
+// Swatch Scan sits with the other project actions and only appears when there is a photo to sample.
+export const PhotoActions: Story = {
+  render: (args) => (
+    <ProjectConnection withPhoto>
+      <ApolloProjectDrawer {...args} />
+    </ProjectConnection>
+  ),
+  play: async ({ canvasElement }) => {
+    const screen = within(canvasElement.ownerDocument.body);
+    const scan = await screen.findByRole("button", { name: "Swatch Scan" });
+    const edit = screen.getByRole("button", { name: "Edit" });
+    await expect(scan.getBoundingClientRect().top).toBeCloseTo(edit.getBoundingClientRect().top, 0);
+    await userEvent.click(scan);
+    await expect(await screen.findByRole("dialog", { name: "Swatch Scan" })).toBeInTheDocument();
   },
 };
 export const Loading: Story = {

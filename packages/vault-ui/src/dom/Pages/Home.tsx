@@ -14,20 +14,25 @@ import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { FolderBrowser } from "../Components/FolderBrowser";
-import { FolderPicker } from "../Components/FolderPicker";
+import { AddChoiceDialog } from "../Components/AddChoiceDialog";
+import { AddMiniatureTile } from "../Components/AddMiniatureTile";
 import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
+import { FolderBrowser } from "../Components/FolderBrowser";
+import { FolderNameDialog } from "../Components/FolderNameDialog";
+import { FolderPicker } from "../Components/FolderPicker";
 import { MiniatureTile } from "../Components/MiniatureTile";
 import { PageHeader } from "../Components/PageHeader";
 import { PageSkeleton } from "../Components/PageSkeletons";
 import { SectionHeader } from "../Components/SectionHeader";
+import { SelectionBar, selectRevealParentSx, selectRevealSx } from "../Components/SelectionBar";
 import { useFolderBrowser } from "../graphql/folder-hooks";
 import { useFolderSearch } from "../graphql/folder-search-hooks";
-import { useVaultGraphQL } from "../graphql/provider";
 import { useMiniatureList } from "../graphql/miniature-list-hooks";
 import type { MiniatureTileProjection } from "../graphql/miniature-list-model";
+import { useVaultGraphQL } from "../graphql/provider";
 import { Archive, Ellipsis, SearchX } from "../icons";
+import { CreateMiniatureDialog } from "../Modals/CreateMiniatureDialog";
 import { useVaultStore } from "../store/hooks";
 import { up } from "../theme-tokens";
 import type { PaintingStatus } from "../types";
@@ -40,13 +45,7 @@ import { useInitialPageLoading } from "./useInitialPageLoading";
 
 const shelfTileSx = { width: "100%", height: "100%" };
 
-export function Home({
-  view,
-  onAdd,
-}: {
-  view: "dashboard" | "miniatures";
-  onAdd(folderId?: string | null): void;
-}) {
+export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const { t, i18n } = useTranslation("pages");
   const number = (value: number) =>
     new Intl.NumberFormat(i18n.resolvedLanguage || i18n.language).format(value);
@@ -111,9 +110,10 @@ export function Home({
   const retry = hasMixedSearch ? mixedSearch.retry : list.retry;
   const initialLoading = useInitialPageLoading(loading, Boolean(listError));
   const pct = list.owned ? (ready / list.owned) * 100 : 0;
-  const shelfItems: MiniatureTileProjection[] = visibleProjects;
+  const shelfItems: (MiniatureTileProjection | null)[] = q ? visibleProjects : [null, ...visibleProjects];
   const hasQuery = Boolean(q);
-  const hasShelf = visibleProjects.length > 0;
+  const hasShelf = visibleProjects.length > 0 || (!q && !loading && !listError);
+  const [adding, setAdding] = useState(false);
   const shelfRef = useRef<HTMLDivElement>(null);
   const [shelfViewport, setShelfViewport] = useState({
     gridTop: 0,
@@ -532,22 +532,7 @@ export function Home({
                 ]}
           </TextField>
         </FilterToolbar>
-        <FolderBrowser
-          browser={browser}
-          kind="project"
-          onAddItem={() => onAdd(browser.flat ? null : browser.folderId)}
-        />
-        {selection.length > 0 && (
-          <Box
-            role="group"
-            aria-label={t("folders.selectItems")}
-            sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2 }}
-          >
-            <Box sx={{ alignSelf: "center" }}>{t("folders.selected", { count: selection.length })}</Box>
-            <Button onClick={() => setMovingItems(selection)}>{t("folders.moveSelected")}</Button>
-            <Button onClick={() => setSelection([])}>{t("folders.clearSelection")}</Button>
-          </Box>
-        )}
+        <FolderBrowser browser={browser} kind="project" />
         {listError && (
           <Alert
             severity="error"
@@ -630,43 +615,51 @@ export function Home({
                       minWidth: 0,
                     }}
                   >
-                    <Box sx={{ position: "relative", height: "100%" }}>
-                      <MiniatureTile
-                        mini={project.mini}
-                        swatches={project.swatches}
-                        total={project.total}
-                        missing={project.missing}
-                        onOpen={openMini}
-                        sx={shelfTileSx}
-                      />
-                      <Checkbox
-                        checked={selection.includes(project.mini.id)}
-                        slotProps={{
-                          input: { "aria-label": t("folders.selectItem", { name: project.mini.title }) },
-                        }}
-                        onChange={(_, checked) =>
-                          setSelection((previous) =>
-                            checked
-                              ? [...previous, project.mini.id]
-                              : previous.filter((id) => id !== project.mini.id),
-                          )
-                        }
-                        sx={{
-                          position: "absolute",
-                          top: 4,
-                          left: 4,
-                          bgcolor: "var(--surface)",
-                          borderRadius: 1,
-                        }}
-                      />
-                      <IconButton
-                        aria-label={t("folders.actions", { name: project.mini.title })}
-                        onClick={(event) => setItemMenu({ id: project.mini.id, anchor: event.currentTarget })}
-                        sx={{ position: "absolute", top: 4, right: 4, bgcolor: "var(--surface)" }}
-                      >
-                        <Ellipsis size={18} />
-                      </IconButton>
-                    </Box>
+                    {project ? (
+                      <Box sx={{ position: "relative", height: "100%", ...selectRevealParentSx }}>
+                        <MiniatureTile
+                          mini={project.mini}
+                          swatches={project.swatches}
+                          total={project.total}
+                          missing={project.missing}
+                          onOpen={openMini}
+                          sx={shelfTileSx}
+                        />
+                        <Checkbox
+                          checked={selection.includes(project.mini.id)}
+                          slotProps={{
+                            input: { "aria-label": t("folders.selectItem", { name: project.mini.title }) },
+                          }}
+                          onChange={(_, checked) =>
+                            setSelection((previous) =>
+                              checked
+                                ? [...previous, project.mini.id]
+                                : previous.filter((id) => id !== project.mini.id),
+                            )
+                          }
+                          className="select-reveal"
+                          sx={{
+                            position: "absolute",
+                            top: 4,
+                            left: 4,
+                            bgcolor: "var(--surface)",
+                            borderRadius: 1,
+                            ...selectRevealSx(selection.length > 0),
+                          }}
+                        />
+                        <IconButton
+                          aria-label={t("folders.actions", { name: project.mini.title })}
+                          onClick={(event) =>
+                            setItemMenu({ id: project.mini.id, anchor: event.currentTarget })
+                          }
+                          sx={{ position: "absolute", top: 4, right: 4, bgcolor: "var(--surface)" }}
+                        >
+                          <Ellipsis size={18} />
+                        </IconButton>
+                      </Box>
+                    ) : (
+                      <AddMiniatureTile onClick={() => setAdding(true)} sx={shelfTileSx} />
+                    )}
                   </Box>
                 );
               })}
@@ -697,6 +690,11 @@ export function Home({
             body={workbench ? t("homeAddOwnedMiniature") : t("homeAddFirstMiniature")}
           />
         )}
+        <SelectionBar
+          count={selection.length}
+          onMove={() => setMovingItems(selection)}
+          onClear={() => setSelection([])}
+        />
         {hasNextPage && (
           <Button onClick={loadMore} disabled={loading || refreshing} sx={{ mt: 2 }}>
             {t("homeLoadMoreMiniatures")}
@@ -722,6 +720,25 @@ export function Home({
             setMovingItems(null);
             setSelection([]);
           }}
+        />
+      )}
+      {adding && (
+        <AddChoiceDialog
+          itemLabel={t("folders.miniature")}
+          item={
+            <CreateMiniatureDialog
+              initialFolderId={browser.flat ? null : browser.folderId}
+              initialTemplateId={null}
+              onClose={() => setAdding(false)}
+            />
+          }
+          folder={
+            <FolderNameDialog
+              title={t("folders.createFolder")}
+              onSave={(name) => browser.create(name)}
+              onClose={() => setAdding(false)}
+            />
+          }
         />
       )}
     </Box>

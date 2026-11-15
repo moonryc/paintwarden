@@ -1,38 +1,110 @@
 fragment WishlistRow on WishlistRow {
   id
-  paint { ...LibraryPaint }
+  paint {
+    ...LibraryPaint
+  }
   brandGroup
   restock
   missingStock
   brokenSubstitution
   projectCount
-  relatedProjectsPreview { id title }
+  relatedProjectsPreview {
+    id
+    title
+  }
   relatedProjectsTruncated
 }
-query WishlistPage($first: Int! = 48, $after: String, $missingFirst: Int! = 48, $missingAfter: String, $miniatureId: ID) {
-  wishlist(first: $first, after: $after, missingFirst: $missingFirst, missingAfter: $missingAfter, miniatureId: $miniatureId) {
-    revision { epoch seq }
-    counts { shoppingPaints restockPaints missingPaints missingStock brokenSubstitution listedMissingStock projectCount }
-    shopping { nodes { ...WishlistRow } totalCount pageInfo { hasNextPage endCursor } }
-    missing { nodes { ...WishlistRow } totalCount pageInfo { hasNextPage endCursor } }
+query WishlistPage(
+  $first: Int! = 48
+  $after: String
+  $missingFirst: Int! = 48
+  $missingAfter: String
+  $miniatureId: ID
+) {
+  wishlist(
+    first: $first
+    after: $after
+    missingFirst: $missingFirst
+    missingAfter: $missingAfter
+    miniatureId: $miniatureId
+  ) {
+    revision {
+      epoch
+      seq
+    }
+    counts {
+      shoppingPaints
+      restockPaints
+      missingPaints
+      missingStock
+      brokenSubstitution
+      listedMissingStock
+      projectCount
+    }
+    shopping {
+      nodes {
+        ...WishlistRow
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+    missing {
+      nodes {
+        ...WishlistRow
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
   }
 }
 query WishlistModelOptions($first: Int! = 40, $after: String, $search: String) {
   wishlistModelOptions(first: $first, after: $after, search: $search) {
-    revision { epoch seq }
-    nodes { id title projectCount }
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      id
+      title
+      projectCount
+    }
     totalCount
-    pageInfo { hasNextPage endCursor }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }
 query WishlistRelatedProjects($paintId: ID!, $first: Int! = 30, $after: String) {
   wishlistRelatedProjects(paintId: $paintId, first: $first, after: $after) {
-    revision { epoch seq }
-    nodes { id title }
+    revision {
+      epoch
+      seq
+    }
+    nodes {
+      id
+      title
+    }
     totalCount
-    pageInfo { hasNextPage endCursor }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
   }
 }
 query WishlistExport($miniatureId: ID) {
-  wishlistExport(miniatureId: $miniatureId) { revision { epoch seq } text totalCount }
+  wishlistExport(miniatureId: $miniatureId) {
+    revision {
+      epoch
+      seq
+    }
+    text
+    totalCount
+  }
 }

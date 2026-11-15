@@ -55,14 +55,21 @@ export function FolderTile({
             />
           )}
           <Folder
-            sx={{
-              position: "relative",
-              fontSize: 64,
-              color: "var(--brand)",
-              bgcolor: "var(--surface)",
-              borderRadius: 2,
-              p: 1,
-            }}
+            sx={
+              folder.coverThumbnailUrl
+                ? {
+                    position: "absolute",
+                    left: 8,
+                    bottom: 8,
+                    fontSize: 32,
+                    color: "var(--brand)",
+                    bgcolor: "var(--surface)",
+                    borderRadius: 1.5,
+                    p: 0.5,
+                    boxShadow: 2,
+                  }
+                : { position: "relative", fontSize: 72, color: "var(--brand)" }
+            }
           />
         </Box>
         <Box sx={{ p: 2, pr: 6 }}>

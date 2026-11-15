@@ -1,6 +1,9 @@
 query VaultNavigation {
   vaultNavigation {
-    revision { epoch seq }
+    revision {
+      epoch
+      seq
+    }
     availablePaints
     shoppingPaints
   }

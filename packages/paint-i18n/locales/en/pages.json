@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Add to vault",
-  "layoutMoreAddOptions": "More add options",
   "layoutMiniature": "Miniature",
-  "layoutAddPaint": "Add paint",
-  "layoutAddScheme": "Add scheme",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Miniature studio",
   "layoutSupport": "Support on Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Search templates…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Category",
-  "templatesEmptyTitle": "No templates yet",
-  "templatesEmptyBody": "Install a plugin with miniature templates from Data & settings → Plugins, or use New template to save a reusable setup of your own.",
   "templatesAllPlugins": "All plugins",
   "templatesNoPlugin": "Not from a plugin",
   "templatesAllCategories": "All categories",
@@ -575,7 +569,6 @@
   "complementarySubtle": "Subtle",
   "complementaryStrong": "Strong",
   "complementaryTarget": "Target {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Owned alternatives",
   "complementaryNoClose": "No close owned match for this role. Nearest suggestions are shown below.",
   "complementaryNoOwned": "No owned paints with a valid color are available for this role.",
@@ -589,7 +582,6 @@
   "complementaryChoose": "Choose a paint to generate the other three roles.",
   "complementarySelected": "Selected match",
   "complementaryInputMissing": "This paint is no longer in the library. Choose another paint.",
-  "complementaryOwned": "Owned",
   "complementaryDistanceHint": "ΔE measures color difference: lower is closer.",
   "folders": {
     "open": "Open {{name}}",
@@ -628,9 +620,11 @@
     "retry": "Retry",
     "itemCount_one": "{{count}} item",
     "itemCount_other": "{{count}} items",
-    "moveSelected": "Move selected",
     "selectItem": "Select {{name}}",
     "resultsCount_one": "{{count}} result",
     "resultsCount_other": "{{count}} results"
-  }
+  },
+  "complementaryPalette": "Your palette",
+  "complementaryYourPaint": "Your paint",
+  "complementaryNoPick": "No owned match"
 }

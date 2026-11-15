@@ -17,6 +17,7 @@ import {
   linearToOklab,
   linearToSrgb,
   linearToXyz,
+  matchCloseness,
   nearestPaints,
   NO_CLOSE_MATCH_DELTA_E,
   oklabToLinear,
@@ -349,4 +350,15 @@ void test("role mapping is deterministic, valid and preserves selected input at 
   }
   assert.equal(derivePaintRoles("#fff", "base", 100).highlight, "#ffffff");
   assert.equal(derivePaintRoles("#000", "base", 100).shadow, "#000000");
+});
+
+test("matchCloseness buckets advisory ΔE values with inclusive boundaries", () => {
+  assert.equal(matchCloseness(0), "exact");
+  assert.equal(matchCloseness(2), "exact");
+  assert.equal(matchCloseness(2.01), "close");
+  assert.equal(matchCloseness(5), "close");
+  assert.equal(matchCloseness(10), "similar");
+  assert.equal(matchCloseness(10.5), "distant");
+  assert.equal(matchCloseness(Number.NaN), "distant");
+  assert.equal(matchCloseness(-1), "distant");
 });

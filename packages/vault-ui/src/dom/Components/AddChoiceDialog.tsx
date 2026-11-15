@@ -1,0 +1,61 @@
+import CreateNewFolder from "@mui/icons-material/CreateNewFolderOutlined";
+import NoteAdd from "@mui/icons-material/NoteAddOutlined";
+import { ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+
+import { ModalLeadContext } from "./Modal";
+
+type Choice = "item" | "folder";
+
+/**
+ * One add dialog for a folder-organized page: a Miniature/Folder (or Template/Folder) switch sits
+ * above whichever form is chosen, and switching swaps the form in place without a second dialog.
+ */
+export function AddChoiceDialog({
+  itemLabel,
+  item,
+  folder,
+}: {
+  itemLabel: string;
+  /** The item form's Modal, such as Add a miniature. */
+  item: ReactNode;
+  /** The folder form's Modal. */
+  folder: ReactNode;
+}) {
+  const { t } = useTranslation("pages");
+  const [choice, setChoice] = useState<Choice>("item");
+  const [switched, setSwitched] = useState(false);
+  // The swapped form mounts a new dialog; keep keyboard focus on the switch the user just used.
+  const keepFocus = (button: HTMLButtonElement | null) => {
+    if (switched) button?.focus();
+  };
+  const lead = (
+    <ToggleButtonGroup
+      exclusive
+      fullWidth
+      size="small"
+      aria-label={t("folders.addChoice")}
+      value={choice}
+      onChange={(_event, value: Choice | null) => {
+        if (!value) return;
+        setSwitched(true);
+        setChoice(value);
+      }}
+    >
+      <ToggleButton value="item" ref={choice === "item" ? keepFocus : undefined} sx={{ gap: 0.75 }}>
+        <NoteAdd fontSize="small" aria-hidden />
+        {itemLabel}
+      </ToggleButton>
+      <ToggleButton value="folder" ref={choice === "folder" ? keepFocus : undefined} sx={{ gap: 0.75 }}>
+        <CreateNewFolder fontSize="small" aria-hidden />
+        {t("folders.folder")}
+      </ToggleButton>
+    </ToggleButtonGroup>
+  );
+  return (
+    <ModalLeadContext.Provider value={{ lead, instant: switched }}>
+      {choice === "item" ? item : folder}
+    </ModalLeadContext.Provider>
+  );
+}

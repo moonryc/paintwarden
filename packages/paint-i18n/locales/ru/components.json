@@ -24,7 +24,6 @@
   "loading": "Загрузка…",
   "openingDialog": "Открытие: {{title}}…",
   "addMiniature": "Добавить миниатюру",
-  "ownedOrWishlist": "В наличии или в списке желаний",
   "colorHex": "Цвет в hex-формате",
   "eG445566": "Например, #445566",
   "plugin": "Плагин",
@@ -516,7 +515,6 @@
   "scanSampled": "Цвет образца: {{hex}}",
   "scanMatches": "Ближайшие краски",
   "scanAlternatives": "Альтернативы",
-  "scanDelta": "ΔE {{value}}",
   "scanOwned": "В наличии",
   "scanAvailable": "Доступна через замену",
   "scanNotOwned": "Нет в наличии",
@@ -530,5 +528,13 @@
   "scanAssignHint": "Выберите существующий шаг или добавьте новый и выберите этап.",
   "scanRecipeStep": "Шаг рецепта",
   "scanNewStep": "Новый шаг",
-  "scanStage": "Этап"
+  "scanStage": "Этап",
+  "matchQualityLabel": "{{quality}} · ΔE {{value}}",
+  "matchQualityExact": "Почти точно",
+  "matchQualityClose": "Очень близко",
+  "matchQualitySimilar": "Похоже",
+  "matchQualityDistant": "Приблизительное совпадение",
+  "scanControlsHelp": "Справка по управлению",
+  "scanBestMatch": "Лучшее совпадение",
+  "scanClosestPaint": "Ближайшая краска"
 }

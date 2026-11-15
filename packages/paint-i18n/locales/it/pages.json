@@ -1,9 +1,5 @@
 {
-  "layoutAddToVault": "Aggiungi all'archivio",
-  "layoutMoreAddOptions": "Altre opzioni di aggiunta",
   "layoutMiniature": "Miniatura",
-  "layoutAddPaint": "Aggiungi colore",
-  "layoutAddScheme": "Aggiungi schema di colore",
   "layoutBrand": "Paintwarden",
   "layoutStudio": "Studio di miniature",
   "layoutSupport": "Sostieni su Ko-fi",
@@ -247,8 +243,6 @@
   "templatesSearchPlaceholder": "Cerca modelli predefiniti…",
   "templatesPlugin": "Plugin",
   "templatesCategory": "Categoria",
-  "templatesEmptyTitle": "Nessun modello predefinito",
-  "templatesEmptyBody": "Installa un plugin con modelli predefiniti per miniature da Dati e impostazioni → Plugin oppure usa Nuovo modello predefinito per salvare una tua configurazione riutilizzabile.",
   "templatesAllPlugins": "Tutti i plugin",
   "templatesNoPlugin": "Non proviene da un plugin",
   "templatesAllCategories": "Tutte le categorie",
@@ -603,7 +597,6 @@
   "complementarySubtle": "Delicata",
   "complementaryStrong": "Forte",
   "complementaryTarget": "Obiettivo {{hex}}",
-  "complementaryMatch": "{{name}} · {{brand}} · {{hex}} · ΔE {{distance}}",
   "complementaryAlternatives": "Alternative possedute",
   "complementaryNoClose": "Nessun colore posseduto è abbastanza simile per questo ruolo. I suggerimenti più vicini sono mostrati sotto.",
   "complementaryNoOwned": "Nessun colore posseduto con un valore cromatico valido è disponibile per questo ruolo.",
@@ -617,7 +610,6 @@
   "complementaryChoose": "Scegli un colore per generare gli altri tre ruoli.",
   "complementarySelected": "Corrispondenza selezionata",
   "complementaryInputMissing": "Questo colore non è più nella libreria. Scegline un altro.",
-  "complementaryOwned": "Posseduto",
   "complementaryDistanceHint": "ΔE misura la differenza di colore: più il valore è basso, più i colori sono simili.",
   "folders": {
     "open": "Apri {{name}}",
@@ -657,10 +649,12 @@
     "itemCount_one": "{{count}} elemento",
     "itemCount_many": "{{count}} elementi",
     "itemCount_other": "{{count}} elementi",
-    "moveSelected": "Sposta selezione",
     "selectItem": "Seleziona {{name}}",
     "resultsCount_one": "{{count}} risultato",
     "resultsCount_many": "{{count}} risultati",
     "resultsCount_other": "{{count}} risultati"
-  }
+  },
+  "complementaryPalette": "La tua tavolozza",
+  "complementaryYourPaint": "Il tuo colore",
+  "complementaryNoPick": "Nessun colore posseduto corrisponde"
 }
