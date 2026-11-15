@@ -58,6 +58,7 @@ export function StableAutocomplete<
     if (loading) current.started = true;
     else if (current.started || options.length > current.count) paging.current = null;
   }, [options, loading]);
+  const [placement, setPlacement] = useState<"bottom-start" | "top-start">("bottom-start");
   const [slow, setSlow] = useState(false);
   useEffect(() => {
     if (!loading) {
@@ -75,10 +76,27 @@ export function StableAutocomplete<
           if (reason === "input" || reason === "clear") paging.current = null;
           props.onInputChange?.(event, value, reason);
         }}
+        onOpen={(event) => {
+          // Pick the fitting side once on open, not again as options change.
+          const root = event.target instanceof Element ? event.target.closest(".MuiAutocomplete-root") : null;
+          const bounds = root?.getBoundingClientRect();
+          const height = Math.min(240, window.innerHeight * 0.4);
+          setPlacement(
+            bounds && window.innerHeight - bounds.bottom < height && bounds.top >= height
+              ? "top-start"
+              : "bottom-start",
+          );
+          props.onOpen?.(event);
+        }}
         options={retained}
         loading={loading && previous === null}
         loadingText={
-          <Box role="listbox" aria-busy="true" aria-label={t("searchResults")}>
+          <Box
+            role="listbox"
+            aria-busy="true"
+            aria-label={t("searchResults")}
+            sx={{ boxSizing: "border-box", height: popupHeight, px: 2, py: 1 }}
+          >
             {[0, 1, 2, 3, 4].map((row) => (
               <Box key={row} sx={{ height: 40, display: "flex", alignItems: "center" }}>
                 <Skeleton width="80%" animation={false} />
@@ -125,7 +143,7 @@ export function StableAutocomplete<
         slotProps={{
           ...slotProps,
           popper: {
-            placement: "bottom-start",
+            placement,
             modifiers: [
               { name: "flip", enabled: false },
               { name: "preventOverflow", enabled: false },
@@ -134,6 +152,7 @@ export function StableAutocomplete<
           paper: {
             sx: {
               height: popupHeight,
+              "& .MuiAutocomplete-loading": { padding: 0 },
               "& .MuiAutocomplete-loading, & .MuiAutocomplete-noOptions": {
                 boxSizing: "border-box",
                 height: popupHeight,

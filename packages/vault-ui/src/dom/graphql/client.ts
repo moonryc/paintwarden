@@ -116,7 +116,10 @@ export function createVaultGraphQLClient(options: Options) {
         };
       }),
   );
-  const errors = new ErrorLink(({ error }) => {
+  const errors = new ErrorLink(({ error, operation }) => {
+    // Superseded searches still reject to their inactive caller, but cleanup is
+    // not a vault error and must not create a global banner.
+    if (operation.getContext().fetchOptions?.signal?.aborted) return;
     const accessDenied =
       (ServerError.is(error) && [401, 403, 428].includes(error.statusCode)) ||
       (CombinedGraphQLErrors.is(error) &&

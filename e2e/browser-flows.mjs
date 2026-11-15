@@ -8,6 +8,7 @@ import sharp from "sharp";
 
 import { checkScanAggregateFixture } from "./scan-aggregate.mjs";
 import { checkSchemeRanking } from "./scheme-ranking.mjs";
+import { checkAutocompleteSearch } from "./autocomplete-search.mjs";
 
 const expect = playwrightExpect.configure({ timeout: 12_000 });
 const username = "browser-fixture-owner";
@@ -290,6 +291,12 @@ async function assertLiveUpdate(page, before, payload, name) {
     before.streams,
     "Update used existing SSE, not a reconnect/access-recovery refresh",
   );
+}
+
+export async function runAutocompleteFlows({ newPage, artifacts, results }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  await checkAutocompleteSearch({ page, artifacts, results });
 }
 
 export async function runBrowserFlows({ newPage, artifacts, results }) {

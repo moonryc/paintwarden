@@ -10,11 +10,17 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { runBrowserFlows, runSchemeRankingFlows, runScanAggregateFlows } from "./browser-flows.mjs";
+import {
+  runAutocompleteFlows,
+  runBrowserFlows,
+  runSchemeRankingFlows,
+  runScanAggregateFlows,
+} from "./browser-flows.mjs";
 
 const repo = fileURLToPath(new URL("../", import.meta.url));
 const aggregate = process.argv.includes("--scan-aggregate");
 const schemeRanking = process.argv.includes("--scheme-ranking");
+const autocompleteSearch = process.argv.includes("--autocomplete-search");
 const artifactsRoot = process.env.E2E_ARTIFACTS_DIR
   ? path.resolve(process.env.E2E_ARTIFACTS_DIR)
   : await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-artifacts-"));
@@ -22,7 +28,9 @@ const artifacts = aggregate
   ? path.join(artifactsRoot, "scan-aggregate")
   : schemeRanking
     ? path.join(artifactsRoot, "scheme-ranking")
-    : artifactsRoot;
+    : autocompleteSearch
+      ? path.join(artifactsRoot, "autocomplete-search")
+      : artifactsRoot;
 await mkdir(artifacts, { recursive: true });
 const dataDir = await mkdtemp(path.join(os.tmpdir(), "paintwarden-browser-data-"));
 const results = {
@@ -225,7 +233,13 @@ try {
     return page;
   }
   await Promise.race([
-    (aggregate ? runScanAggregateFlows : schemeRanking ? runSchemeRankingFlows : runBrowserFlows)({
+    (aggregate
+      ? runScanAggregateFlows
+      : autocompleteSearch
+        ? runAutocompleteFlows
+        : schemeRanking
+          ? runSchemeRankingFlows
+          : runBrowserFlows)({
       newPage,
       artifacts,
       results,

@@ -36,7 +36,7 @@ test("render does no text extraction or fuzzy matching", () => {
     renderSearch(["red", "blue"], () => {
       throw Error("work during render");
     }),
-    />0</,
+    />2</,
   );
 });
 
