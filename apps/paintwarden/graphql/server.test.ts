@@ -473,6 +473,47 @@ test("protected Yoga routes, bounded real SQLite Library and resumable SSE", asy
       assert.equal(again.status, 200);
       await again.body!.cancel();
     });
+    await t.test(
+      "verified interactive sessions exceed 120 starts but token-shaped anonymous requests do not",
+      async () => {
+        for (let index = 0; index < 125; index++) {
+          const response = await post(
+            { query: "{pluginInstallJob{id}}" },
+            { "x-paintwarden-client": "verified-rate-integration" },
+          );
+          assert.equal(response.status, 200);
+          await response.body?.cancel();
+        }
+        owner(0);
+        try {
+          for (let index = 0; index < 120; index++) {
+            const response = await post(
+              { query: "{pluginInstallJob{id}}" },
+              {
+                "x-paintwarden-client": "anonymous-rate-integration",
+                authorization: `Bearer ${"b".repeat(64)}`,
+              },
+            );
+            assert.equal(response.status, 200);
+            await response.body?.cancel();
+          }
+          assert.equal(
+            (
+              await post(
+                { query: "{pluginInstallJob{id}}" },
+                {
+                  "x-paintwarden-client": "anonymous-rate-integration",
+                  authorization: `Bearer ${"b".repeat(64)}`,
+                },
+              )
+            ).status,
+            429,
+          );
+        } finally {
+          owner();
+        }
+      },
+    );
     await t.test("picker preserves uncapped exclusions beyond 100 while keeping output bounded", async () => {
       const ids = Array.from({ length: 102 }, (_, index) => paintId(1000 + index));
       for (const [index, id] of ids.entries()) addPaint(id, `Large exclusions ${index}`);

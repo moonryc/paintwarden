@@ -13,7 +13,14 @@ let streams = 0;
 // reconnect burst must not consume the short-operation budget needed for edits.
 // Both kinds allow 120 starts/min/client AND credential; ordinary operations keep
 // four active slots, streams eight, and streams also share a global cap of 128.
-export function acquireOperation(request: Request, stream: boolean): (() => void) | null {
+// Verified sessions get 800 ordinary starts/minute (~5x the measured fast UI
+// session); unverified credentials never opt into that allowance. Auth/login
+// limits and stream budgets are unchanged. See docs/graphql-rate-limits.md.
+export function acquireOperation(
+  request: Request,
+  stream: boolean,
+  verifiedSession = false,
+): (() => void) | null {
   const now = Date.now();
   const token =
     request.headers.get("authorization")?.match(/^Bearer ([a-f0-9]{64})$/i)?.[1] ??
@@ -50,7 +57,7 @@ export function acquireOperation(request: Request, stream: boolean): (() => void
         !bucket ||
         (stream
           ? bucket.streamStarts >= 120 || bucket.streams >= 8
-          : bucket.count >= 120 || bucket.active >= 4),
+          : bucket.count >= (verifiedSession ? 800 : 120) || bucket.active >= 4),
     ) ||
     (stream && streams >= 128)
   )

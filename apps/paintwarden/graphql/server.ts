@@ -8,6 +8,7 @@ import { getSqlite } from "../db/index.ts";
 import { PaintStockError, setPaintStock } from "../lib/paint-stock.ts";
 import { currentPluginInstallJob } from "../lib/catalog-install-jobs";
 import { publicError } from "../lib/public-errors.ts";
+import { authenticated } from "../lib/auth.ts";
 
 import { checkOperation, GRAPHQL_BODY_BYTES } from "./budgets.ts";
 import { invalidationSince, subscribeChanges, type Family } from "./changes.ts";
@@ -234,7 +235,7 @@ export async function graphqlResponse(request: Request, stream: boolean): Promis
       .some((value) => value.trim().split(";")[0] === "text/event-stream")
   )
     return failure("Subscriptions require Accept: text/event-stream", 406);
-  const release = acquireOperation(request, stream);
+  const release = acquireOperation(request, stream, authenticated(request));
   if (!release) return failure("Too many GraphQL operations", 429, "RATE_LIMITED");
   let streaming = false;
   const start = performance.now();

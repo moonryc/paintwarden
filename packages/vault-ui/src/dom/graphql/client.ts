@@ -19,6 +19,17 @@ type Options = {
   sseRetry?: (retries: number) => Promise<void>;
 };
 
+// Preserve the status through the sanitized Error wrapper. Background health
+// checks can defer throttling without pretending a healthy stream disconnected.
+export function isVaultRateLimited(error: unknown): boolean {
+  if (ServerError.is(error)) return error.statusCode === 429;
+  if (CombinedGraphQLErrors.is(error))
+    return error.errors.some((entry) => entry.extensions?.code === "RATE_LIMITED");
+  return error instanceof Error && error.cause !== error && error.cause !== undefined
+    ? isVaultRateLimited(error.cause)
+    : false;
+}
+
 function revisionFromResult(data: unknown): Revision | null {
   if (!data || typeof data !== "object" || !("vaultChanges" in data)) return null;
   const event = data.vaultChanges;
@@ -61,11 +72,13 @@ export function createVaultSSELink(options: Options) {
             // Surface them as GraphQL errors so the shared error link handles both transports.
             if (response.status >= 400 && response.status < 500) {
               const code =
-                response.status === 401
-                  ? "UNAUTHENTICATED"
-                  : response.status === 403 || response.status === 428
-                    ? "FORBIDDEN"
-                    : "BAD_REQUEST";
+                response.status === 429
+                  ? "RATE_LIMITED"
+                  : response.status === 401
+                    ? "UNAUTHENTICATED"
+                    : response.status === 403 || response.status === 428
+                      ? "FORBIDDEN"
+                      : "BAD_REQUEST";
               return new Response(
                 `event: next\ndata: ${JSON.stringify({ errors: [{ message: i18n.t("shell:graphqlStreamFailed", { value1: response.status }), extensions: { code } }] })}\n\nevent: complete\ndata: {}\n\n`,
                 {
@@ -117,8 +130,8 @@ export function createVaultGraphQLClient(options: Options) {
       }),
   );
   const errors = new ErrorLink(({ error, operation }) => {
-    // Superseded searches still reject to their inactive caller, but cleanup is
-    // not a vault error and must not create a global banner.
+    // Search effects abort superseded work deliberately. Keep rejecting the
+    // operation for its caller, but do not report cleanup as a vault failure.
     if (operation.getContext().fetchOptions?.signal?.aborted) return;
     const accessDenied =
       (ServerError.is(error) && [401, 403, 428].includes(error.statusCode)) ||
@@ -128,7 +141,13 @@ export function createVaultGraphQLClient(options: Options) {
         ));
     if (accessDenied) dispose();
     options.onError?.({
-      message: translateServerError({ errorCode: accessDenied ? "UNAUTHENTICATED" : "REQUEST_FAILED" }),
+      message: translateServerError({
+        errorCode: accessDenied
+          ? "UNAUTHENTICATED"
+          : isVaultRateLimited(error)
+            ? "RATE_LIMITED"
+            : "REQUEST_FAILED",
+      }),
       accessDenied,
     });
   });
@@ -153,7 +172,14 @@ export function createVaultGraphQLClient(options: Options) {
       map((result) => ({
         ...result,
         ...(result.errors
-          ? { errors: result.errors.map((error) => ({ ...error, message: translateServerError(error) })) }
+          ? {
+              errors: result.errors.map((error) => ({
+                ...error,
+                message: translateServerError(
+                  error.extensions?.code === "RATE_LIMITED" ? { errorCode: "RATE_LIMITED" } : error,
+                ),
+              })),
+            }
           : {}),
       })),
     ),
@@ -164,7 +190,15 @@ export function createVaultGraphQLClient(options: Options) {
   const localizedTransportErrors = new ApolloLink((operation, forward) =>
     forward(operation).pipe(
       catchError((cause: unknown) =>
-        throwError(() => new Error(translateServerError({ errorCode: "REQUEST_FAILED" }), { cause })),
+        throwError(
+          () =>
+            new Error(
+              translateServerError({
+                errorCode: isVaultRateLimited(cause) ? "RATE_LIMITED" : "REQUEST_FAILED",
+              }),
+              { cause },
+            ),
+        ),
       ),
     ),
   );

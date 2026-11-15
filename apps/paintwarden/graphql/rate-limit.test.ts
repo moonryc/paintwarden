@@ -110,3 +110,29 @@ void test("independent budgets preserve the global 128-stream cap", () => {
     releases.forEach((release) => release());
   }
 });
+
+void test("only server-verified sessions receive the measured interactive request budget", () => {
+  const verified = request("verified-interactive-client", "verified-interactive-session");
+  for (let i = 0; i < 800; i++) {
+    const release = acquireOperation(verified, false, true);
+    assert.ok(release);
+    release();
+  }
+  assert.equal(acquireOperation(verified, false, true), null, "authenticated budget remains bounded");
+  const unverified = request("unverified-interactive-client", "unverified-interactive-session");
+  for (let i = 0; i < 120; i++) {
+    const release = acquireOperation(unverified, false);
+    assert.ok(release);
+    release();
+  }
+  assert.equal(
+    acquireOperation(unverified, false),
+    null,
+    "a token-shaped string never proves authentication",
+  );
+  const concurrency = request("verified-concurrent-client", "verified-concurrent-session");
+  const releases = Array.from({ length: 4 }, () => acquireOperation(concurrency, false, true));
+  assert.ok(releases.every(Boolean));
+  assert.equal(acquireOperation(concurrency, false, true), null, "retain four-operation concurrency guard");
+  releases.forEach((release) => release!());
+});

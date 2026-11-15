@@ -6,7 +6,7 @@ import { i18n, translateServerError } from "@paintwarden/i18n/runtime";
 
 import { createVaultStore } from "../store/vault-store";
 
-import { createVaultGraphQLClient, type VaultGraphQLError } from "./client";
+import { createVaultGraphQLClient, isVaultRateLimited, type VaultGraphQLError } from "./client";
 import { LibraryPageDocument, VaultChangesDocument } from "./generated/graphql";
 import { readLibraryWindow } from "./library-loader";
 
@@ -372,6 +372,87 @@ void test("SSE terminal network failures localize only after the existing retrie
     assert.equal(retries, 5);
   } finally {
     subscription.unsubscribe();
+    scope.dispose();
+  }
+});
+
+void test("HTTP 429 retains a specific localized retryable message and status without diagnostics", async () => {
+  const errors: VaultGraphQLError[] = [];
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onError: (error) => errors.push(error),
+    fetch: async () => new Response("private limiter diagnostic", { status: 429 }),
+  });
+  try {
+    await assert.rejects(scope.client.query({ query: LibraryPageDocument }), (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.equal(error.message, i18n.t("errors:RATE_LIMITED"));
+      assert.ok(ServerError.is(error.cause));
+      assert.equal(error.cause.statusCode, 429);
+      assert.equal(isVaultRateLimited(error), true);
+      return true;
+    });
+    assert.deepEqual(errors, [{ message: i18n.t("errors:RATE_LIMITED"), accessDenied: false }]);
+    assert.equal(isVaultRateLimited(new Error("offline")), false);
+    assert.notEqual(scope.client.cache, null, "throttling never revokes access");
+  } finally {
+    scope.dispose();
+  }
+});
+
+void test("GraphQL and SSE throttling retain RATE_LIMITED instead of generic failure", async () => {
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    fetch: async () => new Response("private limiter diagnostic", { status: 429 }),
+  });
+  const delivered = deferred<unknown>();
+  const subscription = scope.client
+    .subscribe({ query: VaultChangesDocument, variables: { epoch: "vault", since: "0" } })
+    .subscribe({ next: (result) => delivered.resolve(result.error), error: delivered.resolve });
+  try {
+    const error = await delivered.promise;
+    assert.ok(CombinedGraphQLErrors.is(error));
+    assert.equal(error.message, i18n.t("errors:RATE_LIMITED"));
+    assert.equal(isVaultRateLimited(error), true);
+  } finally {
+    subscription.unsubscribe();
+    scope.dispose();
+  }
+});
+
+void test("aborting superseded picker work rejects its caller without a shared error notification", async () => {
+  const controller = new AbortController();
+  const started = deferred<void>();
+  const reported: VaultGraphQLError[] = [];
+  const scope = createVaultGraphQLClient({
+    authHeaders: () => ({}),
+    onError: (error) => reported.push(error),
+    fetch: (_url, options) =>
+      new Promise((_resolve, reject) => {
+        options?.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("Superseded search", "AbortError")),
+          { once: true },
+        );
+        started.resolve();
+      }),
+  });
+  try {
+    const request = scope.client.query({
+      query: LibraryPageDocument,
+      context: { fetchOptions: { signal: controller.signal } },
+    });
+    const rejected = assert.rejects(request, (error: unknown) => {
+      assert.ok(error instanceof Error);
+      assert.ok(error.cause instanceof DOMException);
+      assert.equal(error.cause.name, "AbortError");
+      return true;
+    });
+    await started.promise;
+    controller.abort();
+    await rejected;
+    assert.deepEqual(reported, []);
+  } finally {
     scope.dispose();
   }
 });

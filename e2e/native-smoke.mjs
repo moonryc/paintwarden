@@ -265,6 +265,16 @@ try {
   assert.equal(results.unexpectedExit, undefined, "No premature app exit allowed");
   record("Owner created through UI; persisted owner and main Workbench loaded without renderer errors");
 
+  const { runBannerStressFlow } = await import("./banner-stress-flow.mjs");
+  results.bannerStress = await runBannerStressFlow(page);
+  await page.screenshot({
+    path: path.join(evidence, "04-heavy-session-no-global-error.png"),
+    timeout: 10000,
+  });
+  record(
+    "Rapid Model typing, fast navigation and focus storms do not trigger a global request error or throttle authenticated use",
+  );
+
   if (values["plugin-zip"]) {
     const { runPluginInstallFlow } = await import("./plugin-install-flow.mjs");
     const { default: Database } = await import("better-sqlite3");
