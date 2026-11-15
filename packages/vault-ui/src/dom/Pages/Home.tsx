@@ -229,6 +229,8 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const initialLoading = useInitialPageLoading(
     gridLoading || (workbench && summary.loading),
     Boolean(listError || summary.error),
+    true,
+    view,
   );
   const shelfLoading = initialLoading && gridLoading;
   const summaryLoading = workbench && initialLoading && summary.loading;
@@ -464,8 +466,11 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               <Box
                 component="span"
                 sx={{
-                  display: "block",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "baseline",
                   width: "100%",
+                  height: "1.75rem",
                   textAlign: "center",
                   overflow: "hidden",
                   whiteSpace: "nowrap",
@@ -480,6 +485,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                   [up.lg]: {
                     fontSize: "1.5rem",
                     lineHeight: 4 / 3,
+                    height: "2rem",
                   },
                 }}
               >
@@ -490,7 +496,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                     variant="rounded"
                     width="70%"
                     height={20}
-                    sx={{ mx: "auto" }}
+                    sx={{ mx: "auto", alignSelf: "center" }}
                   />
                 ) : (
                   <>

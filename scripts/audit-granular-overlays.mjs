@@ -27,7 +27,7 @@ const owned = launchOwned(
 );
 await waitForOutput(owned, /Storybook.*started|Local:/, "isolated Storybook", 120000);
 const base = `http://127.0.0.1:${port}`;
-const stories = [
+const defaultStories = [
   "dialogs-paintdetailsmodal--loading",
   "dialogs-plugins--loading",
   "modals-apollo-project-drawer--loading",
@@ -37,7 +37,10 @@ const stories = [
   "miniatures-form-templates--distant-initial-template",
   "paint-tools-layout--loading",
   "pages-settings--loading",
+  "pages-settings--desktop-metadata-loading",
+  "pages-settings--desktop-phone-initially-enabled",
 ];
+const stories = process.env.AUDIT_STORIES?.split(",") || defaultStories;
 const locales = (
   process.env.AUDIT_LANGUAGES || "en,de,es,fr,it,ja,ko,nl,pl,pt-BR,ru,zh-Hans,zh-Hant,en-XA"
 ).split(",");
@@ -89,7 +92,7 @@ try {
             bodyWidth: document.body.scrollWidth,
             movement,
             papers,
-            text: document.body.innerText.slice(0, 140),
+            text: document.body.innerText.slice(0, 3000),
           };
         });
         const row = { story, locale, width, ...result };

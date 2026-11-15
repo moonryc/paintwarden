@@ -207,7 +207,13 @@ export default function DesktopConnection({ bridge }: { bridge: PaintwardenDeskt
   }
 
   if (choice?.mode && !choice.versionProblem && !editing) {
-    return <Vault key={`${choice.mode}:${choice.serverUrl ?? ""}`} onChangeServer={handleChangeServer} />;
+    return (
+      <Vault
+        key={`${choice.mode}:${choice.serverUrl ?? ""}`}
+        onChangeServer={handleChangeServer}
+        desktopConnection={choice}
+      />
+    );
   }
 
   if (choice?.versionProblem && !editing) {

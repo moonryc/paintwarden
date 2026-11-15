@@ -115,6 +115,7 @@ export function miniatureListView(data: MiniatureListQuery): MiniatureListView {
 
 type NetworkState = {
   dataKey?: string;
+  dataView?: boolean;
   scope?: VaultGraphQLScope;
   data?: MiniatureListQuery;
   loading: boolean;
@@ -206,7 +207,15 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
             Math.ceil(miniatureListEnvelope(next).miniatures.nodes.length / MINIATURE_PAGE_SIZE),
           );
           controller.observe(miniatureListEnvelope(next).revision);
-          setState({ data: next, dataKey: key, scope, loading: false, refreshing: true, error: "" });
+          setState({
+            data: next,
+            dataKey: key,
+            dataView: stableFilters.workbench,
+            scope,
+            loading: false,
+            refreshing: true,
+            error: "",
+          });
         }
       } catch (error) {
         if (active)
@@ -264,13 +273,28 @@ export function useMiniatureList(filters: MiniatureListFilters): MiniatureListRe
       abort.abort();
       unsubscribe();
     };
-  }, [scope, variables, key, fixture]);
+  }, [scope, variables, key, fixture, stableFilters.workbench]);
   const loadMore = useCallback(() => commands.current.more(), []);
   const retry = useCallback(() => commands.current.refresh(), []);
+  // Home keeps one shared folder subscription. Retain a bounded, accepted window
+  // for each view instead of remounting Home or displaying Workbench rows as Miniatures.
+  const acceptedViews = useRef(new Map<boolean, { scope: VaultGraphQLScope; data: MiniatureListQuery }>());
+  useEffect(() => {
+    if (state.scope && state.data && state.dataView !== undefined)
+      acceptedViews.current.set(state.dataView, { scope: state.scope, data: state.data });
+  }, [state.scope, state.data, state.dataView]);
+  const cachedView = acceptedViews.current.get(stableFilters.workbench);
+  const viewData =
+    state.scope === scope && state.dataView === stableFilters.workbench
+      ? state.data
+      : cachedView?.scope === scope
+        ? cachedView.data
+        : null;
   const retained = useRetainedQuery(
-    state.scope === scope ? state.data : null,
+    viewData,
     !state.error && (state.loading || state.refreshing || state.dataKey !== key),
     scope,
+    stableFilters.workbench,
   );
   const view = useMemo(() => {
     if (fixture) return fixture(stableFilters);

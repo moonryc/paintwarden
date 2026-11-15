@@ -60,15 +60,17 @@ export function SettingsRow({
   description,
   action,
   children,
+  busy,
 }: {
   icon: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  busy?: boolean;
   children?: ReactNode;
 }) {
   return (
-    <Box sx={{ px: { xs: 2, md: 2.5 }, py: 2 }}>
+    <Box aria-busy={busy} sx={{ px: { xs: 2, md: 2.5 }, py: 2 }}>
       <Box sx={{ display: "flex", flexWrap: { xs: "wrap", sm: "nowrap" }, alignItems: "center", gap: 2 }}>
         <Box sx={rowIconSx} aria-hidden="true">
           {icon}
@@ -88,6 +90,8 @@ export function SettingsRow({
               flexWrap: "wrap",
               gap: 1,
               flexShrink: 0,
+              minWidth: 0,
+              maxWidth: { xs: "calc(100% - 56px)", sm: "50%" },
               ml: { xs: "56px", sm: 0 },
             }}
           >

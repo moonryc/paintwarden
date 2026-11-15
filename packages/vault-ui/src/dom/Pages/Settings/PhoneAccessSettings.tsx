@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { usePageLoading } from "../../Components/PageLoadingStatus";
 import type { PhoneAccessState } from "../../types";
 
 import { SettingsRow } from "./SettingsSection";
@@ -104,6 +105,7 @@ export function PhoneAccessSettings() {
     }
   }
 
+  usePageLoading(Boolean(bridge && state?.available !== false && (busy || (address && !qr && !qrFailed))));
   if (!bridge || state?.available === false) return null;
   const command = `tailscale serve http://127.0.0.1:${state?.port ?? 0}`;
   return (
@@ -120,13 +122,28 @@ export function PhoneAccessSettings() {
         />
       }
     >
-      <Stack spacing={2} aria-busy={busy}>
-        {busy && (
-          <Box role="status" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <CircularProgress size={16} aria-hidden="true" />
-            {t("phoneAccess.loading")}
-          </Box>
-        )}
+      <Stack
+        spacing={2}
+        aria-busy={busy || Boolean(address && !qr && !qrFailed)}
+        role="region"
+        aria-label={t("phoneAccess.title")}
+        tabIndex={0}
+        sx={{ height: "24rem", overflowY: "auto", scrollbarGutter: "stable", pr: 1 }}
+      >
+        <Box
+          aria-hidden="true"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            height: "3rem",
+            flexShrink: 0,
+            visibility: busy ? "visible" : "hidden",
+          }}
+        >
+          <CircularProgress size={16} aria-hidden="true" />
+          {t("phoneAccess.loading")}
+        </Box>
         {failed && (
           <Alert
             severity="error"
@@ -185,20 +202,30 @@ export function PhoneAccessSettings() {
                   ))}
                 </RadioGroup>
                 <Box sx={{ display: "grid", justifyItems: "start", gap: 1 }}>
-                  {qr ? (
-                    <Box
-                      component="img"
-                      src={qr}
-                      alt={t("phoneAccess.qrAlt", { address })}
-                      sx={{ width: 224, maxWidth: "100%", height: "auto", borderRadius: 1 }}
-                    />
-                  ) : qrFailed ? (
-                    <Alert severity="error">{t("phoneAccess.qrError")}</Alert>
-                  ) : (
-                    <Typography role="status" variant="body2">
-                      {t("phoneAccess.qrLoading")}
-                    </Typography>
-                  )}
+                  <Box
+                    sx={{
+                      width: 224,
+                      maxWidth: "100%",
+                      aspectRatio: "1",
+                      display: "grid",
+                      placeItems: "center",
+                      overflow: "hidden",
+                      borderRadius: 1,
+                    }}
+                  >
+                    {qr ? (
+                      <Box
+                        component="img"
+                        src={qr}
+                        alt={t("phoneAccess.qrAlt", { address })}
+                        sx={{ width: 224, maxWidth: "100%", height: "auto", borderRadius: 1 }}
+                      />
+                    ) : qrFailed ? (
+                      <Alert severity="error">{t("phoneAccess.qrError")}</Alert>
+                    ) : (
+                      <Typography variant="body2">{t("phoneAccess.qrLoading")}</Typography>
+                    )}
+                  </Box>
                   <Typography variant="body2">{t("phoneAccess.scan")}</Typography>
                 </Box>
               </>

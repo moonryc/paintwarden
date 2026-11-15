@@ -150,3 +150,70 @@ export const Loading: Story = {
     await expect(canvas.queryByRole("progressbar")).toBeNull();
   },
 };
+
+const delayedUpdate = {
+  status: "idle" as const,
+  currentVersion: "1.0.0",
+  version: null,
+  progress: null,
+  error: null,
+};
+export const DesktopMetadataLoading: Story = {
+  args: { desktopConnection: { mode: "remote", serverUrl: "https://example.test" } },
+  decorators: [
+    desktopBridge(delayedUpdate, {
+      getUpdateState: () => new Promise((resolve) => setTimeout(() => resolve(delayedUpdate), 750)),
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const check = canvas.getByRole("button", { name: "Check for updates" });
+    await expect(check).toBeDisabled();
+    await expect(canvas.getByText("Loading…")).toBeVisible();
+    const anchors = [
+      canvas.getByRole("heading", { name: "Catalog" }),
+      canvas.getByRole("heading", { name: "Account and security" }),
+    ];
+    const boxes = anchors.map((el) => el.getBoundingClientRect());
+    await waitFor(() => expect(check).toBeEnabled());
+    anchors.forEach((el, index) =>
+      expect(Math.abs(el.getBoundingClientRect().y - boxes[index].y)).toBeLessThanOrEqual(1),
+    );
+  },
+};
+
+export const DesktopPhoneInitiallyEnabled: Story = {
+  args: { desktopConnection: { mode: "local" } },
+  decorators: [
+    desktopBridge(delayedUpdate, {
+      getPhoneAccess: () =>
+        new Promise((resolve) =>
+          setTimeout(
+            () =>
+              resolve({
+                available: true,
+                enabled: true,
+                port: 3180,
+                addresses: ["http://192.168.1.10:3180"],
+                tailscale: false,
+              }),
+            750,
+          ),
+        ),
+    }),
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const anchors = [
+      canvas.getByRole("heading", { name: "Catalog" }),
+      canvas.getByRole("heading", { name: "Account and security" }),
+    ];
+    const boxes = anchors.map((el) => el.getBoundingClientRect());
+    await expect(
+      await canvas.findByRole("img", { name: "QR code for http://192.168.1.10:3180" }),
+    ).toBeVisible();
+    anchors.forEach((el, index) =>
+      expect(Math.abs(el.getBoundingClientRect().y - boxes[index].y)).toBeLessThanOrEqual(1),
+    );
+  },
+};

@@ -48,7 +48,14 @@ const PluginsModal = dialogs.plugins.Component;
 
 if (typeof document !== "undefined") installBaseStyles();
 
-export default function Vault(props: { onChangeServer?: () => void } = {}) {
+import type { DesktopConnectionChoice } from "./types";
+
+type VaultProps = {
+  onChangeServer?: () => void;
+  desktopConnection?: DesktopConnectionChoice;
+};
+
+export default function Vault(props: VaultProps = {}) {
   const [store] = useState(() => createVaultStore());
   return (
     <VaultStoreProvider store={store}>
@@ -64,7 +71,7 @@ export default function Vault(props: { onChangeServer?: () => void } = {}) {
   );
 }
 
-function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
+function VaultContent({ onChangeServer, desktopConnection }: VaultProps) {
   const { t: pagesT } = useTranslation("pages");
   const [authError, setError] = useState("");
   const [username, setUsername] = useState(""),
@@ -259,7 +266,7 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
             ) : (
               <Box component="div" sx={{ minWidth: 0 }}>
                 {tab === "dashboard" || tab === "miniatures" ? (
-                  <Home key={tab} view={tab} />
+                  <Home view={tab} />
                 ) : tab === "templates" ? (
                   <MiniatureTemplatesPage
                     onUse={(id) => {
@@ -283,7 +290,12 @@ function VaultContent({ onChangeServer }: { onChangeServer?: () => void }) {
                   />
                 ) : tab === "settings" ? (
                   <>
-                    <SettingsScreen auth={auth} connected={!loadError} onChangeServer={onChangeServer} />
+                    <SettingsScreen
+                      auth={auth}
+                      connected={!loadError}
+                      onChangeServer={onChangeServer}
+                      desktopConnection={desktopConnection}
+                    />
                     <FirstScreenReady />
                   </>
                 ) : (

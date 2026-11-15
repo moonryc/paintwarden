@@ -8,6 +8,7 @@ import SystemUpdateAltOutlinedIcon from "@mui/icons-material/SystemUpdateAltOutl
 import { Alert, Button, Chip, Switch } from "@mui/material";
 import Box from "@mui/material/Box";
 import { translateServerError } from "@paintwarden/i18n/runtime";
+import { usePageLoading } from "../../Components/PageLoadingStatus";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -18,7 +19,7 @@ import { Download, Extension, FileUp } from "../../icons";
 import { LanguagePicker } from "../../LanguagePicker";
 import { FALLBACK_OWNER_NAME, UserAvatar } from "../../Layout/UserAvatar";
 import { useVaultStore } from "../../store/hooks";
-import type { AuthStatus } from "../../types";
+import type { AuthStatus, DesktopConnectionChoice } from "../../types";
 import { exportBackupFile } from "../../utils/backup-export";
 import { summarizeBackup } from "../../utils/backup-summary";
 import { describeUpdate, useDesktopUpdate } from "../../utils/desktop-update";
@@ -33,12 +34,15 @@ export function SettingsScreen({
   auth,
   connected,
   onChangeServer,
+  desktopConnection,
 }: {
   auth: AuthStatus | null;
   connected: boolean;
   onChangeServer?: () => void;
+  desktopConnection?: DesktopConnectionChoice;
 }) {
   const { t, i18n } = useTranslation("pages");
+  const { t: tc } = useTranslation("components");
   const setToken = useVaultStore((s) => s.setToken);
   const api = useVaultStore((s) => s.api);
   const notify = useVaultStore((s) => s.notify);
@@ -54,10 +58,16 @@ export function SettingsScreen({
   const [restoreMode, setRestoreMode] = useState<RestoreMode>("merge");
   const [exporting, setExporting] = useState(false);
   const [lastExport, setLastExport] = useState<Date | null>(null);
-  const [serverAddress, setServerAddress] = useState<string>(window.location.origin);
-  const [localServer, setLocalServer] = useState(false);
+  const [serverAddress, setServerAddress] = useState<string>(
+    desktopConnection
+      ? desktopConnection.mode === "remote"
+        ? (desktopConnection.serverUrl ?? "remote")
+        : "local"
+      : window.location.origin,
+  );
+  const [localServer, setLocalServer] = useState(desktopConnection?.mode === "local");
   useEffect(() => {
-    if (!window.paintwardenDesktop) return;
+    if (!window.paintwardenDesktop || desktopConnection) return;
     void window.paintwardenDesktop
       .getConnection()
       .then((choice) => {
@@ -65,8 +75,9 @@ export function SettingsScreen({
         setServerAddress(choice.mode === "remote" ? (choice.serverUrl ?? "remote") : "local");
       })
       .catch(() => setServerAddress("desktop"));
-  }, []);
+  }, [desktopConnection]);
   const update = useDesktopUpdate();
+  usePageLoading(Boolean(window.paintwardenDesktop && !update.state));
   const requireSignIn = Boolean(auth?.requireSignIn);
   const username = auth?.username || t(FALLBACK_OWNER_NAME);
 
@@ -167,7 +178,16 @@ export function SettingsScreen({
   }
 
   return (
-    <Box component="div" sx={{ width: "100%", minWidth: 0, display: "grid", gap: { xs: 3, md: 3.5 } }}>
+    <Box
+      component="div"
+      sx={{
+        width: "100%",
+        minWidth: 0,
+        display: "grid",
+        gridTemplateColumns: "minmax(0, 1fr)",
+        gap: { xs: 3, md: 3.5 },
+      }}
+    >
       <PageHeader eyebrow={t("settingsYourData")} title={t("settingsTitle")} body={t("settingsBody")} />
 
       <SettingsSection title={t("settingsConnection")}>
@@ -225,21 +245,42 @@ export function SettingsScreen({
           }
         />
         {localServer && <PhoneAccessSettings />}
-        {update.state && (
+        {window.paintwardenDesktop && (
           <SettingsRow
             icon={<SystemUpdateAltOutlinedIcon />}
             title={t("settingsDesktopApp")}
-            description={describeUpdate(update.state)}
+            busy={!update.state}
+            description={
+              <Box
+                sx={{
+                  height: "4.5em",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 3,
+                  overflow: "hidden",
+                }}
+              >
+                {update.state ? describeUpdate(update.state) : tc("loading")}
+              </Box>
+            }
             action={
-              update.state.status === "ready" ? (
-                <Button variant="contained" size="small" onClick={() => void update.install()}>
+              update.state?.status === "ready" ? (
+                <Button
+                  variant="contained"
+                  size="small"
+                  sx={{ width: "13rem", minHeight: 40 }}
+                  onClick={() => void update.install()}
+                >
                   {t("settingsRestartToUpdate")}
                 </Button>
               ) : (
                 <Button
                   variant="outlined"
                   size="small"
-                  disabled={["disabled", "checking", "downloading"].includes(update.state.status)}
+                  disabled={
+                    !update.state || ["disabled", "checking", "downloading"].includes(update.state.status)
+                  }
+                  sx={{ width: "13rem", minHeight: 40 }}
                   onClick={() => void update.check()}
                 >
                   {t("settingsCheckForUpdates")}
