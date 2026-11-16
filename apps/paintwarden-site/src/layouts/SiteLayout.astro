@@ -34,12 +34,18 @@ const fontFaces = [
 const tokens = Object.entries(themeVars)
   .map(([name, value]) => `${name}:${value}`)
   .join(";");
-const baseStyles = `${fontFaces}:root{${tokens};color-scheme:dark}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans);font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}::selection{background:var(--brand-soft);color:var(--ink)}`;
+const baseStyles = `${fontFaces}html[data-site-pending] body{visibility:hidden}:root{${tokens};color-scheme:dark}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-sans);font-feature-settings:"cv11","ss01";-webkit-font-smoothing:antialiased}::selection{background:var(--brand-soft);color:var(--ink)}`;
 ---
 
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
+    <script is:inline>
+      // No-JS keeps the static English page. JS users first see their saved/browser
+      // language with settled fonts, never an English layout that is replaced later.
+      document.documentElement.setAttribute("data-site-pending", "");
+      window.setTimeout(() => document.documentElement.removeAttribute("data-site-pending"), 8000);
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#202020" />
     <meta name="description" content={description} />

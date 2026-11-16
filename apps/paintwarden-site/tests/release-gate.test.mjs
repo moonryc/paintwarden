@@ -70,9 +70,23 @@ test("built default site hides private links and setup; opt-in restores them", {
     assert.ok(homepage.includes("The Paintwarden app doesn’t collect your data."));
     assert.ok(homepage.includes("/phone/"));
     const phone = hidden("phone");
-    for (const text of ["3000", "127.0.0.1", "Tailscale", "same network", "Home Screen", "within 7 days"]) {
+    for (const text of [
+      "Allow access from my other devices",
+      "OFF by default",
+      "QR",
+      "Wi-Fi",
+      "Tailscale",
+      "awake",
+      "same Paintwarden account",
+      "Docker",
+      "Home Screen",
+      "within 7 days",
+      "sample addresses and a sample QR",
+    ]) {
       assert.ok(phone.includes(text), `phone guide missing ${text}`);
     }
+    assert.ok(phone.includes("/images/phone-access-settings.webp"));
+    assert.ok(!phone.includes("It is not shared with your phone"));
     for (const href of ["/privacy.md", "/phone-access.md"]) assert.ok(hrefs(phone).includes(href));
     for (const [file, source] of [
       ["privacy.md", "privacy.md"],

@@ -64,7 +64,18 @@ function Header({
         backdropFilter: "saturate(140%) blur(18px)",
       }}
     >
-      <Container maxWidth="lg" sx={{ display: "flex", alignItems: "center", minHeight: 68, gap: 2, py: 1.5 }}>
+      <Container
+        maxWidth="xl"
+        sx={{
+          display: { xs: "grid", sm: "flex" },
+          gridTemplateColumns: "minmax(0, 1fr) auto",
+          gridTemplateRows: { xs: "52px 40px", sm: "none" },
+          alignItems: "center",
+          minHeight: 68,
+          gap: { xs: 1.5, sm: 2 },
+          py: 1.5,
+        }}
+      >
         <Box
           component="a"
           href="/"
@@ -76,7 +87,7 @@ function Header({
         <Box
           component="nav"
           aria-label={t("website.mainNavigation")}
-          sx={{ display: { xs: "none", lg: "flex" }, alignItems: "center", gap: 0.5 }}
+          sx={{ display: { xs: "none", xl: "flex" }, alignItems: "center", height: 48, gap: 0.5 }}
         >
           {nav().map((item) => {
             const current = page === item.page;
@@ -87,8 +98,10 @@ function Header({
                 href={item.href}
                 aria-current={current ? "page" : undefined}
                 sx={{
-                  px: 1.75,
+                  px: 1,
                   py: 0.9,
+                  maxHeight: 48,
+                  lineHeight: 1.25,
                   borderRadius: 999,
                   fontSize: 14,
                   fontWeight: 600,
@@ -108,14 +121,6 @@ function Header({
             );
           })}
         </Box>
-        <Button
-          href="/download/"
-          variant="contained"
-          startIcon={<DownloadIcon />}
-          sx={{ display: { xs: "none", lg: "inline-flex" }, ml: 1.5 }}
-        >
-          {t("website.getTheApp")}
-        </Button>
         <TextField
           select
           size="small"
@@ -125,9 +130,12 @@ function Header({
             void setLanguage(event.target.value);
           }}
           sx={{
-            minWidth: 124,
-            maxWidth: { xs: 140, md: 180 },
-            "& .MuiSelect-select": { whiteSpace: "normal", overflowWrap: "anywhere" },
+            minWidth: { xs: 0, sm: 164 },
+            width: { xs: "100%", sm: 164 },
+            flexShrink: 0,
+            gridColumn: { xs: "1 / -1", sm: "auto" },
+            gridRow: { xs: 2, sm: "auto" },
+            "& .MuiSelect-select": { whiteSpace: "nowrap" },
           }}
         >
           {languages.map(({ code, name }) => (
@@ -142,7 +150,9 @@ function Header({
           aria-controls="mobile-navigation"
           onClick={() => setMenuOpen(!menuOpen)}
           sx={{
-            display: { xs: "inline-flex", lg: "none" },
+            display: { xs: "inline-flex", xl: "none" },
+            gridColumn: 2,
+            gridRow: 1,
             border: "1px solid var(--line)",
             bgcolor: "var(--surface-raised)",
             borderRadius: 999,
@@ -157,7 +167,7 @@ function Header({
           component="nav"
           id="mobile-navigation"
           aria-label={t("website.mobileNavigation")}
-          sx={{ display: { lg: "none" }, px: 2, pb: 2, pt: 1, borderTop: "1px solid var(--line)" }}
+          sx={{ display: { xl: "none" }, px: 2, pb: 2, pt: 1, borderTop: "1px solid var(--line)" }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.75 }}>
             {nav().map((item) => {
@@ -353,7 +363,16 @@ export default function WebsitePage({ page, notices = "" }: { page: Page; notice
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ minHeight: "100vh", bgcolor: "var(--canvas)", color: "var(--ink)", overflowX: "clip" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          bgcolor: "var(--canvas)",
+          color: "var(--ink)",
+          overflowWrap: "anywhere",
+          "& .MuiButton-root": { minWidth: 0, maxWidth: "100%" },
+          "& .MuiSvgIcon-root": { flexShrink: 0 },
+        }}
+      >
         <Box
           component="a"
           href="#main"

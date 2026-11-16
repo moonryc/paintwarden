@@ -67,6 +67,21 @@ export function PhonePage() {
       <Box sx={{ display: "grid", gap: 3, maxWidth: 900, mx: "auto" }}>
         <GuideSection id="server" title={t("phone.serverTitle")}>
           <Typography sx={paragraph}>{t("phone.serverBody")}</Typography>
+          <Box component="figure" sx={{ m: 0, mt: 3 }}>
+            <Box
+              component="img"
+              src="/images/phone-access-settings.webp"
+              alt={t("phone.settingsAlt")}
+              width={1440}
+              height={1050}
+              loading="lazy"
+              decoding="async"
+              sx={{ display: "block", width: "100%", height: "auto", borderRadius: 2 }}
+            />
+            <Typography component="figcaption" sx={{ ...paragraph, fontSize: 13 }}>
+              {t("phone.settingsCaption")}
+            </Typography>
+          </Box>
           <Typography sx={paragraph}>{t("phone.desktopNote")}</Typography>
           <Button href="/phone-access.md" variant="outlined" endIcon={<ArrowForward />} sx={{ mt: 3 }}>
             {t("phone.guideLink")}

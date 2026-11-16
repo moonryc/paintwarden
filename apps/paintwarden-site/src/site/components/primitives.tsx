@@ -12,7 +12,7 @@ export function sxItems(sx?: SxProps<Theme>): SxItem[] {
   return Array.isArray(sx) ? (sx as SxItem[]) : [sx as SxItem];
 }
 
-export const serif = '"Fraunces", Georgia, "Times New Roman", serif';
+export const serif = "var(--font-serif)";
 
 /** The same paint-pot mark used by the app's favicon. */
 export function BrandMark({ size = 40 }: { size?: number }) {
@@ -99,7 +99,10 @@ export function PageIntro({
   children?: ReactNode;
 }) {
   return (
-    <Box component="section" sx={{ position: "relative", pt: { xs: 7, md: 11 }, pb: { xs: 5, md: 7 } }}>
+    <Box
+      component="section"
+      sx={{ position: "relative", overflow: "clip", pt: { xs: 7, md: 11 }, pb: { xs: 5, md: 7 } }}
+    >
       <Glow />
       <Box sx={{ position: "relative", maxWidth: 760 }}>
         <Eyebrow tone="gold">{eyebrow}</Eyebrow>

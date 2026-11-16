@@ -41,3 +41,22 @@ test("real app captures have every responsive WebP variant, fixed aspect ratio a
     expected.sort(),
   );
 });
+
+test("phone Settings illustration reserves its intrinsic size and the guide image stays in sync", async () => {
+  const images = new URL("../public/images/", import.meta.url);
+  const png = await readFile(new URL("phone-access-settings.png", images));
+  const documented = await readFile(
+    new URL("../../../docs/images/phone-access-settings.png", import.meta.url),
+  );
+  assert.deepEqual(png, documented, "The downloadable guide's relative image URL is published unchanged");
+  for (const format of ["png", "webp"]) {
+    const url = new URL(`phone-access-settings.${format}`, images);
+    const metadata = await sharp(await readFile(url)).metadata();
+    assert.equal(metadata.width, 1440);
+    assert.equal(metadata.height, 1050);
+    assert.ok((await stat(url)).size < 150_000);
+  }
+  const source = await readFile(new URL("../src/site/pages/PhonePage.tsx", import.meta.url), "utf8");
+  assert.ok(source.includes("width={1440}") && source.includes("height={1050}"));
+  assert.ok(source.includes('t("phone.settingsCaption")'));
+});

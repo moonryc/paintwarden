@@ -30,3 +30,11 @@ Run it yourself in Terminal, review any Tailscale confirmation, then open the **
 When finished, turn phone access off in Paintwarden; this stops access through Serve too. You can also remove the Tailscale Serve configuration yourself with `tailscale serve reset` (this resets other Serve routes on that computer too, so review your configuration first).
 
 This feature does not change HTTPS cookies or proxy settings for Docker/server deployments.
+
+## Optional always-on alternative: Docker or your own server
+
+If you prefer phone access without keeping your desktop computer awake, run Paintwarden with Docker Compose on a server or NAS that stays on. This is an alternative to sharing the desktop app's local vault, not a requirement for the Settings-and-QR setup above.
+
+Open that server's reachable address in your phone's browser on the same trusted Wi-Fi or Tailscale network, and sign in with the owner account for that vault. Use the host and port configured for your deployment, not the desktop app's QR address. For example, `http://192.0.2.10:3000` is a documentation-only sample; replace it with your server's actual address. For remote access, prefer Tailscale rather than forwarding a router port to the public Internet. Plain HTTP does not encrypt passwords or vault traffic; use a trusted network or Tailscale, and configure HTTPS if needed for browser features.
+
+The desktop app can connect to the same server in remote mode, but it does not keep an offline copy. A separately created server vault is not automatically a copy of your desktop vault; use Export and Restore if you want to move your collection, and set up the server's owner account separately. See the repository's Docker/server setup instructions for deployment, persistent storage and backups. The desktop phone-access toggle does not manage a separate Docker/server deployment.

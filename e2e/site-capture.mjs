@@ -376,6 +376,52 @@ try {
       .toBe("CANCELLED");
     await ctx.close();
   }
+  // A separate, clearly labelled illustration of the genuine Settings UI. The
+  // bridge returns documentation-only addresses, never the host's actual LAN or tailnet.
+  const illustration = await browser.newContext({
+    baseURL: `http://127.0.0.1:${port}`,
+    storageState: storage,
+    viewport: { width: 1440, height: 1050 },
+  });
+  await illustration.addInitScript(() => {
+    window.paintwardenDesktop = {
+      getConnection: async () => ({ mode: "local" }),
+      getLanguage: async () => "en",
+      setLanguage: async (language) => language,
+      getUpdateState: async () => ({ status: "disabled", currentVersion: "1.0.0", version: null }),
+      onUpdateState: () => () => {},
+      getPhoneAccess: async () => ({
+        available: true,
+        enabled: true,
+        port: 48177,
+        addresses: ["http://192.0.2.10:48177", "http://100.64.0.10:48177"],
+        tailscale: true,
+      }),
+    };
+  });
+  const settings = await illustration.newPage();
+  settings.on("pageerror", (error) => errors.push(String(error)));
+  await settings.goto("/");
+  await expect(settings.getByRole("heading", { name: "Workbench", exact: true, level: 1 })).toBeVisible();
+  await nav(settings, "Data & settings");
+  const qr = settings.getByRole("img", { name: "QR code for http://192.0.2.10:48177", exact: true });
+  await expect(qr).toBeVisible();
+  await qr.scrollIntoViewIfNeeded();
+  await settings.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all([...document.images].map((image) => image.decode().catch(() => {})));
+  });
+  const qrImage = path.join(artifacts, "phone-access-settings.png");
+  await settings.screenshot({ path: qrImage, animations: "disabled" });
+  await sharp(qrImage).toFile(path.join(repo, "docs/images/phone-access-settings.png"));
+  await sharp(qrImage).toFile(
+    path.join(repo, "apps/paintwarden-site/public/images/phone-access-settings.png"),
+  );
+  await sharp(qrImage)
+    .webp({ quality: 88, effort: 6 })
+    .toFile(path.join(repo, "apps/paintwarden-site/public/images/phone-access-settings.webp"));
+  checks.push("Settings QR illustration: real UI with documentation-only sample addresses/bridge");
+  await illustration.close();
   assert.deepEqual(errors, []);
 } finally {
   clearTimeout(timer);
