@@ -1,3 +1,4 @@
+import { appScrollOffset } from "../utils/app-layout";
 import { Button, Card, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -128,7 +129,7 @@ export function PaintLibrary({ onAddPaint }: { onAddPaint(): void }) {
     setPendingFocus(null);
   }, [pendingFocus, paintWindow.startIndex, paintWindow.endIndex]);
   const focusPaintAt = (index: number, reverse: boolean) => {
-    window.scrollTo({ top: viewport.gridTop + index * 66 - 120, behavior: "auto" });
+    window.scrollTo({ top: viewport.gridTop + index * 66 - appScrollOffset(), behavior: "auto" });
     setViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
     setPendingFocus({ index, reverse });
   };

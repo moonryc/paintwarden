@@ -26,7 +26,14 @@ if (window.paintwardenDesktop?.titleBar) {
   const chromeStyles = document.createElement("style");
   chromeStyles.textContent = `
   body { padding-top: var(--desktop-titlebar-height, 0px) !important; }
-  .MuiModal-root { top: var(--desktop-titlebar-height, 0px) !important; }
+  /* Menus/popovers calculate viewport coordinates: never inset their modal root.
+     Only blocking dialog/drawer surfaces need clearance beneath native chrome. */
+  .MuiDialog-root { top: var(--desktop-titlebar-height, 0px) !important; }
+  .MuiDialog-paperFullScreen { height: 100% !important; max-height: 100% !important; }
+  .MuiDrawer-paper {
+    top: var(--desktop-titlebar-height, 0px) !important;
+    height: calc(100% - var(--desktop-titlebar-height, 0px)) !important;
+  }
 `;
   document.head.append(chromeStyles);
 }

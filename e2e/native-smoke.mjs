@@ -14,6 +14,7 @@ const { values } = parseArgs({
     artifacts: { type: "string" },
     help: { type: "boolean" },
     "ui-quick3": { type: "boolean" },
+    "sticky-toolbar": { type: "boolean" },
     "folder-edit": { type: "boolean" },
     "plugin-zip": { type: "string" },
     "plugin-width": { type: "string", default: "1440" },
@@ -21,7 +22,7 @@ const { values } = parseArgs({
 });
 if (values.help) {
   console.log(
-    "Usage: node e2e/native-smoke.mjs [--executable <packaged binary>] [--artifacts <directory>] [--plugin-zip <synthetic ZIP>] [--plugin-width 1440|390]",
+    "Usage: node e2e/native-smoke.mjs [--executable <packaged binary>] [--artifacts <directory>] [--sticky-toolbar] [--plugin-zip <synthetic ZIP>] [--plugin-width 1440|390]",
   );
   process.exit(0);
 }
@@ -283,6 +284,27 @@ try {
     "Theme-matched title strip pixels, native controls position, focus/fullscreen IPC and no overflow at desktop/phone widths",
   );
 
+  const { runStickyToolbarFlow } = await import("./sticky-toolbar-flow.mjs");
+  results.stickyToolbar = await runStickyToolbarFlow({
+    page,
+    artifacts: evidence,
+    resize: (width) =>
+      application.evaluate(
+        ({ BrowserWindow }, width) => BrowserWindow.getAllWindows()[0].setSize(width, 1000),
+        width,
+      ),
+  });
+  assert.equal(
+    await application.evaluate(({ BrowserWindow }) =>
+      BrowserWindow.getAllWindows().every((window) => !window.isVisible()),
+    ),
+    true,
+    "Sticky toolbar regression must not reveal native windows",
+  );
+  record(
+    "All sticky toolbars clear the header; labels, overflow, zero scroll CLS and anchored popups pass at desktop/tablet/phone widths",
+  );
+
   if (values["folder-edit"]) {
     const { runFolderEditFlow } = await import("./folder-edit-flow.mjs");
     results.folderEdit = await runFolderEditFlow({
@@ -304,18 +326,20 @@ try {
     results.uiQuick3 = await runQuick3Flow(application, page, evidence);
   }
 
-  const { runBannerStressFlow } = await import("./banner-stress-flow.mjs");
-  results.bannerStress = await runBannerStressFlow(page);
-  await page.screenshot({
-    path: path.join(evidence, "04-heavy-session-no-global-error.png"),
-    timeout: 10000,
-  });
-  record(
-    "Rapid Model typing, fast navigation and focus storms do not trigger a global request error or throttle authenticated use",
-  );
+  if (!values["sticky-toolbar"]) {
+    const { runBannerStressFlow } = await import("./banner-stress-flow.mjs");
+    results.bannerStress = await runBannerStressFlow(page);
+    await page.screenshot({
+      path: path.join(evidence, "04-heavy-session-no-global-error.png"),
+      timeout: 10000,
+    });
+    record(
+      "Rapid Model typing, fast navigation and focus storms do not trigger a global request error or throttle authenticated use",
+    );
 
-  const { runPhoneAccessFlow } = await import("./phone-access-flow.mjs");
-  await runPhoneAccessFlow({ application, page, artifacts: evidence, record });
+    const { runPhoneAccessFlow } = await import("./phone-access-flow.mjs");
+    await runPhoneAccessFlow({ application, page, artifacts: evidence, record });
+  }
 
   if (values["plugin-zip"]) {
     const { runPluginInstallFlow } = await import("./plugin-install-flow.mjs");

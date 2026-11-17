@@ -1,3 +1,4 @@
+import { appScrollOffset } from "../../utils/app-layout";
 import { Button, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { isColorCategory } from "@paintwarden/core/color-categories";
@@ -154,7 +155,7 @@ export function ColorSchemesPage() {
   const focusSchemeAt = useCallback(
     (index: number) => {
       const row = Math.floor(index / columns);
-      window.scrollTo({ top: viewport.gridTop + row * (288 + rowGap) - 120, behavior: "auto" });
+      window.scrollTo({ top: viewport.gridTop + row * (288 + rowGap) - appScrollOffset(), behavior: "auto" });
       setViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
       setPendingFocusIndex(index);
     },

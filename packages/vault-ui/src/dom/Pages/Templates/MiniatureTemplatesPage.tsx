@@ -1,3 +1,4 @@
+import { appScrollOffset } from "../../utils/app-layout";
 import { Button, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -185,7 +186,10 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   // Tab past the rendered rows scrolls the next card into the window before focusing it.
   const focusTemplateAt = (index: number) => {
     const row = Math.floor(index / columns);
-    window.scrollTo({ top: viewport.gridTop + row * (rowHeight + gap) - 120, behavior: "auto" });
+    window.scrollTo({
+      top: viewport.gridTop + row * (rowHeight + gap) - appScrollOffset(),
+      behavior: "auto",
+    });
     setViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
     setPendingFocus(index);
   };

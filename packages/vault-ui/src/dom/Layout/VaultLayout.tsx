@@ -1,7 +1,7 @@
 import { Drawer, IconButton, useScrollTrigger } from "@mui/material";
 import Box from "@mui/material/Box";
 import { i18n } from "@paintwarden/i18n/runtime";
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 import { PageLoadingStatus } from "../Components/PageLoadingStatus";
 import { ErrorSurface } from "../Components/QueryErrorNotice";
@@ -24,11 +24,33 @@ export function VaultLayout({
   children: ReactNode;
 }) {
   const [navOpen, setNavOpen] = useState(false);
+  const shell = useRef<HTMLDivElement>(null);
+  const header = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    // Include wrapped install notices and safe-area padding, not just the title row.
+    // These variables affect sticky/scroll clearance only, never normal-flow geometry.
+    const measure = () => {
+      if (header.current)
+        shell.current?.style.setProperty(
+          "--app-header-height",
+          `${header.current.getBoundingClientRect().height}px`,
+        );
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    if (header.current) observer.observe(header.current);
+    return () => observer.disconnect();
+  }, []);
   const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 48 });
   return (
     <Box
       component="div"
+      ref={shell}
       sx={{
+        "--app-header-row-height": "3.5rem",
+        "--app-header-offset":
+          "calc(var(--desktop-titlebar-height, 0px) + var(--app-header-height, calc(var(--app-header-row-height) + env(safe-area-inset-top) + 1px)))",
+        [up.lg]: { "--app-header-row-height": "4rem" },
         display: "flex",
         minHeight: "calc(100vh - var(--desktop-titlebar-height, 0px))",
       }}
@@ -96,6 +118,7 @@ export function VaultLayout({
         {/* Same bar at every size: the page title docks here once the large title scrolls away. */}
         <Box
           component="header"
+          ref={header}
           sx={[
             {
               boxSizing: "border-box",
@@ -125,7 +148,7 @@ export function VaultLayout({
               boxSizing: "border-box",
               marginInline: "auto",
               display: "flex",
-              height: "3.5rem",
+              height: "var(--app-header-row-height)",
               maxWidth: "1280px",
               alignItems: "center",
               justifyContent: "space-between",
@@ -135,7 +158,6 @@ export function VaultLayout({
                 px: 4,
               },
               [up.lg]: {
-                height: "4rem",
                 px: 5,
               },
             }}

@@ -1,3 +1,4 @@
+import { appScrollOffset } from "../utils/app-layout";
 import { gql, type TypedDocumentNode } from "@apollo/client";
 import {
   Button,
@@ -372,7 +373,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
   const focusShelfItem = (index: number, origin: HTMLElement) => {
     const row = Math.floor(index / shelfColumns);
     window.scrollTo({
-      top: shelfViewport.gridTop + row * (shelfRowHeight + shelfGap) - 120,
+      top: shelfViewport.gridTop + row * (shelfRowHeight + shelfGap) - appScrollOffset(),
       behavior: "auto",
     });
     setShelfViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
@@ -706,7 +707,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
         id="miniature-shelf"
         sx={{
           minWidth: 0,
-          scrollMarginTop: "6rem",
+          scrollMarginTop: "calc(var(--app-header-offset) + 2rem)",
         }}
       >
         {workbench && <QueryErrorNotice error={summary.error} onRetry={summary.retry} />}

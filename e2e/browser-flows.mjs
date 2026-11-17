@@ -6,6 +6,7 @@ import { unzipSync } from "fflate";
 import { expect as playwrightExpect } from "playwright/test";
 import sharp from "sharp";
 
+import { runStickyToolbarFlow } from "./sticky-toolbar-flow.mjs";
 import { checkScanAggregateFixture } from "./scan-aggregate.mjs";
 import { checkSchemeRanking } from "./scheme-ranking.mjs";
 import { checkAutocompleteSearch } from "./autocomplete-search.mjs";
@@ -308,6 +309,15 @@ export async function runAutocompleteFlows({ newPage, artifacts, results }) {
   await checkAutocompleteSearch({ page, artifacts, results });
 }
 
+export async function runStickyToolbarFlows({ newPage, artifacts, results }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  results.stickyToolbar = await runStickyToolbarFlow({ page, artifacts });
+  results.checks.push(
+    "PASS all sticky toolbars, labels, zero scroll CLS and anchored popups at desktop/tablet/phone widths",
+  );
+}
+
 export async function runBrowserFlows({ newPage, artifacts, results }) {
   const check = (name) => {
     results.checks.push(`PASS ${name}`);
@@ -315,6 +325,8 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   };
   const first = await newPage();
   await authenticate(first, true);
+  results.stickyToolbar = await runStickyToolbarFlow({ page: first, artifacts });
+  check("all sticky toolbars, labels, zero scroll CLS and anchored popups at desktop/tablet/phone widths");
   const manifest = await first.evaluate(async () => {
     const link = document.querySelector('link[rel="manifest"]');
     return (await fetch(link.href)).json();

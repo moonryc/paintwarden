@@ -1,6 +1,6 @@
 // Production browser gate. First: npm ci && npx playwright install --with-deps chromium && npm run build
 // Then: node e2e/browser-smoke.mjs (optional E2E_ARTIFACTS_DIR, absolute or relative to cwd).
-// Additional isolated gates: --scheme-ranking and --no-refetch-loading.
+// Additional isolated gates: --sticky-toolbar, --scheme-ranking and --no-refetch-loading.
 // Requires Node >=22.13. Never connects to an existing server or uses a personal vault/catalog.
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
   runFolderEditFlows,
+  runStickyToolbarFlows,
   runAutocompleteFlows,
   runBrowserFlows,
   runSchemeRankingFlows,
@@ -278,19 +279,21 @@ try {
     return page;
   }
   await Promise.race([
-    (process.argv.includes("--folder-edit")
-      ? runFolderEditFlows
-      : connectionRecovery
-        ? runConnectionRecoveryFlows
-        : aggregate
-          ? runScanAggregateFlows
-          : autocompleteSearch
-            ? runAutocompleteFlows
-            : noRefetchLoading
-              ? runNoRefetchLoadingFlows
-              : schemeRanking
-                ? runSchemeRankingFlows
-                : runBrowserFlows)({
+    (process.argv.includes("--sticky-toolbar")
+      ? runStickyToolbarFlows
+      : process.argv.includes("--folder-edit")
+        ? runFolderEditFlows
+        : connectionRecovery
+          ? runConnectionRecoveryFlows
+          : aggregate
+            ? runScanAggregateFlows
+            : autocompleteSearch
+              ? runAutocompleteFlows
+              : noRefetchLoading
+                ? runNoRefetchLoadingFlows
+                : schemeRanking
+                  ? runSchemeRankingFlows
+                  : runBrowserFlows)({
       newPage,
       artifacts,
       results,

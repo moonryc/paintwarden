@@ -43,7 +43,7 @@ export function FilterToolbar({
         {
           boxSizing: "border-box",
           position: "sticky",
-          top: "calc(3.5rem + env(safe-area-inset-top) + .5rem)",
+          top: "calc(var(--app-header-offset, 0px) + .5rem)",
           zIndex: 10,
           mb: 2,
           display: "flex",
@@ -56,9 +56,6 @@ export function FilterToolbar({
             flexDirection: "row",
             alignItems: "center",
             gap: 1.5,
-          },
-          [up.lg]: {
-            top: "4.5rem",
           },
           boxShadow: "0 1px 2px rgb(var(--shadow-color) / 6%), 0 1px 1px rgb(var(--shadow-color) / 4%)",
         },

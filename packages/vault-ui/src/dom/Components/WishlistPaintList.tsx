@@ -1,3 +1,4 @@
+import { appScrollOffset } from "../utils/app-layout";
 import { formatNumber } from "../i18n";
 import { useTranslation } from "react-i18next";
 import { Card } from "@mui/material";
@@ -184,7 +185,7 @@ export function WishlistPaintList<T extends { paint: { id: string } }>({
         const flatIndex = next + (groups.length > 1 ? target.groupIndex + 1 : 0);
         if (flatIndex >= start && flatIndex < end) return;
         event.preventDefault();
-        window.scrollTo({ top: viewport.top + target.top - 120, behavior: "auto" });
+        window.scrollTo({ top: viewport.top + target.top - appScrollOffset(), behavior: "auto" });
         setViewport((previous) => ({ ...previous, scrollY: window.scrollY }));
         setPendingFocus({ index: next, reverse });
       }}
