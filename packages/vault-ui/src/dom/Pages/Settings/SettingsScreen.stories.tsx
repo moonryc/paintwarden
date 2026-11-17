@@ -36,6 +36,10 @@ export const Connected: Story = {
     await expect(canvas.getByRole("heading", { name: "Data & settings" })).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Manage plugins" })).toBeVisible();
     await expect(canvas.getByRole("heading", { name: "Help & About" })).toBeVisible();
+    const data = within(canvas.getByRole("region", { name: "Data" }));
+    await expect(data.getByRole("button", { name: "Export" })).toBeVisible();
+    await expect(data.getByRole("button", { name: "Choose file" })).toBeVisible();
+    await expect(canvas.queryByRole("heading", { name: "Backups" })).not.toBeInTheDocument();
     const help = within(canvas.getByRole("region", { name: "Help & About" }));
     await expect(help.getAllByRole("button")).toHaveLength(7);
     await expect(help.getByRole("button", { name: /^About Paintwarden/ })).toBeVisible();

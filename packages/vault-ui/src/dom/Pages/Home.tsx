@@ -968,6 +968,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
       )}
       {adding && (
         <AddChoiceDialog
+          folderView={!browser.flat}
           itemLabel={t("folders.miniature")}
           item={
             <CreateMiniatureDialog

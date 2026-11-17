@@ -19,8 +19,12 @@ export async function runBannerStressFlow(page) {
   page.on("pageerror", error);
   try {
     await page.getByRole("button", { name: "Add miniature", exact: true }).click();
+    // Folder views start on Folder; flat views already show the miniature form.
+    await page.getByRole("dialog").waitFor();
+    const addChoice = page.getByRole("group", { name: "What would you like to add?", exact: true });
+    if (await addChoice.count())
+      await addChoice.getByRole("button", { name: "Miniature", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Add a miniature", exact: true });
-    await dialog.getByRole("button", { name: "Miniature", exact: true }).click();
     const model = dialog.getByRole("combobox", { name: "Model", exact: true });
     await model.fill("");
     for (const term of [

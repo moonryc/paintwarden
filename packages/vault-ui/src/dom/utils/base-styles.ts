@@ -27,5 +27,9 @@ export function installBaseStyles() {
     width: "100%",
   });
   const root = document.getElementById("root");
-  if (root) Object.assign(root.style, { minHeight: "100dvh", width: "100%" });
+  if (root)
+    Object.assign(root.style, {
+      minHeight: "calc(100dvh - var(--desktop-titlebar-height, 0px))",
+      width: "100%",
+    });
 }

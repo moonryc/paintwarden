@@ -190,3 +190,41 @@ export const MixedFolderAndTemplateSearch: Story = {
     await expect(search).toHaveValue("");
   },
 };
+
+export const AddInFlatAndFolderViews: Story = {
+  beforeEach: () => {
+    localStorage.removeItem("paintwarden.folders.templates.flat");
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(canvasElement.ownerDocument.body);
+    const add = await canvas.findByRole("button", { name: "New template" });
+    await userEvent.click(add);
+    const direct = within(await body.findByRole("dialog", { name: "New template" }));
+    await expect(
+      direct.queryByRole("group", { name: "What would you like to add?" }),
+    ).not.toBeInTheDocument();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+    try {
+      await userEvent.click(canvas.getByRole("button", { name: "Folder view" }));
+      await userEvent.click(add);
+      const folder = within(await body.findByRole("dialog", { name: "Create folder" }));
+      const group = within(folder.getByRole("group", { name: "What would you like to add?" }));
+      await expect(group.getAllByRole("button").map((button) => button.textContent)).toEqual([
+        "Folder",
+        "Template",
+      ]);
+      await expect(group.getByRole("button", { name: "Folder" })).toHaveAttribute("aria-pressed", "true");
+      await userEvent.click(group.getByRole("button", { name: "Template" }));
+      const item = within(await body.findByRole("dialog", { name: "New template" }));
+      await expect(item.getByRole("button", { name: "Template" })).toHaveFocus();
+      await expect(body.getAllByRole("dialog")).toHaveLength(1);
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+    } finally {
+      await userEvent.click(canvas.getByRole("button", { name: "Flat view" }));
+      localStorage.removeItem("paintwarden.folders.templates.flat");
+    }
+  },
+};

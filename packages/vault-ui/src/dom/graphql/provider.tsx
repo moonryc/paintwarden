@@ -283,7 +283,14 @@ function Scope({ children }: { children: ReactNode }) {
   // rechecking access rather than querying a permanently stopped client.
   if (failure?.accessDenied)
     return (
-      <Box component="main" sx={{ minHeight: "100vh", pt: 8, bgcolor: "var(--canvas)" }}>
+      <Box
+        component="main"
+        sx={{
+          minHeight: "calc(100vh - var(--desktop-titlebar-height, 0px))",
+          pt: 8,
+          bgcolor: "var(--canvas)",
+        }}
+      >
         <AppContent>
           <AppBanner severity="error" onRetry={() => setToken(token)}>
             {i18n.t("shell:vaultAccessExpiredSignInAgain")}

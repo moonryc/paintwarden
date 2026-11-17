@@ -8,6 +8,7 @@ import inter700 from "@fontsource/inter/files/inter-latin-700-normal.woff2?url";
 import fraunces from "@fontsource-variable/fraunces/files/fraunces-latin-wght-normal.woff2?url";
 
 import DesktopConnection from "./desktop-connection";
+import { DesktopTitleBar } from "./desktop-titlebar";
 
 for (const [family, source, weight] of [
   ["Inter", inter400, "400"],
@@ -19,6 +20,15 @@ for (const [family, source, weight] of [
     .load()
     .then((face) => document.fonts.add(face))
     .catch(() => undefined);
+}
+
+if (window.paintwardenDesktop?.titleBar) {
+  const chromeStyles = document.createElement("style");
+  chromeStyles.textContent = `
+  body { padding-top: var(--desktop-titlebar-height, 0px) !important; }
+  .MuiModal-root { top: var(--desktop-titlebar-height, 0px) !important; }
+`;
+  document.head.append(chromeStyles);
 }
 
 const webPage = ["http:", "https:"].includes(location.protocol) && !window.paintwardenDesktop;
@@ -51,6 +61,7 @@ if (webPage && import.meta.env.DEV && "serviceWorker" in navigator) {
 
 createRoot(document.getElementById("root")!).render(
   <LanguageProvider>
+    <DesktopTitleBar />
     {window.paintwardenDesktop ? <DesktopConnection bridge={window.paintwardenDesktop} /> : <Vault />}
   </LanguageProvider>,
 );

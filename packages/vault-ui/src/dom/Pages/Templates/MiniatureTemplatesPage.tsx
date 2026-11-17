@@ -391,6 +391,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       )}
       {adding && (
         <AddChoiceDialog
+          folderView={!browser.flat}
           itemLabel={t("folders.template")}
           item={
             <TemplateEditorDialog

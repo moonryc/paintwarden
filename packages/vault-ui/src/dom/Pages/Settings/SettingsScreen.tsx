@@ -383,7 +383,7 @@ export function SettingsScreen({
         />
       </SettingsSection>
 
-      <SettingsSection title={t("settingsBackups")} description={t("settingsBackupsDescription")}>
+      <SettingsSection title={t("settingsData")} description={t("settingsDataDescription")}>
         <SettingsRow
           icon={<Download size={20} />}
           title={t("settingsExportBackup")}

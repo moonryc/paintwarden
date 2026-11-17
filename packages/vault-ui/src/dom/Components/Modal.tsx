@@ -9,7 +9,7 @@ import { ErrorSurface } from "./QueryErrorNotice";
 
 /**
  * Lets a wrapper place a control above the body of the form Modal it renders, such as
- * AddChoiceDialog's Miniature/Folder switch. `instant` skips the open transition when the wrapper
+ * AddChoiceDialog's Folder/Miniature switch. `instant` skips the open transition when the wrapper
  * swaps one form for another, so the switch reads as one dialog changing content.
  */
 export const ModalLeadContext = createContext<{ lead: ReactNode; instant: boolean } | null>(null);
@@ -88,7 +88,9 @@ export function Modal({
       subtitle={subtitle}
       badge={badge}
       onClose={onClose}
-      sx={{ flexShrink: 0, ...sx }}
+      // Add forms share a header slot so their switch stays at the same position,
+      // including when one form has no subtitle.
+      sx={{ flexShrink: 0, ...(slot ? { minHeight: 144 } : {}), ...sx }}
     />
   );
   if (phone)
@@ -145,7 +147,15 @@ export function Modal({
       disableAutoFocus={slot?.instant}
       aria-labelledby={titleId}
       slotProps={{
-        paper: { sx: { boxSizing: "border-box", bgcolor: "var(--surface)", ...paperLayout } },
+        paper: {
+          sx: {
+            boxSizing: "border-box",
+            bgcolor: "var(--surface)",
+            ...paperLayout,
+            // Switching between short folder and long item forms must not move the shell.
+            ...(slot ? { height: "min(720px, calc(100dvh - 64px))" } : {}),
+          },
+        },
       }}
     >
       {head({ px: { xs: 3, md: 3.5 }, pt: { xs: 3, md: 3.5 }, pb: { xs: 1.25, md: 1.75 } })}

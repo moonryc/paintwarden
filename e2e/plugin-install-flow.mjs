@@ -186,10 +186,11 @@ export async function runPluginInstallFlow({
   check("fresh vault automatic refresh creates no job, toast or progress panel");
   const title = `Synthetic install companion ${width}`;
   await page.getByRole("button", { name: "Add miniature", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "Add a miniature", exact: true })
-    .getByRole("button", { name: "Miniature", exact: true })
-    .click();
+  // Flat views create directly; folder views default to Folder.
+  await page.getByRole("dialog").waitFor();
+  const addChoice = page.getByRole("group", { name: "What would you like to add?", exact: true });
+  if (await addChoice.count())
+    await addChoice.getByRole("button", { name: "Miniature", exact: true }).click();
   let dialog = page.getByRole("dialog", { name: "Add a miniature", exact: true });
   await dialog.getByRole("textbox", { name: /^Name/ }).fill(title);
   await dialog.locator("button[type=submit]").click();

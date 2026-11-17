@@ -13,6 +13,7 @@ const { values } = parseArgs({
     executable: { type: "string" },
     artifacts: { type: "string" },
     help: { type: "boolean" },
+    "ui-quick3": { type: "boolean" },
     "plugin-zip": { type: "string" },
     "plugin-width": { type: "string", default: "1440" },
   },
@@ -274,6 +275,17 @@ try {
   assert.deepEqual(results.rendererErrors, [], "No renderer exceptions or crashes allowed");
   assert.equal(results.unexpectedExit, undefined, "No premature app exit allowed");
   record("Owner created through UI; persisted owner and main Workbench loaded without renderer errors");
+
+  const { runTitleBarFlow } = await import("./native-titlebar-flow.mjs");
+  results.titleBar = await runTitleBarFlow(application, page, evidence);
+  record(
+    "Theme-matched title strip pixels, native controls position, focus/fullscreen IPC and no overflow at desktop/phone widths",
+  );
+
+  if (values["ui-quick3"]) {
+    const { runQuick3Flow } = await import("./ui-quick3-flow.mjs");
+    results.uiQuick3 = await runQuick3Flow(application, page, evidence);
+  }
 
   const { runBannerStressFlow } = await import("./banner-stress-flow.mjs");
   results.bannerStress = await runBannerStressFlow(page);

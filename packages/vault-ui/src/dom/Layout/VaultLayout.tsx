@@ -30,7 +30,7 @@ export function VaultLayout({
       component="div"
       sx={{
         display: "flex",
-        minHeight: "100vh",
+        minHeight: "calc(100vh - var(--desktop-titlebar-height, 0px))",
       }}
     >
       <Box
@@ -40,7 +40,8 @@ export function VaultLayout({
           {
             boxSizing: "border-box",
             position: "fixed",
-            insetBlock: 0,
+            top: "var(--desktop-titlebar-height, 0px)",
+            bottom: 0,
             left: 0,
             zIndex: 40,
             display: "none",
@@ -99,7 +100,7 @@ export function VaultLayout({
             {
               boxSizing: "border-box",
               position: "sticky",
-              top: 0,
+              top: "var(--desktop-titlebar-height, 0px)",
               zIndex: 20,
               borderBottomStyle: "solid",
               borderBottomWidth: "1px",

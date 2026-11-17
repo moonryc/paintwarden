@@ -2,12 +2,18 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const allowedAdvisories = new Map([
   ["https://github.com/advisories/GHSA-mh32-jxcr-mh9f", "low"],
   ["https://github.com/advisories/GHSA-r3h5-4585-7x3w", "moderate"],
 ]);
+// Exact reviewed build-only graph, not a package-name or severity allowlist.
+// Remove after a patched picomatch release; see docs/dependency-audit.md.
+const reviewedPicomatch = JSON.parse(
+  fs.readFileSync(new URL("./production-audit-picomatch-reviewed.json", import.meta.url), "utf8"),
+);
 const severities = ["info", "low", "moderate", "high", "critical"];
 const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const text = (value) => typeof value === "string" && value.length > 0;
@@ -22,7 +28,7 @@ function keysAre(value, keys) {
 // The site is built as static HTML: these two reviewed Astro advisories do not affect
 // its deployment. The fixed release requires a newer Node than our pinned runtime.
 // Never allow an entire package: new advisories and severity changes require review.
-export function checkProductionAudit(report, astroVersion) {
+export function checkProductionAudit(report, astroVersion, lockPackages) {
   requireShape(
     keysAre(report, ["auditReportVersion", "vulnerabilities", "metadata"]) &&
       report.auditReportVersion === 2 &&
@@ -45,6 +51,9 @@ export function checkProductionAudit(report, astroVersion) {
       ),
     "Invalid npm audit dependency metadata.",
   );
+  if (Object.hasOwn(report.vulnerabilities, "picomatch")) {
+    return checkReviewedPicomatch(report, astroVersion, lockPackages);
+  }
   const expectedCounts = Object.fromEntries(severities.map((severity) => [severity, 0]));
   const accepted = [];
   for (const [name, entry] of Object.entries(report.vulnerabilities)) {
@@ -123,7 +132,59 @@ export function checkProductionAudit(report, astroVersion) {
   return { vulnerablePackages: counts.total, acceptedAdvisories: accepted };
 }
 
-export function checkAuditResult(result, astroVersion) {
+function checkReviewedPicomatch(report, astroVersion, lockPackages) {
+  requireShape(astroVersion === "7.4.0", "Picomatch graph requires locked Astro version 7.4.0.");
+  requireShape(object(lockPackages), "Picomatch exception requires the complete lock package map.");
+  const names = new Set(Object.keys(reviewedPicomatch.vulnerabilities));
+  const actualLocks = Object.fromEntries(
+    Object.entries(lockPackages)
+      .filter(
+        ([location, entry]) =>
+          location.includes("node_modules/") &&
+          object(entry) &&
+          names.has(entry.name ?? location.split("node_modules/").at(-1)),
+      )
+      .map(([location, entry]) => [location, { version: entry.version, dev: entry.dev === true }]),
+  );
+  requireShape(
+    isDeepStrictEqual(actualLocks, reviewedPicomatch.lockPackages),
+    "Unreviewed picomatch dependency lock version, location or development/runtime classification.",
+  );
+  // npm's suggested upgrade can change with registry state even when the
+  // installed tree and advisory graph are identical. Validate its shape, but
+  // never use this recommendation to approve a package, path or advisory.
+  const graph = (entries) =>
+    Object.fromEntries(
+      Object.entries(entries).map(([name, entry]) => {
+        const { fixAvailable, ...security } = entry;
+        requireShape(
+          fixAvailable === false ||
+            (keysAre(fixAvailable, ["name", "version", "isSemVerMajor"]) &&
+              text(fixAvailable.name) &&
+              text(fixAvailable.version) &&
+              typeof fixAvailable.isSemVerMajor === "boolean"),
+          "Invalid npm fix recommendation in reviewed picomatch graph.",
+        );
+        return [name, security];
+      }),
+    );
+  requireShape(
+    isDeepStrictEqual(graph(report.vulnerabilities), graph(reviewedPicomatch.vulnerabilities)),
+    "Unreviewed picomatch advisory or propagated vulnerability graph (including Astro advisories).",
+  );
+  const expectedCounts = Object.fromEntries(severities.map((severity) => [severity, 0]));
+  for (const entry of Object.values(reviewedPicomatch.vulnerabilities)) expectedCounts[entry.severity]++;
+  requireShape(
+    severities.every((severity) => report.metadata.vulnerabilities[severity] === expectedCounts[severity]),
+    "npm audit severity counts do not match the reviewed picomatch graph.",
+  );
+  return {
+    vulnerablePackages: report.metadata.vulnerabilities.total,
+    acceptedAdvisories: [...allowedAdvisories.keys(), reviewedPicomatch.advisory],
+  };
+}
+
+export function checkAuditResult(result, astroVersion, lockPackages) {
   requireShape(
     !result.error && !result.signal && [0, 1].includes(result.status),
     `npm audit failed: ${result.error?.message || result.signal || result.stderr || result.status}.`,
@@ -134,7 +195,7 @@ export function checkAuditResult(result, astroVersion) {
   } catch {
     throw new Error("npm audit did not return valid JSON.");
   }
-  const checked = checkProductionAudit(report, astroVersion);
+  const checked = checkProductionAudit(report, astroVersion, lockPackages);
   requireShape(
     result.status === (checked.vulnerablePackages ? 1 : 0),
     "npm audit exit status does not match its report.",
@@ -152,11 +213,11 @@ function main() {
     timeout: 120_000,
     maxBuffer: 8 * 1024 * 1024,
   });
-  const checked = checkAuditResult(result, lock.packages?.["node_modules/astro"]?.version);
+  const checked = checkAuditResult(result, lock.packages?.["node_modules/astro"]?.version, lock.packages);
   console.log(`Production audit: ${checked.vulnerablePackages} vulnerable package(s).`);
   if (checked.acceptedAdvisories.length) {
     console.log(
-      `Accepted static-only Astro 7.4.0 exception: ${checked.acceptedAdvisories.length} advisory/advisories.`,
+      `Accepted reviewed static/build-only exceptions: ${checked.acceptedAdvisories.length} advisory/advisories.`,
     );
     checked.acceptedAdvisories.forEach((url) => console.log(`  ${url}`));
   }

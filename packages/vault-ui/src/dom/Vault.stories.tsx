@@ -92,7 +92,9 @@ export const AddMiniature: Story = {
     await openPage(canvas, "Miniatures");
     await userEvent.click(await canvas.findByRole("button", { name: /Add miniature/ }));
     const dialog = within(await within(document.body).findByRole("dialog", { name: /miniature/i }));
-    await expect(dialog.getByRole("group", { name: "What would you like to add?" })).toBeInTheDocument();
+    await expect(
+      dialog.queryByRole("group", { name: "What would you like to add?" }),
+    ).not.toBeInTheDocument();
   },
 };
 

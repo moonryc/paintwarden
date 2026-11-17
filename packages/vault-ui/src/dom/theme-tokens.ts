@@ -1,9 +1,11 @@
+import shellColors from "./theme-shell.json" with { type: "json" };
+
 // The app palette and the CSS variables built from it. The MUI theme, the base styles Vault
 // installs, the product website and the desktop connection screen all read these, so a color
 // changes here and nowhere else.
 
 export const colors = {
-  canvas: "#202020",
+  canvas: shellColors.canvas,
   surface: "#262626",
   surfaceRaised: "#2c2c2c",
   sunken: "#303030",
@@ -12,7 +14,7 @@ export const colors = {
   // Border between the plain divider rows in a scheme.
   lineDeep: "#1a1a1a",
   ink: "#d0d0d0",
-  inkSoft: "#a8a8a8",
+  inkSoft: shellColors.inkSoft,
   inkFaint: "#999999",
   brand: "#406ac2",
   brandHover: "#4d79d4",

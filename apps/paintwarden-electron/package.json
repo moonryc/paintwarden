@@ -23,6 +23,7 @@
     "files": [
       "main.cjs",
       "desktop-core.cjs",
+      "desktop-window.cjs",
       "desktop-startup.cjs",
       "desktop-update.cjs",
       "preload.cjs",
@@ -35,6 +36,10 @@
       "desktop-release-notes.cjs"
     ],
     "extraResources": [
+      {
+        "from": "../../packages/vault-ui/src/dom/theme-shell.json",
+        "to": "theme-shell.json"
+      },
       {
         "from": "../paintwarden-web/dist",
         "to": "web-dist"

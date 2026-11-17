@@ -135,6 +135,9 @@ const isPackageManifest = (file) =>
   /(?:^|\/)node_modules\/(?:@[^/]+\/)?[^/]+\/package\.json$/.test(file.replaceAll("\\", "/"));
 
 function assertInventoried(manifest, location, inventory) {
+  // GHSA-fc5q-39xc-vjpf is exempt only for trusted build tooling. A newly
+  // shipped runtime copy must fail even if its license is already inventoried.
+  assert.notEqual(manifest.name, "picomatch", `Build-only picomatch must not ship at runtime (${location})`);
   const own =
     manifest.private === true && (manifest.name === "paintwarden" || /^paintwarden-/.test(manifest.name));
   assert.ok(

@@ -139,7 +139,7 @@ function VaultContent({ onChangeServer, desktopConnection }: VaultProps) {
         sx={{
           boxSizing: "border-box",
           display: "flex",
-          minHeight: "100vh",
+          minHeight: "calc(100vh - var(--desktop-titlebar-height, 0px))",
           alignItems: "center",
           justifyContent: "center",
           bgcolor: "var(--canvas)",
@@ -238,7 +238,7 @@ function VaultContent({ onChangeServer, desktopConnection }: VaultProps) {
         <Box
           component="div"
           sx={{
-            minHeight: "100vh",
+            minHeight: "calc(100vh - var(--desktop-titlebar-height, 0px))",
             bgcolor: "var(--canvas)",
             color: "var(--ink)",
           }}

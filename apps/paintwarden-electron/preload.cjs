@@ -1,6 +1,16 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("paintwardenDesktop", {
+  titleBar: {
+    platform: process.platform,
+    getState: () => ipcRenderer.invoke("window:get"),
+    doubleClick: () => ipcRenderer.invoke("window:double-click"),
+    onState: (listener) => {
+      const handler = (_event, state) => listener(state);
+      ipcRenderer.on("window:state", handler);
+      return () => ipcRenderer.removeListener("window:state", handler);
+    },
+  },
   getSupportSummary: (language) => ipcRenderer.invoke("support:summary", language),
   saveSupportBundle: (language) => ipcRenderer.invoke("support:save", language),
   openBugReport: (language) => ipcRenderer.invoke("support:report", language),

@@ -9,7 +9,17 @@ const os = require("node:os");
 const path = require("node:path");
 const { Readable } = require("node:stream");
 const { pipeline } = require("node:stream/promises");
-const { app, BrowserWindow, dialog, ipcMain, protocol, shell, Menu } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  dialog,
+  ipcMain,
+  protocol,
+  shell,
+  Menu,
+  nativeTheme,
+  systemPreferences,
+} = require("electron");
 const {
   assetPath,
   publicErrorResult,
@@ -30,6 +40,8 @@ const { createPreferences } = require("./desktop-preferences.cjs");
 const { createPhoneAccess } = require("./desktop-network.cjs");
 const { menuTemplate } = require("./desktop-menu.cjs");
 const { supportSummary, createSupportBundle, openBugReport } = require("./desktop-support.cjs");
+
+const { windowOptions, windowState, titleBarDoubleClick } = require("./desktop-window.cjs");
 
 // Electron otherwise derives its native About/app name from the workspace slug.
 app.setName("Paintwarden");
@@ -592,7 +604,9 @@ function allowRenderer(event) {
 }
 
 async function createWindow() {
+  nativeTheme.themeSource = "dark"; // The app currently has one, dark, theme.
   mainWindow = new BrowserWindow({
+    ...windowOptions(process.platform, app.isPackaged ? process.resourcesPath : undefined),
     title: "Paintwarden",
     // Test-only offscreen launch; --hidden alone never changes normal startup.
     show: !hiddenTestWindow,
@@ -609,6 +623,12 @@ async function createWindow() {
       backgroundThrottling: !hiddenTestWindow,
     },
   });
+  const sendWindowState = () => {
+    if (!mainWindow?.isDestroyed()) mainWindow.webContents.send("window:state", windowState(mainWindow));
+  };
+  for (const event of ["focus", "blur", "enter-full-screen", "leave-full-screen"])
+    mainWindow.on(event, sendWindowState);
+  mainWindow.webContents.on("did-finish-load", sendWindowState);
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//i.test(url)) void shell.openExternal(url);
     return { action: "deny" };
@@ -635,6 +655,14 @@ app
       preferences,
     });
     updateMenu();
+    ipcMain.handle("window:get", (event) => {
+      allowRenderer(event);
+      return windowState(mainWindow);
+    });
+    ipcMain.handle("window:double-click", (event) => {
+      allowRenderer(event);
+      if (process.platform === "darwin") titleBarDoubleClick(mainWindow, systemPreferences);
+    });
     ipcMain.handle("language:get", (event) => {
       allowRenderer(event);
       return getLanguage();

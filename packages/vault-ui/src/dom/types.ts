@@ -245,7 +245,15 @@ export type PhoneAccessState = {
   error?: string;
 };
 
+export type DesktopWindowState = { focused: boolean; fullScreen: boolean };
+
 export type DesktopBridge = {
+  titleBar?: {
+    platform: string;
+    getState(): Promise<DesktopWindowState>;
+    doubleClick(): Promise<void>;
+    onState(listener: (state: DesktopWindowState) => void): () => void;
+  };
   getPhoneAccess(): Promise<PhoneAccessState>;
   setPhoneAccess(enabled: boolean): Promise<PhoneAccessState>;
   getSupportSummary(language: string): Promise<SupportSummary>;

@@ -9,14 +9,17 @@ import { ModalLeadContext } from "./Modal";
 type Choice = "item" | "folder";
 
 /**
- * One add dialog for a folder-organized page: a Miniature/Folder (or Template/Folder) switch sits
+ * One add dialog for a folder-organized page: a Folder/Miniature (or Folder/Template) switch sits
  * above whichever form is chosen, and switching swaps the form in place without a second dialog.
  */
 export function AddChoiceDialog({
+  folderView,
   itemLabel,
   item,
   folder,
 }: {
+  /** Flat views create items directly, without offering folder creation. */
+  folderView: boolean;
   itemLabel: string;
   /** The item form's Modal, such as Add a miniature. */
   item: ReactNode;
@@ -24,7 +27,7 @@ export function AddChoiceDialog({
   folder: ReactNode;
 }) {
   const { t } = useTranslation("pages");
-  const [choice, setChoice] = useState<Choice>("item");
+  const [choice, setChoice] = useState<Choice>("folder");
   const [switched, setSwitched] = useState(false);
   // The swapped form mounts a new dialog; keep keyboard focus on the switch the user just used.
   const keepFocus = (button: HTMLButtonElement | null) => {
@@ -43,16 +46,17 @@ export function AddChoiceDialog({
         setChoice(value);
       }}
     >
-      <ToggleButton value="item" ref={choice === "item" ? keepFocus : undefined} sx={{ gap: 0.75 }}>
-        <NoteAdd fontSize="small" aria-hidden />
-        {itemLabel}
-      </ToggleButton>
       <ToggleButton value="folder" ref={choice === "folder" ? keepFocus : undefined} sx={{ gap: 0.75 }}>
         <CreateNewFolder fontSize="small" aria-hidden />
         {t("folders.folder")}
       </ToggleButton>
+      <ToggleButton value="item" ref={choice === "item" ? keepFocus : undefined} sx={{ gap: 0.75 }}>
+        <NoteAdd fontSize="small" aria-hidden />
+        {itemLabel}
+      </ToggleButton>
     </ToggleButtonGroup>
   );
+  if (!folderView) return item;
   return (
     <ModalLeadContext.Provider value={{ lead, instant: switched }}>
       {choice === "item" ? item : folder}

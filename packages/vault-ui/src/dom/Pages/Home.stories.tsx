@@ -449,13 +449,16 @@ export const ApolloDelayedHandoffDoesNotStealFocus: Story = {
 // and the grid sheds its placeholders after the accepted empty response.
 // The tile is the single Add entry point; its dialog switches between a miniature and a folder.
 const emptyShelf: Story = {
+  beforeEach: ({ args }) => {
+    localStorage.removeItem(`paintwarden.folders.${args.view}.flat`);
+  },
   parameters: { vault: emptyState },
   render: (args) => (
     <MiniatureApolloFixture data={emptyState} pageDelay={100}>
       <Home {...args} />
     </MiniatureApolloFixture>
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const shelf = await canvas.findByRole("list", { name: "Miniature shelf" });
     const add = canvas.getByRole("button", { name: /Add miniature/ });
@@ -476,15 +479,33 @@ const emptyShelf: Story = {
     // Wait for the lazily loaded form to replace its loading skeleton.
     await body.findByRole("textbox", { name: /Name/ });
     const miniature = within(body.getByRole("dialog", { name: "Add a miniature" }));
-    const choice = within(miniature.getByRole("group", { name: "What would you like to add?" }));
-    await expect(choice.getByRole("button", { name: "Miniature" })).toHaveAttribute("aria-pressed", "true");
-    await userEvent.click(choice.getByRole("button", { name: "Folder" }));
-    const folder = within(await body.findByRole("dialog", { name: "Create folder" }));
-    await expect(folder.getByRole("button", { name: "Folder" })).toHaveAttribute("aria-pressed", "true");
-    await expect(folder.getByRole("button", { name: "Folder" })).toHaveFocus();
-    await expect(body.queryByRole("dialog", { name: "Add a miniature" })).not.toBeInTheDocument();
-    await userEvent.click(folder.getByRole("button", { name: "Cancel" }));
+    await expect(
+      miniature.queryByRole("group", { name: "What would you like to add?" }),
+    ).not.toBeInTheDocument();
+    await expect(miniature.getByRole("textbox", { name: /Name/ })).not.toHaveFocus();
+    await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+    try {
+      await userEvent.click(canvas.getByRole("button", { name: "Folder view" }));
+      await userEvent.click(add);
+      const folder = within(await body.findByRole("dialog", { name: "Create folder" }));
+      await expect(folder.getByRole("button", { name: "Folder" })).toHaveAttribute("aria-pressed", "true");
+      await expect(folder.getByRole("textbox", { name: "Name" })).not.toHaveFocus();
+      await userEvent.click(folder.getByRole("button", { name: "Miniature" }));
+      const item = within(await body.findByRole("dialog", { name: "Add a miniature" }));
+      await expect(item.getByRole("button", { name: "Miniature" })).toHaveFocus();
+      await expect(body.getAllByRole("dialog")).toHaveLength(1);
+      await userEvent.keyboard("{Escape}");
+      await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+      // Every fresh Add in folder view starts on Folder, even after choosing Miniature.
+      await userEvent.click(add);
+      const reopened = within(await body.findByRole("dialog", { name: "Create folder" }));
+      await userEvent.click(reopened.getByRole("button", { name: "Cancel" }));
+      await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+    } finally {
+      await userEvent.click(canvas.getByRole("button", { name: "Flat view" }));
+      localStorage.removeItem(`paintwarden.folders.${args.view}.flat`);
+    }
   },
 };
 

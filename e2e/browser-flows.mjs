@@ -40,10 +40,21 @@ async function folderView(page) {
 
 async function addChoice(page, choice) {
   await page.getByRole("button", { name: "Add miniature", exact: true }).click();
-  await page
-    .getByRole("dialog", { name: "Add a miniature", exact: true })
-    .getByRole("button", { name: choice, exact: true })
-    .click();
+  const group = page.getByRole("group", { name: "What would you like to add?", exact: true });
+  // Folder view starts on Folder; flat views open the miniature form directly.
+  const dialog = page.getByRole("dialog");
+  await dialog.waitFor();
+  if (await group.count()) {
+    await expect(group.getByRole("button").first()).toHaveText("Folder");
+    await expect(group.getByRole("button", { name: "Folder", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    if (choice !== "Folder") await group.getByRole("button", { name: choice, exact: true }).click();
+  } else {
+    assert.equal(choice, "Miniature", "Flat view only allows miniature creation");
+    await expect(dialog).toHaveAccessibleName("Add a miniature");
+  }
 }
 
 async function createFolder(page, name) {
@@ -197,7 +208,10 @@ function backupSnapshot(bytes) {
 
 async function exportBackup(page, artifacts, name) {
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Export", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Data", exact: true })
+    .getByRole("button", { name: "Export", exact: true })
+    .click();
   const file = await download;
   assert.equal(await file.failure(), null, "Backup download succeeded");
   const destination = path.join(artifacts, name);

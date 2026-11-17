@@ -352,7 +352,7 @@ function Templates() {
   );
 }
 
-// Actual SettingsSection order: Connection, Catalog, Account and security, Backups.
+// Actual SettingsSection order: Connection, Catalog, Account and security, Data.
 function Settings() {
   return (
     <>

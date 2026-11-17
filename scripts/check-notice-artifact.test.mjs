@@ -233,3 +233,21 @@ test("WASM pruner removes nested fallbacks and orphan helpers, preserving native
   await pkg("unrelated-wasm-consumer", { "@emnapi/runtime": "1" });
   assert.deepEqual(await pruneSharpWasm(root), []);
 });
+
+test("build-only picomatch exception never permits a shipped runtime package", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "paintwarden-picomatch-runtime-"));
+  try {
+    const target = path.join(directory, "node_modules/picomatch");
+    await mkdir(target, { recursive: true });
+    await writeFile(
+      path.join(target, "package.json"),
+      JSON.stringify({ name: "picomatch", version: "4.0.7" }),
+    );
+    await assert.rejects(
+      checkPhysicalPackageInventory(directory, new Set(["picomatch@4.0.7"])),
+      /Build-only picomatch must not ship at runtime/,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});

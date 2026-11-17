@@ -166,7 +166,14 @@ export default function DesktopConnection({ bridge }: { bridge: PaintwardenDeskt
     return (
       <ThemeProvider theme={connectionTheme}>
         <CssBaseline />
-        <Box sx={{ minHeight: "100dvh", display: "grid", placeItems: "center", p: 3 }}>
+        <Box
+          sx={{
+            minHeight: "calc(100dvh - var(--desktop-titlebar-height, 0px))",
+            display: "grid",
+            placeItems: "center",
+            p: 3,
+          }}
+        >
           <Card sx={{ width: "100%", maxWidth: 480, p: { xs: 3, sm: 4 } }} aria-busy={!failed}>
             <Stack spacing={2.5}>
               <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
@@ -223,7 +230,7 @@ export default function DesktopConnection({ bridge }: { bridge: PaintwardenDeskt
         <CssBaseline />
         <Box
           sx={{
-            minHeight: "100dvh",
+            minHeight: "calc(100dvh - var(--desktop-titlebar-height, 0px))",
             display: "grid",
             placeItems: "center",
             p: 3,
@@ -264,7 +271,7 @@ export default function DesktopConnection({ bridge }: { bridge: PaintwardenDeskt
       <CssBaseline />
       <Box
         sx={{
-          minHeight: "100dvh",
+          minHeight: "calc(100dvh - var(--desktop-titlebar-height, 0px))",
           display: "grid",
           placeItems: "center",
           p: 3,

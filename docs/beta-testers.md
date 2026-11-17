@@ -95,7 +95,7 @@ before installing a plugin.
 
 ## 5. Back up before upgrading or restoring
 
-In **Data & settings**, export a vault backup ZIP and store it somewhere private
+In **Settings → Data**, export a vault backup ZIP and store it somewhere private
 outside the app's data directory. It includes records, photos and installed
 plugins, **not the owner password or sessions**. Restoring **Merge** keeps existing
 records; **Replace** replaces vault contents but keeps the destination owner.
