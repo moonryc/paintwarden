@@ -87,7 +87,7 @@ test("regional CJK fallback faces do not use the wrong script's font", () => {
   assert.match(localizedFontVars("ko")["--font-sans"], /Apple SD Gothic Neo/);
 });
 
-test("all 13 languages resolve all 56 plural families using current CLDR categories and Intl interpolation", async () => {
+test("all 13 languages resolve all 59 plural families using current CLDR categories and Intl interpolation", async () => {
   const families = [];
   for (const namespace of ["components", "pages", "shell"]) {
     const resource = flatten(
@@ -101,9 +101,11 @@ test("all 13 languages resolve all 56 plural families using current CLDR categor
     for (const key of Object.keys(resource).filter((key) => key.endsWith("_one")))
       families.push([namespace, key.slice(0, -4)]);
   }
-  assert.equal(families.length, 56);
+  assert.equal(families.length, 59);
   assert.ok(families.some(([namespace, key]) => namespace === "pages" && key === "folders.itemCount"));
   assert.ok(families.some(([namespace, key]) => namespace === "pages" && key === "folders.resultsCount"));
+  for (const key of ["folders.deleteMiniatures", "folders.deleteTemplates", "folders.deletedItems"])
+    assert.ok(families.some(([namespace, family]) => namespace === "pages" && family === key));
   try {
     for (const { code } of languages) {
       await i18n.changeLanguage(code);
