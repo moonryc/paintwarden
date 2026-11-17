@@ -1,4 +1,5 @@
 import Close from "@mui/icons-material/Close";
+import DeleteOutline from "@mui/icons-material/DeleteOutlineOutlined";
 import DriveFileMove from "@mui/icons-material/DriveFileMove";
 import { Box, Button, IconButton, Paper, Tooltip } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -7,10 +8,12 @@ import { useTranslation } from "react-i18next";
 export function SelectionBar({
   count,
   onMove,
+  onDelete,
   onClear,
 }: {
   count: number;
   onMove: () => void;
+  onDelete: () => void;
   onClear: () => void;
 }) {
   const { t } = useTranslation("pages");
@@ -47,6 +50,9 @@ export function SelectionBar({
       </Box>
       <Button variant="contained" size="small" startIcon={<DriveFileMove />} onClick={onMove}>
         {t("folders.moveToFolder")}
+      </Button>
+      <Button color="error" variant="outlined" size="small" startIcon={<DeleteOutline />} onClick={onDelete}>
+        {t("folders.deleteSelected", { count })}
       </Button>
       <Tooltip title={t("folders.clearSelection")}>
         <IconButton size="small" aria-label={t("folders.clearSelection")} onClick={onClear}>

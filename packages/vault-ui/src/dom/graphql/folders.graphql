@@ -64,3 +64,13 @@ mutation MoveBrowserFolderItems($kind: FolderKind!, $ids: [ID!]!, $folderId: ID)
     invalidatedFamilies
   }
 }
+
+mutation DeleteBrowserFolderItems($kind: FolderKind!, $ids: [ID!]!) {
+  deleteFolderItems(kind: $kind, ids: $ids) {
+    revision {
+      epoch
+      seq
+    }
+    invalidatedFamilies
+  }
+}

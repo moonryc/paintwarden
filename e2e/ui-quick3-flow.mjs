@@ -57,42 +57,30 @@ export async function runQuick3Flow(application, page, artifacts) {
       await navigate(pages.layoutMiniatures);
       await page.getByRole("button", { name: pages.folders.showFolders, exact: true }).click();
       await setSize(width);
-      await page.getByRole("button", { name: components.addMiniature, exact: true }).click();
+      await expect(page.getByRole("button", { name: pages.folders.addFolder, exact: true })).toHaveCount(0);
+      const edit = page.getByRole("button", { name: pages.folders.selectItems, exact: true });
+      await edit.click();
+      await page.getByRole("button", { name: pages.folders.addFolder, exact: true }).click();
       let dialog = page.getByRole("dialog");
-      const group = dialog.getByRole("group", { name: pages.folders.addChoice, exact: true });
-      await expect(group.getByRole("button").nth(0)).toHaveText(pages.folders.folder);
-      await expect(group.getByRole("button").nth(0)).toHaveAttribute("aria-pressed", "true");
-      await expect(group.getByRole("button").nth(1)).toHaveText(pages.folders.miniature);
+      await expect(dialog).toHaveAccessibleName(pages.folders.createFolder);
       await expect(page.locator(".MuiDialog-container")).toHaveCSS("opacity", "1");
-      const before = await group.boundingBox();
-      if (["en", "de", "ja"].includes(locale))
-        await dialog.screenshot({ path: path.join(artifacts, `add-folder-after-${locale}-${width}.png`) });
-      await group.getByRole("button").nth(1).click();
+      await dialog.screenshot({ path: path.join(artifacts, `add-folder-after-${locale}-${width}.png`) });
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await page.getByRole("button", { name: components.addMiniature, exact: true }).click();
       dialog = page.getByRole("dialog");
-      const switched = dialog.getByRole("group", { name: pages.folders.addChoice, exact: true });
-      await expect(switched.getByRole("button").nth(1)).toBeFocused();
-      const after = await switched.boundingBox();
-      assert.ok(
-        Math.abs(after.y - before.y) <= 1,
-        `Stationary switch ${locale}/${width}: ${before.y}→${after.y}`,
-      );
+      await expect(dialog).not.toHaveAccessibleName(pages.folders.createFolder);
       await page.keyboard.press("Escape");
       await expect(page.getByRole("dialog")).toHaveCount(0);
       await page.getByRole("button", { name: pages.folders.showFlat, exact: true }).click();
-      await page.getByRole("button", { name: components.addMiniature, exact: true }).click();
-      dialog = page.getByRole("dialog");
-      await expect(dialog.getByRole("group", { name: pages.folders.addChoice, exact: true })).toHaveCount(0);
-      await expect(page.locator(".MuiDialog-container")).toHaveCSS("opacity", "1");
-      if (["en", "de", "ja"].includes(locale))
-        await dialog.screenshot({ path: path.join(artifacts, `add-flat-after-${locale}-${width}.png`) });
+      await expect(page.getByRole("button", { name: pages.folders.addFolder, exact: true })).toHaveCount(0);
+      await edit.click();
       const geometry = await page.evaluate(() => ({
         width: document.documentElement.clientWidth,
         scroll: document.documentElement.scrollWidth,
       }));
       assert.ok(geometry.scroll <= geometry.width, `No horizontal scroll ${locale}/${width}`);
-      await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog")).toHaveCount(0);
-      rows.push({ locale, width, switchY: before.y, switchedY: after.y, ...geometry });
+      rows.push({ locale, width, ...geometry });
     }
   }
   await page.evaluate(() => window.paintwardenDesktop.setLanguage("en"));

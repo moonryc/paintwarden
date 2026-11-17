@@ -10,7 +10,7 @@ function windowOptions(platform, resources) {
     titleBarStyle: "hidden",
     ...(platform === "darwin"
       ? { trafficLightPosition: { x: 7, y: 7 }, vibrancy: undefined }
-      : { titleBarOverlay: { color: colors.canvas, symbolColor: colors.inkSoft, height: 28 } }),
+      : { titleBarOverlay: { color: colors.surface, symbolColor: colors.inkSoft, height: 28 } }),
   };
 }
 

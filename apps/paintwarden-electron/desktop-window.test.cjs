@@ -14,7 +14,7 @@ test("native shell uses exactly the shared theme colors on every platform", () =
       assert.equal(options.titleBarOverlay, undefined);
     } else {
       assert.deepEqual(options.titleBarOverlay, {
-        color: colors.canvas,
+        color: colors.surface,
         symbolColor: colors.inkSoft,
         height: 28,
       });

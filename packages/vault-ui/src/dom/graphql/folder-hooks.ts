@@ -3,16 +3,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { FolderView } from "../Components/FolderTile";
 
+import { readFolderTree } from "./folder-loader";
 import {
   BrowseFoldersDocument,
   CreateBrowserFolderDocument,
   DeleteBrowserFolderDocument,
+  DeleteBrowserFolderItemsDocument,
   MoveBrowserFolderDocument,
   MoveBrowserFolderItemsDocument,
   RenameBrowserFolderDocument,
   type BrowseFoldersQuery,
 } from "./generated/graphql";
-import { readFolderTree } from "./folder-loader";
 import type { VaultFamily } from "./invalidation";
 import { useVaultGraphQL, type VaultGraphQLScope } from "./provider";
 import { useRetainedQuery } from "./use-retained-query";
@@ -245,4 +246,33 @@ export function useFolderBrowser(
           ).data?.moveFolderItems,
       ),
   };
+}
+
+export type FolderCommands = {
+  /** Delete 1–1000 entity IDs atomically. Folder IDs are not accepted. */
+  deleteItems(kind: "MINIATURE" | "TEMPLATE", ids: string[]): Promise<void>;
+};
+
+export function createFolderCommands(scope: VaultGraphQLScope | null): FolderCommands {
+  return {
+    deleteItems: async (kind, ids) => {
+      if (!scope) throw new Error(i18n.t("pages:folders.error"));
+      const ticket = scope.controller.captureCommand();
+      if (!scope.controller.isCommandCurrent(ticket)) throw new Error(i18n.t("pages:folders.error"));
+      const result = await scope.client.mutate({
+        mutation: DeleteBrowserFolderItemsDocument,
+        variables: { kind, ids },
+        fetchPolicy: "no-cache",
+      });
+      const payload = result.data?.deleteFolderItems;
+      if (!payload || !scope.controller.commitCommand(ticket, payload.revision, payload.invalidatedFamilies))
+        throw new Error(i18n.t("pages:folders.error"));
+    },
+  };
+}
+
+/** Entity-only atomic bulk commands. Folder IDs use the browser's remove(id, mode) instead. */
+export function useFolderCommands(): FolderCommands {
+  const scope = useVaultGraphQL();
+  return useMemo(() => createFolderCommands(scope), [scope]);
 }

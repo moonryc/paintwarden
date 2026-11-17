@@ -14,6 +14,7 @@ const { values } = parseArgs({
     artifacts: { type: "string" },
     help: { type: "boolean" },
     "ui-quick3": { type: "boolean" },
+    "folder-edit": { type: "boolean" },
     "plugin-zip": { type: "string" },
     "plugin-width": { type: "string", default: "1440" },
   },
@@ -281,6 +282,22 @@ try {
   record(
     "Theme-matched title strip pixels, native controls position, focus/fullscreen IPC and no overflow at desktop/phone widths",
   );
+
+  if (values["folder-edit"]) {
+    const { runFolderEditFlow } = await import("./folder-edit-flow.mjs");
+    results.folderEdit = await runFolderEditFlow({
+      page,
+      artifacts: evidence,
+      resize: async (width) => {
+        await application.evaluate(
+          ({ BrowserWindow }, width) => BrowserWindow.getAllWindows()[0].setSize(width, 1000),
+          width,
+        );
+        await page.setViewportSize({ width, height: 1000 });
+      },
+    });
+    record("Separate add and atomic bulk delete for miniatures/templates, desktop and phone");
+  }
 
   if (values["ui-quick3"]) {
     const { runQuick3Flow } = await import("./ui-quick3-flow.mjs");

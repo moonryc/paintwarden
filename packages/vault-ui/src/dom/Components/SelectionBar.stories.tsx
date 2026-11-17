@@ -6,7 +6,7 @@ import { SelectionBar } from "./SelectionBar";
 const meta = {
   title: "Components/SelectionBar",
   component: SelectionBar,
-  args: { count: 3, onMove: fn(), onClear: fn() },
+  args: { count: 3, onMove: fn(), onDelete: fn(), onClear: fn() },
 } satisfies Meta<typeof SelectionBar>;
 
 export default meta;
@@ -18,6 +18,8 @@ export const ThreeSelected: Story = {
     await expect(bar.getByText("3 selected")).toBeInTheDocument();
     await userEvent.click(bar.getByRole("button", { name: "Move to folder" }));
     await expect(args.onMove).toHaveBeenCalledOnce();
+    await userEvent.click(bar.getByRole("button", { name: "Delete 3" }));
+    await expect(args.onDelete).toHaveBeenCalledOnce();
     await userEvent.click(bar.getByRole("button", { name: "Clear selection" }));
     await expect(args.onClear).toHaveBeenCalledOnce();
   },

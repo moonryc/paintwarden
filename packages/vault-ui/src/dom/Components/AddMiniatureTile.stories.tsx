@@ -30,3 +30,13 @@ export const NamedForTemplates: Story = {
     await expect(within(canvasElement).getByRole("button", { name: "New template" })).toBeVisible();
   },
 };
+
+export const Folder: Story = {
+  args: { folder: true, title: "Add folder" },
+  play: async ({ args, canvasElement }) => {
+    const tile = within(canvasElement).getByRole("button", { name: "Add folder" });
+    await expect(within(tile).getByText("Add folder")).toBeVisible();
+    await userEvent.click(tile);
+    await expect(args.onClick).toHaveBeenCalledOnce();
+  },
+};

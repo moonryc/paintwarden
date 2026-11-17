@@ -14,7 +14,7 @@ import Box from "@mui/material/Box";
 import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AddChoiceDialog } from "../Components/AddChoiceDialog";
+import { BulkDeleteDialog } from "../Components/BulkDeleteDialog";
 import { AddMiniatureTile } from "../Components/AddMiniatureTile";
 import { EmptyState } from "../Components/EmptyState";
 import { FilterToolbar } from "../Components/FilterToolbar";
@@ -28,7 +28,7 @@ import { QueryErrorNotice } from "../Components/QueryErrorNotice";
 import { SectionHeader } from "../Components/SectionHeader";
 import { SelectionBar } from "../Components/SelectionBar";
 import { tileControlSx } from "../Components/tile-control";
-import { useFolderBrowser } from "../graphql/folder-hooks";
+import { useFolderBrowser, useFolderCommands } from "../graphql/folder-hooks";
 import { useFolderSearch } from "../graphql/folder-search-hooks";
 import type { MiniatureListQuery } from "../graphql/generated/graphql";
 import { MiniatureFixtureContext, useMiniatureList } from "../graphql/miniature-list-hooks";
@@ -190,6 +190,11 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
       setSearch("");
     },
   };
+  const commands = useFolderCommands();
+  const notify = useVaultStore((s) => s.notify);
+  const selectedNames = useRef(new Map<string, string>());
+  const [deleting, setDeleting] = useState<{ id: string; name: string }[] | null>(null);
+  const [addingFolder, setAddingFolder] = useState(false);
   const [selection, setSelection] = useState<string[]>([]);
   // Checkboxes, and tapping a tile to select it, only while edit mode is on.
   const [editing, setEditing] = useState(false);
@@ -244,8 +249,13 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
       ? collectionCount
       : (summary.counts?.stages.find((facet) => facet.key === stage)?.count ?? stageCounts[stage]);
   // The add tile leads the grid (not while searching), then folders, then miniatures.
-  const shelfItems: (MiniatureTileProjection | FolderView | "loading" | null)[] = [
-    ...(q ? [] : [null]),
+  useEffect(() => {
+    for (const project of visibleProjects) {
+      if (selection.includes(project.mini.id)) selectedNames.current.set(project.mini.id, project.mini.title);
+    }
+  }, [visibleProjects, selection]);
+  const shelfItems: (MiniatureTileProjection | FolderView | "loading" | "add-folder" | null)[] = [
+    ...(q ? [] : [null, ...(!browser.flat && editing ? ["add-folder" as const] : [])]),
     ...(shelfLoading ? Array.from({ length: 9 }, () => "loading" as const) : browser.visibleFolders),
     ...(shelfLoading ? [] : visibleProjects),
   ];
@@ -824,7 +834,7 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                           <Box
                             component="div"
                             key={
-                              project === "loading"
+                              typeof project === "string"
                                 ? `loading:${index}`
                                 : project
                                   ? "mini" in project
@@ -871,6 +881,13 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
                                   />
                                 </Box>
                               </Card>
+                            ) : project === "add-folder" ? (
+                              <AddMiniatureTile
+                                folder
+                                title={t("folders.addFolder")}
+                                onClick={() => setAddingFolder(true)}
+                                sx={shelfTileSx}
+                              />
                             ) : project && !("mini" in project) ? (
                               renderFolder(project, shelfTileSx)
                             ) : project ? (
@@ -944,6 +961,9 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
               <SelectionBar
                 count={selection.length}
                 onMove={() => setMovingItems(selection)}
+                onDelete={() =>
+                  setDeleting(selection.map((id) => ({ id, name: selectedNames.current.get(id) ?? id })))
+                }
                 onClear={() => setSelection([])}
               />
               {hasNextPage && (
@@ -966,24 +986,34 @@ export function Home({ view }: { view: "dashboard" | "miniatures" }) {
           }}
         />
       )}
+      {deleting && (
+        <BulkDeleteDialog
+          items={deleting}
+          kind="MINIATURE"
+          onClose={() => setDeleting(null)}
+          onDelete={async () => {
+            await commands.deleteItems(
+              "MINIATURE",
+              deleting.map((item) => item.id),
+            );
+            setSelection([]);
+            setEditing(false);
+            notify(t("folders.deletedItems", { count: deleting.length }));
+          }}
+        />
+      )}
       {adding && (
-        <AddChoiceDialog
-          folderView={!browser.flat}
-          itemLabel={t("folders.miniature")}
-          item={
-            <CreateMiniatureDialog
-              initialFolderId={browser.flat ? null : browser.folderId}
-              initialTemplateId={null}
-              onClose={() => setAdding(false)}
-            />
-          }
-          folder={
-            <FolderNameDialog
-              title={t("folders.createFolder")}
-              onSave={(name) => browser.create(name)}
-              onClose={() => setAdding(false)}
-            />
-          }
+        <CreateMiniatureDialog
+          initialFolderId={browser.flat ? null : browser.folderId}
+          initialTemplateId={null}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {addingFolder && (
+        <FolderNameDialog
+          title={t("folders.createFolder")}
+          onSave={(name) => browser.create(name)}
+          onClose={() => setAddingFolder(false)}
         />
       )}
     </Box>

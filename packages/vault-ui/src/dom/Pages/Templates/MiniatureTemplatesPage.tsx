@@ -1,9 +1,9 @@
 import { Button, MenuItem, Skeleton, TextField } from "@mui/material";
 import Box from "@mui/material/Box";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { AddChoiceDialog } from "../../Components/AddChoiceDialog";
+import { BulkDeleteDialog } from "../../Components/BulkDeleteDialog";
 import { AddMiniatureTile } from "../../Components/AddMiniatureTile";
 import { FilterToolbar, filterGridSx } from "../../Components/FilterToolbar";
 import { FolderBrowser } from "../../Components/FolderBrowser";
@@ -13,7 +13,7 @@ import type { FolderView } from "../../Components/FolderTile";
 import { PageHeader } from "../../Components/PageHeader";
 import { QueryErrorNotice } from "../../Components/QueryErrorNotice";
 import { SelectionBar } from "../../Components/SelectionBar";
-import { useFolderBrowser } from "../../graphql/folder-hooks";
+import { useFolderBrowser, useFolderCommands } from "../../graphql/folder-hooks";
 import { useFolderSearch } from "../../graphql/folder-search-hooks";
 import { useVaultStore } from "../../store/hooks";
 import { useTemplateActions, useTemplateCatalog } from "../../store/template-hooks";
@@ -36,6 +36,10 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const [category, setCategory] = useState("ALL");
   const [plugin, setPlugin] = useState("ALL");
   const browser = useFolderBrowser("templates", "TEMPLATE", search);
+  const commands = useFolderCommands();
+  const selectedNames = useRef(new Map<string, string>());
+  const [deleting, setDeleting] = useState<{ id: string; name: string }[] | null>(null);
+  const [addingFolder, setAddingFolder] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   // Checkboxes, and tapping a card to select it, only while edit mode is on.
   const [selectMode, setSelectMode] = useState(false);
@@ -136,12 +140,28 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
   const gap = gridWidth >= 600 ? 16 : 12;
   const columnWidth = Math.max(0, (gridWidth - gap * (columns - 1)) / columns);
   const rowHeight = Math.max(1, ((columnWidth - 2 * CARD_BORDER) * 5) / 4 + 2 * CARD_BORDER);
-  const matching = searching ? mixedSearch.templates : (catalog?.templates ?? []);
+  const matching = useMemo(
+    () => (searching ? mixedSearch.templates : (catalog?.templates ?? [])),
+    [searching, mixedSearch.templates, catalog?.templates],
+  );
+  useEffect(() => {
+    for (const item of matching) {
+      if (selectedIds.includes(item.id)) selectedNames.current.set(item.id, item.name);
+    }
+  }, [matching, selectedIds]);
   const folders = searching ? mixedSearch.folders : browser.visibleFolders;
   // The add tile leads the grid (not while searching), then folders, then templates.
-  const gridItems: (MiniatureTemplate | FolderView | null | "loading")[] = initialLoading
-    ? [null, ...Array.from({ length: 9 }, () => "loading" as const)]
-    : [...(searching ? [] : [null]), ...folders, ...matching];
+  const gridItems: (MiniatureTemplate | FolderView | null | "loading" | "add-folder")[] = initialLoading
+    ? [
+        null,
+        ...(!browser.flat && selectMode ? ["add-folder" as const] : []),
+        ...Array.from({ length: 9 }, () => "loading" as const),
+      ]
+    : [
+        ...(searching ? [] : [null, ...(!browser.flat && selectMode ? ["add-folder" as const] : [])]),
+        ...folders,
+        ...matching,
+      ];
   const gridWindow = schemeGridWindow({
     itemCount: gridItems.length,
     columns,
@@ -305,6 +325,14 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
                       animation={false}
                       sx={{ height: rowHeight, minWidth: 0 }}
                     />
+                  ) : template === "add-folder" ? (
+                    <AddMiniatureTile
+                      key="add-folder"
+                      folder
+                      title={t("folders.addFolder")}
+                      onClick={() => setAddingFolder(true)}
+                      sx={{ width: "100%", height: "100%" }}
+                    />
                   ) : template && "recursiveCount" in template ? (
                     <Box
                       key={`folder:${template.id}`}
@@ -333,7 +361,7 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
                   ) : (
                     <AddMiniatureTile
                       key="add"
-                      title={t("templatesNewTemplate")}
+                      title={t("folders.addTemplate")}
                       onClick={() => setAdding(true)}
                       sx={{ width: "100%", height: "100%" }}
                     />
@@ -347,6 +375,9 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
       <SelectionBar
         count={selectedIds.length}
         onMove={() => setMovingIds(selectedIds)}
+        onDelete={() =>
+          setDeleting(selectedIds.map((id) => ({ id, name: selectedNames.current.get(id) ?? id })))
+        }
         onClear={() => setSelectedIds([])}
       />
       <Box ref={loadMoreRef} sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
@@ -389,28 +420,38 @@ export function MiniatureTemplatesPage({ onUse }: { onUse(id: string): void }) {
           onClose={() => setMovingIds(null)}
         />
       )}
+      {deleting && (
+        <BulkDeleteDialog
+          items={deleting}
+          kind="TEMPLATE"
+          onClose={() => setDeleting(null)}
+          onDelete={async () => {
+            await commands.deleteItems(
+              "TEMPLATE",
+              deleting.map((item) => item.id),
+            );
+            setSelectedIds([]);
+            setSelectMode(false);
+            notify(t("folders.deletedItems", { count: deleting.length }));
+          }}
+        />
+      )}
       {adding && (
-        <AddChoiceDialog
-          folderView={!browser.flat}
-          itemLabel={t("folders.template")}
-          item={
-            <TemplateEditorDialog
-              template={null}
-              folderId={browser.flat ? null : browser.folderId}
-              onSaved={async () => {
-                setAdding(false);
-                notify(t("templatesCreated"));
-              }}
-              onClose={() => setAdding(false)}
-            />
-          }
-          folder={
-            <FolderNameDialog
-              title={t("folders.createFolder")}
-              onSave={(name) => browser.create(name)}
-              onClose={() => setAdding(false)}
-            />
-          }
+        <TemplateEditorDialog
+          template={null}
+          folderId={browser.flat ? null : browser.folderId}
+          onSaved={async () => {
+            setAdding(false);
+            notify(t("templatesCreated"));
+          }}
+          onClose={() => setAdding(false)}
+        />
+      )}
+      {addingFolder && (
+        <FolderNameDialog
+          title={t("folders.createFolder")}
+          onSave={(name) => browser.create(name)}
+          onClose={() => setAddingFolder(false)}
         />
       )}
       {editing !== undefined && (

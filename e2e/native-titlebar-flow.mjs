@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
+import shellColors from "../packages/vault-ui/src/dom/theme-shell.json" with { type: "json" };
 import { expect } from "playwright/test";
 
 export async function runTitleBarFlow(application, page, artifacts) {
@@ -22,7 +23,7 @@ export async function runTitleBarFlow(application, page, artifacts) {
     };
   });
   assert.equal(original.visible, false);
-  assert.equal(original.background.toLowerCase(), "#202020");
+  assert.equal(original.background.toLowerCase(), shellColors.canvas);
   if (process.platform === "darwin") assert.deepEqual(original.buttons, { x: 7, y: 7 });
   result.native = original;
   for (const width of [1440, 390]) {
@@ -36,10 +37,20 @@ export async function runTitleBarFlow(application, page, artifacts) {
       viewport: document.documentElement.clientWidth,
       width: document.documentElement.scrollWidth,
       background: getComputedStyle(document.body).backgroundColor,
+      drawer: getComputedStyle(document.documentElement).getPropertyValue("--surface").trim(),
       inset: getComputedStyle(document.documentElement).getPropertyValue("--desktop-titlebar-height"),
     }));
     assert.ok(dimensions.width <= dimensions.viewport, "No document horizontal overflow");
     assert.equal(dimensions.inset, "28px");
+    assert.equal(dimensions.drawer, shellColors.surface);
+    await expect(chrome).toHaveCSS(
+      "background-color",
+      `rgb(${shellColors.surface
+        .slice(1)
+        .match(/../g)
+        .map((hex) => parseInt(hex, 16))
+        .join(", ")})`,
+    );
     assert.equal(dimensions.background, "rgb(32, 32, 32)");
     const capture = await application.evaluate(async ({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows()[0];
@@ -68,7 +79,18 @@ export async function runTitleBarFlow(application, page, artifacts) {
       return { png: image.toPNG().toString("base64"), size, pixels };
     });
     for (const pixel of capture.pixels)
-      assert.deepEqual(pixel, [32, 32, 32, 255], "Title strip pixels equal the app canvas exactly (BGRA)");
+      assert.deepEqual(
+        pixel,
+        [
+          ...shellColors.surface
+            .slice(1)
+            .match(/../g)
+            .map((hex) => parseInt(hex, 16))
+            .reverse(),
+          255,
+        ],
+        "Title strip pixels equal the drawer surface token exactly (BGRA)",
+      );
     const screenshot = path.join(artifacts, `titlebar-after-${width}.png`);
     await writeFile(screenshot, Buffer.from(capture.png, "base64"));
     result.screenshots.push(screenshot);

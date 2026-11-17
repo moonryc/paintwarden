@@ -1,3 +1,4 @@
+import CreateNewFolder from "@mui/icons-material/CreateNewFolderOutlined";
 import { ButtonBase } from "@mui/material";
 import Box from "@mui/material/Box";
 import type { SxProps, Theme } from "@mui/material/styles";
@@ -7,16 +8,18 @@ import { dialogPreloadHandlers } from "../dialog-preload";
 import { Plus } from "../icons";
 
 /**
- * Dashed "Add miniature" tile. It shows only a plus; `title` names it for assistive technology.
+ * Dashed "Add miniature" tile. The visible subtitle also names the button for assistive technology.
  */
 export function AddMiniatureTile({
   onClick,
   title,
+  folder = false,
   sx,
 }: {
   onClick: () => void;
   /** Accessible name; defaults to "Add miniature". */
   title?: string;
+  folder?: boolean;
   sx?: SxProps<Theme>;
 }) {
   const { t } = useTranslation("components");
@@ -29,7 +32,13 @@ export function AddMiniatureTile({
       sx={[
         {
           boxSizing: "border-box",
-          display: "grid",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          gap: 1.5,
+          minWidth: 0,
+          p: 1,
+          textAlign: "center",
           aspectRatio: "4/5",
           placeItems: "center",
           borderRadius: "20px",
@@ -68,7 +77,10 @@ export function AddMiniatureTile({
           },
         }}
       >
-        <Plus size={20} />
+        {folder ? <CreateNewFolder fontSize="small" /> : <Plus size={20} />}
+      </Box>
+      <Box component="span" sx={{ fontSize: "0.875rem", lineHeight: 1.4, overflowWrap: "anywhere" }}>
+        {title ?? t("addMiniature")}
       </Box>
     </ButtonBase>
   );

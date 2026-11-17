@@ -28,6 +28,9 @@ const owned = launchOwned(
 await waitForOutput(owned, /Storybook.*started|Local:/, "isolated Storybook", 120000);
 const base = `http://127.0.0.1:${port}`;
 const defaultStories = [
+  "components-bulkdeletedialog--long-list",
+  "components-bulkdeletedialog--templates",
+  "components-addminiaturetile--folder",
   "dialogs-paintdetailsmodal--loading",
   "dialogs-plugins--loading",
   "modals-apollo-project-drawer--loading",

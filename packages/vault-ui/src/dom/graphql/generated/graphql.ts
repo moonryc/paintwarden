@@ -379,6 +379,15 @@ export type MoveBrowserFolderItemsMutation = {
   moveFolderItems: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
 };
 
+export type DeleteBrowserFolderItemsMutationVariables = Exact<{
+  kind: FolderKind;
+  ids: Array<string | number> | string | number;
+}>;
+
+export type DeleteBrowserFolderItemsMutation = {
+  deleteFolderItems: { invalidatedFamilies: Array<VaultFamily>; revision: { epoch: string; seq: string } };
+};
+
 export type LibraryPaintFragment = {
   id: string;
   brand: string;
@@ -3313,6 +3322,75 @@ export const MoveBrowserFolderItemsDocument = {
     },
   ],
 } as unknown as DocumentNode<MoveBrowserFolderItemsMutation, MoveBrowserFolderItemsMutationVariables>;
+export const DeleteBrowserFolderItemsDocument = {
+  kind: "Document",
+  definitions: [
+    {
+      kind: "OperationDefinition",
+      operation: "mutation",
+      name: { kind: "Name", value: "DeleteBrowserFolderItems" },
+      variableDefinitions: [
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+          type: {
+            kind: "NonNullType",
+            type: { kind: "NamedType", name: { kind: "Name", value: "FolderKind" } },
+          },
+        },
+        {
+          kind: "VariableDefinition",
+          variable: { kind: "Variable", name: { kind: "Name", value: "ids" } },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "ListType",
+              type: { kind: "NonNullType", type: { kind: "NamedType", name: { kind: "Name", value: "ID" } } },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: "SelectionSet",
+        selections: [
+          {
+            kind: "Field",
+            name: { kind: "Name", value: "deleteFolderItems" },
+            arguments: [
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "kind" },
+                value: { kind: "Variable", name: { kind: "Name", value: "kind" } },
+              },
+              {
+                kind: "Argument",
+                name: { kind: "Name", value: "ids" },
+                value: { kind: "Variable", name: { kind: "Name", value: "ids" } },
+              },
+            ],
+            selectionSet: {
+              kind: "SelectionSet",
+              selections: [
+                {
+                  kind: "Field",
+                  name: { kind: "Name", value: "revision" },
+                  selectionSet: {
+                    kind: "SelectionSet",
+                    selections: [
+                      { kind: "Field", name: { kind: "Name", value: "epoch" } },
+                      { kind: "Field", name: { kind: "Name", value: "seq" } },
+                    ],
+                  },
+                },
+                { kind: "Field", name: { kind: "Name", value: "invalidatedFamilies" } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteBrowserFolderItemsMutation, DeleteBrowserFolderItemsMutationVariables>;
 export const LibraryPageDocument = {
   kind: "Document",
   definitions: [

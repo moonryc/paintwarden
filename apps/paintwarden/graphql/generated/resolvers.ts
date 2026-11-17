@@ -408,6 +408,11 @@ export type Mutation = {
   createTemplate: TemplateMutationPayload;
   deleteCustomPaint: PaintCommandPayload;
   deleteFolder: FolderMutationPayload;
+  /**
+   * Atomically delete 1–1000 miniature or template IDs of the given kind (duplicates are ignored).
+   * Folder IDs are not accepted; use deleteFolder for recursive folder deletion.
+   */
+  deleteFolderItems: FolderMutationPayload;
   deleteMiniature: MiniatureMutationPayload;
   deleteScheme: SchemeMutationPayload;
   deleteSubstitution: SubstitutionMutationPayload;
@@ -463,6 +468,12 @@ export type MutationDeleteFolderArgs = {
   clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
   id: Scalars["ID"]["input"];
   mode: FolderDeleteMode;
+};
+
+export type MutationDeleteFolderItemsArgs = {
+  clientMutationId?: InputMaybe<Scalars["String"]["input"]>;
+  ids: Array<Scalars["ID"]["input"]>;
+  kind: FolderKind;
 };
 
 export type MutationDeleteMiniatureArgs = {
@@ -2170,6 +2181,12 @@ export type MutationResolvers<
     ParentType,
     ContextType,
     RequireFields<MutationDeleteFolderArgs, "id" | "mode">
+  >;
+  deleteFolderItems?: Resolver<
+    ResolversTypes["FolderMutationPayload"],
+    ParentType,
+    ContextType,
+    RequireFields<MutationDeleteFolderItemsArgs, "ids" | "kind">
   >;
   deleteMiniature?: Resolver<
     ResolversTypes["MiniatureMutationPayload"],

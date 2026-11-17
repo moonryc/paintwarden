@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import {
+  runFolderEditFlows,
   runAutocompleteFlows,
   runBrowserFlows,
   runSchemeRankingFlows,
@@ -277,17 +278,19 @@ try {
     return page;
   }
   await Promise.race([
-    (connectionRecovery
-      ? runConnectionRecoveryFlows
-      : aggregate
-        ? runScanAggregateFlows
-        : autocompleteSearch
-          ? runAutocompleteFlows
-          : noRefetchLoading
-            ? runNoRefetchLoadingFlows
-            : schemeRanking
-              ? runSchemeRankingFlows
-              : runBrowserFlows)({
+    (process.argv.includes("--folder-edit")
+      ? runFolderEditFlows
+      : connectionRecovery
+        ? runConnectionRecoveryFlows
+        : aggregate
+          ? runScanAggregateFlows
+          : autocompleteSearch
+            ? runAutocompleteFlows
+            : noRefetchLoading
+              ? runNoRefetchLoadingFlows
+              : schemeRanking
+                ? runSchemeRankingFlows
+                : runBrowserFlows)({
       newPage,
       artifacts,
       results,

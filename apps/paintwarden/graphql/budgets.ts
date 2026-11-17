@@ -24,7 +24,7 @@ function reject(message: string): never {
 function boundedInput(value: unknown, key: string, depth = 0) {
   if (depth > 8) reject("Input nesting limit exceeded");
   if (Array.isArray(value)) {
-    if (key === "ids" && value.length > 1000) reject("Move at most 1000 items per operation");
+    if (key === "ids" && value.length > 1000) reject("At most 1000 items per operation");
     for (const item of value) boundedInput(item, key, depth + 1);
   } else if (value && typeof value === "object") {
     for (const [name, item] of Object.entries(value)) boundedInput(item, name, depth + 1);

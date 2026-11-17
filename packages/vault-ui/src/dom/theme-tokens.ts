@@ -6,7 +6,7 @@ import shellColors from "./theme-shell.json" with { type: "json" };
 
 export const colors = {
   canvas: shellColors.canvas,
-  surface: "#262626",
+  surface: shellColors.surface,
   surfaceRaised: "#2c2c2c",
   sunken: "#303030",
   line: "#383838",

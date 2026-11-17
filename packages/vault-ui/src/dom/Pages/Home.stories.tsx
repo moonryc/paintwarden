@@ -487,21 +487,24 @@ const emptyShelf: Story = {
     await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
     try {
       await userEvent.click(canvas.getByRole("button", { name: "Folder view" }));
-      await userEvent.click(add);
+      await expect(canvas.queryByRole("button", { name: "Add folder" })).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Select items" }));
+      await userEvent.click(canvas.getByRole("button", { name: "Add folder" }));
       const folder = within(await body.findByRole("dialog", { name: "Create folder" }));
-      await expect(folder.getByRole("button", { name: "Folder" })).toHaveAttribute("aria-pressed", "true");
+      await expect(folder.queryByRole("group")).not.toBeInTheDocument();
       await expect(folder.getByRole("textbox", { name: "Name" })).not.toHaveFocus();
-      await userEvent.click(folder.getByRole("button", { name: "Miniature" }));
-      const item = within(await body.findByRole("dialog", { name: "Add a miniature" }));
-      await expect(item.getByRole("button", { name: "Miniature" })).toHaveFocus();
-      await expect(body.getAllByRole("dialog")).toHaveLength(1);
       await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
-      // Every fresh Add in folder view starts on Folder, even after choosing Miniature.
       await userEvent.click(add);
-      const reopened = within(await body.findByRole("dialog", { name: "Create folder" }));
-      await userEvent.click(reopened.getByRole("button", { name: "Cancel" }));
+      const item = within(await body.findByRole("dialog", { name: "Add a miniature" }));
+      await expect(
+        item.queryByRole("group", { name: "What would you like to add?" }),
+      ).not.toBeInTheDocument();
+      await userEvent.keyboard("{Escape}");
       await waitFor(() => expect(body.queryByRole("dialog")).not.toBeInTheDocument());
+      await userEvent.click(canvas.getByRole("button", { name: "Flat view" }));
+      await expect(canvas.queryByRole("button", { name: "Add folder" })).not.toBeInTheDocument();
+      await userEvent.click(canvas.getByRole("button", { name: "Select items" }));
     } finally {
       await userEvent.click(canvas.getByRole("button", { name: "Flat view" }));
       localStorage.removeItem(`paintwarden.folders.${args.view}.flat`);

@@ -392,6 +392,39 @@ export const folderMutations: NonNullable<Resolvers<GraphQLContext>["Mutation"]>
       folderId: args.folderId ?? undefined,
       movedCount: moveItems(args.kind, args.ids, args.folderId),
     })),
+  deleteFolderItems: async (_root, args) =>
+    withImageMutation(async () => {
+      const keys: string[] = [];
+      const result = atomic(() => {
+        const kind = dbKind(args.kind),
+          table = tableFor(kind),
+          sqlite = getSqlite();
+        if (!args.ids.length || args.ids.length > 1000) bad("Delete between 1 and 1000 items");
+        const ids = [...new Set(args.ids)];
+        const select = sqlite.prepare(`SELECT image_key AS imageKey FROM ${table} WHERE id=?`);
+        const other = sqlite.prepare(
+          `SELECT id FROM ${tableFor(kind === "miniature" ? "template" : "miniature")} WHERE id=?`,
+        );
+        // Validate every ID within the deleting transaction before the first write.
+        // Folder IDs are intentionally excluded: this command deletes selected entities only.
+        for (const id of ids) {
+          validateText(id, "id");
+          const item = select.get(id) as { imageKey: string | null } | undefined;
+          if (!item) {
+            if (other.get(id) || sqlite.prepare("SELECT id FROM folders WHERE id=?").get(id))
+              bad("Item must have the selected kind; folder IDs are not accepted");
+            return bad("Item not found", "NOT_FOUND");
+          }
+          if (item.imageKey) keys.push(item.imageKey);
+        }
+        const remove = sqlite.prepare(`DELETE FROM ${table} WHERE id=?`);
+        for (const id of ids) remove.run(id);
+      });
+      // Never unlink on rollback. Cleanup checks all surviving references under the
+      // same image lock, including templates, source assets, schemes and export holds.
+      await deleteImages(keys);
+      return result;
+    }),
   deleteFolder: async (_root, args) =>
     withImageMutation(async () => {
       const keys: string[] = [];

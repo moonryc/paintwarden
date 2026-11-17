@@ -39,21 +39,13 @@ async function folderView(page) {
 }
 
 async function addChoice(page, choice) {
-  await page.getByRole("button", { name: "Add miniature", exact: true }).click();
-  const group = page.getByRole("group", { name: "What would you like to add?", exact: true });
-  // Folder view starts on Folder; flat views open the miniature form directly.
-  const dialog = page.getByRole("dialog");
-  await dialog.waitFor();
-  if (await group.count()) {
-    await expect(group.getByRole("button").first()).toHaveText("Folder");
-    await expect(group.getByRole("button", { name: "Folder", exact: true })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-    if (choice !== "Folder") await group.getByRole("button", { name: choice, exact: true }).click();
+  if (choice === "Folder") {
+    const edit = page.getByRole("button", { name: "Select items", exact: true });
+    if ((await edit.getAttribute("aria-pressed")) !== "true") await edit.click();
+    await page.getByRole("button", { name: "Add folder", exact: true }).click();
   } else {
-    assert.equal(choice, "Miniature", "Flat view only allows miniature creation");
-    await expect(dialog).toHaveAccessibleName("Add a miniature");
+    await page.getByRole("button", { name: "Add miniature", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveAccessibleName("Add a miniature");
   }
 }
 
@@ -70,6 +62,8 @@ async function createFolder(page, name) {
   const body = await (await saved).json();
   await dialog.waitFor({ state: "hidden" });
   await openFolder(page, name).waitFor();
+  const edit = page.getByRole("button", { name: "Select items", exact: true });
+  if ((await edit.getAttribute("aria-pressed")) === "true") await edit.click();
   return body.data.createFolder.revision;
 }
 
@@ -466,6 +460,11 @@ export async function runBrowserFlows({ newPage, artifacts, results }) {
   await verifyThumbnail(first, created.miniatureId, results.thumbnail.originalHash);
   await first.screenshot({ path: path.join(artifacts, "success.png"), animations: "disabled" });
   check("restored nested folder navigation, miniature rows and regenerated thumbnail remain usable");
+  const { runFolderEditFlow } = await import("./folder-edit-flow.mjs");
+  results.folderEdit = await runFolderEditFlow({ page: first, artifacts });
+  check(
+    "separate Add modals and atomic bulk delete/cancel for miniatures and templates at desktop/phone widths",
+  );
 }
 
 export async function runNoRefetchLoadingFlows({ newPage, artifacts, results }) {
@@ -619,4 +618,12 @@ export async function runConnectionRecoveryFlows({ newPage, artifacts, results, 
   await createMiniature(page, title);
   const { checkConnectionRecovery } = await import("./connection-recovery.mjs");
   await checkConnectionRecovery({ page, title, artifacts, results, stopServer, restartServer });
+}
+
+export async function runFolderEditFlows({ newPage, artifacts, results }) {
+  const page = await newPage();
+  await authenticate(page, true);
+  const { runFolderEditFlow } = await import("./folder-edit-flow.mjs");
+  results.folderEdit = await runFolderEditFlow({ page, artifacts });
+  results.checks.push("PASS folder-edit separate Add and bulk delete flows");
 }

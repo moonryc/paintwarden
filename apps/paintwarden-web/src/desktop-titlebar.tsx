@@ -45,7 +45,7 @@ export function DesktopTitleBar() {
           inset: "0 0 auto",
           height,
           zIndex: 2000,
-          background: colors.canvas,
+          background: colors.surface,
           color: colors.inkSoft,
           display: "grid",
           placeItems: "center",

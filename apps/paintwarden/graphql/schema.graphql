@@ -995,6 +995,11 @@ extend type Mutation {
   renameFolder(id: ID!, name: String!, clientMutationId: String): FolderMutationPayload!
   moveFolder(id: ID!, parentId: ID, clientMutationId: String): FolderMutationPayload!
   deleteFolder(id: ID!, mode: FolderDeleteMode!, clientMutationId: String): FolderMutationPayload!
+  """
+  Atomically delete 1–1000 miniature or template IDs of the given kind (duplicates are ignored).
+  Folder IDs are not accepted; use deleteFolder for recursive folder deletion.
+  """
+  deleteFolderItems(kind: FolderKind!, ids: [ID!]!, clientMutationId: String): FolderMutationPayload!
   moveFolderItems(
     kind: FolderKind!
     ids: [ID!]!

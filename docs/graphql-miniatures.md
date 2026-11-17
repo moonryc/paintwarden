@@ -93,3 +93,23 @@ story is not a claim of native packaged UI coverage.
 ## Projects and mixed search
 
 See [folders](graphql-folders.md). Non-flat browse uses `folderId` and direct membership, while Workbench counts always summarize descendants. The three per-page device preferences do not share a global folder location. Mixed search uses the bounded `FolderSearchResult` union rather than manufacturing a full-vault state.
+
+## Edit-mode bulk deletion
+
+`deleteFolderItems(kind, ids)` deletes 1–1000 selected miniature or template IDs in one
+SQLite transaction. The server deduplicates IDs and validates existence and kind before
+writing; any validation or SQL failure rolls back rows, cascades and trigger change logs.
+The response carries the committed revision and invalidated families, using the existing
+SSE invalidation contract. Images are cleaned only after commit under the image mutation
+lock, preserving surviving entity/asset/scheme references and export holds.
+
+The edit-mode Delete confirmation freezes the selected IDs/names, defaults keyboard focus
+to Cancel, and retains the selection on failure. Success clears selection, leaves edit mode
+and shows a localized toast. Folder tiles are navigation, not selectable entities; their
+existing Move contents up / Delete contents dialog is unchanged.
+
+The dashed creation tiles open independent forms: Add miniature (Add template in Templates)
+is always available when not searching; Add folder is available only in folder view while
+editing. Both create in the current folder. There is no Miniature/Folder form toggle.
+Global miniature creation remains miniature-only; using a template retains that existing
+miniature creation behavior.
