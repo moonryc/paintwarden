@@ -76,7 +76,7 @@ export function WishlistPaintRow({
         <Box sx={{ flexShrink: 0, mr: 0.75 }}>
           <RoundActionButton
             size="md"
-            tone="wishlist"
+            tone="info"
             label={`${projectCount! > 99 ? "99+ · " : ""}${t("usedInProjects", { count: projectCount })}`}
             title={t("usedInProjects", { count: projectCount })}
             onClick={onProjects}

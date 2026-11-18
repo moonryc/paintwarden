@@ -16,7 +16,7 @@ const meta = {
     children: <Heart size={15} />,
   },
   argTypes: {
-    tone: { control: "inline-radio", options: ["rust", "ok", "wishlist"] },
+    tone: { control: "inline-radio", options: ["rust", "ok", "wishlist", "info"] },
     children: { control: false },
   },
 } satisfies Meta<typeof RoundActionButton>;
@@ -46,3 +46,17 @@ export const Remove: Story = {
 export const Disabled: Story = { args: { tone: "ok", disabled: true, children: <Check size={15} /> } };
 
 export const Medium: Story = { args: { size: "md" } };
+
+export const Informational: Story = {
+  args: {
+    tone: "info",
+    size: "md",
+    label: "1 · Used in 1 project",
+    title: "Used in 1 project",
+    children: "1",
+  },
+};
+
+export const InformationalActive: Story = {
+  args: { ...Informational.args, active: true },
+};

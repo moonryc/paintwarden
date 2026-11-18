@@ -27,6 +27,14 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run storybook:test
+      - name: Wishlist action palette, focus, contrast and geometry regression
+        run: node scripts/smoke-wishlist-actions.mjs outputs/wishlist-actions --geometry-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wishlist-actions
+          retention-days: 7
+          path: outputs/wishlist-actions
       - name: Responsive global banner geometry regression
         run: node scripts/smoke-banner-layout.mjs outputs/banner-layout --geometry-only
       - uses: actions/upload-artifact@v4

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 
+import { computedContrast } from "../storybook/contrast";
 import { list } from "../storybook/decorators";
 import { paints } from "../storybook/fixtures";
 
@@ -69,6 +70,40 @@ export const CircularProjectCount: Story = {
     await expect(b.height).toBe(a.height);
     await expect(button.scrollWidth).toBeLessThanOrEqual(button.clientWidth);
     await userEvent.click(button);
+    await expect(args.onProjects).toHaveBeenCalledOnce();
+  },
+};
+
+// All three adjacent actions, including the informational project count.
+export const ProjectActions: Story = { args: { projectCount: 1, onProjects: fn() } };
+
+export const ProjectCountHover: Story = {
+  args: ProjectActions.args,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const count = canvas.getByRole("button", { name: "Used in 1 project" });
+    const before = count.getBoundingClientRect();
+    await userEvent.hover(count);
+    // Storybook dispatches synthetic pointer events; native :hover palette/pixels
+    // are exercised by smoke-wishlist-actions.mjs with a real browser pointer.
+    await expect(computedContrast(count)).toBeGreaterThanOrEqual(4.5);
+    await expect(count.getBoundingClientRect().toJSON()).toEqual(before.toJSON());
+  },
+};
+
+export const ProjectCountFocus: Story = {
+  args: ProjectActions.args,
+  play: async ({ canvasElement, args }) => {
+    const count = within(canvasElement).getByRole("button", { name: "Used in 1 project" });
+    await userEvent.tab(); // Paint details.
+    await userEvent.tab(); // Project count.
+    await expect(count).toHaveFocus();
+    await expect(count.matches(":focus-visible")).toBe(true);
+    await expect(getComputedStyle(count).outlineWidth).toBe("2px");
+    await waitFor(async () => {
+      await expect(getComputedStyle(count).outlineColor).toBe(getComputedStyle(count).color);
+    });
+    await userEvent.keyboard("{Enter}");
     await expect(args.onProjects).toHaveBeenCalledOnce();
   },
 };

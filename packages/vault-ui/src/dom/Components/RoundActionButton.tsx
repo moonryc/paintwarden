@@ -19,13 +19,19 @@ export function RoundActionButton({
   title: string;
   onClick(): void;
   children: ReactNode;
-  tone: Extract<Tone, "rust" | "ok" | "wishlist">;
+  tone: Extract<Tone, "rust" | "ok" | "wishlist"> | "info";
   active?: boolean;
   disabled?: boolean;
   // sm is 28px; md matches the quantity counter (40px on phones, 32px wider).
   size?: "sm" | "md";
 }) {
-  const color = `var(--${tone})`;
+  // The shared sky token also backs the MUI info palette.
+  const color = tone === "info" ? "var(--sky)" : `var(--${tone})`;
+  const highlighted = {
+    color,
+    bgcolor: `color-mix(in oklab, ${color} 14%, var(--surface-raised))`,
+    borderColor: color,
+  };
 
   return (
     <IconButton
@@ -49,12 +55,18 @@ export function RoundActionButton({
         boxShadow: "0 1px 3px rgb(var(--shadow-color) / .12)",
         transition: "background-color .15s, border-color .15s, color .15s",
         "&.Mui-disabled": { opacity: 1, color: "var(--ink-faint)" },
-        "&:hover": {
-          color,
-          bgcolor: `color-mix(in oklab, ${color} 14%, var(--surface-raised))`,
-          borderColor: color,
+        "&:hover": highlighted,
+        ...(tone === "info" && {
+          "&:active": {
+            ...highlighted,
+            bgcolor: `color-mix(in oklab, ${color} 22%, var(--surface-raised))`,
+          },
+        }),
+        "&:focus-visible": {
+          ...(tone === "info" && highlighted),
+          outline: `2px solid ${color}`,
+          outlineOffset: 2,
         },
-        "&:focus-visible": { outline: `2px solid ${color}`, outlineOffset: 2 },
       }}
     >
       {children}
