@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 // Adding happens on each page (add tiles, Add paint, New scheme), so the sidebar has no add button.
 const noQuickAdd: Story["play"] = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const tools = canvas.getByRole("button", { name: "Paint Tools Beta", exact: true });
+  const tools = canvas.getByRole("button", { name: "Paint Tools Beta" });
   await expect(tools.querySelectorAll(".MuiChip-root")).toHaveLength(1);
   await expect(tools.scrollWidth).toBeLessThanOrEqual(tools.clientWidth);
   await expect(canvas.queryByRole("group", { name: "Add to vault" })).not.toBeInTheDocument();

@@ -28,7 +28,7 @@ async function openPage(canvas: Canvas, name: string) {
   // The settings button sits below the page list, in the same panel.
   const panel = within(nav.parentElement ?? nav);
   if (name === "Paint Tools") {
-    const tools = panel.getByRole("button", { name: "Paint Tools Beta", exact: true });
+    const tools = panel.getByRole("button", { name: "Paint Tools Beta" });
     await expect(tools.querySelectorAll(".MuiChip-root")).toHaveLength(1);
     await expect(tools.scrollWidth).toBeLessThanOrEqual(tools.clientWidth);
   }
@@ -59,7 +59,7 @@ export const PaintTools: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await openPage(canvas, "Paint Tools");
-    const title = await canvas.findByRole("heading", { level: 2, name: "Paint Tools Beta", exact: true });
+    const title = await canvas.findByRole("heading", { level: 2, name: "Paint Tools Beta" });
     await expect(title.querySelectorAll(".MuiChip-root")).toHaveLength(1);
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },

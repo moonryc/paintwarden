@@ -132,9 +132,7 @@ export const PaintToolsHeaderParity: Story = {
       });
       await expect(rects[0]).toEqual(rects[1]);
     }
-    await expect(
-      within(canvasElement).getByRole("heading", { name: "Paint Tools Beta", exact: true }),
-    ).toBeVisible();
+    await expect(within(canvasElement).getByRole("heading", { name: "Paint Tools Beta" })).toBeVisible();
     await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
   },
 };
