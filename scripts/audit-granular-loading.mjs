@@ -363,7 +363,10 @@ try {
           }, expected);
           await page.waitForFunction(
             (expected) =>
-              [...document.querySelectorAll("main h2")].some((el) => el.textContent === expected) &&
+              // Badges are accessible heading content, not part of the localized page identity.
+              [...document.querySelectorAll("main h2")].some(
+                (el) => (el.dataset.pageTitle || el.textContent) === expected,
+              ) &&
               !document.querySelector(
                 "main [data-skeleton], main [aria-busy=true], main .MuiSkeleton-root, main [role=progressbar]:not([aria-valuenow])",
               ),

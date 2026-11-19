@@ -60,6 +60,7 @@ export function PageHeader({
         </Box>
         <Box
           component="h2"
+          data-page-title={title}
           sx={{
             ...(beta ? { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 } : {}),
             m: 0,
