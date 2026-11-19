@@ -27,6 +27,11 @@ async function openPage(canvas: Canvas, name: string) {
   const nav = await within(document.body).findByRole("navigation", { name: "Primary" });
   // The settings button sits below the page list, in the same panel.
   const panel = within(nav.parentElement ?? nav);
+  if (name === "Paint Tools") {
+    const tools = panel.getByRole("button", { name: "Paint Tools Beta", exact: true });
+    await expect(tools.querySelectorAll(".MuiChip-root")).toHaveLength(1);
+    await expect(tools.scrollWidth).toBeLessThanOrEqual(tools.clientWidth);
+  }
   await userEvent.click(await panel.findByRole("button", { name: new RegExp(name) }));
 }
 
@@ -50,7 +55,15 @@ export const Paints = page("Paints", /Paints/);
 export const Wishlist = page("Wishlist", /Wishlist/);
 export const Schemes = page("Schemes", /Schemes/);
 export const Templates = page("Templates", /Templates/);
-export const PaintTools = page("Paint Tools", /Paint tools/i);
+export const PaintTools: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await openPage(canvas, "Paint Tools");
+    const title = await canvas.findByRole("heading", { level: 2, name: "Paint Tools Beta", exact: true });
+    await expect(title.querySelectorAll(".MuiChip-root")).toHaveLength(1);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
 export const Settings = page("Data & settings", /Data & settings/);
 
 export const Plugins: Story = {

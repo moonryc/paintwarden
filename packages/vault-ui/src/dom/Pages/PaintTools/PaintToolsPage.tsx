@@ -17,7 +17,7 @@ export function PaintToolsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow={t("toolsEyebrow")} title={t("toolsTitle")} body={t("toolsDescription")} />
+      <PageHeader beta eyebrow={t("toolsEyebrow")} title={t("toolsTitle")} body={t("toolsDescription")} />
       <ToggleButtonGroup
         exclusive
         fullWidth

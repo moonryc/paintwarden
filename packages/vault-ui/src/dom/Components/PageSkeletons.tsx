@@ -6,6 +6,8 @@ import { createContext, useContext } from "react";
 
 import { visuallyHiddenSx } from "../utils/visually-hidden";
 
+import { PageHeader } from "./PageHeader";
+
 export type SkeletonPage =
   | "home"
   | "miniatures"
@@ -85,6 +87,15 @@ function pageBodies(): Partial<Record<SkeletonPage, string>> {
   };
 }
 function Header({ page, action = false }: { page: SkeletonPage; action?: boolean }) {
+  if (page === "paint-tools")
+    return (
+      <PageHeader
+        beta
+        eyebrow={i18n.t("pages:toolsEyebrow")}
+        title={i18n.t("pages:toolsTitle")}
+        body={i18n.t("pages:toolsDescription")}
+      />
+    );
   const actionWidth = page === "templates" ? 147 : page === "schemes" ? 139 : 124;
   return (
     <Box

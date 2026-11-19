@@ -2,6 +2,9 @@ import Box from "@mui/material/Box";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
 
+import { PaintToolsPage } from "../Pages/PaintTools/PaintToolsPage";
+import { StoryGraphQL } from "../storybook/graphql";
+
 import { PageSkeleton } from "./PageSkeletons";
 
 const meta = {
@@ -97,3 +100,41 @@ export const NarrowWishlist: Story = {
 
 export const NarrowMiniatures: Story = { ...NarrowWishlist, args: { page: "miniatures" } };
 export const NarrowSchemes: Story = { ...NarrowWishlist, args: { page: "schemes" } };
+
+// The lazy-page shell and query-pending page reserve exactly the same beta title geometry.
+export const PaintToolsHeaderParity: Story = {
+  args: { page: "paint-tools" },
+  render: () => (
+    <StoryGraphQL pending respond={() => ({})}>
+      <Box sx={{ minWidth: 0 }}>
+        <PageSkeleton page="paint-tools" />
+      </Box>
+      <Box sx={{ minWidth: 0 }}>
+        <PaintToolsPage />
+      </Box>
+    </StoryGraphQL>
+  ),
+  play: async ({ canvasElement }) => {
+    const headers = canvasElement.querySelectorAll<HTMLElement>("[data-page-header]");
+    await expect(headers).toHaveLength(2);
+    for (const selector of [":scope", "h2", "p:last-child", ".MuiChip-root"]) {
+      const elements = [...headers].map((header) =>
+        selector === ":scope" ? header : header.querySelector<HTMLElement>(selector)!,
+      );
+      const rects = elements.map((element, index) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          x: rect.x,
+          y: rect.y - headers[index].getBoundingClientRect().y,
+          width: rect.width,
+          height: rect.height,
+        };
+      });
+      await expect(rects[0]).toEqual(rects[1]);
+    }
+    await expect(
+      within(canvasElement).getByRole("heading", { name: "Paint Tools Beta", exact: true }),
+    ).toBeVisible();
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};

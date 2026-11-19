@@ -13,6 +13,7 @@ import {
 import Box from "@mui/material/Box";
 import { useTranslation } from "react-i18next";
 
+import { BetaChip } from "../Components/BetaChip";
 import { formatNumber } from "../i18n";
 import { Settings, X } from "../icons";
 import type { Tab } from "../types";
@@ -192,12 +193,26 @@ export function NavPanel({
                       <Icon size={onClose ? 20 : 18} />
                     </ListItemIcon>
                     <ListItemText
-                      primary={t(label)}
+                      primary={
+                        <>
+                          {t(label)}
+                          {key === "paint-tools" && <BetaChip />}
+                        </>
+                      }
                       slotProps={{
                         primary: {
                           sx: [
                             {
                               boxSizing: "border-box",
+                              ...(key === "paint-tools"
+                                ? {
+                                    display: "flex",
+                                    flexWrap: "wrap",
+                                    alignItems: "center",
+                                    gap: 0.75,
+                                    overflowWrap: "anywhere",
+                                  }
+                                : {}),
                             },
                             onClose
                               ? {

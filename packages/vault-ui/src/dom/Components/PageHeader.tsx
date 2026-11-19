@@ -3,16 +3,20 @@ import type { ReactNode } from "react";
 
 import { up } from "../theme-tokens";
 
+import { BetaChip } from "./BetaChip";
+
 export function PageHeader({
   eyebrow,
   title,
   body,
   action,
+  beta = false,
 }: {
   eyebrow: string;
   title: string;
   body?: string;
   action?: ReactNode;
+  beta?: boolean;
 }) {
   return (
     <Box
@@ -57,6 +61,7 @@ export function PageHeader({
         <Box
           component="h2"
           sx={{
+            ...(beta ? { display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 } : {}),
             m: 0,
             fontFamily: "var(--font-serif)",
             fontSize: "2rem",
@@ -69,6 +74,14 @@ export function PageHeader({
           }}
         >
           {title}
+          {beta && (
+            <Box
+              component="span"
+              sx={{ display: "inline-flex", fontFamily: "var(--font-sans)", letterSpacing: "normal" }}
+            >
+              <BetaChip />
+            </Box>
+          )}
         </Box>
         {body && (
           <Box

@@ -35,6 +35,8 @@ export const Tabs: Story = {
     const phone = viewport.value === "phone390";
     await expect(window.innerWidth).toBe(phone ? 390 : 1440);
     await expect(window.innerHeight).toBe(phone ? 844 : 1050);
+    const heading = within(canvasElement).getByRole("heading", { name: "Paint Tools Beta", exact: true });
+    await expect(heading.querySelectorAll(".MuiChip-root")).toHaveLength(1);
     const tab = within(canvasElement).getByRole("button", { name: /^Complementary$/ });
     const label = Array.from(tab.childNodes).find((node) => node.textContent === "Complementary")!;
     const text = document.createRange();
@@ -91,7 +93,7 @@ export const DesktopPalette: Story = {
 export const Loading: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("heading", { name: "Paint Tools" })).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Paint Tools Beta", exact: true })).toBeVisible();
     await expect(canvas.getByRole("button", { name: /^Complementary$/ })).toBeEnabled();
     const field = canvas.getByRole("combobox");
     await expect(field).toBeDisabled();
